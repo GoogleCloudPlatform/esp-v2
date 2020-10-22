@@ -573,12 +573,7 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "safeRegex":{
-                                       "googleRe2":{
-                                          
-                                       },
-                                       "regex":"^/v1/shelves/[^\\/]+$"
-                                    }
+                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -593,7 +588,7 @@ var (
                               },
                               {
                                  "decorator":{
-                                    "operation":"ingress CreateShelf"
+                                    "operation":"ingress ListShelves"
                                  },
                                  "match":{
                                     "headers":[
@@ -602,7 +597,7 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -611,7 +606,7 @@ var (
                                  "typedPerFilterConfig":{
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
                                     }
                                  }
                               },
@@ -641,7 +636,7 @@ var (
                               },
                               {
                                  "decorator":{
-                                    "operation":"ingress ListShelves"
+                                    "operation":"ingress CreateShelf"
                                  },
                                  "match":{
                                     "headers":[
@@ -650,7 +645,12 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                    "safeRegex":{
+                                       "googleRe2":{
+                                          
+                                       },
+                                       "regex":"^/v1/shelves/[^\\/]+$"
+                                    }
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -659,7 +659,7 @@ var (
                                  "typedPerFilterConfig":{
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
                               }
@@ -906,16 +906,11 @@ var (
                                  "match":{
                                     "headers":[
                                        {
-                                          "exactMatch":"DELETE",
+                                          "exactMatch":"POST",
                                           "name":":method"
                                        }
                                     ],
-                                    "safeRegex":{
-                                       "googleRe2":{
-                                          
-                                       },
-                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+$"
-                                    }
+                                    "path":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -930,7 +925,7 @@ var (
                               },
                               {
                                  "decorator":{
-                                    "operation":"ingress DeleteBook"
+                                    "operation":"ingress GetBook"
                                  },
                                  "match":{
                                     "headers":[
@@ -939,7 +934,36 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "path":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
+                                    "path":"/endpoints.examples.bookstore.Bookstore/GetBook"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.GetBook"
+                                    }
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress DeleteBook"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"DELETE",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "safeRegex":{
+                                       "googleRe2":{
+                                          
+                                       },
+                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+$"
+                                    }
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -969,30 +993,6 @@ var (
                                        },
                                        "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+$"
                                     }
-                                 },
-                                 "route":{
-                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                                    "timeout":"15s"
-                                 },
-                                 "typedPerFilterConfig":{
-                                    "com.google.espv2.filters.http.service_control":{
-                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                       "operationName":"endpoints.examples.bookstore.Bookstore.GetBook"
-                                    }
-                                 }
-                              },
-                              {
-                                 "decorator":{
-                                    "operation":"ingress GetBook"
-                                 },
-                                 "match":{
-                                    "headers":[
-                                       {
-                                          "exactMatch":"POST",
-                                          "name":":method"
-                                       }
-                                    ],
-                                    "path":"/endpoints.examples.bookstore.Bookstore/GetBook"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -1227,7 +1227,7 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "path":"/v1/shelves"
+                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -1242,7 +1242,7 @@ var (
                               },
                               {
                                  "decorator":{
-                                    "operation":"ingress CreateShelf"
+                                    "operation":"ingress ListShelves"
                                  },
                                  "match":{
                                     "headers":[
@@ -1251,7 +1251,7 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "path":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
+                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -1260,7 +1260,7 @@ var (
                                  "typedPerFilterConfig":{
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
                                     }
                                  }
                               },
@@ -1290,7 +1290,7 @@ var (
                               },
                               {
                                  "decorator":{
-                                    "operation":"ingress ListShelves"
+                                    "operation":"ingress CreateShelf"
                                  },
                                  "match":{
                                     "headers":[
@@ -1299,7 +1299,7 @@ var (
                                           "name":":method"
                                        }
                                     ],
-                                    "path":"/endpoints.examples.bookstore.Bookstore/ListShelves"
+                                    "path":"/v1/shelves"
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
@@ -1308,7 +1308,7 @@ var (
                                  "typedPerFilterConfig":{
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                       "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                       "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
                               }
@@ -1486,7 +1486,7 @@ var (
                         }
                      }
                   ],
-                  "routeConfig":{
+                   "routeConfig":{
                      "name":"local_route",
                      "virtualHosts":[
                         {
@@ -1495,30 +1495,6 @@ var (
                            ],
                            "name":"backend",
                            "routes":[
-                              {
-                                 "decorator":{
-                                    "operation":"ingress Echo"
-                                 },
-                                 "match":{
-                                    "headers":[
-                                       {
-                                          "exactMatch":"POST",
-                                          "name":":method"
-                                       }
-                                    ],
-                                    "path":"/echo"
-                                 },
-                                 "route":{
-                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                                    "timeout":"15s"
-                                 },
-                                 "typedPerFilterConfig":{
-                                    "com.google.espv2.filters.http.service_control":{
-                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
-                                    }
-                                 }
-                              },
                               {
                                  "decorator":{
                                     "operation":"ingress Echo_Auth_Jwt"
@@ -1540,6 +1516,30 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
+                                    }
+                                 }
+                              },
+                              {
+                                 "decorator":{
+                                    "operation":"ingress Echo"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"POST",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/echo"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
                                     }
                                  }
                               }

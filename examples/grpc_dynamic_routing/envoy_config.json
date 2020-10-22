@@ -981,7 +981,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress Echo"
+                              "operation": "ingress EchoReport"
                             },
                             "match": {
                               "headers": [
@@ -990,7 +990,7 @@
                                   "name": ":method"
                                 }
                               ],
-                              "path": "/test.grpc.Test/Echo"
+                              "path": "/echoreport"
                             },
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -1004,7 +1004,7 @@
                               },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                "operationName": "test.grpc.Test.Echo"
+                                "operationName": "test.grpc.Test.EchoReport"
                               }
                             }
                           },
@@ -1020,35 +1020,6 @@
                                 }
                               ],
                               "path": "/echostream"
-                            },
-                            "route": {
-                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
-                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
-                              "timeout": "0s"
-                            },
-                            "typedPerFilterConfig": {
-                              "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
-                              },
-                              "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                "operationName": "test.grpc.Test.EchoStream"
-                              }
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress EchoStream"
-                            },
-                            "match": {
-                              "headers": [
-                                {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
-                                }
-                              ],
-                              "path": "/test.grpc.Test/EchoStream"
                             },
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -1097,7 +1068,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress EchoReport"
+                              "operation": "ingress Echo"
                             },
                             "match": {
                               "headers": [
@@ -1106,7 +1077,7 @@
                                   "name": ":method"
                                 }
                               ],
-                              "path": "/echoreport"
+                              "path": "/test.grpc.Test/Echo"
                             },
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -1120,7 +1091,7 @@
                               },
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                "operationName": "test.grpc.Test.EchoReport"
+                                "operationName": "test.grpc.Test.Echo"
                               }
                             }
                           },
@@ -1150,6 +1121,35 @@
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.EchoReport"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress EchoStream"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/test.grpc.Test/EchoStream"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "timeout": "0s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoStream"
                               }
                             }
                           }

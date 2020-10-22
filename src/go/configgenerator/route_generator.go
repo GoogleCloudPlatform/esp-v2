@@ -207,8 +207,19 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 
 func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
-	for _, operation := range serviceInfo.Operations {
+	httpPatternMethods, err := getSortMethodsByHttpPattern(serviceInfo)
+	if err != nil {
+		return nil, fmt.Errorf("fail to sort route match, %v", err)
+	}
+
+	for _, httpPatternMethod := range *httpPatternMethods {
+		operation := httpPatternMethod.Operation
 		method := serviceInfo.Methods[operation]
+		httpRule := &commonpb.Pattern{
+			UriTemplate: httpPatternMethod.UriTemplate,
+			HttpMethod:  httpPatternMethod.HttpMethod,
+		}
+
 		var routeMatcher *routepb.RouteMatch
 
 		// Response timeouts are not compatible with streaming methods (documented in Envoy).
@@ -221,51 +232,49 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 			respTimeout = method.BackendInfo.Deadline
 		}
 
-		for _, httpRule := range method.HttpRule {
-			var err error
-			if routeMatcher, err = makeHttpRouteMatcher(httpRule); err != nil {
-				return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
-			}
-
-			r := routepb.Route{
-				Match: routeMatcher,
-				Action: &routepb.Route_Route{
-					Route: &routepb.RouteAction{
-						ClusterSpecifier: &routepb.RouteAction_Cluster{
-							Cluster: method.BackendInfo.ClusterName,
-						},
-						Timeout: ptypes.DurationProto(respTimeout),
-					},
-				},
-				Decorator: &routepb.Decorator{
-					// Note we don't add ApiName to reduce the length of the span name.
-					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
-				},
-				TypedPerFilterConfig: makePerRouteFilterConfig(operation, method, httpRule),
-			}
-
-			if method.BackendInfo.Hostname != "" {
-				// For routing to remote backends.
-				r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
-					HostRewriteLiteral: method.BackendInfo.Hostname,
-				}
-			}
-
-			if serviceInfo.Options.EnableHSTS {
-				r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
-					{
-						Header: &corepb.HeaderValue{
-							Key:   util.HSTSHeaderKey,
-							Value: util.HSTSHeaderValue,
-						},
-					},
-				}
-			}
-			backendRoutes = append(backendRoutes, &r)
-
-			jsonStr, _ := util.ProtoToJson(&r)
-			glog.Infof("adding route: %v", jsonStr)
+		var err error
+		if routeMatcher, err = makeHttpRouteMatcher(httpRule); err != nil {
+			return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
 		}
+
+		r := routepb.Route{
+			Match: routeMatcher,
+			Action: &routepb.Route_Route{
+				Route: &routepb.RouteAction{
+					ClusterSpecifier: &routepb.RouteAction_Cluster{
+						Cluster: method.BackendInfo.ClusterName,
+					},
+					Timeout: ptypes.DurationProto(respTimeout),
+				},
+			},
+			Decorator: &routepb.Decorator{
+				// Note we don't add ApiName to reduce the length of the span name.
+				Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
+			},
+			TypedPerFilterConfig: makePerRouteFilterConfig(operation, method, httpRule),
+		}
+
+		if method.BackendInfo.Hostname != "" {
+			// For routing to remote backends.
+			r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
+				HostRewriteLiteral: method.BackendInfo.Hostname,
+			}
+		}
+
+		if serviceInfo.Options.EnableHSTS {
+			r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
+				{
+					Header: &corepb.HeaderValue{
+						Key:   util.HSTSHeaderKey,
+						Value: util.HSTSHeaderValue,
+					},
+				},
+			}
+		}
+		backendRoutes = append(backendRoutes, &r)
+
+		jsonStr, _ := util.ProtoToJson(&r)
+		glog.Infof("adding route: %v", jsonStr)
 	}
 	return backendRoutes, nil
 }
@@ -312,4 +321,24 @@ func makeHttpRouteMatcher(httpRule *commonpb.Pattern) (*routepb.RouteMatch, erro
 		}
 	}
 	return &routeMatcher, nil
+}
+
+func getSortMethodsByHttpPattern(serviceInfo *configinfo.ServiceInfo) (*httppattern.MethodSlice, error) {
+	httpPatternMethods := &httppattern.MethodSlice{}
+	for _, operation := range serviceInfo.Operations {
+		method := serviceInfo.Methods[operation]
+		for _, httpRule := range method.HttpRule {
+			httpPatternMethods.AppendMethod(&httppattern.Method{
+				HttpMethod:  httpRule.HttpMethod,
+				UriTemplate: httpRule.UriTemplate,
+				Operation:   operation,
+			})
+		}
+	}
+
+	if err := httppattern.Sort(httpPatternMethods); err != nil {
+		return nil, err
+	}
+
+	return httpPatternMethods, nil
 }

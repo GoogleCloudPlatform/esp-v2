@@ -40,7 +40,7 @@ func TestSortErrorHttpPattern(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			methods := &MethodSlice{}
 			httpMethod, uriTemplate := parsePattern(tc)
-			methods.appendMethod(&Method{
+			methods.AppendMethod(&Method{
 				UriTemplate: uriTemplate,
 				HttpMethod:  httpMethod,
 			})
@@ -64,7 +64,7 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 				"GET /foo/bar",
 				"GET /foo/bar",
 			},
-			wantError: "duplicate http pattern `GET /foo/bar`",
+			wantError: "operation has duplicate http pattern `GET /foo/bar`",
 		},
 		{
 			desc: "duplicate in variable segments",
@@ -72,7 +72,7 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 				"GET /a/{id}",
 				"GET /a/{name}",
 			},
-			wantError: "duplicate http pattern `GET /a/{name}`",
+			wantError: "operation has duplicate http pattern `GET /a/{name}`",
 		},
 	}
 	for _, tc := range testCases {
@@ -81,9 +81,10 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 			methods := &MethodSlice{}
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
-				methods.appendMethod(&Method{
+				methods.AppendMethod(&Method{
 					UriTemplate: uriTemplate,
 					HttpMethod:  httpMethod,
+					Operation:   "operation",
 				})
 			}
 
@@ -263,7 +264,7 @@ func TestSort(t *testing.T) {
 			methods := &MethodSlice{}
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
-				methods.appendMethod(&Method{
+				methods.AppendMethod(&Method{
 					UriTemplate: uriTemplate,
 					HttpMethod:  httpMethod,
 				})

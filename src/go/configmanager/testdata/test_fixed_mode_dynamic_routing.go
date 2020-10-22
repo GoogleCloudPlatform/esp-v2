@@ -297,7 +297,7 @@ var (
                               "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
                            },
-                           "jwtAudienceList": [
+                           "jwtAudienceList":[
                               "1083071298623-e...t.apps.googleusercontent.com",
                               "https://us-central1-cloud-esf.cloudfunctions.net/hello",
                               "https://us-west2-cloud-esf.cloudfunctions.net/search"
@@ -364,6 +364,39 @@ var (
                               },
                               {
                                  "decorator":{
+                                    "operation":"ingress dynamic_routing_Hello"
+                                 },
+                                 "match":{
+                                    "headers":[
+                                       {
+                                          "exactMatch":"GET",
+                                          "name":":method"
+                                       }
+                                    ],
+                                    "path":"/hello"
+                                 },
+                                 "route":{
+                                    "cluster":"backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
+                                    "hostRewriteLiteral":"us-central1-cloud-esf.cloudfunctions.net",
+                                    "timeout":"15s"
+                                 },
+                                 "typedPerFilterConfig":{
+                                    "com.google.espv2.filters.http.backend_auth":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                       "jwtAudience":"https://us-central1-cloud-esf.cloudfunctions.net/hello"
+                                    },
+                                    "com.google.espv2.filters.http.path_rewrite":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                       "pathPrefix":"/hello"
+                                    },
+                                    "com.google.espv2.filters.http.service_control":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
+                                    }
+                                 }
+                              },
+                              {
+                                 "decorator":{
                                     "operation":"ingress dynamic_routing_AddPet"
                                  },
                                  "match":{
@@ -381,13 +414,13 @@ var (
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
-                                    "com.google.espv2.filters.http.backend_auth": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-                                       "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
+                                    "com.google.espv2.filters.http.backend_auth":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                       "jwtAudience":"1083071298623-e...t.apps.googleusercontent.com"
                                     },
-                                    "com.google.espv2.filters.http.path_rewrite": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
-                                       "pathPrefix": "/api"
+                                    "com.google.espv2.filters.http.path_rewrite":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                       "pathPrefix":"/api"
                                     },
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
@@ -407,7 +440,9 @@ var (
                                        }
                                     ],
                                     "safeRegex":{
-                                       "googleRe2":{},
+                                       "googleRe2":{
+                                          
+                                       },
                                        "regex":"^/pet/[^\\/]+$"
                                     }
                                  },
@@ -417,50 +452,17 @@ var (
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
-                                    "com.google.espv2.filters.http.backend_auth": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-                                       "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
+                                    "com.google.espv2.filters.http.backend_auth":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                       "jwtAudience":"1083071298623-e...t.apps.googleusercontent.com"
                                     },
-                                    "com.google.espv2.filters.http.path_rewrite": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
-                                       "pathPrefix": "/api"
+                                    "com.google.espv2.filters.http.path_rewrite":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                       "pathPrefix":"/api"
                                     },
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
-                                    }
-                                 }
-                              },
-                              {
-                                 "decorator":{
-                                    "operation":"ingress dynamic_routing_Hello"
-                                 },
-                                 "match":{
-                                    "headers":[
-                                       {
-                                          "exactMatch":"GET",
-                                          "name":":method"
-                                       }
-                                    ],
-                                    "path":"/hello"
-                                 },
-                                 "route":{
-                                    "cluster":"backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
-                                    "hostRewriteLiteral":"us-central1-cloud-esf.cloudfunctions.net",
-                                    "timeout":"15s"
-                                 },
-                                 "typedPerFilterConfig":{
-                                    "com.google.espv2.filters.http.backend_auth": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-                                       "jwtAudience": "https://us-central1-cloud-esf.cloudfunctions.net/hello"
-                                    },
-                                    "com.google.espv2.filters.http.path_rewrite": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
-                                       "pathPrefix": "/hello"
-                                    },
-                                    "com.google.espv2.filters.http.service_control":{
-                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                       "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
                                     }
                                  }
                               },
@@ -483,13 +485,13 @@ var (
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
-                                    "com.google.espv2.filters.http.backend_auth": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-                                       "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
+                                    "com.google.espv2.filters.http.backend_auth":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                       "jwtAudience":"1083071298623-e...t.apps.googleusercontent.com"
                                     },
-                                    "com.google.espv2.filters.http.path_rewrite": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
-                                       "pathPrefix": "/api"
+                                    "com.google.espv2.filters.http.path_rewrite":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                       "pathPrefix":"/api"
                                     },
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
@@ -516,14 +518,14 @@ var (
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
-                                    "com.google.espv2.filters.http.backend_auth": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-                                       "jwtAudience": "https://us-west2-cloud-esf.cloudfunctions.net/search"
+                                    "com.google.espv2.filters.http.backend_auth":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                       "jwtAudience":"https://us-west2-cloud-esf.cloudfunctions.net/search"
                                     },
-                                    "com.google.espv2.filters.http.path_rewrite": {
-                                       "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
-                                       "constantPath": {
-                                          "path": "/search"
+                                    "com.google.espv2.filters.http.path_rewrite":{
+                                       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                       "constantPath":{
+                                          "path":"/search"
                                        }
                                     },
                                     "com.google.espv2.filters.http.service_control":{

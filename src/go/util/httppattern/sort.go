@@ -14,6 +14,8 @@
 
 package httppattern
 
+import "fmt"
+
 type Method struct {
 	UriTemplate string
 	HttpMethod  string
@@ -32,7 +34,7 @@ func Sort(methods *MethodSlice) error {
 	s := newHttpPatternTrie()
 	for _, m := range *methods {
 		if err := s.insert(m); err != nil {
-			return err
+			return fmt.Errorf("%s has %s", m.Operation, err)
 		}
 	}
 
@@ -40,4 +42,10 @@ func Sort(methods *MethodSlice) error {
 	s.RootPtr.traverse(methods)
 
 	return nil
+}
+
+func (sr *MethodSlice) AppendMethod(m *Method) {
+	if m != nil {
+		*sr = append(*sr, m)
+	}
 }
