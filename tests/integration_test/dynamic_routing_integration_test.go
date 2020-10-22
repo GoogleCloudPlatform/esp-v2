@@ -250,26 +250,28 @@ func TestDynamicRouting(t *testing.T) {
 			method:        "GET",
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
 		},
+		// The following three test cases cover when requests can be matched by multiple
+		// http patterns, the most specific will be matched.
 		{
-			desc:          "Operation ordering - The first operation is matched, resulting in an invalid host rewrite.",
-			path:          "/allow-all/abc",
-			method:        "POST",
-			message:       "hello",
-			httpCallError: fmt.Errorf("http response status is not 200 OK: 503 Service Unavailable"),
-		},
-		{
-			desc:     "Operation ordering - The second operation is matched due to the catch-all rule, resulting in a correct message.",
-			path:     "/allow-all/some/random/route",
+			desc:     "Route match ordering - Match http pattern `POST /allow-all/abc`",
+			path:     "/allow-all/abc",
 			method:   "POST",
 			message:  "hello",
-			wantResp: `{"message": "hello"}`,
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard"}`,
 		},
 		{
-			desc:     "Operation ordering - The second operation is matched again; the third operation will never be matched.",
-			path:     "/allow-all/xyz",
+			desc:     "Route match ordering - Match http pattern `POST /allow-all/{single_wildcard=*}`",
+			path:     "/allow-all/should-match-single-wildcard",
 			method:   "POST",
 			message:  "hello",
-			wantResp: `{"message": "hello"}`,
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?single_wildcard=should-match-single-wildcard"}`,
+		},
+		{
+			desc:     "Route match ordering - Match http pattern `POST /allow-all/{double_wildcard=**}`",
+			path:     "/allow-all/should-match/double-wildcard",
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?double_wildcard=should-match/double-wildcard"}`,
 		},
 	}
 	for _, tc := range testData {
