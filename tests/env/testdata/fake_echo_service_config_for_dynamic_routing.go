@@ -281,9 +281,9 @@ var (
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_exact_match",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_double_wildcard_match",
 					Pattern: &annotationspb.HttpRule_Post{
-						Post: "/allow-all/exact-match",
+						Post: "/allow-all/{double_wildcard=**}",
 					},
 				},
 				{
@@ -293,9 +293,9 @@ var (
 					},
 				},
 				{
-					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_double_wildcard_match",
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_exact_match",
 					Pattern: &annotationspb.HttpRule_Post{
-						Post: "/allow-all/{double_wildcard=**}",
+						Post: "/allow-all/exact-match",
 					},
 				},
 			},
