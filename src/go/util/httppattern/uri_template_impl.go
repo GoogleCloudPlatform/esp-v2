@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package httppattern
 
 import (
@@ -23,7 +37,6 @@ type variable struct {
 }
 
 // Uri Template Grammar:
-// Questions:
 //
 // Template = "/" | "/" Segments [ Verb ] ;
 // Segments = Segment { "/" Segment } ;
@@ -90,6 +103,9 @@ func serializeUriTemplate(input *UriTemplate, fieldNameMapping map[string]string
 	return buff.String()
 }
 
+// `generateVariableBindingSyntax` tries to recover the following syntax with
+// replacement of fieldPathName.
+//    Variable = "{" FieldPath [ "=" Segments ] "}" ;
 func generateVariableBindingSyntax(segments []string, v *variable, fieldNameMapping map[string]string) string {
 	pathVar := bytes.Buffer{}
 	for i := v.StartSegment; i < v.EndSegment; i += 1 {
