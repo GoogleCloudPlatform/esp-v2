@@ -727,7 +727,7 @@ func (s *ServiceInfo) processTypes() error {
 		snakeNameToJsonNameForUriTemplates := func(m *MethodInfo, snakeNameToJsonName map[string]string) error {
 			for _, httpRule := range m.HttpRule {
 				if uriTemplate, err := httppattern.ReplaceVariableFieldInUriTemplate(httpRule.UriTemplate, snakeNameToJsonName); err != nil {
-					return fmt.Errorf("fail to replace snake name with json name in uri template, %v", err)
+					return fmt.Errorf("for operation(%s), fail to replace snake name with json name in its uri template of, %v", operation, err)
 				} else {
 					httpRule.UriTemplate = uriTemplate
 				}

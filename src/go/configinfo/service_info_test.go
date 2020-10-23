@@ -1329,7 +1329,7 @@ func TestMethods(t *testing.T) {
 						Methods: []*apipb.Method{
 							{
 								Name:           "Echo",
-								RequestTypeUrl: "endpoints.examples.echo.EchoRequest",
+								RequestTypeUrl: "type.googleapis.com/endpoints.examples.echo.EchoRequest",
 							},
 						},
 					},
@@ -1345,7 +1345,7 @@ func TestMethods(t *testing.T) {
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/echo/{testOne}/echo",
+								Get: "/echo/{test_one}/echo",
 							},
 						},
 					},
@@ -1369,10 +1369,11 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
-							UriTemplate: "/echo/{testOne}/echo",
+							UriTemplate: "/echo/{testOne=*}/echo",
 							HttpMethod:  util.GET,
 						},
 					},
+					RequestTypeName: "endpoints.examples.echo.EchoRequest",
 					BackendInfo: &backendInfo{
 						ClusterName: "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
 						Deadline:    util.DefaultResponseDeadline,
@@ -1384,7 +1385,7 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*commonpb.Pattern{
 						{
-							UriTemplate: "/echo/{testOne}/echo",
+							UriTemplate: "/echo/{testOne=*}/echo",
 							HttpMethod:  util.OPTIONS,
 						},
 					},
@@ -1395,6 +1396,46 @@ func TestMethods(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			desc: "fail for replacing snakeName with jsonName due to invalid url template",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name:           "Echo",
+								RequestTypeUrl: "type.googleapis.com/endpoints.examples.echo.EchoRequest",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "invalid-uri-template",
+							},
+						},
+					},
+				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "endpoints.examples.echo.EchoRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "test_one",
+								JsonName: "testOne",
+							},
+						},
+					},
+				},
+			},
+			BackendAddress: "http://127.0.0.1:80",
+			wantError:      "for operation(1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo), fail to replace snake name with json name in its uri template of, invalid uri template `invalid-uri-template`",
 		},
 		{
 			desc: "Succeed for multiple url Pattern",
