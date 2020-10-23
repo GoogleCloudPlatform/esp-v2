@@ -63,7 +63,7 @@ func (h *httpPatternTrie) insert(method *Method) error {
 	uriTemplate := method.UriTemplate
 	httpMethod := method.HttpMethod
 
-	ht := Parse(uriTemplate)
+	ht := ParseUriTemplate(uriTemplate)
 	if ht == nil {
 		return fmt.Errorf("invalid url template `%s`", uriTemplate)
 	}

@@ -166,7 +166,7 @@ func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *commonpb.Pat
 			Path: method.BackendInfo.Path,
 		}
 		// Parse the url_template to see if containing variables.
-		if u := httppattern.Parse(httpRule.UriTemplate); u != nil && len(u.Variables) > 0 {
+		if u := httppattern.ParseUriTemplate(httpRule.UriTemplate); u != nil && len(u.Variables) > 0 {
 			constPath.UrlTemplate = httpRule.UriTemplate
 		}
 		return &prpb.PerRouteFilterConfig{

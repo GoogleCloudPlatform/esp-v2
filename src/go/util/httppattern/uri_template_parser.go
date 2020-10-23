@@ -16,25 +16,7 @@ package httppattern
 
 import (
 	"bytes"
-	"fmt"
 )
-
-// The info about a variable binding {variable=subpath} in the template.
-type variable struct {
-	// Specifies the range of segments [start_segment, end_segment) the
-	// variable binds to. Both start_segment and end_segment are 0 based.
-	// end_segment can also be negative, which means that the position is
-	// specified relative to the end such that -1 corresponds to the end
-	// of the path.
-	StartSegment int
-	EndSegment   int
-
-	// The path of the protobuf field the variable binds to.
-	FieldPath []string
-
-	// Do we have a ** in the variable template?
-	HasDoubleWildCard bool
-}
 
 // Uri Template Grammar:
 //
@@ -54,81 +36,23 @@ type parser struct {
 	variables  []*variable
 }
 
-// `serializeUriTemplate` serialize the UriTemplate object into the string representation
-// with variable field names replacement.
-// It assumes the input is valid uriTemplate generated from `Parse()` and it
-// won't do any validation.
-func serializeUriTemplate(input *UriTemplate, fieldNameMapping map[string]string) string {
-	if len(input.Segments) == 0 {
-		return "/"
+func ParseUriTemplate(input string) *UriTemplate {
+	if input == "/" {
+		return &UriTemplate{}
 	}
 
-	startSegmentToVariable := make(map[int]*variable)
-	for _, v := range input.Variables {
-		startSegmentToVariable[v.StartSegment] = v
-
-		// The opposite processing for EndSegment against `postProcessVariables()`
-		// Recover EndSegment from negative index for positive index for doubleWildCard
-		if v.HasDoubleWildCard {
-			if input.Verb != "" {
-				v.EndSegment += 1
-			}
-			v.EndSegment = v.EndSegment + len(input.Segments) + 1
-		}
+	p := parser{
+		input: input,
+	}
+	if !p.parse() || !p.validateParts() {
+		return nil
 	}
 
-	buff := bytes.Buffer{}
-	nextIdx := 0
-	for idx, seg := range input.Segments {
-		//  The current segment has been visited included in variable.
-		if idx < nextIdx {
-			continue
-		}
-		nextIdx = idx + 1
-
-		// Add variable syntax.
-		if v, ok := startSegmentToVariable[idx]; ok {
-			buff.WriteString(generateVariableBindingSyntax(input.Segments, v, fieldNameMapping))
-			nextIdx = v.EndSegment
-			continue
-		}
-
-		// Add path field.
-		buff.WriteString(fmt.Sprintf("/%s", seg))
+	return &UriTemplate{
+		Segments:  p.segments,
+		Verb:      p.verb,
+		Variables: p.variables,
 	}
-
-	if input.Verb != "" {
-		buff.WriteString(fmt.Sprintf(":%s", input.Verb))
-	}
-
-	return buff.String()
-}
-
-// `generateVariableBindingSyntax` tries to recover the following syntax with
-// replacement of fieldPathName.
-//    Variable = "{" FieldPath [ "=" Segments ] "}" ;
-func generateVariableBindingSyntax(segments []string, v *variable, fieldNameMapping map[string]string) string {
-	pathVar := bytes.Buffer{}
-	for i := v.StartSegment; i < v.EndSegment; i += 1 {
-		pathVar.WriteString(segments[i])
-		if i != v.EndSegment-1 {
-			pathVar.WriteString("/")
-		}
-	}
-
-	varName := bytes.Buffer{}
-	for idx, field := range v.FieldPath {
-		fieldUsed := field
-		if fieldNameMapping != nil && fieldNameMapping[field] != "" {
-			fieldUsed = fieldNameMapping[field]
-		}
-		varName.WriteString(fieldUsed)
-		if idx != len(v.FieldPath)-1 {
-			varName.WriteByte('.')
-		}
-	}
-
-	return fmt.Sprintf("/{%s=%s}", varName.String(), pathVar.String())
 }
 
 func (p *parser) parse() bool {
