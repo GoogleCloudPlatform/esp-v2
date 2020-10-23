@@ -54,7 +54,8 @@ type parser struct {
 	variables  []*variable
 }
 
-// `serializeUriTemplate` serialize the UriTemplate object into the string representation.
+// `serializeUriTemplate` serialize the UriTemplate object into the string representation
+// with variable field names replacement.
 // It assumes the input is valid uriTemplate generated from `Parse()` and it
 // won't do any validation.
 func serializeUriTemplate(input *UriTemplate, fieldNameMapping map[string]string) string {
