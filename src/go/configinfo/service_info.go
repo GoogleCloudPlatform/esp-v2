@@ -240,8 +240,8 @@ func (s *ServiceInfo) addGrpcHttpRules() {
 		for _, method := range api.GetMethods() {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
 			mi, _ := s.getOrCreateMethod(selector)
-			mi.HttpRule = append(mi.HttpRule, &commonpb.Pattern{
-				UriTemplate: fmt.Sprintf("/%s/%s", api.GetName(), method.GetName()),
+			mi.HttpRule = append(mi.HttpRule, &httppattern.Pattern{
+				UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())),
 				HttpMethod:  util.POST,
 			})
 		}
@@ -297,68 +297,68 @@ func (s *ServiceInfo) processEndpoints() {
 	}
 }
 
-func addHttpRule(method *MethodInfo, r *annotationspb.HttpRule, httpMatcherWithOptionsSet map[string]bool) error {
-
-	var httpRule *commonpb.Pattern
+func addHttpRule(method *MethodInfo, r *annotationspb.HttpRule, addedRouteMatchWithOptionsSet map[string]bool) error {
+	var path string
+	var uriTemplate *httppattern.UriTemplate
+	var httpMethod string
 	switch r.GetPattern().(type) {
 	case *annotationspb.HttpRule_Get:
-		httpRule = &commonpb.Pattern{
-			UriTemplate: r.GetGet(),
-			HttpMethod:  util.GET,
-		}
+		path = r.GetGet()
+		uriTemplate = httppattern.ParseUriTemplate(path)
+		httpMethod = util.GET
 	case *annotationspb.HttpRule_Put:
-		httpRule = &commonpb.Pattern{
-			UriTemplate: r.GetPut(),
-			HttpMethod:  util.PUT,
-		}
+		path = r.GetPut()
+		uriTemplate = httppattern.ParseUriTemplate(path)
+		httpMethod = util.PUT
 	case *annotationspb.HttpRule_Post:
-		httpRule = &commonpb.Pattern{
-			UriTemplate: r.GetPost(),
-			HttpMethod:  util.POST,
-		}
+		path = r.GetPost()
+		uriTemplate = httppattern.ParseUriTemplate(path)
+		httpMethod = util.POST
 	case *annotationspb.HttpRule_Delete:
-		httpRule = &commonpb.Pattern{
-			UriTemplate: r.GetDelete(),
-			HttpMethod:  util.DELETE,
-		}
+		path = r.GetDelete()
+		uriTemplate = httppattern.ParseUriTemplate(path)
+		httpMethod = util.DELETE
 	case *annotationspb.HttpRule_Patch:
-		httpRule = &commonpb.Pattern{
-			UriTemplate: r.GetPatch(),
-			HttpMethod:  util.PATCH,
-		}
+		path = r.GetPatch()
+		uriTemplate = httppattern.ParseUriTemplate(path)
+		httpMethod = util.PATCH
 	case *annotationspb.HttpRule_Custom:
-		httpMethod := r.GetCustom().GetKind()
-		httpRule = &commonpb.Pattern{
-			UriTemplate: r.GetCustom().GetPath(),
-			HttpMethod:  httpMethod,
-		}
+		path = r.GetCustom().GetPath()
+		uriTemplate = httppattern.ParseUriTemplate(path)
+		httpMethod = r.GetCustom().GetKind()
 
 		if httpMethod == util.OPTIONS {
-			// Ensure we don't generate duplicate methods later for AllowCors.
-			matcher := httppattern.WildcardMatcherForPath(r.GetCustom().GetPath())
-			if matcher == "" {
-				matcher = r.GetCustom().GetPath()
-			}
-			httpMatcherWithOptionsSet[matcher] = true
+			routeMatch := uriTemplate.Regex()
+			addedRouteMatchWithOptionsSet[routeMatch] = true
 		}
 	default:
-		return fmt.Errorf("unsupported http method %T", r.GetPattern())
+		return fmt.Errorf("operation(%s): unsupported http method %T", method.Operation(), r.GetPattern())
 	}
-	method.HttpRule = append(method.HttpRule, httpRule)
 
+	if uriTemplate == nil {
+		return fmt.Errorf("operation(%s): invalid uri template %s", method.Operation(), path)
+	}
+
+	httpRule := &httppattern.Pattern{
+		HttpMethod:  httpMethod,
+		UriTemplate: uriTemplate,
+	}
+
+	method.HttpRule = append(method.HttpRule, httpRule)
 	return nil
 }
 
 func (s *ServiceInfo) processHttpRule() error {
-	// An temporary map to record generated OPTION methods, to avoid duplication.
-	httpMatcherWithOptionsSet := make(map[string]bool)
+	// An temporary map to record added route match with Options set,
+	// to avoid duplication.
+	addedRouteMatchWithOptionsSet := make(map[string]bool)
 
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
 		method, err := s.getOrCreateMethod(rule.GetSelector())
 		if err != nil {
 			return err
 		}
-		if err := addHttpRule(method, rule, httpMatcherWithOptionsSet); err != nil {
+		if err := addHttpRule(method, rule, addedRouteMatchWithOptionsSet); err != nil {
 			return err
 		}
 
@@ -367,7 +367,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		// when interpret the httprules from the descriptor. Therefore, no need to
 		// check for nested additional_bindings.
 		for _, additionalRule := range rule.AdditionalBindings {
-			if err := addHttpRule(method, additionalRule, httpMatcherWithOptionsSet); err != nil {
+			if err := addHttpRule(method, additionalRule, addedRouteMatchWithOptionsSet); err != nil {
 				return err
 			}
 		}
@@ -380,18 +380,21 @@ func (s *ServiceInfo) processHttpRule() error {
 			method := s.Methods[r.GetSelector()]
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != util.OPTIONS {
-					matcher := httppattern.WildcardMatcherForPath(httpRule.UriTemplate)
-					if matcher == "" {
-						matcher = httpRule.UriTemplate
+					newHttpRule := &httppattern.Pattern{
+						HttpMethod:  util.OPTIONS,
+						UriTemplate: httpRule.UriTemplate,
 					}
-					if _, exist := httpMatcherWithOptionsSet[matcher]; !exist {
-						if err := s.addOptionMethod(method, httpRule.UriTemplate); err != nil {
+					routeMatch := httpRule.UriTemplate.Regex()
+
+					if _, exist := addedRouteMatchWithOptionsSet[routeMatch]; !exist {
+						if err := s.addOptionMethod(method, newHttpRule); err != nil {
 							return err
 						}
-						httpMatcherWithOptionsSet[matcher] = true
-					}
 
+						addedRouteMatchWithOptionsSet[routeMatch] = true
+					}
 				}
+
 			}
 		}
 	}
@@ -408,8 +411,8 @@ func (s *ServiceInfo) processHttpRule() error {
 			s.Options.Healthz = fmt.Sprintf("/%s", s.Options.Healthz)
 		}
 
-		hcMethod.HttpRule = append(hcMethod.HttpRule, &commonpb.Pattern{
-			UriTemplate: s.Options.Healthz,
+		hcMethod.HttpRule = append(hcMethod.HttpRule, &httppattern.Pattern{
+			UriTemplate: httppattern.ParseUriTemplate(s.Options.Healthz),
 			HttpMethod:  util.GET,
 		})
 		hcMethod.SkipServiceControl = true
@@ -419,7 +422,7 @@ func (s *ServiceInfo) processHttpRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) addOptionMethod(originalMethod *MethodInfo, path string) error {
+func (s *ServiceInfo) addOptionMethod(originalMethod *MethodInfo, httpRule *httppattern.Pattern) error {
 	genOperation := fmt.Sprintf("%s.%s_CORS_%s", originalMethod.ApiName, util.AutogeneratedOperationPrefix, originalMethod.ShortName)
 
 	method, err := s.getOrCreateMethod(genOperation)
@@ -430,10 +433,7 @@ func (s *ServiceInfo) addOptionMethod(originalMethod *MethodInfo, path string) e
 	method.ApiVersion = originalMethod.ApiVersion
 	method.BackendInfo = originalMethod.BackendInfo
 	method.IsGenerated = true
-	method.HttpRule = append(method.HttpRule, &commonpb.Pattern{
-		UriTemplate: path,
-		HttpMethod:  util.OPTIONS,
-	})
+	method.HttpRule = append(method.HttpRule, httpRule)
 
 	originalMethod.GeneratedCorsMethod = method
 
@@ -724,27 +724,22 @@ func (s *ServiceInfo) processTypes() error {
 			}
 		}
 
-		snakeNameToJsonNameForUriTemplates := func(m *MethodInfo, snakeNameToJsonName map[string]string) error {
+		snakeNameToJsonNameForUriTemplates := func(m *MethodInfo, snakeNameToJsonName map[string]string) {
 			for _, httpRule := range m.HttpRule {
-				if uriTemplate, err := httppattern.ReplaceVariableFieldInUriTemplate(httpRule.UriTemplate, snakeNameToJsonName); err != nil {
-					return fmt.Errorf("for operation(%s), fail to replace snake name with json name in its uri template of, %v", operation, err)
-				} else {
-					httpRule.UriTemplate = uriTemplate
+				// Invalid uri templates are handled by `processHttpRules` so should be
+				// no empty UriTemplate here.
+				if httpRule.UriTemplate != nil {
+					httpRule.UriTemplate.ReplaceVariableField(snakeNameToJsonName)
 				}
 			}
-			return nil
 		}
 
 		// Replace the snake name with the json name in url template
 		if len(snakeToJson) > 0 {
-			if err := snakeNameToJsonNameForUriTemplates(mi, snakeToJson); err != nil {
-				return err
-			}
+			snakeNameToJsonNameForUriTemplates(mi, snakeToJson)
 
 			if mi.GeneratedCorsMethod != nil {
-				if err := snakeNameToJsonNameForUriTemplates(mi.GeneratedCorsMethod, snakeToJson); err != nil {
-					return err
-				}
+				snakeNameToJsonNameForUriTemplates(mi.GeneratedCorsMethod, snakeToJson)
 			}
 		}
 	}

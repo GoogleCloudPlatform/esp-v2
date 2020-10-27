@@ -25,33 +25,6 @@ func parsePattern(pattern string) (string, string) {
 	return s[0], s[1]
 }
 
-func TestSortErrorHttpPattern(t *testing.T) {
-	testCases := []string{
-		"GET /a{x=b/**}/bb/{y=*}",
-		"GET /a{x=b/**}/{y=**}",
-		"GET /a{x=b/**}/bb/{y=**}",
-		"GET /a/**/*",
-		"GET /a/**/foo/*",
-		"GET /a/**/**",
-		"GET /a/**/foo/**",
-		"GET /**/**",
-	}
-	for _, tc := range testCases {
-		t.Run(tc, func(t *testing.T) {
-			methods := &MethodSlice{}
-			httpMethod, uriTemplate := parsePattern(tc)
-			methods.AppendMethod(&Method{
-				UriTemplate: uriTemplate,
-				HttpMethod:  httpMethod,
-			})
-
-			if err := Sort(methods); err == nil || strings.Index(err.Error(), "invalid url template") == -1 {
-				t.Errorf("expect failing to insert the template: %s but it succeed", tc)
-			}
-		})
-	}
-}
-
 func TestSortDuplicateHttpPattern(t *testing.T) {
 	testCases := []struct {
 		desc         string
@@ -69,10 +42,10 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 		{
 			desc: "duplicate in variable segments",
 			httpPatterns: []string{
-				"GET /a/{id}",
-				"GET /a/{name}",
+				"GET /a/{id=*}",
+				"GET /a/{name=*}",
 			},
-			wantError: "operation has duplicate http pattern `GET /a/{name}`",
+			wantError: "operation has duplicate http pattern `GET /a/{name=*}`",
 		},
 	}
 	for _, tc := range testCases {
@@ -82,9 +55,11 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
 				methods.AppendMethod(&Method{
-					UriTemplate: uriTemplate,
-					HttpMethod:  httpMethod,
-					Operation:   "operation",
+					Pattern: &Pattern{
+						HttpMethod:  httpMethod,
+						UriTemplate: ParseUriTemplate(uriTemplate),
+					},
+					Operation: "operation",
 				})
 			}
 
@@ -189,7 +164,7 @@ func TestSort(t *testing.T) {
 				"GET /a/b/{x=*}",
 				"GET /a/{x=b/*}/{y=d/**}",
 				"GET /{x=a/*}/b/{y=*}/c",
-				"GET /a/{x}/c/d/e",
+				"GET /a/{x=*}/c/d/e",
 				"GET /alpha/{x=*}/beta/{y=**}/gamma",
 				"GET /{x=*}/a",
 				"GET /{x=*}/d/e/f/{y=**}",
@@ -265,8 +240,10 @@ func TestSort(t *testing.T) {
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
 				methods.AppendMethod(&Method{
-					UriTemplate: uriTemplate,
-					HttpMethod:  httpMethod,
+					Pattern: &Pattern{
+						HttpMethod:  httpMethod,
+						UriTemplate: ParseUriTemplate(uriTemplate),
+					},
 				})
 			}
 

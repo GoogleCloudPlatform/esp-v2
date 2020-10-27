@@ -406,7 +406,7 @@ var (
                         },
                         {
                             "selector": "endpoints.examples.bookstore.Bookstore.CreateShelf",
-                            "post": "/v1/shelves/{shelf}"
+                            "post": "/v1/shelves/{shelf=*}"
                         }
                     ]
                 },
@@ -464,7 +464,7 @@ var (
                                  "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
                                  "pattern":{
                                     "httpMethod":"POST",
-                                    "uriTemplate":"/v1/shelves/{shelf}"
+                                    "uriTemplate":"/v1/shelves/{shelf=*}"
                                  }
                               },
                               {
@@ -704,11 +704,11 @@ var (
                     "rules": [
                         {
                             "selector": "endpoints.examples.bookstore.Bookstore.GetBook",
-                            "get": "/v1/shelves/{shelf}/books/{book}"
+                            "get": "/v1/shelves/{shelf=*}/books/{book=*}"
                         },
                         {
                             "selector": "endpoints.examples.bookstore.Bookstore.DeleteBook",
-                            "delete": "/v1/shelves/{shelf}/books/{book}"
+                            "delete": "/v1/shelves/{shelf=*}/books/{book=*}"
                         }
                     ]
                 },
@@ -766,7 +766,7 @@ var (
                                  "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
                                  "pattern":{
                                     "httpMethod":"DELETE",
-                                    "uriTemplate":"/v1/shelves/{shelf}/books/{book}"
+                                    "uriTemplate":"/v1/shelves/{shelf=*}/books/{book=*}"
                                  }
                               },
                               {
@@ -780,7 +780,7 @@ var (
                                  "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
                                  "pattern":{
                                     "httpMethod":"GET",
-                                    "uriTemplate":"/v1/shelves/{shelf}/books/{book}"
+                                    "uriTemplate":"/v1/shelves/{shelf=*}/books/{book=*}"
                                  }
                               },
                               {

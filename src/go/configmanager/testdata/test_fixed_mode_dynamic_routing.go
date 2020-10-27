@@ -261,7 +261,7 @@ var (
                                  "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
                                  "pattern":{
                                     "httpMethod":"GET",
-                                    "uriTemplate":"/pet/{pet_id}"
+                                    "uriTemplate":"/pet/{pet_id=*}"
                                  }
                               },
                               {

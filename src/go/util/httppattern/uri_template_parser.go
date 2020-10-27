@@ -52,6 +52,7 @@ func ParseUriTemplate(input string) *UriTemplate {
 		Segments:  p.segments,
 		Verb:      p.verb,
 		Variables: p.variables,
+		Origin:    input,
 	}
 }
 

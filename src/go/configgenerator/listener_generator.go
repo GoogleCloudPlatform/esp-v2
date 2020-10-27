@@ -77,13 +77,10 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 	// Add Path Matcher filter. The following filters rely on the dynamic
 	// metadata populated by Path Matcher filter.
 	// * Jwt Authentication filter
-	// * Service Control filter
-	// * Backend Authentication filter
-	// * Backend Routing filter
-	pathMathcherFilter := makePathMatcherFilter(serviceInfo)
-	if pathMathcherFilter != nil {
-		httpFilters = append(httpFilters, pathMathcherFilter)
-		jsonStr, _ := util.ProtoToJson(pathMathcherFilter)
+	pathMatcherFilter := makePathMatcherFilter(serviceInfo)
+	if pathMatcherFilter != nil {
+		httpFilters = append(httpFilters, pathMatcherFilter)
+		jsonStr, _ := util.ProtoToJson(pathMatcherFilter)
 		glog.Infof("adding Path Matcher Filter config: %v", jsonStr)
 	}
 
@@ -335,10 +332,13 @@ func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 
 		// Adds PathMatcherRule for HTTP method, whose HttpRule is not empty.
 		for _, httpRule := range method.HttpRule {
-			if httpRule.UriTemplate != "" && httpRule.HttpMethod != "" {
+			if httpRule.UriTemplate != nil && httpRule.HttpMethod != "" {
 				newHttpRule := &pmpb.PathMatcherRule{
 					Operation: operation,
-					Pattern:   httpRule,
+					Pattern: &commonpb.Pattern{
+						HttpMethod:  httpRule.HttpMethod,
+						UriTemplate: httpRule.UriTemplate.String(),
+					},
 				}
 				rules = append(rules, newHttpRule)
 			}

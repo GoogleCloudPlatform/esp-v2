@@ -15,7 +15,6 @@
 package httppattern
 
 import (
-	"encoding/json"
 	"testing"
 )
 
@@ -69,15 +68,13 @@ func TestReplaceVariableFieldInUriTemplateRebuild(t *testing.T) {
 	uriTemplateStrEqual := func(get string, want string) bool {
 		getUriTemplate := ParseUriTemplate(get)
 		wantUriTemplate := ParseUriTemplate(want)
-		getUriTemplateBytes, _ := json.Marshal(getUriTemplate)
-		wantUriTemplateBytes, _ := json.Marshal(wantUriTemplate)
-		return string(getUriTemplateBytes) == string(wantUriTemplateBytes)
+		return getUriTemplate.Equal(wantUriTemplate)
 	}
 
 	for _, tc := range testCases {
 		// Some uri templates are equal in syntax through not equal in string comparison.
-		if getUriTemplate, _ := ReplaceVariableFieldInUriTemplate(tc, nil); !uriTemplateStrEqual(getUriTemplate, tc) {
-			t.Errorf("fail to rebuild, wante uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate)
+		if getUriTemplate := ParseUriTemplate(tc).String(); !uriTemplateStrEqual(getUriTemplate, tc) {
+			t.Errorf("fail to rebuild, want uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate)
 		}
 	}
 }
@@ -137,10 +134,80 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			if getUriTemplate, _ := ReplaceVariableFieldInUriTemplate(tc.uriTemplate, tc.varReplace); getUriTemplate != tc.wantUriTemplate {
+			uriTemplate := ParseUriTemplate(tc.uriTemplate)
+			uriTemplate.ReplaceVariableField(tc.varReplace)
+			if getUriTemplate := uriTemplate.String(); getUriTemplate != tc.wantUriTemplate {
 				t.Errorf("fail to replace variable field, wante uriTemplate: %s, get uriTemplate: %s", tc.wantUriTemplate, getUriTemplate)
 			}
 		})
 
+	}
+}
+
+func TestWildcardMatcherForPath(t *testing.T) {
+	testData := []struct {
+		desc        string
+		uri         string
+		wantMatcher string
+		wantError   string
+	}{
+		{
+			desc:        "No path params",
+			uri:         "/shelves",
+			wantMatcher: `^/shelves$`,
+		},
+		{
+			desc:        "Path params with fieldpath-only bindings",
+			uri:         "/shelves/{shelf_id}/books/{book.id}",
+			wantMatcher: `^/shelves/[^\/]+/books/[^\/]+$`,
+		},
+		{
+			desc:        "Path params with fieldpath-only bindings and verb",
+			uri:         "/shelves/{shelf_id}/books/{book.id}:checkout",
+			wantMatcher: `^/shelves/[^\/]+/books/[^\/]+:checkout$`,
+		},
+		{
+			desc:        "Path param with wildcard segments",
+			uri:         "/test/*/test/**",
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
+		},
+		{
+			desc:        "Path param with wildcard segments and verb",
+			uri:         "/test/*/test/**:upload",
+			wantMatcher: `^/test/[^\/]+/test/.*:upload$`,
+		},
+		{
+			desc:        "Path param with wildcard in segment binding",
+			uri:         "/test/{x=*}/test/{y=**}",
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
+		},
+		{
+			desc:        "Path param with mixed wildcards",
+			uri:         "/test/{name=*}/test/**",
+			wantMatcher: `^/test/[^\/]+/test/.*$`,
+		},
+		{
+			desc:        "Path params with full segment binding",
+			uri:         "/v1/{name=books/*}",
+			wantMatcher: `^/v1/books/[^\/]+$`,
+		},
+		{
+			desc:        "Path params with multiple field path segment bindings",
+			uri:         "/v1/{test=a/b/*}/route/{resource_id=shelves/*/books/**}:upload",
+			wantMatcher: `^/v1/a/b/[^\/]+/route/shelves/[^\/]+/books/.*:upload$`,
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			uriTemplate := ParseUriTemplate(tc.uri)
+			if uriTemplate == nil {
+				t.Fatalf("fail to parse uri template %s", tc.uri)
+			}
+
+			if got := uriTemplate.Regex(); tc.wantMatcher != got {
+				t.Errorf("Test (%v): \n got %v \nwant %v", tc.desc, got, tc.wantMatcher)
+			}
+		})
 	}
 }

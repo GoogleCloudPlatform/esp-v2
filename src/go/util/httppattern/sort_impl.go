@@ -59,27 +59,21 @@ func (h *httpPatternTrie) insert(method *Method) error {
 	if method == nil {
 		return fmt.Errorf("empty method")
 	}
+	uriTemplate := method.Pattern.UriTemplate
+	httpMethod := method.Pattern.HttpMethod
 
-	uriTemplate := method.UriTemplate
-	httpMethod := method.HttpMethod
-
-	ht := ParseUriTemplate(uriTemplate)
-	if ht == nil {
-		return fmt.Errorf("invalid url template `%s`", uriTemplate)
-	}
-
-	pathInfo := transferFromUriTemplate(ht)
+	pathInfo := transferFromUriTemplate(uriTemplate)
 	methodData := &methodData{
 		Method:   method,
-		Variable: ht.Variables,
+		Variable: uriTemplate.Variables,
 	}
 
 	if !h.RootPtr.insertPath(pathInfo, httpMethod, methodData, true) {
-		return fmt.Errorf("duplicate http pattern `%s %s`", httpMethod, uriTemplate)
+		return fmt.Errorf("duplicate http pattern `%s %s`", httpMethod, uriTemplate.Origin)
 	}
 
-	if ht.Verb != "" {
-		h.CustomVerbs[ht.Verb] = true
+	if uriTemplate.Verb != "" {
+		h.CustomVerbs[uriTemplate.Verb] = true
 	}
 
 	return nil

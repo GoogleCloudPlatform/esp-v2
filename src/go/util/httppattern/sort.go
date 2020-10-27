@@ -17,9 +17,8 @@ package httppattern
 import "fmt"
 
 type Method struct {
-	UriTemplate string
-	HttpMethod  string
-	Operation   string
+	*Pattern
+	Operation string
 }
 
 type MethodSlice []*Method
