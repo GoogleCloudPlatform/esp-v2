@@ -144,7 +144,7 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 	}
 }
 
-func TestWildcardMatcherForPath(t *testing.T) {
+func TestUriTemplateRegex(t *testing.T) {
 	testData := []struct {
 		desc        string
 		uri         string
