@@ -62,6 +62,9 @@ func (h *httpPatternTrie) insert(method *Method) error {
 	uriTemplate := method.Pattern.UriTemplate
 	httpMethod := method.Pattern.HttpMethod
 
+	if uriTemplate == nil {
+		return fmt.Errorf("find nil uriTemplate under operation %s", method.Operation)
+	}
 	pathInfo := transferFromUriTemplate(uriTemplate)
 	methodData := &methodData{
 		Method:   method,

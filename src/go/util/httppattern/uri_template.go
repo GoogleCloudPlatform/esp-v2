@@ -70,15 +70,6 @@ func (u *UriTemplate) String() string {
 	startSegmentToVariable := make(map[int]*variable)
 	for _, v := range u.Variables {
 		startSegmentToVariable[v.StartSegment] = v
-
-		// The opposite processing for EndSegment against `postProcessVariables()`
-		// Recover EndSegment from negative index for positive index for doubleWildCard
-		if v.EndSegment < 0 && v.HasDoubleWildCard {
-			if u.Verb != "" {
-				v.EndSegment += 1
-			}
-			v.EndSegment = v.EndSegment + len(u.Segments) + 1
-		}
 	}
 
 	buff := bytes.Buffer{}
@@ -92,7 +83,7 @@ func (u *UriTemplate) String() string {
 
 		// Add variable syntax.
 		if v, ok := startSegmentToVariable[idx]; ok {
-			buff.WriteString(generateVariableBindingSyntax(u.Segments, v))
+			buff.WriteString(u.generateVariableBindingSyntax(v))
 			nextIdx = v.EndSegment
 			continue
 		}
@@ -163,11 +154,21 @@ func (u *UriTemplate) Regex() string {
 // `generateVariableBindingSyntax` tries to recover the following syntax with
 // replacement of fieldPathName.
 //    Variable = "{" FieldPath [ "=" Segments ] "}" ;
-func generateVariableBindingSyntax(segments []string, v *variable) string {
+func (u *UriTemplate) generateVariableBindingSyntax(v *variable) string {
+	// The opposite processing for EndSegment against `postProcessVariables()`
+	// Recover EndSegment from negative index for positive index for doubleWildCard
+	endSegment := v.EndSegment
+	if endSegment < 0 && v.HasDoubleWildCard {
+		if u.Verb != "" {
+			endSegment += 1
+		}
+		endSegment = endSegment + len(u.Segments) + 1
+	}
+
 	pathVar := bytes.Buffer{}
-	for i := v.StartSegment; i < v.EndSegment; i += 1 {
-		pathVar.WriteString(segments[i])
-		if i != v.EndSegment-1 {
+	for i := v.StartSegment; i < endSegment; i += 1 {
+		pathVar.WriteString(u.Segments[i])
+		if i != endSegment-1 {
 			pathVar.WriteString("/")
 		}
 	}

@@ -941,7 +941,7 @@ func TestUriTemplateParse(t *testing.T) {
 			UriTemplate: "/",
 			wantUriTemplate: `
 {
-   "Origin":"",
+   "Origin":"/",
    "Segments":null,
    "Variables":null,
    "Verb":""
