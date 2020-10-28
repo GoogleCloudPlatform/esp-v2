@@ -28,9 +28,9 @@ message PerRouteFilterConfig {
   // It has to be in the `jwt_audience_list`.
   string jwt_audience = 1 [(validate.rules).string = {
     min_bytes: 1,
-    // Does not contain query params ('?'), fragments ('#'), or invalid
+    // Does not contain query params ('?', '&'), fragments ('#'), or invalid
     // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
-    pattern: '^[^?#\\r\\n\\0]+$',
+    pattern: '^[^?&#\\r\\n\\0]+$',
   }];
 }
 
