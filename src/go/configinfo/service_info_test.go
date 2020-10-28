@@ -2495,6 +2495,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 		fakeServiceConfig *confpb.Service
 		wantMethods       map[string]*MethodInfo
 		wantApiNames      []string
+		wantError         string
 	}{
 		{
 			desc: "Process API with unary and streaming gRPC methods",
@@ -2556,6 +2557,22 @@ func TestProcessApisForGrpc(t *testing.T) {
 				"api-streaming-test",
 			},
 		},
+		{
+			desc: "fail add httpRule for Invalid grpc config",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "api-streaming-test",
+						Methods: []*apipb.Method{
+							{
+								Name: "***",
+							},
+						},
+					},
+				},
+			},
+			wantError: "adding httpRules for grpc method api-streaming-test.***: invalid uri template /api-streaming-test/**",
+		},
 	}
 
 	for i, tc := range testData {
@@ -2566,7 +2583,13 @@ func TestProcessApisForGrpc(t *testing.T) {
 			Methods:             make(map[string]*MethodInfo),
 		}
 		serviceInfo.processApis()
-		serviceInfo.addGrpcHttpRules()
+		if err := serviceInfo.addGrpcHttpRules(); err != nil {
+			if err.Error() == tc.wantError {
+				continue
+			} else {
+				t.Fatalf("For processGrpcHttpRules error, expect: %s, get: %s", tc.wantError, err.Error())
+			}
+		}
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
