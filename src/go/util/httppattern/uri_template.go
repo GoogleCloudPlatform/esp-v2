@@ -73,7 +73,7 @@ func (u *UriTemplate) String() string {
 
 		// The opposite processing for EndSegment against `postProcessVariables()`
 		// Recover EndSegment from negative index for positive index for doubleWildCard
-		if v.HasDoubleWildCard {
+		if v.EndSegment < 0 && v.HasDoubleWildCard {
 			if u.Verb != "" {
 				v.EndSegment += 1
 			}

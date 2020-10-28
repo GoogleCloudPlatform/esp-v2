@@ -382,7 +382,7 @@ func (s *ServiceInfo) processHttpRule() error {
 				if httpRule.HttpMethod != util.OPTIONS {
 					newHttpRule := &httppattern.Pattern{
 						HttpMethod:  util.OPTIONS,
-						UriTemplate: httpRule.UriTemplate,
+						UriTemplate: httppattern.ParseUriTemplate(httpRule.UriTemplate.Origin),
 					}
 					routeMatch := httpRule.UriTemplate.Regex()
 
