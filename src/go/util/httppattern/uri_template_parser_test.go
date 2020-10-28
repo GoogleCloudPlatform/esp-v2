@@ -33,891 +33,976 @@ func TestUriTemplateParse(t *testing.T) {
 			UriTemplate: "/shelves/{shelf}/books/{book}",
 			wantUriTemplate: `
 {
- "Segments": [
-   "shelves",
-   "*",
-   "books",
-   "*"
- ],
- "Verb": "",
- "Variables": [
-   {
-     "StartSegment": 1,
-     "EndSegment": 2,
-     "FieldPath": [
-       "shelf"
-     ],
-     "HasDoubleWildCard": false
-   },
-   {
-     "StartSegment": 3,
-     "EndSegment": 4,
-     "FieldPath": [
-       "book"
-     ],
-     "HasDoubleWildCard": false
-   }
- ]
+   "Origin":"/shelves/{shelf}/books/{book}",
+   "Segments":[
+      "shelves",
+      "*",
+      "books",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":2,
+         "FieldPath":[
+            "shelf"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      },
+      {
+         "EndSegment":4,
+         "FieldPath":[
+            "book"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":3
+      }
+   ],
+   "Verb":""
 }
-`},
+`,
+		},
 		{
 			desc:        "ParseTest2",
 			UriTemplate: "/shelves/**",
 			wantUriTemplate: `
 {
- "Segments": [
-   "shelves",
-   "**"
- ],
- "Variables": null,
- "Verb": ""
+   "Origin":"/shelves/**",
+   "Segments":[
+      "shelves",
+      "**"
+   ],
+   "Variables":null,
+   "Verb":""
 }
-`},
+`,
+		},
 		{
 			desc:        "ParseTest3a",
 			UriTemplate: "/**",
 			wantUriTemplate: `
 {
- "Segments": [
-   "**"
- ],
- "Variables": null,
- "Verb": ""
+   "Origin":"/**",
+   "Segments":[
+      "**"
+   ],
+   "Variables":null,
+   "Verb":""
 }
-`},
+`,
+		},
 		{
 			desc:        "ParseTest3b",
 			UriTemplate: "/*",
 			wantUriTemplate: `
 {
- "Segments": [
-   "*"
- ],
- "Variables": null,
- "Verb": ""
+   "Origin":"/*",
+   "Segments":[
+      "*"
+   ],
+   "Variables":null,
+   "Verb":""
 }
-`},
+`,
+		},
 		{
 			desc:        "ParseTest4a",
 			UriTemplate: "/a:foo",
 			wantUriTemplate: `
 {
- "Segments": [
-   "a"
- ],
- "Variables": null,
- "Verb": "foo"
+   "Origin":"/a:foo",
+   "Segments":[
+      "a"
+   ],
+   "Variables":null,
+   "Verb":"foo"
 }
-`},
+`,
+		},
 		{
 			desc:        "ParseTest4b",
 			UriTemplate: "/a/b/c:foo",
 			wantUriTemplate: `
 {
- "Segments": [
-   "a",
-   "b",
-   "c"
- ],
- "Variables": null,
- "Verb": "foo"
-}
-`},
+   "Origin":"/a/b/c:foo",
+   "Segments":[
+      "a",
+      "b",
+      "c"
+   ],
+   "Variables":null,
+   "Verb":"foo"
+} 
+`,
+		},
 		{
 			desc:        "ParseTest5",
 			UriTemplate: "/*/**",
 			wantUriTemplate: `
 {
- "Segments": [
-   "*",
-   "**"
- ],
- "Variables": null,
- "Verb": ""
+   "Origin":"/*/**",
+   "Segments":[
+      "*",
+      "**"
+   ],
+   "Variables":null,
+   "Verb":""
 }
-
-`},
+`,
+		},
 		{
 			desc:        "ParseTest6",
 			UriTemplate: "/*/a/**",
 			wantUriTemplate: `
 {
- "Segments": [
-   "*",
-   "a",
-   "**"
- ],
- "Variables": null,
- "Verb": ""
+   "Origin":"/*/a/**",
+   "Segments":[
+      "*",
+      "a",
+      "**"
+   ],
+   "Variables":null,
+   "Verb":""
 }
-`},
+`,
+		},
 		{
 			desc:        "ParseTest7",
 			UriTemplate: "/a/{a.b.c}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 2,
-      "FieldPath": [
-        "a",
-        "b",
-        "c"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{a.b.c}",
+   "Segments":[
+      "a",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":2,
+         "FieldPath":[
+            "a",
+            "b",
+            "c"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseTest8",
 			UriTemplate: "/a/{a.b.c=*}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 2,
-      "FieldPath": [
-        "a",
-        "b",
-        "c"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{a.b.c=*}",
+   "Segments":[
+      "a",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":2,
+         "FieldPath":[
+            "a",
+            "b",
+            "c"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseTest9",
 			UriTemplate: "/a/{b=*}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 2,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{b=*}",
+   "Segments":[
+      "a",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":2,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseTest10",
 			UriTemplate: "/a/{b=**}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "**"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -1,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{b=**}",
+   "Segments":[
+      "a",
+      "**"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-1,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+ `,
+		},
 		{
 			desc:        "ParseTest11",
 			UriTemplate: "/a/{b=c/*}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "c",
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 3,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{b=c/*}",
+   "Segments":[
+      "a",
+      "c",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":3,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+ `,
+		},
 		{
 			desc:        "ParseTest12",
 			UriTemplate: "/a/{b=c/*/d}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "c",
-    "*",
-    "d"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 4,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{b=c/*/d}",
+   "Segments":[
+      "a",
+      "c",
+      "*",
+      "d"
+   ],
+   "Variables":[
+      {
+         "EndSegment":4,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+ `,
+		},
 		{
 			desc:        "ParseTest13",
 			UriTemplate: "/a/{b=c/**}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "c",
-    "**"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -1,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{b=c/**}",
+   "Segments":[
+      "a",
+      "c",
+      "**"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-1,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseTest14",
 			UriTemplate: "/a/{b=c/**}/d/e",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "c",
-    "**",
-    "d",
-    "e"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -3,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{b=c/**}/d/e",
+   "Segments":[
+      "a",
+      "c",
+      "**",
+      "d",
+      "e"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-3,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseTest15",
 			UriTemplate: "/a/{b=c/*/d}/e",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "c",
-    "*",
-    "d",
-    "e"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 4,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": ""
+   "Origin":"/a/{b=c/*/d}/e",
+   "Segments":[
+      "a",
+      "c",
+      "*",
+      "d",
+      "e"
+   ],
+   "Variables":[
+      {
+         "EndSegment":4,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseTest16",
 			UriTemplate: "/a/{b=c/*/d}/e:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "c",
-    "*",
-    "d",
-    "e"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 4,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": "verb"
+   "Origin":"/a/{b=c/*/d}/e:verb",
+   "Segments":[
+      "a",
+      "c",
+      "*",
+      "d",
+      "e"
+   ],
+   "Variables":[
+      {
+         "EndSegment":4,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "CustomVerbTests-1",
 			UriTemplate: "/*:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*"
-  ],
-  "Variables": null,
-  "Verb": "verb"
+   "Origin":"/*:verb",
+   "Segments":[
+      "*"
+   ],
+   "Variables":null,
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "CustomVerbTests-2",
 			UriTemplate: "/**:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "**"
-  ],
-  "Variables": null,
-  "Verb": "verb"
+   "Origin":"/**:verb",
+   "Segments":[
+      "**"
+   ],
+   "Variables":null,
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "CustomVerbTests-3",
 			UriTemplate: "/{a}:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 1,
-      "FieldPath": [
-        "a"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "verb"
+   "Origin":"/{a}:verb",
+   "Segments":[
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":1,
+         "FieldPath":[
+            "a"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "CustomVerbTests-4",
 			UriTemplate: "/a/b/*:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "b",
-    "*"
-  ],
-  "Variables": null,
-  "Verb": "verb"
+   "Origin":"/a/b/*:verb",
+   "Segments":[
+      "a",
+      "b",
+      "*"
+   ],
+   "Variables":null,
+   "Verb":"verb"
 }
-
-		`},
+ `,
+		},
 		{
 			desc:        "CustomVerbTests-5",
 			UriTemplate: "/a/b/**:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "b",
-    "**"
-  ],
-  "Variables": null,
-  "Verb": "verb"
+   "Origin":"/a/b/**:verb",
+   "Segments":[
+      "a",
+      "b",
+      "**"
+   ],
+   "Variables":null,
+   "Verb":"verb"
 }
-		`},
+ `,
+		},
 		{
 			desc:        "CustomVerbTests-6",
 			UriTemplate: "/a/b/{a}:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "b",
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 3,
-      "FieldPath": [
-        "a"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 2
-    }
-  ],
-  "Verb": "verb"
+   "Origin":"/a/b/{a}:verb",
+   "Segments":[
+      "a",
+      "b",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":3,
+         "FieldPath":[
+            "a"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":2
+      }
+   ],
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "MoreVariableTests-1",
 			UriTemplate: "/{x}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 1,
-      "FieldPath": [
-        "x"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
+   "Origin":"/{x}",
+   "Segments":[
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":1,
+         "FieldPath":[
+            "x"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "MoreVariableTests-2",
 			UriTemplate: "/{x.y.z}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 1,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
+   "Origin":"/{x.y.z}",
+   "Segments":[
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":1,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "MoreVariableTests-3",
 			UriTemplate: "/{x=*}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 1,
-      "FieldPath": [
-        "x"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
+   "Origin":"/{x=*}",
+   "Segments":[
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":1,
+         "FieldPath":[
+            "x"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "MoreVariableTests-4",
 			UriTemplate: "/{x=a/*}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 2,
-      "FieldPath": [
-        "x"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
-}
-		`},
+   "Origin":"/{x=a/*}",
+   "Segments":[
+      "a",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":2,
+         "FieldPath":[
+            "x"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
+} 
+`,
+		},
 		{
 			desc:        "MoreVariableTests-5",
 			UriTemplate: "/{x.y.z=*/a/b}/c",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*",
-    "a",
-    "b",
-    "c"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 3,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
+   "Origin":"/{x.y.z=*/a/b}/c",
+   "Segments":[
+      "*",
+      "a",
+      "b",
+      "c"
+   ],
+   "Variables":[
+      {
+         "EndSegment":3,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "MoreVariableTests-6",
 			UriTemplate: "/{x=**}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "**"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -1,
-      "FieldPath": [
-        "x"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
+   "Origin":"/{x=**}",
+   "Segments":[
+      "**"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-1,
+         "FieldPath":[
+            "x"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "MoreVariableTests-7",
 			UriTemplate: "/{x.y.z=**}",
 			wantUriTemplate: `
-      
 {
-  "Segments": [
-    "**"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -1,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
-}
-		`},
+   "Origin":"/{x.y.z=**}",
+   "Segments":[
+      "**"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-1,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
+} 
+`,
+		},
 		{
 			desc:        "MoreVariableTests-8",
 			UriTemplate: "/{x.y.z=a/**/b}",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "**",
-    "b"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -1,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
+   "Origin":"/{x.y.z=a/**/b}",
+   "Segments":[
+      "a",
+      "**",
+      "b"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-1,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
 }
-		`},
+ `,
+		},
 		{
 			desc:        "MoreVariableTests-9",
 			UriTemplate: "/{x.y.z=a/**/b}/c/d",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "**",
-    "b",
-    "c",
-    "d"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -3,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": ""
+   "Origin":"/{x.y.z=a/**/b}/c/d",
+   "Segments":[
+      "a",
+      "**",
+      "b",
+      "c",
+      "d"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-3,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "VariableAndCustomVerbTests-1",
 			UriTemplate: "/{x}:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 1,
-      "FieldPath": [
-        "x"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "verb"
+   "Origin":"/{x}:verb",
+   "Segments":[
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":1,
+         "FieldPath":[
+            "x"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "VariableAndCustomVerbTests-2",
 			UriTemplate: "/{x.y.z}:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 1,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "verb"
+   "Origin":"/{x.y.z}:verb",
+   "Segments":[
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":1,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"verb"
 }
-		`},
+ `,
+		},
 		{
 			desc:        "VariableAndCustomVerbTests-3",
 			UriTemplate: "/{x.y.z=*/*}:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "*",
-    "*"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 2,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "verb"
+   "Origin":"/{x.y.z=*/*}:verb",
+   "Segments":[
+      "*",
+      "*"
+   ],
+   "Variables":[
+      {
+         "EndSegment":2,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"verb"
 }
-		`},
+ `,
+		},
 		{
 			desc:        "VariableAndCustomVerbTests-4",
 			UriTemplate: "/{x=**}:myverb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "**"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -2,
-      "FieldPath": [
-        "x"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "myverb"
+   "Origin":"/{x=**}:myverb",
+   "Segments":[
+      "**"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-2,
+         "FieldPath":[
+            "x"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"myverb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "VariableAndCustomVerbTests-5",
 			UriTemplate: "/{x.y.z=**}:myverb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "**"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -2,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "myverb"
+   "Origin":"/{x.y.z=**}:myverb",
+   "Segments":[
+      "**"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-2,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"myverb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "VariableAndCustomVerbTests-6",
 			UriTemplate: "/{x.y.z=a/**/b}:custom",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "**",
-    "b"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -2,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "custom"
+   "Origin":"/{x.y.z=a/**/b}:custom",
+   "Segments":[
+      "a",
+      "**",
+      "b"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-2,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"custom"
 }
-		`},
+`,
+		},
 		{
 			desc:        "VariableAndCustomVerbTests-7",
 			UriTemplate: "/{x.y.z=a/**/b}/c/d:custom",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "**",
-    "b",
-    "c",
-    "d"
-  ],
-  "Variables": [
-    {
-      "EndSegment": -4,
-      "FieldPath": [
-        "x",
-        "y",
-        "z"
-      ],
-      "HasDoubleWildCard": true,
-      "StartSegment": 0
-    }
-  ],
-  "Verb": "custom"
+   "Origin":"/{x.y.z=a/**/b}/c/d:custom",
+   "Segments":[
+      "a",
+      "**",
+      "b",
+      "c",
+      "d"
+   ],
+   "Variables":[
+      {
+         "EndSegment":-4,
+         "FieldPath":[
+            "x",
+            "y",
+            "z"
+         ],
+         "HasDoubleWildCard":true,
+         "StartSegment":0
+      }
+   ],
+   "Verb":"custom"
 }
-		`},
+`,
+		},
 		{
 			desc:        "RootPath",
 			UriTemplate: "/",
 			wantUriTemplate: `
 {
-  "Segments": null,
-  "Variables": null,
-  "Verb": ""
+   "Origin":"/",
+   "Segments":null,
+   "Variables":null,
+   "Verb":""
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseVerbTest2",
 			UriTemplate: "/a/*:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "*"
-  ],
-  "Variables": null,
-  "Verb": "verb"
+   "Origin":"/a/*:verb",
+   "Segments":[
+      "a",
+      "*"
+   ],
+   "Variables":null,
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseVerbTest3",
 			UriTemplate: "/a/**:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "**"
-  ],
-  "Variables": null,
-  "Verb": "verb"
+   "Origin":"/a/**:verb",
+   "Segments":[
+      "a",
+      "**"
+   ],
+   "Variables":null,
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 		{
 			desc:        "ParseVerbTest4",
 			UriTemplate: "/a/{b=*}/**:verb",
 			wantUriTemplate: `
 {
-  "Segments": [
-    "a",
-    "*",
-    "**"
-  ],
-  "Variables": [
-    {
-      "EndSegment": 2,
-      "FieldPath": [
-        "b"
-      ],
-      "HasDoubleWildCard": false,
-      "StartSegment": 1
-    }
-  ],
-  "Verb": "verb"
+   "Origin":"/a/{b=*}/**:verb",
+   "Segments":[
+      "a",
+      "*",
+      "**"
+   ],
+   "Variables":[
+      {
+         "EndSegment":2,
+         "FieldPath":[
+            "b"
+         ],
+         "HasDoubleWildCard":false,
+         "StartSegment":1
+      }
+   ],
+   "Verb":"verb"
 }
-		`},
+`,
+		},
 	}
 
 	for _, tc := range testCases {

@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
@@ -172,10 +173,10 @@ func TestProcessApiKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &MethodInfo{
 					ShortName: "echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -222,10 +223,10 @@ func TestProcessApiKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &MethodInfo{
 					ShortName: "echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -279,10 +280,10 @@ func TestProcessApiKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo": &MethodInfo{
 					ShortName: "echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -385,10 +386,10 @@ func TestProcessApiKeyLocations(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo": {
 					ShortName: "foo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/1.echo_api_endpoints_cloudesf_testing_cloud_goog/foo",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/foo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -418,10 +419,10 @@ func TestProcessApiKeyLocations(t *testing.T) {
 				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar": {
 					ShortName: "bar",
 					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/2.echo_api_endpoints_cloudesf_testing_cloud_goog/bar",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/2.echo_api_endpoints_cloudesf_testing_cloud_goog/bar"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -450,10 +451,10 @@ func TestProcessApiKeyLocations(t *testing.T) {
 				"3.echo_api_endpoints_cloudesf_testing_cloud_goog.baz": {
 					ShortName: "baz",
 					ApiName:   "3.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/3.echo_api_endpoints_cloudesf_testing_cloud_goog/baz",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/3.echo_api_endpoints_cloudesf_testing_cloud_goog/baz"),
 						},
 					},
 				},
@@ -663,10 +664,10 @@ func TestMethods(t *testing.T) {
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &MethodInfo{
 					ShortName: "ListShelves",
 					ApiName:   testApiName,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "ListShelves"),
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -677,10 +678,10 @@ func TestMethods(t *testing.T) {
 				fmt.Sprintf("%s.%s", testApiName, "CreateShelf"): &MethodInfo{
 					ShortName: "CreateShelf",
 					ApiName:   testApiName,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "CreateShelf"),
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "CreateShelf")),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -693,10 +694,10 @@ func TestMethods(t *testing.T) {
 					ApiName:            "espv2_deployment",
 					SkipServiceControl: true,
 					IsGenerated:        true,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/",
 							HttpMethod:  util.GET,
+							UriTemplate: httppattern.ParseUriTemplate("/"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -747,10 +748,10 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &MethodInfo{
 					ShortName: "Echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -761,10 +762,10 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &MethodInfo{
 					ShortName: "Echo_Auth_Jwt",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/auth/info/googlejwt",
 							HttpMethod:  util.GET,
+							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -777,9 +778,9 @@ func TestMethods(t *testing.T) {
 					ApiName:            "espv2_deployment",
 					SkipServiceControl: true,
 					IsGenerated:        true,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/",
+							UriTemplate: httppattern.ParseUriTemplate("/"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -823,26 +824,26 @@ func TestMethods(t *testing.T) {
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/auth/info/googlejwt",
+								Get: "/1/auth/info/googlejwt",
 							},
 						},
 						{
 							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 							Pattern: &annotationspb.HttpRule_Post{
-								Post: "/echo",
+								Post: "/1/echo",
 							},
 							Body: "message",
 						},
 						{
 							Selector: "2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/auth/info/googlejwt",
+								Get: "/2/auth/info/googlejwt",
 							},
 						},
 						{
 							Selector: "2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 							Pattern: &annotationspb.HttpRule_Post{
-								Post: "/echo",
+								Post: "/2/echo",
 							},
 							Body: "message",
 						},
@@ -854,9 +855,9 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &MethodInfo{
 					ShortName: "Echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo",
+							UriTemplate: httppattern.ParseUriTemplate("/1/echo"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -868,9 +869,9 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &MethodInfo{
 					ShortName: "Echo_Auth_Jwt",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/auth/info/googlejwt",
+							UriTemplate: httppattern.ParseUriTemplate("/1/auth/info/googlejwt"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -882,10 +883,10 @@ func TestMethods(t *testing.T) {
 				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &MethodInfo{
 					ShortName: "Echo",
 					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/2/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -896,10 +897,10 @@ func TestMethods(t *testing.T) {
 				"2.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt": &MethodInfo{
 					ShortName: "Echo_Auth_Jwt",
 					ApiName:   "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/auth/info/googlejwt",
 							HttpMethod:  util.GET,
+							UriTemplate: httppattern.ParseUriTemplate("/2/auth/info/googlejwt"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1009,10 +1010,10 @@ func TestMethods(t *testing.T) {
 					ShortName:  "EchoCors",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo",
 							HttpMethod:  util.OPTIONS,
+							UriTemplate: httppattern.ParseUriTemplate("/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1024,10 +1025,10 @@ func TestMethods(t *testing.T) {
 					ShortName:  "Echo",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1039,10 +1040,10 @@ func TestMethods(t *testing.T) {
 					ShortName:  "GetBook",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
 							HttpMethod:  util.GET,
+							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1054,10 +1055,10 @@ func TestMethods(t *testing.T) {
 					ShortName:  "ESPv2_Autogenerated_CORS_GetBook",
 					ApiVersion: "1.2.3",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
 							HttpMethod:  util.OPTIONS,
+							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
 						},
 					},
 					IsGenerated: true,
@@ -1070,10 +1071,10 @@ func TestMethods(t *testing.T) {
 					ShortName:  "UpdateBook",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/shelves/{shelf_id}/books/{book.id}",
 							HttpMethod:  util.PATCH,
+							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1085,9 +1086,9 @@ func TestMethods(t *testing.T) {
 					ShortName:  "DeleteBook",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/shelves/{shelf_id_different_param}/books/{book.id}",
+							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id_different_param}/books/{book.id}"),
 							HttpMethod:  util.DELETE,
 						},
 					},
@@ -1100,9 +1101,9 @@ func TestMethods(t *testing.T) {
 					ShortName:  "ESPv2_Autogenerated_CORS_Echo_Auth_Jwt",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/auth/info/googlejwt",
+							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
 							HttpMethod:  util.OPTIONS,
 						},
 					},
@@ -1116,9 +1117,9 @@ func TestMethods(t *testing.T) {
 					ShortName:  "Echo_Auth_Jwt",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/auth/info/googlejwt",
+							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -1131,10 +1132,10 @@ func TestMethods(t *testing.T) {
 					ShortName:  "Echo_Auth",
 					ApiName:    "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiVersion: "1.2.3",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/auth/info/googlejwt",
 							HttpMethod:  util.POST,
+							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1147,10 +1148,10 @@ func TestMethods(t *testing.T) {
 					ApiName:            "espv2_deployment",
 					SkipServiceControl: true,
 					IsGenerated:        true,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/healthz",
 							HttpMethod:  util.GET,
+							UriTemplate: httppattern.ParseUriTemplate("/healthz"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1199,10 +1200,10 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoCustom": &MethodInfo{
 					ShortName: "EchoCustom",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo/test",
 							HttpMethod:  "CustomMethod",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/test"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1214,10 +1215,10 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_EchoCustom": &MethodInfo{
 					ShortName: "ESPv2_Autogenerated_CORS_EchoCustom",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo/test",
 							HttpMethod:  util.OPTIONS,
+							UriTemplate: httppattern.ParseUriTemplate("/echo/test"),
 						},
 					},
 					IsGenerated: true,
@@ -1277,17 +1278,17 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &MethodInfo{
 					ShortName: "Echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo/{test_one}/echo",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_one}/echo"),
 							HttpMethod:  util.GET,
 						},
 						{
-							UriTemplate: "/echo/{test_two}/echo",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_two}/echo"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: "/echo/{test_three}/a/b/c",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_three}/a/b/c"),
 							HttpMethod:  util.DELETE,
 						},
 					},
@@ -1300,14 +1301,14 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_Echo": &MethodInfo{
 					ShortName: "ESPv2_Autogenerated_CORS_Echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo/{test_one}/echo",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_one}/echo"),
 							HttpMethod:  util.OPTIONS,
 						},
 						// 2nd pattern should be missing.
 						{
-							UriTemplate: "/echo/{test_three}/a/b/c",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_three}/a/b/c"),
 							HttpMethod:  util.OPTIONS,
 						},
 					},
@@ -1367,9 +1368,9 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo": &MethodInfo{
 					ShortName: "Echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo/{testOne=*}/echo",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/{testOne=*}/echo"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -1383,9 +1384,9 @@ func TestMethods(t *testing.T) {
 				"1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_Echo": &MethodInfo{
 					ShortName: "ESPv2_Autogenerated_CORS_Echo",
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/echo/{testOne=*}/echo",
+							UriTemplate: httppattern.ParseUriTemplate("/echo/{testOne=*}/echo"),
 							HttpMethod:  util.OPTIONS,
 						},
 					},
@@ -1398,7 +1399,7 @@ func TestMethods(t *testing.T) {
 			},
 		},
 		{
-			desc: "fail for replacing snakeName with jsonName due to invalid url template",
+			desc: "fail to processHttpRules due to invalid url template",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -1435,7 +1436,7 @@ func TestMethods(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantError:      "for operation(1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo), fail to replace snake name with json name in its uri template of, invalid uri template `invalid-uri-template`",
+			wantError:      "operation(1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo): invalid uri template invalid-uri-template",
 		},
 		{
 			desc: "Succeed for multiple url Pattern",
@@ -1483,17 +1484,17 @@ func TestMethods(t *testing.T) {
 					ShortName:       "CreateBook",
 					ApiName:         "endpoints.examples.bookstore.Bookstore",
 					RequestTypeName: "endpoints.examples.bookstore.CreateBookRequest",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/{book.id}/{book.author}"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: "/v1/shelves/{shelf}/books",
+							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
+							UriTemplate: httppattern.ParseUriTemplate("/endpoints.examples.bookstore.Bookstore/CreateBook"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -1557,21 +1558,21 @@ func TestMethods(t *testing.T) {
 					ShortName:       "CreateBook",
 					ApiName:         "endpoints.examples.bookstore.Bookstore",
 					RequestTypeName: "endpoints.examples.bookstore.CreateBookRequest",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
+							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/{book.id}/{book.author}"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: "/v1/shelves/{shelf}/books/foo",
+							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/foo"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: "/v1/shelves/{shelf}/books/bar",
+							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/bar"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: "/endpoints.examples.bookstore.Bookstore/CreateBook",
+							UriTemplate: httppattern.ParseUriTemplate("/endpoints.examples.bookstore.Bookstore/CreateBook"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -1600,7 +1601,7 @@ func TestMethods(t *testing.T) {
 				t.Fatalf("expected no error \ngot err %v", err)
 			}
 			if len(serviceInfo.Methods) != len(tc.wantMethods) {
-				t.Fatalf("diff in number of Methods, got : %v, want: %v", serviceInfo.Methods, tc.wantMethods)
+				t.Fatalf("diff in number of Methods,\ngot : %v,\nwant: %v", serviceInfo.Methods, tc.wantMethods)
 			}
 			for key, gotMethod := range serviceInfo.Methods {
 				wantMethod, ok := tc.wantMethods[key]
@@ -2187,9 +2188,9 @@ func TestProcessQuota(t *testing.T) {
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &MethodInfo{
 					ShortName: "ListShelves",
 					ApiName:   testApiName,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "ListShelves"),
+							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2235,9 +2236,9 @@ func TestProcessQuota(t *testing.T) {
 				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &MethodInfo{
 					ShortName: "ListShelves",
 					ApiName:   testApiName,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: fmt.Sprintf("/%s/%s", testApiName, "ListShelves"),
+							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2494,6 +2495,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 		fakeServiceConfig *confpb.Service
 		wantMethods       map[string]*MethodInfo
 		wantApiNames      []string
+		wantError         string
 	}{
 		{
 			desc: "Process API with unary and streaming gRPC methods",
@@ -2521,9 +2523,9 @@ func TestProcessApisForGrpc(t *testing.T) {
 				"api-streaming-test.unary": {
 					ShortName: "unary",
 					ApiName:   "api-streaming-test",
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/api-streaming-test/unary",
+							UriTemplate: httppattern.ParseUriTemplate("/api-streaming-test/unary"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2532,9 +2534,9 @@ func TestProcessApisForGrpc(t *testing.T) {
 					ShortName:   "streaming_request",
 					ApiName:     "api-streaming-test",
 					IsStreaming: true,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/api-streaming-test/streaming_request",
+							UriTemplate: httppattern.ParseUriTemplate("/api-streaming-test/streaming_request"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2543,9 +2545,9 @@ func TestProcessApisForGrpc(t *testing.T) {
 					ShortName:   "streaming_response",
 					ApiName:     "api-streaming-test",
 					IsStreaming: true,
-					HttpRule: []*commonpb.Pattern{
+					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: "/api-streaming-test/streaming_response",
+							UriTemplate: httppattern.ParseUriTemplate("/api-streaming-test/streaming_response"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2554,6 +2556,22 @@ func TestProcessApisForGrpc(t *testing.T) {
 			wantApiNames: []string{
 				"api-streaming-test",
 			},
+		},
+		{
+			desc: "fail add httpRule for Invalid grpc config",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "api-streaming-test",
+						Methods: []*apipb.Method{
+							{
+								Name: "***",
+							},
+						},
+					},
+				},
+			},
+			wantError: "adding httpRules for grpc method api-streaming-test.***: invalid uri template /api-streaming-test/***",
 		},
 	}
 
@@ -2565,7 +2583,13 @@ func TestProcessApisForGrpc(t *testing.T) {
 			Methods:             make(map[string]*MethodInfo),
 		}
 		serviceInfo.processApis()
-		serviceInfo.addGrpcHttpRules()
+		if err := serviceInfo.addGrpcHttpRules(); err != nil {
+			if err.Error() == tc.wantError {
+				continue
+			} else {
+				t.Fatalf("For processGrpcHttpRules error, expect: %s, get: %s", tc.wantError, err.Error())
+			}
+		}
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
@@ -2818,9 +2842,9 @@ func TestProcessTypes(t *testing.T) {
 		for operation, requestType := range tc.fakeRequestTypeNamesByOperation {
 			mi := &MethodInfo{
 				RequestTypeName: requestType,
-				HttpRule: []*commonpb.Pattern{
+				HttpRule: []*httppattern.Pattern{
 					{
-						UriTemplate: tc.urlTemplateByOperation[operation],
+						UriTemplate: httppattern.ParseUriTemplate(tc.urlTemplateByOperation[operation]),
 					},
 				},
 			}
@@ -2841,7 +2865,7 @@ func TestProcessTypes(t *testing.T) {
 		}
 
 		for operation, wantUrlTemplate := range tc.wantUrlTemplateByOperation {
-			getUrlTemplate := serviceInfo.Methods[operation].HttpRule[0].UriTemplate
+			getUrlTemplate := serviceInfo.Methods[operation].HttpRule[0].UriTemplate.String()
 			if getUrlTemplate != wantUrlTemplate {
 				t.Errorf("Test(%v): For operation (%v), expected urlTemplate (%v), got urlTemplate(%v)", tc.desc, operation, wantUrlTemplate, getUrlTemplate)
 			}

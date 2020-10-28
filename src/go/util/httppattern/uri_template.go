@@ -17,12 +17,21 @@ package httppattern
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 // Use null char to denote coming into invalid char.
 const (
 	InvalidChar = byte(0)
 )
+
+// Pattern Corresponds espv2.api.envoy.v9.http.common.Pattern and it holds the
+// syntax parsing result for uri template.
+type Pattern struct {
+	HttpMethod string
+	*UriTemplate
+}
 
 // UriTemplate keeps information of the uri template string.
 // It follows the grammar:
@@ -31,6 +40,9 @@ type UriTemplate struct {
 	Segments  []string
 	Verb      string
 	Variables []*variable
+	// The original uri template string before parsing.
+	// It is ignored when calling `String` or `Equal`
+	Origin string
 }
 
 // The info about a variable binding {variable=subpath} in the template.
@@ -50,17 +62,6 @@ type variable struct {
 	HasDoubleWildCard bool
 }
 
-func ReplaceVariableFieldInUriTemplate(input string, variableFieldMapping map[string]string) (string, error) {
-	uriTemplate := ParseUriTemplate(input)
-	if uriTemplate == nil {
-		return "", fmt.Errorf("invalid uri template `%s`", input)
-	}
-
-	uriTemplate.replaceVariableField(variableFieldMapping)
-
-	return uriTemplate.String(), nil
-}
-
 func (u *UriTemplate) String() string {
 	if len(u.Segments) == 0 {
 		return "/"
@@ -72,7 +73,7 @@ func (u *UriTemplate) String() string {
 
 		// The opposite processing for EndSegment against `postProcessVariables()`
 		// Recover EndSegment from negative index for positive index for doubleWildCard
-		if v.HasDoubleWildCard {
+		if v.EndSegment < 0 && v.HasDoubleWildCard {
 			if u.Verb != "" {
 				v.EndSegment += 1
 			}
@@ -107,7 +108,13 @@ func (u *UriTemplate) String() string {
 	return buff.String()
 }
 
-func (u *UriTemplate) replaceVariableField(fieldMapping map[string]string) {
+// Check if two uriTemplates are equal. Ignore `Origin`
+func (u *UriTemplate) Equal(v *UriTemplate) bool {
+	return cmp.Equal(u.Segments, v.Segments) && cmp.Equal(u.Variables, v.Variables) && cmp.Equal(u.Verb, v.Verb)
+}
+
+// Replace all the variable fields found in the input map.
+func (u *UriTemplate) ReplaceVariableField(fieldMapping map[string]string) {
 	for _, v := range u.Variables {
 		var newFieldPath []string
 
@@ -120,6 +127,37 @@ func (u *UriTemplate) replaceVariableField(fieldMapping map[string]string) {
 		}
 		v.FieldPath = newFieldPath
 	}
+}
+
+func (u *UriTemplate) IsExactMatch() bool {
+	for _, seg := range u.Segments {
+		if seg == SingleWildCardKey || seg == DoubleWildCardKey {
+			return false
+		}
+	}
+	return true
+}
+
+// Generate regular expression of the current uri template.
+func (u *UriTemplate) Regex() string {
+	regex := bytes.Buffer{}
+	for _, segment := range u.Segments {
+		regex.WriteByte('/')
+		switch segment {
+		case SingleWildCardKey:
+			regex.WriteString(singleWildcardReplacementRegex)
+		case DoubleWildCardKey:
+			regex.WriteString(doubleWildcardReplacementRegex)
+		default:
+			regex.WriteString(segment)
+		}
+	}
+
+	if u.Verb != "" {
+		regex.WriteString(":" + u.Verb)
+	}
+
+	return "^" + regex.String() + "$"
 }
 
 // `generateVariableBindingSyntax` tries to recover the following syntax with

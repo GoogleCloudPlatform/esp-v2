@@ -157,8 +157,8 @@ func TestMakeRouteConfig(t *testing.T) {
       "name": "backend",
       "routes": [
         {
-          "decorator":{
-            "operation":"ingress Foo"
+          "decorator": {
+            "operation": "ingress Foo"
           },
           "match": {
             "headers": [
@@ -182,25 +182,28 @@ func TestMakeRouteConfig(t *testing.T) {
             "hostRewriteLiteral": "testapipb.com",
             "timeout": "15s"
           },
-          "typedPerFilterConfig":{
-            "com.google.espv2.filters.http.backend_auth":{
-              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-              "jwtAudience":"bar.com"
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
             },
-            "com.google.espv2.filters.http.path_rewrite":{
-              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
-              "constantPath":{"path":"/foo"}
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/foo"
+              }
             },
-            "com.google.espv2.filters.http.service_control":{
-              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-              "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
             }
           }
         }
       ]
     }
   ]
-}`,
+}
+`,
 		},
 		{
 			desc: "Wildcard paths and wildcard http method for remote backend",
@@ -283,7 +286,8 @@ func TestMakeRouteConfig(t *testing.T) {
       ]
     }
   ]
-}`,
+}
+`,
 		},
 		{
 			desc: "path_rewrite: http rule url_templates with variable bindings.",
@@ -307,13 +311,13 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves/{shelves}",
+								Get: "/v1/shelves/{shelves=*}",
 							},
 						},
 						{
 							Selector: "endpoints.examples.bookstore.Bookstore.CreateShelf",
 							Pattern: &annotationspb.HttpRule_Post{
-								Post: "/v1/shelves/{shelves}",
+								Post: "/v1/shelves/{shelves=*}",
 							},
 							Body: "shelf",
 						},
@@ -413,7 +417,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
                 "path": "/foo",
-                "urlTemplate": "/v1/shelves/{shelves}"
+                "urlTemplate": "/v1/shelves/{shelves=*}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -593,7 +597,7 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/foo/{x}",
+								Get: "/foo/{x=*}",
 							},
 						},
 						{
@@ -730,7 +734,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
                 "path": "/foo",
-                "urlTemplate": "/foo/{x}"
+                "urlTemplate": "/foo/{x=*}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -769,7 +773,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
                 "path": "/foo",
-                "urlTemplate": "/foo/{x}"
+                "urlTemplate": "/foo/{x=*}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -781,7 +785,8 @@ func TestMakeRouteConfig(t *testing.T) {
       ]
     }
   ]
-}`,
+}
+`,
 		},
 		{
 			desc: "path_rewrite: empty path for APPEND, no path_rewrite",
@@ -901,7 +906,8 @@ func TestMakeRouteConfig(t *testing.T) {
       ]
     }
   ]
-}`,
+}
+`,
 		},
 		{
 			desc: "path_rewrite: empty path for CONST always generates `/` prefix",
@@ -1071,7 +1077,8 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
+			wantRouteConfig: `
+{
   "name": "local_route",
   "virtualHosts": [
     {
@@ -1118,7 +1125,8 @@ func TestMakeRouteConfig(t *testing.T) {
       ]
     }
   ]
-}`,
+}
+`,
 		},
 		{
 			desc: "Multiple http rules for one selector",
@@ -1145,7 +1153,7 @@ func TestMakeRouteConfig(t *testing.T) {
 						{
 							Selector: "testapi.foo",
 							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/foo/{abc}",
+								Get: "/foo/{abc=*}",
 							},
 						},
 					},
@@ -1160,7 +1168,8 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
+			wantRouteConfig: `
+{
   "name": "local_route",
   "virtualHosts": [
     {
@@ -1234,7 +1243,7 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
               "constantPath": {
                 "path": "/",
-                "urlTemplate": "/foo/{abc}"
+                "urlTemplate": "/foo/{abc=*}"
               }
             },
             "com.google.espv2.filters.http.service_control": {
@@ -1246,7 +1255,8 @@ func TestMakeRouteConfig(t *testing.T) {
       ]
     }
   ]
-}`,
+}
+`,
 		},
 		// In this test, the route configs will be in the order of
 		//    GET /foo/bar
@@ -1583,33 +1593,6 @@ func TestMakeRouteConfig(t *testing.T) {
 `,
 		},
 		{
-			desc:                          "Use error format http template",
-			enableStrictTransportSecurity: true,
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-						Methods: []*apipb.Method{
-							{
-								Name: "Echo",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
-					{
-						Selector: fmt.Sprintf("%s.Echo", testApiName),
-						Pattern: &annotationspb.HttpRule_Get{
-							Get: "/**/**",
-						},
-					},
-				},
-				},
-			},
-			wantedError: "fail to sort route match, endpoints.examples.bookstore.Bookstore.Echo has invalid url template `/**/**`",
-		},
-		{
 			desc:                          "Use duplicate http template",
 			enableStrictTransportSecurity: true,
 			fakeServiceConfig: &confpb.Service{
@@ -1628,19 +1611,19 @@ func TestMakeRouteConfig(t *testing.T) {
 					{
 						Selector: fmt.Sprintf("%s.Echo", testApiName),
 						Pattern: &annotationspb.HttpRule_Get{
-							Get: "/{echoSize}",
+							Get: "/{echoSize=*}",
 						},
 					},
 					{
 						Selector: fmt.Sprintf("%s.Echo", testApiName),
 						Pattern: &annotationspb.HttpRule_Get{
-							Get: "/{echoId}",
+							Get: "/{echoId=*}",
 						},
 					},
 				},
 				},
 			},
-			wantedError: "fail to sort route match, endpoints.examples.bookstore.Bookstore.Echo has duplicate http pattern `GET /{echoId}`",
+			wantedError: "fail to sort route match, endpoints.examples.bookstore.Bookstore.Echo has duplicate http pattern `GET /{echoId=*}`",
 		},
 	}
 

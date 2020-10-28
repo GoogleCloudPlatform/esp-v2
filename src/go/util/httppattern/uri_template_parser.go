@@ -38,7 +38,9 @@ type parser struct {
 
 func ParseUriTemplate(input string) *UriTemplate {
 	if input == "/" {
-		return &UriTemplate{}
+		return &UriTemplate{
+			Origin: "/",
+		}
 	}
 
 	p := parser{
@@ -52,6 +54,7 @@ func ParseUriTemplate(input string) *UriTemplate {
 		Segments:  p.segments,
 		Verb:      p.verb,
 		Variables: p.variables,
+		Origin:    input,
 	}
 }
 
