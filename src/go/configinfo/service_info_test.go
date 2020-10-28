@@ -2571,7 +2571,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 					},
 				},
 			},
-			wantError: "adding httpRules for grpc method api-streaming-test.***: invalid uri template /api-streaming-test/**",
+			wantError: "adding httpRules for grpc method api-streaming-test.***: invalid uri template /api-streaming-test/***",
 		},
 	}
 
