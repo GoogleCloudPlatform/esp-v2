@@ -66,14 +66,14 @@ func TestReplaceVariableFieldInUriTemplateRebuild(t *testing.T) {
 	}
 
 	uriTemplateStrEqual := func(get string, want string) bool {
-		getUriTemplate := ParseUriTemplate(get)
-		wantUriTemplate := ParseUriTemplate(want)
+		getUriTemplate, _ := ParseUriTemplate(get)
+		wantUriTemplate, _ := ParseUriTemplate(want)
 		return getUriTemplate.Equal(wantUriTemplate)
 	}
 
 	for _, tc := range testCases {
 		// Some uri templates are equal in syntax through not equal in string comparison.
-		if getUriTemplate := ParseUriTemplate(tc).String(); !uriTemplateStrEqual(getUriTemplate, tc) {
+		if getUriTemplate, _ := ParseUriTemplate(tc); !uriTemplateStrEqual(getUriTemplate.String(), tc) {
 			t.Errorf("fail to rebuild, want uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate)
 		}
 	}
@@ -134,7 +134,7 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			uriTemplate := ParseUriTemplate(tc.uriTemplate)
+			uriTemplate, _ := ParseUriTemplate(tc.uriTemplate)
 			uriTemplate.ReplaceVariableField(tc.varReplace)
 			if getUriTemplate := uriTemplate.String(); getUriTemplate != tc.wantUriTemplate {
 				t.Errorf("fail to replace variable field, wante uriTemplate: %s, get uriTemplate: %s", tc.wantUriTemplate, getUriTemplate)
@@ -200,7 +200,7 @@ func TestUriTemplateRegex(t *testing.T) {
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
-			uriTemplate := ParseUriTemplate(tc.uri)
+			uriTemplate, _ := ParseUriTemplate(tc.uri)
 			if uriTemplate == nil {
 				t.Fatalf("fail to parse uri template %s", tc.uri)
 			}

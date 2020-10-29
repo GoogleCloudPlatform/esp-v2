@@ -176,7 +176,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
+							UriTemplate: parseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -226,7 +226,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
+							UriTemplate: parseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -283,7 +283,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
+							UriTemplate: parseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/echo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -389,7 +389,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/foo"),
+							UriTemplate: parseUriTemplate("/1.echo_api_endpoints_cloudesf_testing_cloud_goog/foo"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -422,7 +422,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/2.echo_api_endpoints_cloudesf_testing_cloud_goog/bar"),
+							UriTemplate: parseUriTemplate("/2.echo_api_endpoints_cloudesf_testing_cloud_goog/bar"),
 						},
 					},
 					ApiKeyLocations: []*scpb.ApiKeyLocation{
@@ -454,7 +454,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/3.echo_api_endpoints_cloudesf_testing_cloud_goog/baz"),
+							UriTemplate: parseUriTemplate("/3.echo_api_endpoints_cloudesf_testing_cloud_goog/baz"),
 						},
 					},
 				},
@@ -667,7 +667,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
+							UriTemplate: parseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -681,7 +681,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "CreateShelf")),
+							UriTemplate: parseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "CreateShelf")),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -697,7 +697,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.GET,
-							UriTemplate: httppattern.ParseUriTemplate("/"),
+							UriTemplate: parseUriTemplate("/"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -751,7 +751,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/echo"),
+							UriTemplate: parseUriTemplate("/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -765,7 +765,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.GET,
-							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
+							UriTemplate: parseUriTemplate("/auth/info/googlejwt"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -780,7 +780,7 @@ func TestMethods(t *testing.T) {
 					IsGenerated:        true,
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/"),
+							UriTemplate: parseUriTemplate("/"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -857,7 +857,7 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/1/echo"),
+							UriTemplate: parseUriTemplate("/1/echo"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -871,7 +871,7 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/1/auth/info/googlejwt"),
+							UriTemplate: parseUriTemplate("/1/auth/info/googlejwt"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -886,7 +886,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/2/echo"),
+							UriTemplate: parseUriTemplate("/2/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -900,7 +900,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.GET,
-							UriTemplate: httppattern.ParseUriTemplate("/2/auth/info/googlejwt"),
+							UriTemplate: parseUriTemplate("/2/auth/info/googlejwt"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1013,7 +1013,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.OPTIONS,
-							UriTemplate: httppattern.ParseUriTemplate("/echo"),
+							UriTemplate: parseUriTemplate("/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1028,7 +1028,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/echo"),
+							UriTemplate: parseUriTemplate("/echo"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1043,7 +1043,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.GET,
-							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
+							UriTemplate: parseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1058,7 +1058,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.OPTIONS,
-							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
+							UriTemplate: parseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
 						},
 					},
 					IsGenerated: true,
@@ -1074,7 +1074,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.PATCH,
-							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
+							UriTemplate: parseUriTemplate("/shelves/{shelf_id}/books/{book.id}"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1088,7 +1088,7 @@ func TestMethods(t *testing.T) {
 					ApiVersion: "1.2.3",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/shelves/{shelf_id_different_param}/books/{book.id}"),
+							UriTemplate: parseUriTemplate("/shelves/{shelf_id_different_param}/books/{book.id}"),
 							HttpMethod:  util.DELETE,
 						},
 					},
@@ -1103,7 +1103,7 @@ func TestMethods(t *testing.T) {
 					ApiVersion: "1.2.3",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
+							UriTemplate: parseUriTemplate("/auth/info/googlejwt"),
 							HttpMethod:  util.OPTIONS,
 						},
 					},
@@ -1119,7 +1119,7 @@ func TestMethods(t *testing.T) {
 					ApiVersion: "1.2.3",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
+							UriTemplate: parseUriTemplate("/auth/info/googlejwt"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -1135,7 +1135,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.POST,
-							UriTemplate: httppattern.ParseUriTemplate("/auth/info/googlejwt"),
+							UriTemplate: parseUriTemplate("/auth/info/googlejwt"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1151,7 +1151,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.GET,
-							UriTemplate: httppattern.ParseUriTemplate("/healthz"),
+							UriTemplate: parseUriTemplate("/healthz"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1203,7 +1203,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  "CustomMethod",
-							UriTemplate: httppattern.ParseUriTemplate("/echo/test"),
+							UriTemplate: parseUriTemplate("/echo/test"),
 						},
 					},
 					BackendInfo: &backendInfo{
@@ -1218,7 +1218,7 @@ func TestMethods(t *testing.T) {
 					HttpRule: []*httppattern.Pattern{
 						{
 							HttpMethod:  util.OPTIONS,
-							UriTemplate: httppattern.ParseUriTemplate("/echo/test"),
+							UriTemplate: parseUriTemplate("/echo/test"),
 						},
 					},
 					IsGenerated: true,
@@ -1280,15 +1280,15 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_one}/echo"),
+							UriTemplate: parseUriTemplate("/echo/{test_one}/echo"),
 							HttpMethod:  util.GET,
 						},
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_two}/echo"),
+							UriTemplate: parseUriTemplate("/echo/{test_two}/echo"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_three}/a/b/c"),
+							UriTemplate: parseUriTemplate("/echo/{test_three}/a/b/c"),
 							HttpMethod:  util.DELETE,
 						},
 					},
@@ -1303,12 +1303,12 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_one}/echo"),
+							UriTemplate: parseUriTemplate("/echo/{test_one}/echo"),
 							HttpMethod:  util.OPTIONS,
 						},
 						// 2nd pattern should be missing.
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/echo/{test_three}/a/b/c"),
+							UriTemplate: parseUriTemplate("/echo/{test_three}/a/b/c"),
 							HttpMethod:  util.OPTIONS,
 						},
 					},
@@ -1370,7 +1370,7 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/echo/{testOne=*}/echo"),
+							UriTemplate: parseUriTemplate("/echo/{testOne=*}/echo"),
 							HttpMethod:  util.GET,
 						},
 					},
@@ -1386,7 +1386,7 @@ func TestMethods(t *testing.T) {
 					ApiName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/echo/{testOne=*}/echo"),
+							UriTemplate: parseUriTemplate("/echo/{testOne=*}/echo"),
 							HttpMethod:  util.OPTIONS,
 						},
 					},
@@ -1486,15 +1486,15 @@ func TestMethods(t *testing.T) {
 					RequestTypeName: "endpoints.examples.bookstore.CreateBookRequest",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/{book.id}/{book.author}"),
+							UriTemplate: parseUriTemplate("/v1/shelves/{shelf}/books/{book.id}/{book.author}"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books"),
+							UriTemplate: parseUriTemplate("/v1/shelves/{shelf}/books"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/endpoints.examples.bookstore.Bookstore/CreateBook"),
+							UriTemplate: parseUriTemplate("/endpoints.examples.bookstore.Bookstore/CreateBook"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -1560,19 +1560,19 @@ func TestMethods(t *testing.T) {
 					RequestTypeName: "endpoints.examples.bookstore.CreateBookRequest",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/{book.id}/{book.author}"),
+							UriTemplate: parseUriTemplate("/v1/shelves/{shelf}/books/{book.id}/{book.author}"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/foo"),
+							UriTemplate: parseUriTemplate("/v1/shelves/{shelf}/books/foo"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/v1/shelves/{shelf}/books/bar"),
+							UriTemplate: parseUriTemplate("/v1/shelves/{shelf}/books/bar"),
 							HttpMethod:  util.POST,
 						},
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/endpoints.examples.bookstore.Bookstore/CreateBook"),
+							UriTemplate: parseUriTemplate("/endpoints.examples.bookstore.Bookstore/CreateBook"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2190,7 +2190,7 @@ func TestProcessQuota(t *testing.T) {
 					ApiName:   testApiName,
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
+							UriTemplate: parseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2238,7 +2238,7 @@ func TestProcessQuota(t *testing.T) {
 					ApiName:   testApiName,
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
+							UriTemplate: parseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2525,7 +2525,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 					ApiName:   "api-streaming-test",
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/api-streaming-test/unary"),
+							UriTemplate: parseUriTemplate("/api-streaming-test/unary"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2536,7 +2536,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 					IsStreaming: true,
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/api-streaming-test/streaming_request"),
+							UriTemplate: parseUriTemplate("/api-streaming-test/streaming_request"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2547,7 +2547,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 					IsStreaming: true,
 					HttpRule: []*httppattern.Pattern{
 						{
-							UriTemplate: httppattern.ParseUriTemplate("/api-streaming-test/streaming_response"),
+							UriTemplate: parseUriTemplate("/api-streaming-test/streaming_response"),
 							HttpMethod:  util.POST,
 						},
 					},
@@ -2844,7 +2844,7 @@ func TestProcessTypes(t *testing.T) {
 				RequestTypeName: requestType,
 				HttpRule: []*httppattern.Pattern{
 					{
-						UriTemplate: httppattern.ParseUriTemplate(tc.urlTemplateByOperation[operation]),
+						UriTemplate: parseUriTemplate(tc.urlTemplateByOperation[operation]),
 					},
 				},
 			}
@@ -2928,4 +2928,9 @@ func TestProcessAccessToken(t *testing.T) {
 		}
 	}
 
+}
+
+func parseUriTemplate(input string) *httppattern.UriTemplate {
+	u, _ := httppattern.ParseUriTemplate(input)
+	return u
 }

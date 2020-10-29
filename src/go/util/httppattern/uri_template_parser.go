@@ -16,6 +16,7 @@ package httppattern
 
 import (
 	"bytes"
+	"fmt"
 )
 
 // Uri Template Grammar:
@@ -36,18 +37,18 @@ type parser struct {
 	variables  []*variable
 }
 
-func ParseUriTemplate(input string) *UriTemplate {
+func ParseUriTemplate(input string) (*UriTemplate, error) {
 	if input == "/" {
 		return &UriTemplate{
 			Origin: "/",
-		}
+		}, nil
 	}
 
 	p := parser{
 		input: input,
 	}
 	if !p.parse() || !p.validateParts() {
-		return nil
+		return nil, fmt.Errorf("invalid uri template %s", input)
 	}
 
 	return &UriTemplate{
@@ -55,7 +56,7 @@ func ParseUriTemplate(input string) *UriTemplate {
 		Verb:      p.verb,
 		Variables: p.variables,
 		Origin:    input,
-	}
+	}, nil
 }
 
 func (p *parser) parse() bool {
