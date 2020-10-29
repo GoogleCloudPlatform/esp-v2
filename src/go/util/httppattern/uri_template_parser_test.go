@@ -1007,9 +1007,9 @@ func TestUriTemplateParse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			ut := ParseUriTemplate(tc.UriTemplate)
-			if ut == nil {
-				t.Fatal("fail to generate UriTemplate")
+			ut, err := ParseUriTemplate(tc.UriTemplate)
+			if err != nil {
+				t.Fatal(err)
 			}
 
 			if tc.wantUriTemplate != "" {
@@ -1084,7 +1084,7 @@ func TestUriTemplateParseError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("`%s`", tc), func(t *testing.T) {
-			if ParseUriTemplate(tc) != nil {
+			if _, err := ParseUriTemplate(tc); err == nil {
 				t.Fatalf("succeed parsing %s but expect to fail", tc)
 			}
 		})

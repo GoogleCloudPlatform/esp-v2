@@ -54,10 +54,11 @@ func TestSortDuplicateHttpPattern(t *testing.T) {
 			methods := &MethodSlice{}
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
+				u, _ := ParseUriTemplate(uriTemplate)
 				methods.AppendMethod(&Method{
 					Pattern: &Pattern{
 						HttpMethod:  httpMethod,
-						UriTemplate: ParseUriTemplate(uriTemplate),
+						UriTemplate: u,
 					},
 					Operation: "operation",
 				})
@@ -239,10 +240,11 @@ func TestSort(t *testing.T) {
 			methods := &MethodSlice{}
 			for _, hp := range tc.httpPatterns {
 				httpMethod, uriTemplate := parsePattern(hp)
+				u, _ := ParseUriTemplate(uriTemplate)
 				methods.AppendMethod(&Method{
 					Pattern: &Pattern{
 						HttpMethod:  httpMethod,
-						UriTemplate: ParseUriTemplate(uriTemplate),
+						UriTemplate: u,
 					},
 				})
 			}
