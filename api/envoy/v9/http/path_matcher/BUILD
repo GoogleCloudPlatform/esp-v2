@@ -16,10 +16,15 @@ api_cc_py_proto_library(
 
 go_proto_library(
     name = "config_go_proto",
+    compilers = [
+        "@io_bazel_rules_go//proto:go_proto",
+        "@envoy_api//bazel:pgv_plugin_go",
+    ],
     importpath = "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher",
     proto = ":config_proto",
     deps = [
         "//api/envoy/v9/http/common:base_go_proto",
         "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
+        "@com_github_golang_protobuf//ptypes:go_default_library",
     ],
 )

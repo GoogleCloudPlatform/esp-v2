@@ -103,6 +103,13 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 	}
 
 	glog.Infof("generate clusters: %v", clusters)
+
+	for _, cluster := range clusters {
+		if err := cluster.Validate(); err != nil {
+			return nil, fmt.Errorf("validation error for cluster: %v", err)
+		}
+	}
+
 	return clusters, nil
 }
 

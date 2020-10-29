@@ -58,6 +58,11 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 	if err != nil {
 		return nil, err
 	}
+
+	if err := listener.Validate(); err != nil {
+		return nil, fmt.Errorf("validation error for listener: %v", err)
+	}
+
 	return []*listenerpb.Listener{listener}, nil
 }
 
