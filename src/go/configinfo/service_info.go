@@ -201,6 +201,11 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 			}
 			provider.JwksUri = jwksUri
 		}
+
+		// Jwks URI should be validated since it's supplied from the service config.
+		if err := util.HasOnlyUrlChars(provider.JwksUri); err != nil {
+			return fmt.Errorf("jwks_uri for provider (%v) has error: %v", provider.Id, err)
+		}
 	}
 	return nil
 }
@@ -534,6 +539,14 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 			r.Selector)
 		jwtAud = ""
 	}
+
+	// Jwt audience should be validated since it's supplied from the service config.
+	if jwtAud != "" {
+		if err := util.HasOnlyUrlCharsWithNoQuery(jwtAud); err != nil {
+			return fmt.Errorf("JWT audience for operation (%v) is invalid: %v", r.Selector, err)
+		}
+	}
+
 	method.BackendInfo.JwtAudience = jwtAud
 
 	return nil

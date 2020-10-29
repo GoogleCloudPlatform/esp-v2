@@ -1935,6 +1935,7 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 		fakeServiceConfig *confpb.Service
 		nonGcp            bool
 		wantedJwtAudience map[string]string
+		wantErr           error
 	}{
 
 		{
@@ -2055,6 +2056,55 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			},
 		},
 		{
+			// Regression test for b/171326338.
+			desc: "JwtAudience has invalid characters",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "https://test.run.app/version?key=param",
+							},
+						},
+					},
+				},
+			},
+			wantErr: fmt.Errorf("contains query parameters or fragements"),
+		},
+		{
+			desc: "Non-url JwtAudience is allowed",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "test-foo-bar",
+							},
+						},
+					},
+				},
+			},
+			wantedJwtAudience: map[string]string{
+				"abc.com.api": "test-foo-bar",
+			},
+		},
+		{
 			desc:   "JwtAudience is set, but non-GCP runtime disables backend auth",
 			nonGcp: true,
 			fakeServiceConfig: &confpb.Service{
@@ -2135,9 +2185,11 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.NonGCP = tc.nonGcp
 			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-
 			if err != nil {
-				t.Fatalf("error not expected, got: %v", err)
+				if tc.wantErr != nil && strings.Contains(err.Error(), tc.wantErr.Error()) {
+					return
+				}
+				t.Fatalf("\ngot err : %v\nwant err: %v", err, tc.wantErr)
 			}
 
 			for _, rule := range tc.fakeServiceConfig.Backend.Rules {

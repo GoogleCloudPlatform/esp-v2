@@ -136,7 +136,7 @@ func ResolveJwksUriUsingOpenID(uri string) (string, error) {
 	}
 
 	jwksURI, ok := data["jwks_uri"].(string)
-	if !ok {
+	if !ok || jwksURI == "" {
 		return "", fmt.Errorf("Invalid jwks_uri %v in openID discovery configuration", data["jwks_uri"])
 	}
 	return jwksURI, nil

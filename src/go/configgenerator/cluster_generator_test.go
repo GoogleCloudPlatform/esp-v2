@@ -620,16 +620,6 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 		},
 		{
-			desc: "Failed with wrong-format jwksUri",
-			fakeProviders: []*confpb.AuthProvider{
-				&confpb.AuthProvider{
-					Id:      "auth_provider",
-					Issuer:  "issuer_2",
-					JwksUri: "%",
-				}},
-			wantedError: "Fail to parse uri %",
-		},
-		{
 			desc: "Deduplicate Auth Provider With Same Host",
 			fakeProviders: []*confpb.AuthProvider{
 				&confpb.AuthProvider{
@@ -655,34 +645,35 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			},
 		},
 	}
-	for i, tc := range testData {
-		fakeServiceConfig := &confpb.Service{
-			Apis: []*apipb.Api{
-				{
-					Name: testApiName,
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			fakeServiceConfig := &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
 				},
-			},
-			Authentication: &confpb.Authentication{
-				Providers: tc.fakeProviders,
-			},
-		}
+				Authentication: &confpb.Authentication{
+					Providers: tc.fakeProviders,
+				},
+			}
 
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = "grpc://127.0.0.1:80"
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Fatal(err)
-		}
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = "grpc://127.0.0.1:80"
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		clusters, err := makeJwtProviderClusters(fakeServiceInfo)
-		if err != nil && !strings.Contains(err.Error(), tc.wantedError) {
-			t.Fatalf("Test Desc(%d): %s, got error:%v, wanted error:%v", i, tc.desc, err, tc.wantedError)
-		}
+			clusters, err := makeJwtProviderClusters(fakeServiceInfo)
+			if err != nil && !strings.Contains(err.Error(), tc.wantedError) {
+				t.Fatalf("got error:%v, wanted error:%v", err, tc.wantedError)
+			}
 
-		if !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
-			t.Errorf("Test Desc(%d): %s, makeJwtProviderClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
-		}
-
+			if !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
+				t.Errorf("makeJwtProviderClusters\ngot: %v,\nwant: %v", clusters, tc.wantedClusters)
+			}
+		})
 	}
 }
 
