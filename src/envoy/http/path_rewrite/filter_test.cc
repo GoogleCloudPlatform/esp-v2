@@ -202,8 +202,8 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
               sendLocalReply(
                   Envoy::Http::Code::InternalServerError,
                   "Request `GET /books/1` is getting wrong route config", _, _,
-                  "path_rewrite_wrong_route_config{Request path: /books/1 is "
-                  "mismatched with url_template: /bar/{xyz}}"));
+                  "path_rewrite_wrong_route_config{request_path(/books/"
+                  "1)-mismatched-url_template(/bar/{xyz})}"));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
