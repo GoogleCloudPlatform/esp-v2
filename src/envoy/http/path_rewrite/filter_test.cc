@@ -198,11 +198,12 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
   EXPECT_CALL(*raw_mock_parser_, url_template()).WillOnce(Return("/bar/{xyz}"));
 
   // The request is rejected
-  EXPECT_CALL(
-      mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::InternalServerError,
-                     "Request `GET /books/1` is getting wrong route config", _,
-                     _, "path_rewrite_wrong_route_config"));
+  EXPECT_CALL(mock_decoder_callbacks_,
+              sendLocalReply(
+                  Envoy::Http::Code::InternalServerError,
+                  "Request `GET /books/1` is getting wrong route config", _, _,
+                  "path_rewrite_wrong_route_config{request_path(/books/"
+                  "1)-mismatched-url_template(/bar/{xyz})}"));
 
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
