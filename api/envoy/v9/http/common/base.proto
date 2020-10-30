@@ -38,8 +38,11 @@ message Pattern {
   //     /search{?q*,lang}
   //
   string uri_template = 1 [(validate.rules).string = {
-    well_known_regex: HTTP_HEADER_VALUE,
-    strict: false
+    // Must not be empty, at a minimum must be "/".
+    min_len: 1,
+    // Does not contain query params ('?', '&'), fragments ('#'), or invalid
+    // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
+    pattern: '^[^?&#\\r\\n\\0]+$',
   }];
 
   // HTTP request method to match against as defined by
@@ -52,6 +55,7 @@ message Pattern {
 message HttpUri {
   // The uri string including the domain and path.
   string uri = 1 [(validate.rules).string = {
+    // Must not be empty, at a minimum must be "/".
     min_bytes: 1,
     well_known_regex: HTTP_HEADER_VALUE,
     strict: false

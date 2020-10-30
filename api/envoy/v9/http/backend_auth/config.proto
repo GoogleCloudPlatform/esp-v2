@@ -28,8 +28,9 @@ message PerRouteFilterConfig {
   // It has to be in the `jwt_audience_list`.
   string jwt_audience = 1 [(validate.rules).string = {
     min_bytes: 1,
-    well_known_regex: HTTP_HEADER_VALUE,
-    strict: false
+    // Does not contain query params ('?', '&'), fragments ('#'), or invalid
+    // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
+    pattern: '^[^?&#\\r\\n\\0]+$',
   }];
 }
 
@@ -38,7 +39,14 @@ message FilterConfig {
   // The tokens from this list will be prefetched.
   repeated string jwt_audience_list = 1 [(validate.rules).repeated = {
     min_items: 1
-    items { string { well_known_regex: HTTP_HEADER_VALUE strict: false } }
+    items {
+      string {
+        min_len: 1,
+        // Does not contain query params ('?', '&'), fragments ('#'), or invalid
+        // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
+        pattern: '^[^?&#\\r\\n\\0]+$',
+      }
+    }
   }];
 
   oneof id_token_info {

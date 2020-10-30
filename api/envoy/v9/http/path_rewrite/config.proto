@@ -51,11 +51,11 @@ message ConstantPath {
   // This is the final path. All incoming request paths will be
   // translated to this final path.
   string path = 1 [(validate.rules).string = {
-    // Must not be empty. At minimu it should have "/".
+    // Must not be empty. At minimum it should have "/".
     min_len: 1,
-    // Does not contain query params ('?'), fragments ('#'), or invalid
+    // Does not contain query params ('?', '&'), fragments ('#'), or invalid
     // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
-    pattern: '^[^?#\\r\\n\\0]+$',
+    pattern: '^[^?&#\\r\\n\\0]+$',
   }];
 
   // If not empty, specify the url template with variable names.
@@ -73,9 +73,9 @@ message PerRouteFilterConfig {
     string path_prefix = 1 [(validate.rules).string = {
       // Must be more than "/".
       min_len: 2,
-      // Does not contain query params ('?'), fragments ('#'), or invalid
+      // Does not contain query params ('?', '&'), fragments ('#'), or invalid
       // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
-      pattern: '^[^?#\\r\\n\\0]+$',
+      pattern: '^[^?&#\\r\\n\\0]+$',
     }];
 
     // Translate to a constant path.
