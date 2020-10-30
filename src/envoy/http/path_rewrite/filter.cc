@@ -112,13 +112,8 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
         absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
                      utils::readHeaderEntry(headers.Path()),
                      "` is getting wrong route config"),
-        utils::generateRcDetails(
-            utils::kRcDetailFilterPathRewrite,
-            utils::kRcDetailErrorTypeWrongRouteConfig,
-            absl::StrCat(
-                "Request path: ", utils::readHeaderEntry(headers.Path()),
-                " is mismatched with url_template: ",
-                per_route->config_parser().url_template())));
+        utils::generateRcDetails(utils::kRcDetailFilterPathRewrite,
+                                 utils::kRcDetailErrorTypeWrongRouteConfig));
     return FilterHeadersStatus::StopIteration;
   }
 

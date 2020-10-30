@@ -158,7 +158,6 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
                              "service_control_check_error{API_KEY_INVALID}");
       }));
 
-  // TODO(toddbeckman) Figure out how to EXPECT_CALL sendLocalReply directly
   EXPECT_CALL(
       mock_decoder_callbacks_.stream_info_,
       setResponseFlag(
@@ -215,7 +214,6 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
             filter_->decodeHeaders(req_headers_, true));
 
   // Filter should reject this request
-  // TODO(toddbeckman) Figure out how to EXPECT_CALL sendLocalReply directly
   EXPECT_CALL(
       mock_decoder_callbacks_.stream_info_,
       setResponseFlag(
