@@ -105,6 +105,11 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   }
 
   std::string new_path;
+
+  // This route config mismatch shouldn't happen as the current route match is
+  // regenerated and ordered after syntax parsing uri template in the same logic
+  // of path rewrit in the control plane. It would be a bug in the route match
+  // generation if t happens.
   if (!per_route->config_parser().rewrite(original_path, new_path)) {
     config_->stats().denied_by_url_template_mismatch_.inc();
     rejectRequest(
