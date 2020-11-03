@@ -136,7 +136,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:             util.GCE,
 					Location:             "test-zone",
 					BackendProtocol:      "grpc",
-					ResponseCodeDetail:   "jwt_authn_access_denied",
+					ResponseCodeDetail:   "jwt_authn_access_denied{Jwt_is_missing}",
 				},
 			},
 		},
