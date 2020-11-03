@@ -153,14 +153,14 @@ TEST(ServiceControlUtils, FillLoggedHeader) {
   }
 
   // Test: The headers contain the logged header twice.
-  // Only one will be logged, but which one is not consistent. Expect either.
+  // Both should be logged, but order is not consistent. Expect either.
   std::string service_proto = R"(log_request_headers: "log-this")";
   ASSERT_TRUE(TextFormat::ParseFromString(service_proto, &service));
 
   Envoy::Http::TestRequestHeaderMapImpl headers{{"log-this", "foo"},
                                                 {"log-this", "bar"}};
   fillLoggedHeader(&headers, service.log_request_headers(), output);
-  EXPECT_TRUE(output == "log-this=foo;" || output == "log-this=bar;");
+  EXPECT_TRUE(output == "log-this=bar,foo;" || output == "log-this=foo,bar;");
 }
 
 TEST(ServiceControlUtils, ExtractApiKey) {

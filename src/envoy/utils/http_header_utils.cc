@@ -15,6 +15,7 @@
 #include "src/envoy/utils/http_header_utils.h"
 
 #include "common/common/empty_string.h"
+#include "common/http/header_utility.h"
 #include "common/http/headers.h"
 
 namespace espv2 {
@@ -38,11 +39,12 @@ absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry) {
 
 absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
                                 const Envoy::Http::LowerCaseString& header) {
-  const auto result = headers.get(header);
-  if (result.empty()) {
+  const auto result =
+      Envoy::Http::HeaderUtility::getAllOfHeaderAsString(headers, header);
+  if (!result.result().has_value()) {
     return Envoy::EMPTY_STRING;
   }
-  return readHeaderEntry(result[0]);
+  return result.result().value();
 }
 
 bool handleHttpMethodOverride(Envoy::Http::RequestHeaderMap& headers) {

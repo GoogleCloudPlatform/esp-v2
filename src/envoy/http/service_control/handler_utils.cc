@@ -21,6 +21,7 @@
 #include "absl/strings/str_split.h"
 #include "api/envoy/v9/http/service_control/config.pb.h"
 #include "common/common/logger.h"
+#include "common/http/header_utility.h"
 #include "common/http/utility.h"
 #include "envoy/http/header_map.h"
 #include "envoy/server/filter_config.h"
@@ -153,10 +154,11 @@ void fillLoggedHeader(
     return;
   }
   for (const auto& log_header : log_headers) {
-    auto entry = headers->get(Envoy::Http::LowerCaseString(log_header));
-    if (!entry.empty()) {
+    const auto entry = Envoy::Http::HeaderUtility::getAllOfHeaderAsString(
+        *headers, Envoy::Http::LowerCaseString(log_header));
+    if (entry.result().has_value()) {
       absl::StrAppend(&info_header_field, log_header, "=",
-                      entry[0]->value().getStringView(), ";");
+                      entry.result().value(), ";");
     }
   }
 }
