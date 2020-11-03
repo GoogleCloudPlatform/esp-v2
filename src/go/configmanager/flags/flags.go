@@ -78,7 +78,7 @@ var (
   When disabled, config generator will not make external calls to determine the JWKS URI, 
 	but the 'jwks_uri' field must not be empty in any authentication provider. 
 	This should be disabled when the URLs configured by the API Producer cannot be trusted.`)
-	DependencyErrorBehavior = flag.String("dependency_error_behavior", commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ALL_ERRORS.String(),
+	DependencyErrorBehavior = flag.String("dependency_error_behavior", commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
 		`The behavior all Envoy filter will adhere to when waiting for external dependencies during filter config.`)
 
 	// Envoy configurations.

@@ -128,7 +128,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ListenerPort:                     8080,
 		TokenAgentPort:                   8791,
 		DisableOidcDiscovery:             false,
-		DependencyErrorBehavior:          commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ALL_ERRORS.String(),
+		DependencyErrorBehavior:          commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
 		SslSidestreamClientRootCertsPath: util.DefaultRootCAPaths,
 		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:             true,

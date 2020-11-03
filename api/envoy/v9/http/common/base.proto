@@ -108,7 +108,7 @@ enum DependencyErrorBehavior {
 
   // Treats all external dependencies as critical for proxy health.
   // Any error will block proxy initialization. No error attribution occurs.
-  BLOCK_INIT_ON_ALL_ERRORS = 1;
+  BLOCK_INIT_ON_ANY_ERROR = 1;
 
   // Treats all external dependencies as optional.
   // Proxy will always initialize, even if dependencies have errors.

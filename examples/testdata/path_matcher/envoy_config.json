@@ -267,7 +267,7 @@
                       "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
                         "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
-                        "depErrorBehavior":"BLOCK_INIT_ON_ALL_ERRORS",
+                        "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
                           "timeout": "30s",

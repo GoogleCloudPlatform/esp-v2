@@ -471,13 +471,13 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			depErrorBehavior: commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ALL_ERRORS.String(),
+			depErrorBehavior: commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
 			wantBackendAuthFilter: `
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
-      "depErrorBehavior":"BLOCK_INIT_ON_ALL_ERRORS",
+      "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
       "imdsToken":{
           "cluster":"metadata-cluster",
           "timeout":"30s",
@@ -548,12 +548,12 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			depErrorBehavior: commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ALL_ERRORS.String(),
+			depErrorBehavior: commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
 			wantBackendAuthFilter: `{
         "name":"com.google.espv2.filters.http.backend_auth",
         "typedConfig":{
           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
-          "depErrorBehavior":"BLOCK_INIT_ON_ALL_ERRORS",
+          "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
           "imdsToken":{
             "cluster":"metadata-cluster",
             "timeout":"30s",
@@ -1135,28 +1135,33 @@ func TestServiceControl(t *testing.T) {
     },`,
 		},
 	}
-	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.ServiceControlCredentials = tc.serviceControlCredentials
-		opts.ServiceAccountKey = tc.serviceAccountKey
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
 
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Error(err)
-		}
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.ServiceControlCredentials = tc.serviceControlCredentials
+			opts.ServiceAccountKey = tc.serviceAccountKey
 
-		marshaler := &jsonpb.Marshaler{}
-		filter := makeServiceControlFilter(fakeServiceInfo)
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Error(err)
+			}
 
-		gotFilter, err := marshaler.MarshalToString(filter)
-		if err != nil {
-			t.Fatal(err)
-		}
+			marshaler := &jsonpb.Marshaler{}
+			filter, err := makeServiceControlFilter(fakeServiceInfo)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if err := util.JsonContains(gotFilter, tc.wantPartialServiceControlFilter); err != nil {
-			t.Errorf("Test Desc(%d): %s, makeServiceControlFilter failed,\n%v", i, tc.desc, err)
-		}
+			gotFilter, err := marshaler.MarshalToString(filter)
+			if err != nil {
+				t.Fatal(err)
+			}
 
+			if err := util.JsonContains(gotFilter, tc.wantPartialServiceControlFilter); err != nil {
+				t.Errorf("makeServiceControlFilter failed,\n%v", err)
+			}
+		})
 	}
 }
 

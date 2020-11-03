@@ -108,7 +108,10 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 
 	// Add Service Control filter if needed.
 	if !serviceInfo.Options.SkipServiceControlFilter {
-		serviceControlFilter := makeServiceControlFilter(serviceInfo)
+		serviceControlFilter, err := makeServiceControlFilter(serviceInfo)
+		if err != nil {
+			return nil, fmt.Errorf("could not add Service Control filter: %v", err)
+		}
 		if serviceControlFilter != nil {
 			httpFilters = append(httpFilters, serviceControlFilter)
 			jsonStr, _ := util.ProtoToJson(serviceControlFilter)
@@ -560,9 +563,9 @@ func makeServiceControlCallingConfig(opts options.ConfigGeneratorOptions) *scpb.
 	return setting
 }
 
-func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
+func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
-		return nil
+		return nil, nil
 	}
 
 	// TODO(b/148638212): Clean up this hacky way of specifying the protocol for Service Control report.
@@ -677,15 +680,21 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		filterConfig.Requirements = append(filterConfig.Requirements, requirement)
 	}
 
+	depErrorBehaviorEnum, err := parseDepErrorBehavior(serviceInfo.Options.DependencyErrorBehavior)
+	if err != nil {
+		return nil, err
+	}
+	filterConfig.DepErrorBehavior = depErrorBehaviorEnum
+
 	scs, err := ptypes.MarshalAny(filterConfig)
 	if err != nil {
-		glog.Warningf("failed to convert message to struct: %v", err)
+		return nil, err
 	}
 	filter := &hcmpb.HttpFilter{
 		Name:       util.ServiceControl,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{scs},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: scs},
 	}
-	return filter
+	return filter, nil
 }
 
 func copyServiceConfigForReportMetrics(src *confpb.Service) *confpb.Service {
@@ -772,11 +781,11 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, erro
 		JwtAudienceList: audList,
 	}
 
-	depErrorBehaviorEnum, ok := commonpb.DependencyErrorBehavior_value[serviceInfo.Options.DependencyErrorBehavior]
-	if !ok {
-		return nil, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are (%+v)", serviceInfo.Options.DependencyErrorBehavior, commonpb.DependencyErrorBehavior_name)
+	depErrorBehaviorEnum, err := parseDepErrorBehavior(serviceInfo.Options.DependencyErrorBehavior)
+	if err != nil {
+		return nil, err
 	}
-	backendAuthConfig.DepErrorBehavior = commonpb.DependencyErrorBehavior(depErrorBehaviorEnum)
+	backendAuthConfig.DepErrorBehavior = depErrorBehaviorEnum
 
 	if serviceInfo.Options.BackendAuthCredentials != nil {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
@@ -801,10 +810,14 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, erro
 			},
 		}
 	}
-	backendAuthConfigStruct, _ := ptypes.MarshalAny(backendAuthConfig)
+	backendAuthConfigStruct, err := ptypes.MarshalAny(backendAuthConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	backendAuthFilter := &hcmpb.HttpFilter{
 		Name:       util.BackendAuth,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendAuthConfigStruct},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: backendAuthConfigStruct},
 	}
 	return backendAuthFilter, nil
 }
@@ -843,4 +856,12 @@ func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: router},
 	}
 	return routerFilter
+}
+
+func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, error) {
+	depErrorBehaviorInt, ok := commonpb.DependencyErrorBehavior_value[stringVal]
+	if !ok {
+		return commonpb.DependencyErrorBehavior_UNSPECIFIED, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are (%+v)", stringVal, commonpb.DependencyErrorBehavior_name)
+	}
+	return commonpb.DependencyErrorBehavior(depErrorBehaviorInt), nil
 }
