@@ -99,3 +99,23 @@ message IamTokenInfo {
   // The sequence of service accounts in a delegation chain.
   repeated string delegates = 4;
 }
+
+// The behavior a filter will adhere to when waiting for external dependencies
+// during filter config.
+enum DependencyErrorBehavior {
+  // Uses the filter's default behavior.
+  UNSPECIFIED = 0;
+
+  // Treats all external dependencies as critical for proxy health.
+  // Any error will block proxy initialization. No error attribution occurs.
+  BLOCK_INIT_ON_ALL_ERRORS = 1;
+
+  // Treats all external dependencies as optional.
+  // Proxy will always initialize, even if dependencies have errors.
+  // Note: This will result in API requests failing for routes that have
+  // dependency errors.
+  ALWAYS_INIT = 2;
+
+  // TODO(b/171326666): Does API Gateway need an option that blocks init based
+  // on error attribution?
+}
