@@ -17,6 +17,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+using ::google::protobuf::util::Status;
 using ::google::protobuf::util::error::Code;
 
 namespace espv2 {
@@ -42,12 +43,12 @@ TEST(JsonStructTest, GetString) {
 
   // Test: Getting a string works
   std::string good_string;
-  EXPECT_OK(json_struct.getString("good_string", &good_string));
+  EXPECT_TRUE(json_struct.getString("good_string", &good_string).ok());
   EXPECT_EQ(good_string, "good");
 
   // Test: Getting empty string works
   std::string empty_string;
-  EXPECT_OK(json_struct.getString("empty_string", &empty_string));
+  EXPECT_TRUE(json_struct.getString("empty_string", &empty_string).ok());
   EXPECT_TRUE(empty_string.empty());
 
   // Test: Getting a string that is not a string type fails
@@ -79,12 +80,12 @@ TEST(JsonStructTest, GetInt) {
 
   // Test: Getting an integer works
   int good_int;
-  EXPECT_OK(json_struct.getInteger("good_int", &good_int));
+  EXPECT_TRUE(json_struct.getInteger("good_int", &good_int).ok());
   EXPECT_EQ(good_int, 377);
 
   // Test: Getting an integer that is actually a float passes
   int float_to_int;
-  EXPECT_OK(json_struct.getInteger("float_number", &float_to_int));
+  EXPECT_TRUE(json_struct.getInteger("float_number", &float_to_int).ok());
   EXPECT_EQ(float_to_int, 1);
 
   // Test: Getting an integer that is not a number type fails

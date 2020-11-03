@@ -15,6 +15,7 @@
 #include "src/envoy/utils/http_header_utils.h"
 
 #include "common/common/empty_string.h"
+#include "common/http/header_utility.h"
 #include "common/http/headers.h"
 
 namespace espv2 {
@@ -38,19 +39,23 @@ absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry) {
 
 absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
                                 const Envoy::Http::LowerCaseString& header) {
-  const auto* entry = headers.get(header);
-  return readHeaderEntry(entry);
+  const auto result =
+      Envoy::Http::HeaderUtility::getAllOfHeaderAsString(headers, header);
+  if (!result.result().has_value()) {
+    return Envoy::EMPTY_STRING;
+  }
+  return result.result().value();
 }
 
 bool handleHttpMethodOverride(Envoy::Http::RequestHeaderMap& headers) {
-  const auto* entry = headers.get(kHttpMethodOverrideHeader);
-  if (entry == nullptr) {
+  const auto entry = headers.get(kHttpMethodOverrideHeader);
+  if (entry.empty()) {
     return false;
   }
 
   // Override can be confusing while debugging, log it.
   absl::string_view method_original = headers.Method()->value().getStringView();
-  absl::string_view method_override = entry->value().getStringView();
+  absl::string_view method_override = entry[0]->value().getStringView();
   ENVOY_LOG_MISC(debug, "Original :method = {}, x-http-method-override = {}",
                  method_original, method_override);
 

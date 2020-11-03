@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
@@ -92,8 +93,10 @@ func TestServiceControlAccessTokenFromIam(t *testing.T) {
 
 		if iamReqBody, err := s.MockIamServer.GetRequestBody(); err != nil {
 			t.Errorf("Test Desc(%s): failed to get request body", tc.desc)
-		} else if tc.wantIamReqBody != "" && tc.wantIamReqBody != iamReqBody {
-			t.Errorf("Test Desc(%s), different request body received by iam, expected: %s, got: %s", tc.desc, tc.wantIamReqBody, iamReqBody)
+		} else if tc.wantIamReqBody != "" {
+			if err := util.JsonEqual(tc.wantIamReqBody, iamReqBody); err != nil {
+				t.Errorf("Test Desc(%s), different iam request body, \n %v", tc.desc, err)
+			}
 		}
 	}
 }

@@ -42,12 +42,10 @@ void ServiceControlCallImpl::createImdsTokenSub() {
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_->runOnAllThreads(
-            [new_token](Envoy::ThreadLocal::ThreadLocalObjectSharedPtr object) {
-              object->asType<ThreadLocalCache>().set_sc_token(new_token);
-              object->asType<ThreadLocalCache>().set_quota_token(new_token);
-              return object;
-            });
+        tls_.runOnAllThreads([new_token](ThreadLocalCache& object) {
+          object.set_sc_token(new_token);
+          object.set_quota_token(new_token);
+        });
       });
 }
 
@@ -84,12 +82,10 @@ void ServiceControlCallImpl::createIamTokenSub() {
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_->runOnAllThreads(
-            [new_token](Envoy::ThreadLocal::ThreadLocalObjectSharedPtr object) {
-              object->asType<ThreadLocalCache>().set_sc_token(new_token);
-              object->asType<ThreadLocalCache>().set_quota_token(new_token);
-              return object;
-            });
+        tls_.runOnAllThreads([new_token](ThreadLocalCache& object) {
+          object.set_sc_token(new_token);
+          object.set_quota_token(new_token);
+        });
       },
       filter_config_.iam_token().delegates(), scopes,
       [this]() { return access_token_for_iam_; });
@@ -101,14 +97,13 @@ ServiceControlCallImpl::ServiceControlCallImpl(
     Envoy::Server::Configuration::FactoryContext& context)
     : filter_config_(*proto_config),
       token_subscriber_factory_(context),
-      tls_(context.threadLocal().allocateSlot()) {
+      tls_(context.threadLocal()) {
   // Pass shared_ptr of proto_config to the function capture so that
   // it will not be released when the function is called.
-  tls_->set([proto_config, &config, stats_prefix, &scope = context.scope(),
-             &cm = context.clusterManager(),
-             &time_source =
-                 context.timeSource()](Envoy::Event::Dispatcher& dispatcher)
-                -> Envoy::ThreadLocal::ThreadLocalObjectSharedPtr {
+  tls_.set([proto_config, &config, stats_prefix, &scope = context.scope(),
+            &cm = context.clusterManager(),
+            &time_source =
+                context.timeSource()](Envoy::Event::Dispatcher& dispatcher) {
     return std::make_shared<ThreadLocalCache>(config, *proto_config,
                                               stats_prefix, scope, cm,
                                               time_source, dispatcher);
