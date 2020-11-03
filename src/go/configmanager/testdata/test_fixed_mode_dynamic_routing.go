@@ -297,6 +297,7 @@ var (
                               "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
                            },
+                           "depErrorBehavior":"BLOCK_INIT_ON_ALL_ERRORS",
                            "jwtAudienceList":[
                               "1083071298623-e...t.apps.googleusercontent.com",
                               "https://us-central1-cloud-esf.cloudfunctions.net/hello",

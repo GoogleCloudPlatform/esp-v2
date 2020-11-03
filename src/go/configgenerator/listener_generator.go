@@ -137,7 +137,10 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 	}
 
 	// Add Backend Auth filter and Backend Routing if needed.
-	backendAuthFilter := makeBackendAuthFilter(serviceInfo)
+	backendAuthFilter, err := makeBackendAuthFilter(serviceInfo)
+	if err != nil {
+		return nil, fmt.Errorf("could not add backend auth filter: %v", err)
+	}
 	if backendAuthFilter != nil {
 		httpFilters = append(httpFilters, backendAuthFilter)
 		jsonStr, _ := util.ProtoToJson(backendAuthFilter)
@@ -746,7 +749,7 @@ func makeTranscoderFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	return nil
 }
 
-func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
+func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	// Use map to collect list of unique jwt audiences.
 	audMap := make(map[string]bool)
 	for _, method := range serviceInfo.Methods {
@@ -756,7 +759,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 	// If audMap is empty, not need to add the filter.
 	if len(audMap) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	var audList []string
@@ -768,6 +771,12 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	backendAuthConfig := &bapb.FilterConfig{
 		JwtAudienceList: audList,
 	}
+
+	depErrorBehaviorEnum, ok := commonpb.DependencyErrorBehavior_value[serviceInfo.Options.DependencyErrorBehavior]
+	if !ok {
+		return nil, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are (%+v)", serviceInfo.Options.DependencyErrorBehavior, commonpb.DependencyErrorBehavior_name)
+	}
+	backendAuthConfig.DepErrorBehavior = commonpb.DependencyErrorBehavior(depErrorBehaviorEnum)
 
 	if serviceInfo.Options.BackendAuthCredentials != nil {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
@@ -797,7 +806,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		Name:       util.BackendAuth,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{backendAuthConfigStruct},
 	}
-	return backendAuthFilter
+	return backendAuthFilter, nil
 }
 
 func makeHealthCheckFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
