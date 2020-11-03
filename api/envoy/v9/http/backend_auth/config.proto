@@ -61,6 +61,5 @@ message FilterConfig {
   }
 
   // How the filter config will handle failures when fetching ID tokens.
-  espv2.api.envoy.v9.http.common.DependencyErrorBehavior dep_error_behavior = 4
-      [(validate.rules).enum = { in: [ 1, 2 ] }];
+  espv2.api.envoy.v9.http.common.DependencyErrorBehavior dep_error_behavior = 4;
 }
