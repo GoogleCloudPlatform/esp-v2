@@ -4,10 +4,6 @@
 build --define=grpc_no_ares=true
 build --cxxopt='-std=c++17'
 
-# Required by envoy and grpc-echo
-build --incompatible_disable_deprecated_attr_params=false
-query --incompatible_disable_deprecated_attr_params=false
-
 # Compile a Position Independent Executable
 # Ref: github.com/envoyproxy/envoy#8792
 build --copt=-fPIC
@@ -100,8 +96,9 @@ build:asan-fuzzer --test_env=UBSAN_OPTIONS=print_stacktrace=1
 
 # Coverage
 coverage --config=coverage
+coverage --build_tests_only
 build:coverage --action_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
-build:coverage --action_env=GCOV=llvm-profdata
+build:coverage --action_env=GCOV=llvm-profdata-10
 build:coverage --action_env=CC=clang-10
 build:coverage --action_env=CXX=clang++-10
 build:coverage --copt=-DNDEBUG
