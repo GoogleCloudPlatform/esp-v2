@@ -79,7 +79,8 @@ var (
 	but the 'jwks_uri' field must not be empty in any authentication provider. 
 	This should be disabled when the URLs configured by the API Producer cannot be trusted.`)
 	DependencyErrorBehavior = flag.String("dependency_error_behavior", commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
-		`The behavior all Envoy filter will adhere to when waiting for external dependencies during filter config.`)
+		`The behavior all Envoy filter will adhere to when waiting for external dependencies during filter config.
+						Value must match the enum espv2.api.envoy.v9.http.common.DependencyErrorBehavior.`)
 
 	// Envoy configurations.
 	AccessLog       = flag.String("access_log", "", "Path to a local file to which the access log entries will be written")
