@@ -861,7 +861,7 @@ func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
 func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, error) {
 	depErrorBehaviorInt, ok := commonpb.DependencyErrorBehavior_value[stringVal]
 	if !ok {
-		return commonpb.DependencyErrorBehavior_UNSPECIFIED, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are (%+v)", stringVal, commonpb.DependencyErrorBehavior_name)
+		return commonpb.DependencyErrorBehavior_UNSPECIFIED, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are: %v", stringVal, commonpb.DependencyErrorBehavior_name)
 	}
 	return commonpb.DependencyErrorBehavior(depErrorBehaviorInt), nil
 }

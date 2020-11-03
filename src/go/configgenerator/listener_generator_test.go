@@ -593,7 +593,7 @@ func TestBackendAuthFilter(t *testing.T) {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
       "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
-		  "depErrorBehavior":"ALWAYS_INIT",
+			"depErrorBehavior":"ALWAYS_INIT",
       "iamToken":{
          "accessToken":{
             "remoteToken":{
@@ -638,7 +638,7 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			wantError: "unknown value for DependencyErrorBehavior",
+			wantError: "unknown value for DependencyErrorBehavior (UNKNOWN_ERROR_BEHAVIOR), accepted values are: map[0:UNSPECIFIED 1:BLOCK_INIT_ON_ANY_ERROR 2:ALWAYS_INIT]",
 		},
 	}
 
