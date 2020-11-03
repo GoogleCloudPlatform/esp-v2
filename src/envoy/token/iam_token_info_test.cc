@@ -70,7 +70,7 @@ TEST_F(IamTokenInfoTest, SimpleSuccess) {
   EXPECT_EQ(got_msg->headers().Host()->value().getStringView(), "iam-url.com");
   EXPECT_EQ(got_msg->headers().Path()->value().getStringView(), "/path1");
   EXPECT_EQ(got_msg->headers()
-                .get(Envoy::Http::CustomHeaders::get().Authorization)
+                .get(Envoy::Http::CustomHeaders::get().Authorization)[0]
                 ->value()
                 .getStringView(),
             "Bearer valid-access-token");

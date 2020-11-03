@@ -42,14 +42,14 @@ class AudienceContext {
       const token::TokenSubscriberFactory& token_subscriber_factory,
       token::GetTokenFunc access_token_fn);
   TokenSharedPtr token() const {
-    if (tls_->getTyped<TokenCache>().token_) {
-      return tls_->getTyped<TokenCache>().token_;
+    if (tls_->token_) {
+      return tls_->token_;
     }
     return nullptr;
   }
 
  private:
-  Envoy::ThreadLocal::SlotPtr tls_;
+  Envoy::ThreadLocal::TypedSlot<TokenCache> tls_;
   token::TokenSubscriberPtr iam_token_sub_ptr_;
   token::TokenSubscriberPtr imds_token_sub_ptr_;
 };

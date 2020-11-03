@@ -38,19 +38,14 @@ AudienceContext::AudienceContext(
     const FilterConfig& filter_config,
     const token::TokenSubscriberFactory& token_subscriber_factory,
     GetTokenFunc access_token_fn)
-    : tls_(context.threadLocal().allocateSlot()) {
-  tls_->set([](Envoy::Event::Dispatcher&)
-                -> Envoy::ThreadLocal::ThreadLocalObjectSharedPtr {
-    return std::make_shared<TokenCache>();
-  });
+    : tls_(context.threadLocal()) {
+  tls_.set(
+      [](Envoy::Event::Dispatcher&) { return std::make_shared<TokenCache>(); });
 
   UpdateTokenCallback callback = [this](absl::string_view token) {
     TokenSharedPtr new_token = std::make_shared<std::string>(token);
-    tls_->runOnAllThreads(
-        [new_token](Envoy::ThreadLocal::ThreadLocalObjectSharedPtr object) {
-          object->asType<TokenCache>().token_ = new_token;
-          return object;
-        });
+    tls_.runOnAllThreads(
+        [new_token](TokenCache& obj) { obj.token_ = new_token; });
   };
 
   switch (filter_config.id_token_info_case()) {

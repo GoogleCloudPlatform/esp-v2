@@ -37,7 +37,7 @@ TEST(HttpHeaderUtilsTest, HttpMethodOverride) {
   // Expect the handler to modify the headers.
   EXPECT_TRUE(override);
   EXPECT_EQ(headers.Method()->value().getStringView(), "GET");
-  EXPECT_EQ(headers.get(kHttpMethodOverrideHeader), nullptr);
+  EXPECT_TRUE(headers.get(kHttpMethodOverrideHeader).empty());
 }
 
 TEST(HttpHeaderUtilsTest, NoHttpMethodOverride) {

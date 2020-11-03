@@ -98,9 +98,7 @@ class ServiceControlCallImpl
 
  private:
   // Get thread local cache object.
-  ThreadLocalCache& getTLCache() const {
-    return tls_->getTyped<ThreadLocalCache>();
-  }
+  ThreadLocalCache& getTLCache() { return tls_.get(); }
 
   void createImdsTokenSub();
   void createIamTokenSub();
@@ -122,7 +120,7 @@ class ServiceControlCallImpl
   // Token subscriber used to fetch access token from iam for service control
   token::TokenSubscriberPtr iam_token_sub_;
 
-  Envoy::ThreadLocal::SlotPtr tls_;
+  Envoy::ThreadLocal::TypedSlot<ThreadLocalCache> tls_;
 };  // namespace ServiceControl
 
 class ServiceControlCallFactoryImpl : public ServiceControlCallFactory {
