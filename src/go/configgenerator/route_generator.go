@@ -30,6 +30,7 @@ import (
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -201,6 +202,18 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 		prAny, _ := ptypes.MarshalAny(pr)
 		perFilterConfig[util.PathRewrite] = prAny
 	}
+
+	// add JwtAuthn PerRouteConfig
+	if method.RequireAuth {
+		jwtPerRoute := &jwtpb.PerRouteConfig{
+			RequirementSpecifier: &jwtpb.PerRouteConfig_RequirementName{
+				RequirementName: operation,
+			},
+		}
+		jwt, _ := ptypes.MarshalAny(jwtPerRoute)
+		perFilterConfig[util.JwtAuthn] = jwt
+	}
+
 	return perFilterConfig
 }
 

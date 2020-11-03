@@ -146,6 +146,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if err := serviceInfo.processLocalBackendOperations(); err != nil {
 		return nil, err
 	}
+	if err := serviceInfo.processAuthRequirement(); err != nil {
+		return nil, err
+	}
 
 	return serviceInfo, nil
 }
@@ -787,6 +790,19 @@ func (s *ServiceInfo) getOrCreateMethod(name string) (*MethodInfo, error) {
 
 func (s *ServiceInfo) LocalBackendClusterName() string {
 	return util.BackendClusterName(fmt.Sprintf("%s_local", s.Name))
+}
+
+func (s *ServiceInfo) processAuthRequirement() error {
+	auth := s.serviceConfig.GetAuthentication()
+	for _, rule := range auth.GetRules() {
+		if len(rule.GetRequirements()) > 0 {
+			if s.Methods[rule.GetSelector()] == nil {
+				return fmt.Errorf("Authentication selector %s is not defined in Api.method or Http.rule", rule.GetSelector())
+			}
+			s.Methods[rule.GetSelector()].RequireAuth = true
+		}
+	}
+	return nil
 }
 
 // If the backend address's scheme is grpc/grpcs, it should be changed it http or https.

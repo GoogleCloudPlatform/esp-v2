@@ -83,6 +83,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(transcoderpb.GrpcJsonTranscoder), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication":
 		return new(jwtpb.JwtAuthentication), nil
+	case "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig":
+		return new(jwtpb.PerRouteConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig":

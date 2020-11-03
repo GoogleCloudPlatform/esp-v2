@@ -480,11 +480,8 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 
 	jwtAuthentication := &jwtpb.JwtAuthentication{
-		Providers: providers,
-		FilterStateRules: &jwtpb.FilterStateRule{
-			Name:     "com.google.espv2.filters.http.path_matcher.operation",
-			Requires: requirements,
-		},
+		Providers:      providers,
+		RequirementMap: requirements,
 	}
 
 	jas, _ := ptypes.MarshalAny(jwtAuthentication)
