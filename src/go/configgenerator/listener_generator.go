@@ -16,7 +16,6 @@ package configgenerator
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -862,8 +861,11 @@ func makeRouterFilter(opts options.ConfigGeneratorOptions) *hcmpb.HttpFilter {
 func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, error) {
 	depErrorBehaviorInt, ok := commonpb.DependencyErrorBehavior_value[stringVal]
 	if !ok {
-		values := reflect.ValueOf(commonpb.DependencyErrorBehavior_value).MapKeys()
-		return commonpb.DependencyErrorBehavior_UNSPECIFIED, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are: %+q", stringVal, values)
+		keys := make([]string, 0, len(commonpb.DependencyErrorBehavior_value))
+		for k := range commonpb.DependencyErrorBehavior_value {
+			keys = append(keys, k)
+		}
+		return commonpb.DependencyErrorBehavior_UNSPECIFIED, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are: %+q", stringVal, keys)
 	}
 	return commonpb.DependencyErrorBehavior(depErrorBehaviorInt), nil
 }
