@@ -19,39 +19,6 @@ package espv2.api.envoy.v9.http.common;
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
 
-// Pattern defines a single pattern to match against
-// incoming requests. This pattern matcher is not limited to HTTP requests.
-//
-// ```yaml
-// pattern:
-//   uriTemplate: /foo/bar
-//   httpMethod: GET
-// ```
-message Pattern {
-  // URI template to match against as defined by
-  // [rfc6570](https://tools.ietf.org/html/rfc6570). For example, the
-  // following are valid URI templates:
-  //
-  //     /pets
-  //     /pets/{id}
-  //     /dictionary/{term:1}/{term}
-  //     /search{?q*,lang}
-  //
-  string uri_template = 1 [(validate.rules).string = {
-    // Must not be empty, at a minimum must be "/".
-    min_len: 1,
-    // Does not contain query params ('?', '&'), fragments ('#'), or invalid
-    // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
-    pattern: '^[^?&#\\r\\n\\0]+$',
-  }];
-
-  // HTTP request method to match against as defined by
-  // [rfc7231](https://tools.ietf.org/html/rfc7231#page-21). For
-  // example: GET, HEAD, POST, PUT, DELETE.
-  string http_method = 2
-      [(validate.rules).string.well_known_regex = HTTP_HEADER_NAME];
-}
-
 message HttpUri {
   // The uri string including the domain and path.
   string uri = 1 [(validate.rules).string = {
