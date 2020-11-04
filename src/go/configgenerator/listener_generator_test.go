@@ -638,7 +638,7 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			wantError: `unknown value for DependencyErrorBehavior (UNKNOWN_ERROR_BEHAVIOR), accepted values are: ["UNSPECIFIED" "BLOCK_INIT_ON_ANY_ERROR" "ALWAYS_INIT"]`,
+			wantError: `unknown value for DependencyErrorBehavior (UNKNOWN_ERROR_BEHAVIOR), accepted values are: ["ALWAYS_INIT" "BLOCK_INIT_ON_ANY_ERROR" "UNSPECIFIED"]`,
 		},
 	}
 
