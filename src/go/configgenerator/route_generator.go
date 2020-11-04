@@ -178,14 +178,18 @@ func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *httppattern.
 	return nil
 }
 
-func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, httpRule *httppattern.Pattern) map[string]*anypb.Any {
+func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, httpRule *httppattern.Pattern) (map[string]*anypb.Any, error) {
 	perFilterConfig := make(map[string]*anypb.Any)
 
 	// Always add ServiceControl PerRouteConfig
 	scPerRoute := &scpb.PerRouteFilterConfig{
 		OperationName: operation,
 	}
-	scpr, _ := ptypes.MarshalAny(scPerRoute)
+	scpr, err := ptypes.MarshalAny(scPerRoute)
+	if err != nil {
+		return perFilterConfig, fmt.Errorf("error marshaling service_control per-route config to Any: %v", err)
+	}
+
 	perFilterConfig[util.ServiceControl] = scpr
 
 	// add BackendAuth PerRouteConfig if needed
@@ -193,13 +197,19 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 		auPerRoute := &aupb.PerRouteFilterConfig{
 			JwtAudience: method.BackendInfo.JwtAudience,
 		}
-		aupr, _ := ptypes.MarshalAny(auPerRoute)
+		aupr, err := ptypes.MarshalAny(auPerRoute)
+		if err != nil {
+			return perFilterConfig, fmt.Errorf("error marshaling backend_auth per-route config to Any: %v", err)
+		}
 		perFilterConfig[util.BackendAuth] = aupr
 	}
 
 	// add PathRewrite PerRouteConfig if needed
 	if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
-		prAny, _ := ptypes.MarshalAny(pr)
+		prAny, err := ptypes.MarshalAny(pr)
+		if err != nil {
+			return perFilterConfig, fmt.Errorf("error marshaling path_rewrite per-route config to Any: %v", err)
+		}
 		perFilterConfig[util.PathRewrite] = prAny
 	}
 
@@ -210,11 +220,14 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 				RequirementName: operation,
 			},
 		}
-		jwt, _ := ptypes.MarshalAny(jwtPerRoute)
+		jwt, err := ptypes.MarshalAny(jwtPerRoute)
+		if err != nil {
+			return perFilterConfig, fmt.Errorf("error marshaling jwt_authn per-route config to Any: %v", err)
+		}
 		perFilterConfig[util.JwtAuthn] = jwt
 	}
 
-	return perFilterConfig
+	return perFilterConfig, nil
 }
 
 func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
@@ -263,7 +276,11 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 				// Note we don't add ApiName to reduce the length of the span name.
 				Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 			},
-			TypedPerFilterConfig: makePerRouteFilterConfig(operation, method, httpRule),
+		}
+
+		r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
+		if err != nil {
+			return nil, fmt.Errorf("fail to make per-route filter config, %v", err)
 		}
 
 		if method.BackendInfo.Hostname != "" {

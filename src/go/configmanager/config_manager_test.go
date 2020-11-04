@@ -128,7 +128,10 @@ func TestFetchListeners(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				version, _ := resp.GetVersion()
+				version, err := resp.GetVersion()
+				if err != nil {
+					t.Fatal(err)
+				}
 				if version != testdata.TestFetchListenersConfigID {
 					t.Fatalf("snapshot cache fetch got version: %v, want: %v", version, testdata.TestFetchListenersConfigID)
 				}
@@ -272,7 +275,10 @@ func getListeners(configManager *ConfigManager, opts options.ConfigGeneratorOpti
 	if err != nil {
 		return nil, nil, "", err
 	}
-	resp, _ := respInterface.GetDiscoveryResponse()
+	resp, err := respInterface.GetDiscoveryResponse()
+	if err != nil {
+		return nil, nil, "", err
+	}
 
 	marshaler := &jsonpb.Marshaler{
 		AnyResolver: util.Resolver,
@@ -326,7 +332,10 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			continue
 		}
 
-		resp, _ := respInterface.GetDiscoveryResponse()
+		resp, err := respInterface.GetDiscoveryResponse()
+		if err != nil {
+			t.Fatal(err)
+		}
 		sortedClusters := sortClusters(resp.Resources)
 
 		if len(sortedClusters) != len(tc.wantedClusters) {
@@ -358,8 +367,16 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			t.Error(err)
 			continue
 		}
-		version, _ := respInterface.GetVersion()
-		resp, _ = respInterface.GetDiscoveryResponse()
+		version, err := respInterface.GetVersion()
+		if err != nil {
+			t.Fatal(err)
+			continue
+		}
+		resp, err = respInterface.GetDiscoveryResponse()
+		if err != nil {
+			t.Fatal(err)
+			continue
+		}
 
 		if version != testdata.TestFetchListenersConfigID {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, version, testdata.TestFetchListenersConfigID)
@@ -535,7 +552,10 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		version, _ := respInterface.GetVersion()
+		version, err := respInterface.GetVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		if version != oldConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, version, oldConfigID)
@@ -562,7 +582,10 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		version, _ = respInterface.GetVersion()
+		version, err = respInterface.GetVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		if version != newConfigID || configManager.curConfigId() != newConfigID {
 			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, version, newConfigID)
