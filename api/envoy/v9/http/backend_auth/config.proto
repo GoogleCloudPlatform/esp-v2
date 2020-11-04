@@ -59,4 +59,7 @@ message FilterConfig {
     // Information used to fetch id token from Google Cloud IAM.
     espv2.api.envoy.v9.http.common.IamTokenInfo iam_token = 3;
   }
+
+  // How the filter config will handle failures when fetching ID tokens.
+  espv2.api.envoy.v9.http.common.DependencyErrorBehavior dep_error_behavior = 4;
 }

@@ -19,6 +19,8 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
 )
 
 // ConfigGeneratorOptions describes the possible overrides for the service config to envoy config translation.
@@ -66,7 +68,8 @@ type ConfigGeneratorOptions struct {
 	TokenAgentPort    uint
 
 	// Flags for external calls.
-	DisableOidcDiscovery bool
+	DisableOidcDiscovery    bool
+	DependencyErrorBehavior string
 
 	// Flags for testing purpose.
 	SkipJwtAuthnFilter       bool
@@ -125,6 +128,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ListenerPort:                     8080,
 		TokenAgentPort:                   8791,
 		DisableOidcDiscovery:             false,
+		DependencyErrorBehavior:          commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
 		SslSidestreamClientRootCertsPath: util.DefaultRootCAPaths,
 		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:             true,

@@ -1139,6 +1139,7 @@ var (
                               "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
+                           "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
                            "gcpAttributes":{
                               "platform":"GCE(ESPv2)"
                            },
@@ -1641,6 +1642,7 @@ var (
                               "timeout":"30s",
                               "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
                            },
+                           "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
                            "gcpAttributes":{
                               "platform":"GCE(ESPv2)"
                            },

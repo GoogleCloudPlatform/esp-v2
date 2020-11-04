@@ -149,6 +149,7 @@
                       "name": "com.google.espv2.filters.http.service_control",
                       "typedConfig": {
                         "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.FilterConfig",
+                        "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                         "generatedHeaderPrefix": "X-Endpoint-",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
