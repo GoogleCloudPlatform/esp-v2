@@ -818,6 +818,7 @@ func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, 
 		for k := range commonpb.DependencyErrorBehavior_value {
 			keys = append(keys, k)
 		}
+		sort.Strings(keys)
 		return commonpb.DependencyErrorBehavior_UNSPECIFIED, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are: %+q", stringVal, keys)
 	}
 	return commonpb.DependencyErrorBehavior(depErrorBehaviorInt), nil
