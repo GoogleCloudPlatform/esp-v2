@@ -124,28 +124,6 @@
                   },
                   "httpFilters": [
                     {
-                      "name": "com.google.espv2.filters.http.path_matcher",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                        "rules": [
-                          {
-                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves",
-                            "pattern": {
-                              "httpMethod": "GET",
-                              "uriTemplate": "/shelves"
-                            }
-                          },
-                          {
-                            "operation": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/shelves"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typedConfig": {
                         "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.FilterConfig",

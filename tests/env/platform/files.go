@@ -55,8 +55,8 @@ const (
 	ScEnvoyConfig
 	DrServiceConfig
 	DrEnvoyConfig
-	PmServiceConfig
-	PmEnvoyConfig
+	RmServiceConfig
+	RmEnvoyConfig
 	SbServiceConfig
 	SbEnvoyConfig
 	GrpcEchoServiceConfig
@@ -103,8 +103,8 @@ var fileMap = map[RuntimeFile]string{
 	ScEnvoyConfig:         "../../../../examples/service_control/envoy_config.json",
 	DrServiceConfig:       "../../../../examples/dynamic_routing/service_config_generated.json",
 	DrEnvoyConfig:         "../../../../examples/dynamic_routing/envoy_config.json",
-	PmServiceConfig:       "../../../../examples/testdata/path_matcher/service_config_generated.json",
-	PmEnvoyConfig:         "../../../../examples/testdata/path_matcher/envoy_config.json",
+	RmServiceConfig:       "../../../../examples/testdata/route_match/service_config_generated.json",
+	RmEnvoyConfig:         "../../../../examples/testdata/route_match/envoy_config.json",
 	SbServiceConfig:       "../../../../examples/testdata/sidecar_backend/service_config_generated.json",
 	SbEnvoyConfig:         "../../../../examples/testdata/sidecar_backend/envoy_config.json",
 	GrpcEchoServiceConfig: "../../../../examples/grpc_dynamic_routing/service_config_generated.json",

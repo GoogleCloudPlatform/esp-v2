@@ -206,74 +206,9 @@
                   },
                   "httpFilters": [
                     {
-                      "name": "com.google.espv2.filters.http.path_matcher",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                        "rules": [
-                          {
-                            "operation": "test.grpc.Test.Echo",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/echo"
-                            }
-                          },
-                          {
-                            "operation": "test.grpc.Test.Echo",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/test.grpc.Test/Echo"
-                            }
-                          },
-                          {
-                            "operation": "test.grpc.Test.EchoStream",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/echostream"
-                            }
-                          },
-                          {
-                            "operation": "test.grpc.Test.EchoStream",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/test.grpc.Test/EchoStream"
-                            }
-                          },
-                          {
-                            "operation": "test.grpc.Test.Cork",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/test.grpc.Test/Cork"
-                            }
-                          },
-                          {
-                            "operation": "test.grpc.Test.EchoReport",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/echoreport"
-                            }
-                          },
-                          {
-                            "operation": "test.grpc.Test.EchoReport",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/test.grpc.Test/EchoReport"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
                       "name": "envoy.filters.http.jwt_authn",
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
-                        "filterStateRules": {
-                          "name": "com.google.espv2.filters.http.path_matcher.operation",
-                          "requires": {
-                            "test.grpc.Test.EchoStream": {
-                              "providerName": "test_jwk"
-                            }
-                          }
-                        },
                         "providers": {
                           "test_jwk": {
                             "audiences": [
@@ -303,6 +238,11 @@
                                 "uri": "https://www.googleapis.com/service_accounts/v1/jwk/e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com"
                               }
                             }
+                          }
+                        },
+                        "requirementMap": {
+                          "test.grpc.Test.EchoStream": {
+                            "providerName": "test_jwk"
                           }
                         }
                       }
@@ -1036,6 +976,10 @@
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.EchoStream"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "test.grpc.Test.EchoStream"
                               }
                             }
                           },
@@ -1152,6 +1096,10 @@
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "test.grpc.Test.EchoStream"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "test.grpc.Test.EchoStream"
                               }
                             }
                           }

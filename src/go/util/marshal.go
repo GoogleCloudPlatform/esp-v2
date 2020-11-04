@@ -22,10 +22,10 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher"
 	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 
+	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	statspb "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	accessfilepb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
@@ -83,10 +83,10 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(transcoderpb.GrpcJsonTranscoder), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication":
 		return new(jwtpb.JwtAuthentication), nil
+	case "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig":
+		return new(jwtpb.PerRouteConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
-	case "type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig":
-		return new(pmpb.FilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig":
 		return new(prpb.PerRouteFilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig":
@@ -109,6 +109,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(accessgrpcpb.TcpGrpcAccessLogConfig), nil
 	case "type.googleapis.com/envoy.extensions.access_loggers.grpc.v3.CommonGrpcAccessLogConfig":
 		return new(accessgrpcpb.CommonGrpcAccessLogConfig), nil
+	case "type.googleapis.com/envoy.config.listener.v3.Listener":
+		return new(listenerpb.Listener), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsConfig":
 		return new(statspb.StatsConfig), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsSink":

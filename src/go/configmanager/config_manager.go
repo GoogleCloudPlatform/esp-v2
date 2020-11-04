@@ -255,7 +255,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.Name)
 
-	var clusterResources, endpoints, runtimes, routes, listenerResources []types.Resource
+	var clusterResources, endpoints, secrets, runtimes, routes, listenerResources []types.Resource
 	clusters, err := gen.MakeClusters(m.serviceInfo)
 	if err != nil {
 		return nil, err
@@ -273,7 +273,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		listenerResources = append(listenerResources, lis)
 	}
 
-	snapshot := cache.NewSnapshot(m.curConfigId(), endpoints, clusterResources, routes, listenerResources, runtimes)
+	snapshot := cache.NewSnapshot(m.curConfigId(), endpoints, clusterResources, routes, listenerResources, runtimes, secrets)
 	m.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
 }

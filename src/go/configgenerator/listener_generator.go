@@ -28,7 +28,6 @@ import (
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 
 	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
@@ -72,16 +71,6 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 		httpFilters = append(httpFilters, corsFilter)
 		jsonStr, _ := util.ProtoToJson(corsFilter)
 		glog.Infof("adding CORS Filter config: %v", jsonStr)
-	}
-
-	// Add Path Matcher filter. The following filters rely on the dynamic
-	// metadata populated by Path Matcher filter.
-	// * Jwt Authentication filter
-	pathMatcherFilter := makePathMatcherFilter(serviceInfo)
-	if pathMatcherFilter != nil {
-		httpFilters = append(httpFilters, pathMatcherFilter)
-		jsonStr, _ := util.ProtoToJson(pathMatcherFilter)
-		glog.Infof("adding Path Matcher Filter config: %v", jsonStr)
 	}
 
 	// Add Health Check filter if needed. It must behind Path Matcher filter, since Service Control
@@ -331,39 +320,6 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 	return httpConMgr, nil
 }
 
-func makePathMatcherFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
-	var rules []*pmpb.PathMatcherRule
-	for _, operation := range serviceInfo.Operations {
-		method := serviceInfo.Methods[operation]
-
-		// Adds PathMatcherRule for HTTP method, whose HttpRule is not empty.
-		for _, httpRule := range method.HttpRule {
-			if httpRule.UriTemplate != nil && httpRule.HttpMethod != "" {
-				newHttpRule := &pmpb.PathMatcherRule{
-					Operation: operation,
-					Pattern: &commonpb.Pattern{
-						HttpMethod:  httpRule.HttpMethod,
-						UriTemplate: httpRule.UriTemplate.String(),
-					},
-				}
-				rules = append(rules, newHttpRule)
-			}
-		}
-	}
-
-	if len(rules) == 0 {
-		return nil
-	}
-
-	pathMatcherConfig := &pmpb.FilterConfig{Rules: rules}
-	pathMatcherConfigStruct, _ := ptypes.MarshalAny(pathMatcherConfig)
-	pathMatcherFilter := &hcmpb.HttpFilter{
-		Name:       util.PathMatcher,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: pathMatcherConfigStruct},
-	}
-	return pathMatcherFilter
-}
-
 func needPathRewrite(serviceInfo *sc.ServiceInfo) bool {
 	for _, method := range serviceInfo.Methods {
 		for _, httpRule := range method.HttpRule {
@@ -480,11 +436,8 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 
 	jwtAuthentication := &jwtpb.JwtAuthentication{
-		Providers: providers,
-		FilterStateRules: &jwtpb.FilterStateRule{
-			Name:     "com.google.espv2.filters.http.path_matcher.operation",
-			Requires: requirements,
-		},
+		Providers:      providers,
+		RequirementMap: requirements,
 	}
 
 	jas, _ := ptypes.MarshalAny(jwtAuthentication)

@@ -163,61 +163,9 @@
                   },
                   "httpFilters": [
                     {
-                      "name": "com.google.espv2.filters.http.path_matcher",
-                      "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                        "rules": [
-                          {
-                            "operation": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves",
-                            "pattern": {
-                              "httpMethod": "GET",
-                              "uriTemplate": "/shelves"
-                            }
-                          },
-                          {
-                            "operation": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
-                            "pattern": {
-                              "httpMethod": "POST",
-                              "uriTemplate": "/shelves"
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
                       "name": "envoy.filters.http.jwt_authn",
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
-                        "filterStateRules": {
-                          "name": "com.google.espv2.filters.http.path_matcher.operation",
-                          "requires": {
-                            "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf": {
-                              "providerAndAudiences": {
-                                "audiences": [
-                                  "bookstore.endpoints.cloudesf-testing.cloud.goog"
-                                ],
-                                "providerName": "auth0_jwk"
-                              }
-                            },
-                            "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves": {
-                              "requiresAny": {
-                                "requirements": [
-                                  {
-                                    "providerAndAudiences": {
-                                      "audiences": [
-                                        "apiproxy-231719"
-                                      ],
-                                      "providerName": "firebase"
-                                    }
-                                  },
-                                  {
-                                    "providerName": "google_id_token"
-                                  }
-                                ]
-                              }
-                            }
-                          }
-                        },
                         "providers": {
                           "auth0_jwk": {
                             "audiences": [
@@ -306,6 +254,33 @@
                               }
                             }
                           }
+                        },
+                        "requirementMap": {
+                          "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf": {
+                            "providerAndAudiences": {
+                              "audiences": [
+                                "bookstore.endpoints.cloudesf-testing.cloud.goog"
+                              ],
+                              "providerName": "auth0_jwk"
+                            }
+                          },
+                          "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves": {
+                            "requiresAny": {
+                              "requirements": [
+                                {
+                                  "providerAndAudiences": {
+                                    "audiences": [
+                                      "apiproxy-231719"
+                                    ],
+                                    "providerName": "firebase"
+                                  }
+                                },
+                                {
+                                  "providerName": "google_id_token"
+                                }
+                              ]
+                            }
+                          }
                         }
                       }
                     },
@@ -361,6 +336,10 @@
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
                               }
                             }
                           },
@@ -385,6 +364,10 @@
                               "com.google.espv2.filters.http.service_control": {
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
                               }
                             }
                           }
