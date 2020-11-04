@@ -46,8 +46,6 @@ const (
 
 	// ServiceControl filter.
 	ServiceControl = "com.google.espv2.filters.http.service_control"
-	// PathMatcher filter.
-	PathMatcher = "com.google.espv2.filters.http.path_matcher"
 	// PathRewrite filter.
 	PathRewrite = "com.google.espv2.filters.http.path_rewrite"
 	// BackendAuth filter.

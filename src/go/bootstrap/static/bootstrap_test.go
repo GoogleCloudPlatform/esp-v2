@@ -75,17 +75,6 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			envoyConfigPath:   platform.GetFilePath(platform.DrEnvoyConfig),
 		},
 		{
-			desc: "envoy config for path matcher",
-			opt_mod: func(opt *options.ConfigGeneratorOptions) {
-				opt.AdminPort = 0
-				opt.BackendAddress = "http://127.0.0.1:8082"
-				opt.DisableTracing = true
-				opt.SkipServiceControlFilter = true
-			},
-			serviceConfigPath: platform.GetFilePath(platform.PmServiceConfig),
-			envoyConfigPath:   platform.GetFilePath(platform.PmEnvoyConfig),
-		},
-		{
 			desc: "grpc dynamic routing",
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
 				opt.AdminPort = 0

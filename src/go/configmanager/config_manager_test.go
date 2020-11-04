@@ -31,12 +31,14 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/serviceconfig"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 
+	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	discoverypb "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -126,11 +128,12 @@ func TestFetchListeners(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				if resp.Version != testdata.TestFetchListenersConfigID {
-					t.Fatalf("snapshot cache fetch got version: %v, want: %v", resp.Version, testdata.TestFetchListenersConfigID)
+				version, _ := resp.GetVersion()
+				if version != testdata.TestFetchListenersConfigID {
+					t.Fatalf("snapshot cache fetch got version: %v, want: %v", version, testdata.TestFetchListenersConfigID)
 				}
-				if !proto.Equal(&resp.Request, req) {
-					t.Fatalf("snapshot cache fetch got request: %v, want: %v", resp.Request, req)
+				if !proto.Equal(resp.GetRequest(), req) {
+					t.Fatalf("snapshot cache fetch got request: %v, want: %v", resp.GetRequest(), req)
 				}
 
 				if err := util.JsonEqual(tc.wantedListeners, gotListeners); err != nil {
@@ -252,14 +255,14 @@ func TestRetryCallServiceManagement(t *testing.T) {
 	}
 }
 
-func getListeners(configManager *ConfigManager, opts options.ConfigGeneratorOptions) (*cache.Request, *cache.Response, string, error) {
+func getListeners(configManager *ConfigManager, opts options.ConfigGeneratorOptions) (*cache.Request, cache.Response, string, error) {
 	if configManager == nil {
 		return nil, nil, "", fmt.Errorf("configmanager is empty")
 	}
 
 	ctx := context.Background()
 	// First request, VersionId should be empty.
-	req := discoverypb.DiscoveryRequest{
+	req := &discoverypb.DiscoveryRequest{
 		Node: &corepb.Node{
 			Id: opts.Node,
 		},
@@ -269,13 +272,13 @@ func getListeners(configManager *ConfigManager, opts options.ConfigGeneratorOpti
 	if err != nil {
 		return nil, nil, "", err
 	}
-	resp := respInterface.(cache.Response)
+	resp, _ := respInterface.GetDiscoveryResponse()
 
 	marshaler := &jsonpb.Marshaler{
 		AnyResolver: util.Resolver,
 	}
 	gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
-	return &req, &resp, gotListeners, err
+	return req, respInterface, gotListeners, err
 }
 
 func TestFixedModeDynamicRouting(t *testing.T) {
@@ -306,7 +309,7 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 		}
 		ctx := context.Background()
 		// First request, VersionId should be empty.
-		reqForClusters := discoverypb.DiscoveryRequest{
+		reqForClusters := &discoverypb.DiscoveryRequest{
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
@@ -317,14 +320,14 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		respForClusters := respInterface.(cache.Response)
 
-		if !proto.Equal(&respForClusters.Request, &reqForClusters) {
-			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForClusters.Request, reqForClusters)
+		if !proto.Equal(respInterface.GetRequest(), reqForClusters) {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respInterface.GetRequest(), reqForClusters)
 			continue
 		}
 
-		sortedClusters := sortResources(respForClusters)
+		resp, _ := respInterface.GetDiscoveryResponse()
+		sortedClusters := sortClusters(resp.Resources)
 
 		if len(sortedClusters) != len(tc.wantedClusters) {
 			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got clusters: %v, want: %v", i, tc.desc, sortedClusters, tc.wantedClusters)
@@ -343,7 +346,7 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			}
 		}
 
-		reqForListener := discoverypb.DiscoveryRequest{
+		reqForListener := &discoverypb.DiscoveryRequest{
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
@@ -355,18 +358,19 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 			t.Error(err)
 			continue
 		}
-		respForListener := respInterface.(cache.Response)
+		version, _ := respInterface.GetVersion()
+		resp, _ = respInterface.GetDiscoveryResponse()
 
-		if respForListener.Version != testdata.TestFetchListenersConfigID {
-			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, respForListener.Version, testdata.TestFetchListenersConfigID)
+		if version != testdata.TestFetchListenersConfigID {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got version: %v, want: %v", i, tc.desc, version, testdata.TestFetchListenersConfigID)
 			continue
 		}
-		if !proto.Equal(&respForListener.Request, &reqForListener) {
-			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respForListener.Request, reqForListener)
+		if !proto.Equal(respInterface.GetRequest(), reqForListener) {
+			t.Errorf("Test Desc(%d): %s, snapshot cache fetch got request: %v, want: %v", i, tc.desc, respInterface.GetRequest(), reqForListener)
 			continue
 		}
 
-		gotListener, err := marshaler.MarshalToString(respForListener.Resources[0])
+		gotListener, err := marshaler.MarshalToString(resp.Resources[0])
 		if err != nil {
 			t.Error(err)
 			continue
@@ -519,10 +523,9 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		var respInterface cache.ResponseIface
-		var resp cache.Response
+		var respInterface cache.Response
 		ctx := context.Background()
-		req := discoverypb.DiscoveryRequest{
+		req := &discoverypb.DiscoveryRequest{
 			Node: &corepb.Node{
 				Id: opts.Node,
 			},
@@ -532,13 +535,13 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		resp = respInterface.(cache.Response)
+		version, _ := respInterface.GetVersion()
 
-		if resp.Version != oldConfigID {
-			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, resp.Version, oldConfigID)
+		if version != oldConfigID {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, version, oldConfigID)
 		}
-		if !proto.Equal(&resp.Request, &req) {
-			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", tc.desc, resp.Request, req)
+		if !proto.Equal(respInterface.GetRequest(), req) {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", tc.desc, respInterface.GetRequest(), req)
 		}
 
 		if err = genProtoBinary(tc.fakeNewScReport, new(servicecontrolpb.ReportResponse), &fakeScReport); err != nil {
@@ -559,14 +562,14 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		resp = respInterface.(cache.Response)
+		version, _ = respInterface.GetVersion()
 
-		if resp.Version != newConfigID || configManager.curConfigId() != newConfigID {
-			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, resp.Version, newConfigID)
+		if version != newConfigID || configManager.curConfigId() != newConfigID {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got version: %v, want: %v", tc.desc, version, newConfigID)
 		}
 
-		if !proto.Equal(&resp.Request, &req) {
-			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", tc.desc, resp.Request, req)
+		if !proto.Equal(respInterface.GetRequest(), req) {
+			t.Errorf("Test Desc: %s, snapshot cache fetch got request: %v, want: %v", tc.desc, respInterface.GetRequest(), req)
 		}
 	})
 }
@@ -633,14 +636,17 @@ var initMockServer = func(t *testing.T, config *safeData) *httptest.Server {
 	}))
 }
 
-func sortResources(response cache.Response) []types.Resource {
-	// configManager.cache may change the order
-	// sort them before comparing results.
-	sortedResources := response.Resources
-	sort.Slice(sortedResources, func(i, j int) bool {
-		return cache.GetResourceName(sortedResources[i]) < cache.GetResourceName(sortedResources[j])
+func getClusterName(a *any.Any) string {
+	c := &clusterpb.Cluster{}
+	ptypes.UnmarshalAny(a, c)
+	return c.GetName()
+}
+
+func sortClusters(s []*any.Any) []*any.Any {
+	sort.Slice(s, func(i, j int) bool {
+		return getClusterName(s[i]) < getClusterName(s[j])
 	})
-	return sortedResources
+	return s
 }
 
 func unmarshalJsonTestToPbMessage(input string, output proto.Message) error {

@@ -70,6 +70,7 @@ var (
 
 	WantedListsenerForGrpcWithTranscoding = fmt.Sprintf(`
 {
+   "@type": "type.googleapis.com/envoy.config.listener.v3.Listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -87,21 +88,6 @@ var (
                      "headersWithUnderscoresAction":"REJECT_REQUEST"
                   },
                   "httpFilters":[
-                     {
-                        "name":"com.google.espv2.filters.http.path_matcher",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                           "rules":[
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                 }
-                              }
-                           ]
-                        }
-                     },
                      {
                         "name":"envoy.filters.http.grpc_web"
                      },
@@ -234,6 +220,7 @@ var (
 
 	WantedListsenerForGrpcWithJwtFilterWithAuds = fmt.Sprintf(`
 {
+   "@type": "type.googleapis.com/envoy.config.listener.v3.Listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -250,27 +237,10 @@ var (
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"com.google.espv2.filters.http.path_matcher",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                           "rules":[
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                 }
-                              }
-                           ]
-                        }
-                     },
-                     {
                         "name":"envoy.filters.http.jwt_authn",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
-                           "filterStateRules":{
-                              "name":"com.google.espv2.filters.http.path_matcher.operation",
-                              "requires":{
+                           "requirementMap":{
                                  "endpoints.examples.bookstore.Bookstore.CreateShelf":{
                                     "providerAndAudiences":{
                                        "audiences":[
@@ -279,7 +249,6 @@ var (
                                        "providerName":"firebase"
                                     }
                                  }
-                              }
                            },
                            "providers":{
                               "firebase":{
@@ -359,6 +328,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
                               }
@@ -440,6 +413,7 @@ var (
             }`, TestFetchListenersEndpointName, TestFetchListenersEndpointName)
 
 	WantedListsenerForGrpcWithJwtFilterWithoutAuds = fmt.Sprintf(`{
+   "@type": "type.googleapis.com/envoy.config.listener.v3.Listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -456,55 +430,16 @@ var (
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"com.google.espv2.filters.http.path_matcher",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                           "rules":[
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/v1/shelves/{shelf=*}"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                 "pattern":{
-                                    "httpMethod":"GET",
-                                    "uriTemplate":"/v1/shelves"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-                                 }
-                              }
-                           ]
-                        }
-                     },
-                     {
                         "name":"envoy.filters.http.jwt_authn",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
-                           "filterStateRules":{
-                              "name":"com.google.espv2.filters.http.path_matcher.operation",
-                              "requires":{
+                           "requirementMap":{
                                  "endpoints.examples.bookstore.Bookstore.CreateShelf":{
                                     "providerName":"firebase"
                                  },
                                  "endpoints.examples.bookstore.Bookstore.ListShelves":{
                                     "providerName":"firebase"
                                  }
-                              }
                            },
                            "providers":{
                               "firebase":{
@@ -583,6 +518,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
                               },
@@ -607,6 +546,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "endpoints.examples.bookstore.Bookstore.ListShelves"
                                     }
                                  }
                               },
@@ -631,6 +574,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"endpoints.examples.bookstore.Bookstore.ListShelves"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "endpoints.examples.bookstore.Bookstore.ListShelves"
                                     }
                                  }
                               },
@@ -660,6 +607,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
                               }
@@ -742,6 +693,7 @@ var (
                 }
             }`, TestFetchListenersEndpointName, TestFetchListenersEndpointName)
 	WantedListenerForGrpcWithJwtFilterWithMultiReqs = fmt.Sprintf(`{
+   "@type": "type.googleapis.com/envoy.config.listener.v3.Listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -758,48 +710,10 @@ var (
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"com.google.espv2.filters.http.path_matcher",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                           "rules":[
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
-                                 "pattern":{
-                                    "httpMethod":"DELETE",
-                                    "uriTemplate":"/v1/shelves/{shelf=*}/books/{book=*}"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.DeleteBook",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/DeleteBook"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
-                                 "pattern":{
-                                    "httpMethod":"GET",
-                                    "uriTemplate":"/v1/shelves/{shelf=*}/books/{book=*}"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.GetBook",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/GetBook"
-                                 }
-                              }
-                           ]
-                        }
-                     },
-                     {
                         "name":"envoy.filters.http.jwt_authn",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
-                           "filterStateRules":{
-                              "name":"com.google.espv2.filters.http.path_matcher.operation",
-                              "requires":{
+                           "requirementMap":{
                                  "endpoints.examples.bookstore.Bookstore.GetBook":{
                                     "requiresAny":{
                                        "requirements":[
@@ -812,7 +726,6 @@ var (
                                        ]
                                     }
                                  }
-                              }
                            },
                            "providers":{
                               "firebase1":{
@@ -944,6 +857,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"endpoints.examples.bookstore.Bookstore.GetBook"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "endpoints.examples.bookstore.Bookstore.GetBook"
                                     }
                                  }
                               },
@@ -1002,6 +919,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"endpoints.examples.bookstore.Bookstore.GetBook"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "endpoints.examples.bookstore.Bookstore.GetBook"
                                     }
                                  }
                               }
@@ -1079,6 +1000,7 @@ var (
             }`, TestFetchListenersProjectName, TestFetchListenersEndpointName, testProjectID, TestFetchListenersEndpointName)
 
 	WantedListenerForGrpcWithServiceControl = fmt.Sprintf(`{
+   "@type": "type.googleapis.com/envoy.config.listener.v3.Listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -1094,42 +1016,6 @@ var (
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
-                     {
-                        "name":"com.google.espv2.filters.http.path_matcher",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                           "rules":[
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/v1/shelves"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.CreateShelf",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/CreateShelf"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                 "pattern":{
-                                    "httpMethod":"GET",
-                                    "uriTemplate":"/v1/shelves"
-                                 }
-                              },
-                              {
-                                 "operation":"endpoints.examples.bookstore.Bookstore.ListShelves",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/endpoints.examples.bookstore.Bookstore/ListShelves"
-                                 }
-                              }
-                           ]
-                        }
-                     },
                      {
                         "name":"com.google.espv2.filters.http.service_control",
                         "typedConfig":{
@@ -1388,13 +1274,14 @@ var (
             }`, TestFetchListenersEndpointName)
 
 	WantedListenerForHttp = fmt.Sprintf(`{
+   "@type": "type.googleapis.com/envoy.config.listener.v3.Listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
          "portValue":8080
       }
    },
-	 "name": "ingress_listener",
+   "name": "ingress_listener",
    "filterChains":[
       {
          "filters":[
@@ -1404,34 +1291,10 @@ var (
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
                      {
-                        "name":"com.google.espv2.filters.http.path_matcher",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                           "rules":[
-                              {
-                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-                                 "pattern":{
-                                    "httpMethod":"POST",
-                                    "uriTemplate":"/echo"
-                                 }
-                              },
-                              {
-                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
-                                 "pattern":{
-                                    "httpMethod":"GET",
-                                    "uriTemplate":"/auth/info/googlejwt"
-                                 }
-                              }
-                           ]
-                        }
-                     },
-                     {
                         "name":"envoy.filters.http.jwt_authn",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
-                           "filterStateRules":{
-                              "name":"com.google.espv2.filters.http.path_matcher.operation",
-                              "requires":{
+                           "requirementMap":{
                                  "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt":{
                                     "providerAndAudiences":{
                                        "audiences":[
@@ -1440,7 +1303,6 @@ var (
                                        "providerName":"firebase"
                                     }
                                  }
-                              }
                            },
                            "providers":{
                               "firebase":{
@@ -1517,6 +1379,10 @@ var (
                                     "com.google.espv2.filters.http.service_control":{
                                        "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                        "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
+                                    },
+                                    "envoy.filters.http.jwt_authn": {
+                                       "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                       "requirementName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
                                     }
                                  }
                               },
@@ -1555,8 +1421,8 @@ var (
                   "useRemoteAddress":false,
                   %s,
                   "xffNumTrustedHops":2
-               }
-            }
+                }
+             }            
          ]
       }
    ]
@@ -1596,6 +1462,7 @@ var (
             }`, TestFetchListenersProjectName, testProjectID, TestFetchListenersProjectName)
 
 	WantedListenersAllowCorsTracingDebug = fmt.Sprintf(`{
+   "@type": "type.googleapis.com/envoy.config.listener.v3.Listener",
    "address":{
       "socketAddress":{
          "address":"0.0.0.0",
@@ -1611,28 +1478,6 @@ var (
                "typedConfig":{
                   "@type":"type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "httpFilters":[
-                     {
-                        "name":"com.google.espv2.filters.http.path_matcher",
-                        "typedConfig":{
-                           "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig",
-                           "rules":[
-                              {
-                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
-                                 "pattern":{
-                                    "httpMethod":"GET",
-                                    "uriTemplate":"/simplegetcors"
-                                 }
-                              },
-                              {
-                                 "operation":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_simplegetcors",
-                                 "pattern":{
-                                    "httpMethod":"OPTIONS",
-                                    "uriTemplate":"/simplegetcors"
-                                 }
-                              }
-                           ]
-                        }
-                     },
                      {
                         "name":"com.google.espv2.filters.http.service_control",
                         "typedConfig":{

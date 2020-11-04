@@ -26,6 +26,7 @@ import (
 	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 
+	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	statspb "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	accessfilepb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
@@ -111,6 +112,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(accessgrpcpb.TcpGrpcAccessLogConfig), nil
 	case "type.googleapis.com/envoy.extensions.access_loggers.grpc.v3.CommonGrpcAccessLogConfig":
 		return new(accessgrpcpb.CommonGrpcAccessLogConfig), nil
+	case "type.googleapis.com/envoy.config.listener.v3.Listener":
+		return new(listenerpb.Listener), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsConfig":
 		return new(statspb.StatsConfig), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsSink":
