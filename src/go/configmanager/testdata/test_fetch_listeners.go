@@ -1422,7 +1422,7 @@ var (
                   %s,
                   "xffNumTrustedHops":2
                 }
-             }            
+             }
          ]
       }
    ]

@@ -22,7 +22,6 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
-	pmpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher"
 	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 
@@ -88,8 +87,6 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(jwtpb.PerRouteConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
-	case "type.googleapis.com/espv2.api.envoy.v9.http.path_matcher.FilterConfig":
-		return new(pmpb.FilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig":
 		return new(prpb.PerRouteFilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig":

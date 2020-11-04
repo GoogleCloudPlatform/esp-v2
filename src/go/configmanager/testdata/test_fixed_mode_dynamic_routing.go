@@ -279,7 +279,6 @@ var (
             "httpProtocolOptions": {
               "enableTrailers": true
             },
- 
            "localReplyConfig": {
               "bodyFormat": {
                 "jsonFormat": {
