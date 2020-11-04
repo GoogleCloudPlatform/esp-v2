@@ -21,12 +21,6 @@ namespace espv2 {
 namespace envoy {
 namespace utils {
 
-// Data names in `FilterState` set by Path Matcher filter:
-constexpr char kFilterStateOperation[] =
-    "com.google.espv2.filters.http.path_matcher.operation";
-constexpr char kFilterStateQueryParams[] =
-    "com.google.espv2.filters.http.path_matcher.query_params";
-
 // Data name in `FilterState` set by Service Control filter:
 constexpr char kFilterStateApiKey[] =
     "com.google.espv2.filters.http.service_control.api_key";

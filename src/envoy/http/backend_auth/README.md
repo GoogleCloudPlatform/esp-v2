@@ -7,16 +7,6 @@ this filter overwrites the `Authorization` header with corresponding identity to
 _Note_: this is a pass through filter. If the requested operation is not configured in the
 filter config, the request will pass through unmodified.
 
-## Prerequisites
-
-This filter will not function unless the following filters appear earlier in the filter chain:
-
-- [Path Matcher](../path_matcher/README.md)
-
-This filter is designed to strongly integrate with the following filters:
-
-- [Backend Routing](../backend_routing/README.md)
-
 ## Configuration
 
 View the [backend auth configuration proto](../../../../api/envoy/v9/http/backend_auth/config.proto)

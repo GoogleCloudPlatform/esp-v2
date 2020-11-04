@@ -31,10 +31,6 @@ cp -f bazel-bin/api/envoy/v9/http/common/base_go_proto_/github.com/GoogleCloudPl
 bazel build //api/envoy/v9/http/service_control:config_go_proto
 mkdir -p src/go/proto/api/envoy/v9/http/service_control
 cp -f bazel-bin/api/envoy/v9/http/service_control/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control/* src/go/proto/api/envoy/v9/http/service_control
-# HTTP filter path_matcher
-bazel build //api/envoy/v9/http/path_matcher:config_go_proto
-mkdir -p src/go/proto/api/envoy/v9/http/path_matcher
-cp -f bazel-bin/api/envoy/v9/http/path_matcher/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_matcher/* src/go/proto/api/envoy/v9/http/path_matcher
 # HTTP filter path_rewrite
 bazel build //api/envoy/v9/http/path_rewrite:config_go_proto
 mkdir -p src/go/proto/api/envoy/v9/http/path_rewrite

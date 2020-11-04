@@ -137,12 +137,20 @@ DEFINE_PROTO_FUZZER(
     ServiceControlFilterConfig filter_config(input.config(), "fuzz-test-stats",
                                              context);
 
-    // Set the operation name to match an endpoint that requires API keys
-    // and has configured metric costs.
-    // This ensures both CHECK and QUOTA are called.
-    utils::setStringFilterState(
-        *stream_info->filter_state_, utils::kFilterStateOperation,
+    ::espv2::api::envoy::v9::http::service_control::PerRouteFilterConfig
+        per_route_cfg;
+    per_route_cfg.set_operation_name(
         input.config().requirements(0).operation_name());
+    auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
+
+    testing::NiceMock<Envoy::Router::MockRouteEntry> mock_route_entry;
+    stream_info->route_entry_ = &mock_route_entry;
+    EXPECT_CALL(mock_route_entry, perFilterConfig(kFilterName))
+        .WillRepeatedly(
+            Invoke([per_route](const std::string&)
+                       -> const Envoy::Router::RouteSpecificFilterConfig* {
+              return per_route.get();
+            }));
 
     // Create filter.
     ServiceControlFilter filter(filter_config.stats(),
