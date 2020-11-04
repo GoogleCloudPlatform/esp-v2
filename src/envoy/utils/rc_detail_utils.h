@@ -23,7 +23,6 @@ namespace utils {
 
 // The filter prefixes.
 const char kRcDetailFilterServiceControl[] = "service_control";
-const char kRcDetailFilterPathMatcher[] = "path_matcher";
 const char kRcDetailFilterBackendAuth[] = "backend_auth";
 const char kRcDetailFilterPathRewrite[] = "path_rewrite";
 

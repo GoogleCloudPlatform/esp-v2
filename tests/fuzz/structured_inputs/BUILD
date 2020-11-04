@@ -50,12 +50,3 @@ envoy_proto_library(
         "@envoy//test/fuzz:common_proto",
     ],
 )
-
-envoy_proto_library(
-    name = "path_matcher_filter_proto",
-    srcs = ["path_matcher_filter.proto"],
-    deps = [
-        "//api/envoy/v9/http/path_matcher:config_proto",
-        "@envoy//test/fuzz:common_proto",
-    ],
-)
