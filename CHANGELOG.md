@@ -1,3 +1,24 @@
+# Release 2.20.0 05-11-2020
+
+- ConfigMgr changes: Jwt_authn use per-route config, remove path_matcher (#403)
+- Use syntax parsing to generate route match instead of regex (#394)
+- Replace snakeName with jsonName using syntax parsing (#393)
+- Change configmgr to replace backend_routing with path_rewrite filter (#388)
+- Switch ads to unix domain socket (#386)
+- Path rewrite filter: add envoy filter related files. (#384)
+- Add path_rewrite filter config and config_parser (#380)
+- Change backend_auth to use per-route config (#376)
+- Add flags to specify `cipher_suites` for TLS certificate (#379)
+- Add option to disable OpenID Connect Discovery (#378)
+- Fix path extraction for auto-gen cors methods (#377)
+- Use per-route config for ServiceControl filter (#368)
+- Support for complicated http_template in envoy route match (#370)
+- Automatically disable backend auth on non-GCP platforms (#367)
+- Add response code detail in service control report (#349)
+- Support BackendRule deadline configuration in sidecar mode (#364)
+- Enable route config for local backend in sidecar mode (#358)
+- Increase API version to v9 (#360)
+
 # Release 2.19.0 29-09-2020
 
 - b/169095072: Fix path matcher misleading error message (#350)
