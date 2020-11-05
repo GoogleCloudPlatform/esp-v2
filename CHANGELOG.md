@@ -4,7 +4,6 @@
 - Add config generator option to allow startup on errors (#402)
 - Use syntax parsing to generate route match instead of regex (#394)
 - Replace snakeName with jsonName using syntax parsing (#393)
-- Remove backend_routing envoy filter (#391)
 - Change configmgr to replace backend_routing with path_rewrite filter (#388)
 - Switch ads to unix domain socket (#386)
 - Path rewrite filter: add envoy filter related files. (#384)
