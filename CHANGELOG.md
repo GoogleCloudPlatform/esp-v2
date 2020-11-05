@@ -1,7 +1,6 @@
 # Release 2.20.0 05-11-2020
 
 - ConfigMgr changes: Jwt_authn use per-route config, remove path_matcher (#403)
-- Add config generator option to allow startup on errors (#402)
 - Use syntax parsing to generate route match instead of regex (#394)
 - Replace snakeName with jsonName using syntax parsing (#393)
 - Change configmgr to replace backend_routing with path_rewrite filter (#388)
