@@ -20,7 +20,6 @@ The current implementation of ESPv2 uses [Envoy](https://www.envoyproxy.io/) as 
 * [Repository Structure](#repository-structure)
 * [Contributing and Support](#contributing-and-support)
 * [License](#license)
-* [Disclaimer](#disclaimer)
 
 ## Introduction
 
@@ -161,7 +160,3 @@ Your contributions are welcome:
 ## License
 
 [Apache v2](LICENSE) - Google LLC
-
-## Disclaimer
-
-ESPv2 is currently GA for both sidecar and reverse proxy deployment modes.
