@@ -15,6 +15,7 @@
 #include "src/envoy/token/token_subscriber.h"
 
 #include "absl/strings/str_cat.h"
+#include "api/envoy/v9/http/common/base.pb.h"
 #include "common/common/assert.h"
 #include "common/common/enum_to_int.h"
 #include "common/http/message_impl.h"
@@ -26,6 +27,8 @@ namespace espv2 {
 namespace envoy {
 namespace token {
 
+using ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior;
+
 // Delay after a failed fetch.
 constexpr std::chrono::seconds kFailedRequestRetryTime(2);
 
@@ -36,12 +39,14 @@ TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
     const TokenType& token_type, const std::string& token_cluster,
     const std::string& token_url, std::chrono::seconds fetch_timeout,
-    UpdateTokenCallback callback, TokenInfoPtr token_info)
+    const DependencyErrorBehavior error_behavior, UpdateTokenCallback callback,
+    TokenInfoPtr token_info)
     : context_(context),
       token_type_(token_type),
       token_cluster_(token_cluster),
       token_url_(token_url),
       fetch_timeout_(fetch_timeout),
+      error_behavior_(error_behavior),
       callback_(callback),
       token_info_(std::move(token_info)),
       active_request_(nullptr),
@@ -67,6 +72,17 @@ TokenSubscriber::~TokenSubscriber() {
 void TokenSubscriber::handleFailResponse() {
   active_request_ = nullptr;
   refresh_timer_->enableTimer(kFailedRequestRetryTime);
+
+  switch (error_behavior_) {
+    case DependencyErrorBehavior::ALWAYS_INIT:
+      ENVOY_LOG(debug,
+                "{}: Response failed, but signalling ready due to "
+                "DependencyErrorBehavior config.");
+      init_target_->ready();
+      break;
+    default:
+      break;
+  }
 }
 
 void TokenSubscriber::handleSuccessResponse(absl::string_view token,

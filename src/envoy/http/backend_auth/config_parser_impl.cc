@@ -26,6 +26,7 @@ namespace backend_auth {
 
 using ::espv2::api::envoy::v9::http::backend_auth::FilterConfig;
 using ::espv2::api::envoy::v9::http::common::AccessToken;
+using ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior;
 using ::google::protobuf::util::TimeUtil;
 using token::GetTokenFunc;
 using token::TokenSubscriber;
@@ -55,14 +56,16 @@ AudienceContext::AudienceContext(
           filter_config.iam_token().iam_uri().cluster();
       const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
           filter_config.iam_token().iam_uri().timeout()));
+      const DependencyErrorBehavior error_behavior =
+          filter_config.dep_error_behavior();
       const std::string real_uri =
           absl::StrCat(uri, "?audience=", jwt_audience);
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates =
           filter_config.iam_token().delegates();
       iam_token_sub_ptr_ = token_subscriber_factory.createIamTokenSubscriber(
-          TokenType::IdentityToken, cluster, real_uri, fetch_timeout, callback,
-          delegates, ::google::protobuf::RepeatedPtrField<std::string>(),
-          access_token_fn);
+          TokenType::IdentityToken, cluster, real_uri, fetch_timeout,
+          error_behavior, callback, delegates,
+          ::google::protobuf::RepeatedPtrField<std::string>(), access_token_fn);
     }
       return;
     case FilterConfig::IdTokenInfoCase::kImdsToken: {
@@ -70,11 +73,14 @@ AudienceContext::AudienceContext(
       const std::string& cluster = filter_config.imds_token().cluster();
       const std::chrono::seconds fetch_timeout(
           TimeUtil::DurationToSeconds(filter_config.imds_token().timeout()));
+      const DependencyErrorBehavior error_behavior =
+          filter_config.dep_error_behavior();
       const std::string real_uri =
           absl::StrCat(uri, "?format=standard&audience=", jwt_audience);
 
       imds_token_sub_ptr_ = token_subscriber_factory.createImdsTokenSubscriber(
-          TokenType::IdentityToken, cluster, real_uri, fetch_timeout, callback);
+          TokenType::IdentityToken, cluster, real_uri, fetch_timeout,
+          error_behavior, callback);
     }
       return;
     default:
@@ -96,10 +102,12 @@ FilterConfigParserImpl::FilterConfigParserImpl(
             config.iam_token().access_token().remote_token().uri();
         const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
             config.iam_token().access_token().remote_token().timeout()));
+        const DependencyErrorBehavior error_behavior =
+            config.dep_error_behavior();
         access_token_sub_ptr_ =
             token_subscriber_factory.createImdsTokenSubscriber(
                 TokenType::AccessToken, cluster, uri, fetch_timeout,
-                [this](absl::string_view access_token) {
+                error_behavior, [this](absl::string_view access_token) {
                   access_token_ = std::string(access_token);
                 });
         break;

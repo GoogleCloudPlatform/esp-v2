@@ -48,6 +48,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":token_info_lib",
+        "//api/envoy/v9/http/common:base_proto_cc_proto",
         "@envoy//include/envoy/common:time_interface",
         "@envoy//include/envoy/event:dispatcher_interface",
         "@envoy//include/envoy/server:filter_config_interface",
@@ -78,6 +79,7 @@ envoy_cc_library(
         ":iam_token_info_lib",
         ":imds_token_info_lib",
         ":token_subscriber_lib",
+        "//api/envoy/v9/http/common:base_proto_cc_proto",
     ],
 )
 
@@ -88,6 +90,7 @@ envoy_cc_library(
     deps = [
         ":token_info_lib",
         ":token_subscriber_factory_interface",
+        "//api/envoy/v9/http/common:base_proto_cc_proto",
     ],
 )
 
@@ -100,6 +103,7 @@ envoy_cc_library(
         ":imds_token_info_lib",
         ":token_subscriber_factory_interface",
         ":token_subscriber_lib",
+        "//api/envoy/v9/http/common:base_proto_cc_proto",
     ],
 )
 
@@ -156,6 +160,7 @@ envoy_cc_test(
     deps = [
         ":mocks_lib",
         ":token_subscriber_lib",
+        "//api/envoy/v9/http/common:base_proto_cc_proto",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
         "@envoy//test/test_common:utility_lib",

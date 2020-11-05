@@ -25,6 +25,7 @@ namespace http_filters {
 namespace service_control {
 
 using ::espv2::api::envoy::v9::http::common::AccessToken;
+using ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior;
 using ::espv2::api::envoy::v9::http::service_control::FilterConfig;
 using ::espv2::api::envoy::v9::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LogsMetricsLoader;
@@ -38,9 +39,11 @@ void ServiceControlCallImpl::createImdsTokenSub() {
   const std::string& token_uri = filter_config_.imds_token().uri();
   const std::chrono::seconds fetch_timeout(
       TimeUtil::DurationToSeconds(filter_config_.imds_token().timeout()));
+  const DependencyErrorBehavior error_behavior =
+      filter_config_.dep_error_behavior();
   imds_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
-      [this](absl::string_view token) {
+      error_behavior, [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_.runOnAllThreads([new_token](ThreadLocalCache& object) {
           object.set_sc_token(new_token);
@@ -58,8 +61,10 @@ void ServiceControlCallImpl::createIamTokenSub() {
           filter_config_.iam_token().access_token().remote_token().uri();
       const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
           filter_config_.iam_token().access_token().remote_token().timeout()));
+      const DependencyErrorBehavior error_behavior =
+          filter_config_.dep_error_behavior();
       access_token_sub_ = token_subscriber_factory_.createImdsTokenSubscriber(
-          TokenType::AccessToken, cluster, uri, fetch_timeout,
+          TokenType::AccessToken, cluster, uri, fetch_timeout, error_behavior,
           [this](absl::string_view access_token) {
             access_token_for_iam_ = std::string(access_token);
           });
@@ -76,10 +81,13 @@ void ServiceControlCallImpl::createIamTokenSub() {
   const std::string& token_uri = filter_config_.iam_token().iam_uri().uri();
   const std::chrono::seconds fetch_timeout(TimeUtil::DurationToSeconds(
       filter_config_.iam_token().iam_uri().timeout()));
+  const DependencyErrorBehavior error_behavior =
+      filter_config_.dep_error_behavior();
   ::google::protobuf::RepeatedPtrField<std::string> scopes;
   scopes.Add(kServiceControlScope);
   iam_token_sub_ = token_subscriber_factory_.createIamTokenSubscriber(
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
+      error_behavior,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
         tls_.runOnAllThreads([new_token](ThreadLocalCache& object) {
