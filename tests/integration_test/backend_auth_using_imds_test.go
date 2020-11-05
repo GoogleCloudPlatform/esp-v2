@@ -88,39 +88,49 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdTokenRetries, platform.EchoRemote)
-	// Health checks prevent envoy from starting up due to bad responses from IMDS for tokens.
-	s.SkipHealthChecks()
-
 	testData := []struct {
 		desc           string
 		method         string
 		path           string
+		confArgs       []string
 		wantNumFails   int
 		wantInitialErr string
 		wantFinalResp  string
 	}{
 		{
-			desc:           "Add Bearer token for CONSTANT_ADDRESS backend that requires JWT token",
+			desc:           "By default, envoy does not start until token is successfully fetched.",
 			method:         "GET",
 			path:           "/bearertoken/constant/42",
+			confArgs:       utils.CommonArgs(),
 			wantNumFails:   5,
 			wantInitialErr: `connect: connection refused`,
+			wantFinalResp:  `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+		{
+			desc:   "With modified error behavior, envoy starts but returns errors before token is successfully fetched.",
+			method: "GET",
+			path:   "/bearertoken/constant/42",
+			confArgs: append([]string{
+				"--dependency_error_behavior=ALWAYS_INIT",
+			}, utils.CommonArgs()...),
+			wantNumFails:   5,
+			wantInitialErr: `{"code":500,"message":"Token not found for audience: https://localhost/bearertoken/constant"}`,
 			wantFinalResp:  `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 	}
 
 	for _, tc := range testData {
-
-		// Place in closure to allow deferring in loop.
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdTokenRetries, platform.EchoRemote)
+			// Health checks prevent envoy from starting up due to bad responses from IMDS for tokens.
+			s.SkipHealthChecks()
 			s.OverrideMockMetadata(
 				map[string]string{
 					util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
 				}, tc.wantNumFails)
 
 			defer s.TearDown(t)
-			if err := s.Setup(utils.CommonArgs()); err != nil {
+			if err := s.Setup(tc.confArgs); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
@@ -148,7 +158,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 			if err := util.JsonEqual(tc.wantFinalResp, gotResp); err != nil {
 				t.Errorf("Test Desc(%s) fails: \n %s", tc.desc, err)
 			}
-		}()
+		})
 	}
 }
 
