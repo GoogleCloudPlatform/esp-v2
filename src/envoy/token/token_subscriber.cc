@@ -39,7 +39,7 @@ TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
     const TokenType& token_type, const std::string& token_cluster,
     const std::string& token_url, std::chrono::seconds fetch_timeout,
-    const DependencyErrorBehavior error_behavior, UpdateTokenCallback callback,
+    DependencyErrorBehavior error_behavior, UpdateTokenCallback callback,
     TokenInfoPtr token_info)
     : context_(context),
       token_type_(token_type),

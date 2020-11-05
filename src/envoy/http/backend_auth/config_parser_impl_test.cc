@@ -68,7 +68,7 @@ imds_token {
                   std::chrono::seconds(20), _, _))
       .WillOnce(Invoke([&token_foo](const token::TokenType&, const std::string&,
                                     const std::string&, std::chrono::seconds,
-                                    const DependencyErrorBehavior,
+                                    DependencyErrorBehavior,
                                     token::UpdateTokenCallback callback)
                            -> token::TokenSubscriberPtr {
         callback(token_foo);
@@ -81,7 +81,7 @@ imds_token {
                   std::chrono::seconds(20), _, _))
       .WillOnce(Invoke([&token_bar](const token::TokenType&, const std::string&,
                                     const std::string&, std::chrono::seconds,
-                                    const DependencyErrorBehavior,
+                                    DependencyErrorBehavior,
                                     token::UpdateTokenCallback callback)
                            -> token::TokenSubscriberPtr {
         callback(token_bar);
@@ -129,7 +129,7 @@ iam_token {
       .WillOnce(
           Invoke([&access_token](const token::TokenType&, const std::string&,
                                  const std::string&, std::chrono::seconds,
-                                 const DependencyErrorBehavior,
+                                 DependencyErrorBehavior,
                                  token::UpdateTokenCallback callback)
                      -> token::TokenSubscriberPtr {
             callback(access_token);
@@ -143,7 +143,7 @@ iam_token {
       .WillOnce(
           Invoke([&id_token_foo](
                      token::TokenType, const std::string&, const std::string&,
-                     std::chrono::seconds, const DependencyErrorBehavior,
+                     std::chrono::seconds, DependencyErrorBehavior,
                      token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
@@ -160,7 +160,7 @@ iam_token {
       .WillOnce(
           Invoke([&id_token_bar](
                      token::TokenType, const std::string&, const std::string&,
-                     std::chrono::seconds, const DependencyErrorBehavior,
+                     std::chrono::seconds, DependencyErrorBehavior,
                      token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,

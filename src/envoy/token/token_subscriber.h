@@ -45,7 +45,7 @@ class TokenSubscriber
                   const TokenType& token_type, const std::string& token_cluster,
                   const std::string& token_url,
                   std::chrono::seconds fetch_timeout,
-                  const api::envoy::v9::http::common::DependencyErrorBehavior
+                  ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior
                       error_behavior,
                   UpdateTokenCallback callback, TokenInfoPtr token_info);
   void init();

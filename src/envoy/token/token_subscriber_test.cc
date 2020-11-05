@@ -49,8 +49,7 @@ class TokenSubscriberTest : public testing::Test {
     mock_timer_ = new Envoy::Event::MockTimer{};
   }
 
-  void setUp(const TokenType& token_type,
-             const DependencyErrorBehavior error_behavior) {
+  void setUp(TokenType token_type, DependencyErrorBehavior error_behavior) {
     EXPECT_CALL(context_.init_manager_, add(_))
         .WillOnce(Invoke([this](const Envoy::Init::Target& target) {
           init_target_handle_ = target.createHandle("test");
