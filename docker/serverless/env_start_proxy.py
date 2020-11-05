@@ -40,7 +40,7 @@ MISSING_SERVICE_CONFIG_ERROR = '''
 MALFORMED_ESPv2_ARGS_ERROR = '''
  Malformed ESPv2_ARGS environment variable.
  
- Please refer to the official ESPv2 Beta startup reference
+ Please refer to the official ESPv2 startup reference
  (below) for information on how to format ESPv2_ARGS.
  
  https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options#setting-configuration-flags

@@ -86,7 +86,7 @@ across multiple remote upstream services.
 The official Google Cloud Endpoints documentation contains tutorials and detailed documentation
 on deploying ESPv2 and managing API traffic.
 
-Getting started with Extensible Service Proxy V2 Beta (ESPv2 Beta) tutorials:
+Getting started with Extensible Service Proxy V2(ESPv2) tutorials:
 
 * [Cloud Endpoints for OpenAPI](https://cloud.google.com/endpoints/docs/openapi/tutorials)
 
@@ -94,7 +94,7 @@ Getting started with Extensible Service Proxy V2 Beta (ESPv2 Beta) tutorials:
 
 Configuring ESPv2:
 
-* [ESPv2 Beta Startup Options](https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options)
+* [ESPv2 Startup Options](https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options)
 
 Understanding ESPv2:
 
@@ -164,4 +164,4 @@ Your contributions are welcome:
 
 ## Disclaimer
 
-ESPv2 is currently in Beta for both sidecar and reverse proxy deployment modes.
+ESPv2 is currently GA for both sidecar and reverse proxy deployment modes.
