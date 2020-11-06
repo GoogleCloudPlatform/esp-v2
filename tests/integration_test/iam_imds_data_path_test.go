@@ -21,47 +21,77 @@ func TestIamImdsDataPath(t *testing.T) {
 		useIam       bool
 		fakeIamDown  bool
 		fakeImdsDown bool
+		confArgs     []string
 		wantResp     string
 		wantErr      string
 	}{
 		{
 			desc:     "Backend auth with IMDS works when everything is up",
+			confArgs: utils.CommonArgs(),
 			wantResp: `{"Authorization": "Bearer ya29.new", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 		{
 			desc:        "Backend auth with IMDS works, even when IAM is down",
 			fakeIamDown: true,
+			confArgs:    utils.CommonArgs(),
 			wantResp:    `{"Authorization": "Bearer ya29.new", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 		{
 			desc:         "Backend auth with IMDS fails (envoy doesn't start) when IMDS is down",
 			fakeImdsDown: true,
+			confArgs:     utils.CommonArgs(),
 			wantErr:      `connect: connection refused`,
+		},
+		{
+			desc:         "Backend auth with IMDS fails when IMDS is down, but Envoy starts due to configured error behavior",
+			fakeImdsDown: true,
+			confArgs: append([]string{
+				"--dependency_error_behavior=ALWAYS_INIT",
+			}, utils.CommonArgs()...),
+			wantErr: `{"code":500,"message":"Token not found for audience: https://localhost/bearertoken/constant"}`,
 		},
 		{
 			desc:     "Backend auth with IAM works when everything is up",
 			useIam:   true,
+			confArgs: utils.CommonArgs(),
 			wantResp: `{"Authorization": "Bearer default-test-id-token", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 		{
 			desc:        "Backend auth with IAM fails (envoy doesn't start) when IAM is down",
 			useIam:      true,
 			fakeIamDown: true,
+			confArgs:    utils.CommonArgs(),
 			wantErr:     `connect: connection refused`,
+		},
+		{
+			desc:        "Backend auth with IAM fails when IAM is down, but Envoy starts due to configured error behavior",
+			useIam:      true,
+			fakeIamDown: true,
+			confArgs: append([]string{
+				"--dependency_error_behavior=ALWAYS_INIT",
+			}, utils.CommonArgs()...),
+			wantErr: `{"code":500,"message":"Token not found for audience: https://localhost/bearertoken/constant"}`,
 		},
 		{
 			desc:         "Backend auth with IAM fails (envoy doesn't start) when IMDS is down",
 			useIam:       true,
 			fakeImdsDown: true,
+			confArgs:     utils.CommonArgs(),
 			wantErr:      `connect: connection refused`,
+		},
+		{
+			desc:         "Backend auth with IAM fails when IMDS is down, but Envoy starts due to configured error behavior",
+			useIam:       true,
+			fakeImdsDown: true,
+			confArgs: append([]string{
+				"--dependency_error_behavior=ALWAYS_INIT",
+			}, utils.CommonArgs()...),
+			wantErr: `{"code":500,"message":"Token not found for audience: https://localhost/bearertoken/constant"}`,
 		},
 	}
 
 	for _, tc := range testData {
-
-		// Place in closure to allow deferring in loop.
-		func() {
-
+		t.Run(tc.desc, func(t *testing.T) {
 			// By default, IMDS will be used for service control and backend auth.
 			s := env.NewTestEnv(platform.TestIamImdsDataPath, platform.EchoRemote)
 
@@ -90,7 +120,7 @@ func TestIamImdsDataPath(t *testing.T) {
 			}
 
 			defer s.TearDown(t)
-			if err := s.Setup(utils.CommonArgs()); err != nil {
+			if err := s.Setup(tc.confArgs); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
@@ -117,6 +147,6 @@ func TestIamImdsDataPath(t *testing.T) {
 					t.Errorf("Test Desc(%s) failed, \n %v", tc.desc, err)
 				}
 			}
-		}()
+		})
 	}
 }

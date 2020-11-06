@@ -14,6 +14,7 @@
 
 #include "src/envoy/token/token_subscriber.h"
 
+#include "api/envoy/v9/http/common/base.pb.h"
 #include "common/http/message_impl.h"
 #include "common/tracing/http_tracer_impl.h"
 #include "gmock/gmock.h"
@@ -29,6 +30,7 @@ namespace token {
 namespace test {
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
+using ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior;
 
 using ::testing::_;
 using ::testing::ByMove;
@@ -47,7 +49,7 @@ class TokenSubscriberTest : public testing::Test {
     mock_timer_ = new Envoy::Event::MockTimer{};
   }
 
-  void setUp(const TokenType& token_type) {
+  void setUp(TokenType token_type, DependencyErrorBehavior error_behavior) {
     EXPECT_CALL(context_.init_manager_, add(_))
         .WillOnce(Invoke([this](const Envoy::Init::Target& target) {
           init_target_handle_ = target.createHandle("test");
@@ -76,8 +78,8 @@ class TokenSubscriberTest : public testing::Test {
     // Create token subscriber under test.
     token_sub_ = std::make_unique<TokenSubscriber>(
         context_, token_type, "token_cluster", token_url_,
-        std::chrono::seconds(5), token_callback_.AsStdFunction(),
-        std::move(info_));
+        std::chrono::seconds(5), error_behavior,
+        token_callback_.AsStdFunction(), std::move(info_));
     token_sub_->init();
 
     // TokenSubscriber must call `ready` to signal Init::Manager once it
@@ -127,7 +129,8 @@ TEST_F(TokenSubscriberTest, HandleMissingPreconditions) {
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
-  setUp(TokenType::IdentityToken);
+  setUp(TokenType::IdentityToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 0);
@@ -146,7 +149,8 @@ TEST_F(TokenSubscriberTest, VerifyRemoteRequest) {
               std::move(headers)))));
 
   // Start class under test.
-  setUp(TokenType::IdentityToken);
+  setUp(TokenType::IdentityToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Assert remote call matches.
   ASSERT_EQ(call_count_, 1);
@@ -169,7 +173,8 @@ TEST_F(TokenSubscriberTest, ProcessNon200Response) {
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
-  setUp(TokenType::IdentityToken);
+  setUp(TokenType::IdentityToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
@@ -187,6 +192,39 @@ TEST_F(TokenSubscriberTest, ProcessNon200Response) {
   ASSERT_FALSE(init_ready_);
 }
 
+TEST_F(TokenSubscriberTest, ProcessNon200ResponseButInitAllowed) {
+  // Setup fake remote request.
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
+  EXPECT_CALL(*info_, prepareRequest(token_url_))
+      .Times(1)
+      .WillRepeatedly(
+          Return(ByMove(std::make_unique<Envoy::Http::RequestMessageImpl>(
+              std::move(req_headers)))));
+
+  // Expect subscriber does not succeed.
+  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(token_callback_, Call(_)).Times(0);
+
+  // Start class under test.
+  setUp(TokenType::IdentityToken, DependencyErrorBehavior::ALWAYS_INIT);
+
+  // Setup fake response.
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "504"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
+
+  // Start the response.
+  client_callback_->onSuccess(client_request_, std::move(response));
+
+  // Assert subscriber did not succeed, but init allowed.
+  ASSERT_EQ(call_count_, 1);
+  ASSERT_TRUE(init_ready_);
+}
+
 TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
   // Setup fake remote request.
   Envoy::Http::RequestHeaderMapPtr req_headers(
@@ -202,7 +240,8 @@ TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
-  setUp(TokenType::IdentityToken);
+  setUp(TokenType::IdentityToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
@@ -236,7 +275,8 @@ TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
-  setUp(TokenType::IdentityToken);
+  setUp(TokenType::IdentityToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
@@ -272,7 +312,8 @@ TEST_F(TokenSubscriberTest, BadParseAccessToken) {
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
-  setUp(TokenType::AccessToken);
+  setUp(TokenType::AccessToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
@@ -313,7 +354,8 @@ TEST_F(TokenSubscriberTest, TokenSantizationCheckFails) {
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
-  setUp(TokenType::AccessToken);
+  setUp(TokenType::AccessToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
@@ -354,7 +396,8 @@ TEST_F(TokenSubscriberTest, TokenPastExpiryCheckFails) {
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
-  setUp(TokenType::AccessToken);
+  setUp(TokenType::AccessToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
@@ -397,7 +440,8 @@ TEST_F(TokenSubscriberTest, Success) {
   EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
 
   // Start class under test.
-  setUp(TokenType::AccessToken);
+  setUp(TokenType::AccessToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
@@ -443,11 +487,65 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
 
   // Start class under test.
-  setUp(TokenType::AccessToken);
+  setUp(TokenType::AccessToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Assert subscriber did not succeed.
   ASSERT_EQ(call_count_, 0);
   ASSERT_FALSE(init_ready_);
+
+  // Part 2: Retry the callback for the timer, will result in a success.
+  timer_cb_();
+
+  // Setup fake response.
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
+
+  // Start the response.
+  client_callback_->onSuccess(client_request_, std::move(response));
+
+  // Assert subscriber did succeed.
+  ASSERT_EQ(call_count_, 1);
+  ASSERT_TRUE(init_ready_);
+}
+
+TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccessWithAlwaysInit) {
+  // Part 1: Failed due to missing precondition
+
+  // Setup mocks for info. Fail on the first time, then work later.
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
+  EXPECT_CALL(*info_, prepareRequest(_))
+      .WillOnce(Return(ByMove(nullptr)))
+      .WillRepeatedly(
+          Return(ByMove(std::make_unique<Envoy::Http::RequestMessageImpl>(
+              std::move(req_headers)))));
+
+  // Setup fake parse status.
+  EXPECT_CALL(*info_, parseAccessToken(_, _))
+      .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
+        ret->token = "fake-token";
+        ret->expiry_duration = std::chrono::seconds(30);
+        return true;
+      }));
+
+  // Expect subscriber does not succeed at first, but then does.
+  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_,
+              enableTimer(std::chrono::milliseconds(25 * 1000), nullptr))
+      .Times(1);
+  EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
+
+  // Start class under test.
+  setUp(TokenType::AccessToken, DependencyErrorBehavior::ALWAYS_INIT);
+
+  // Assert subscriber did not succeed, but init allowed.
+  ASSERT_EQ(call_count_, 0);
+  ASSERT_TRUE(init_ready_);
 
   // Part 2: Retry the callback for the timer, will result in a success.
   timer_cb_();
@@ -493,7 +591,8 @@ TEST_F(TokenSubscriberTest, RetryShortExpiryTime) {
   EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
 
   // Start class under test.
-  setUp(TokenType::AccessToken);
+  setUp(TokenType::AccessToken,
+        DependencyErrorBehavior::BLOCK_INIT_ON_ANY_ERROR);
 
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(

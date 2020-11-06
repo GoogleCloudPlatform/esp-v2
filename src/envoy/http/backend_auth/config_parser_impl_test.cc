@@ -28,6 +28,8 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
+using ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior;
+
 class ConfigParserImplTest : public ::testing::Test {
  protected:
   void setUp(absl::string_view filter_config) {
@@ -63,9 +65,10 @@ imds_token {
               createImdsTokenSubscriber(
                   token::TokenType::IdentityToken, "this-is-cluster",
                   "this-is-uri?format=standard&audience=audience-foo",
-                  std::chrono::seconds(20), _))
+                  std::chrono::seconds(20), _, _))
       .WillOnce(Invoke([&token_foo](const token::TokenType&, const std::string&,
                                     const std::string&, std::chrono::seconds,
+                                    DependencyErrorBehavior,
                                     token::UpdateTokenCallback callback)
                            -> token::TokenSubscriberPtr {
         callback(token_foo);
@@ -75,9 +78,10 @@ imds_token {
               createImdsTokenSubscriber(
                   token::TokenType::IdentityToken, "this-is-cluster",
                   "this-is-uri?format=standard&audience=audience-bar",
-                  std::chrono::seconds(20), _))
+                  std::chrono::seconds(20), _, _))
       .WillOnce(Invoke([&token_bar](const token::TokenType&, const std::string&,
                                     const std::string&, std::chrono::seconds,
+                                    DependencyErrorBehavior,
                                     token::UpdateTokenCallback callback)
                            -> token::TokenSubscriberPtr {
         callback(token_bar);
@@ -121,10 +125,11 @@ iam_token {
   EXPECT_CALL(mock_token_subscriber_factory_,
               createImdsTokenSubscriber(
                   token::TokenType::AccessToken, "this-is-imds-cluster",
-                  "this-is-imds-uri", std::chrono::seconds(20), _))
+                  "this-is-imds-uri", std::chrono::seconds(20), _, _))
       .WillOnce(
           Invoke([&access_token](const token::TokenType&, const std::string&,
                                  const std::string&, std::chrono::seconds,
+                                 DependencyErrorBehavior,
                                  token::UpdateTokenCallback callback)
                      -> token::TokenSubscriberPtr {
             callback(access_token);
@@ -134,11 +139,12 @@ iam_token {
   EXPECT_CALL(mock_token_subscriber_factory_,
               createIamTokenSubscriber(_, "this-is-iam-cluster",
                                        "this-is-iam-uri?audience=audience-foo",
-                                       std::chrono::seconds(4), _, _, _, _))
+                                       std::chrono::seconds(4), _, _, _, _, _))
       .WillOnce(
           Invoke([&id_token_foo](
                      token::TokenType, const std::string&, const std::string&,
-                     std::chrono::seconds, token::UpdateTokenCallback callback,
+                     std::chrono::seconds, DependencyErrorBehavior,
+                     token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      token::GetTokenFunc access_token_fn)
@@ -150,11 +156,12 @@ iam_token {
   EXPECT_CALL(mock_token_subscriber_factory_,
               createIamTokenSubscriber(_, "this-is-iam-cluster",
                                        "this-is-iam-uri?audience=audience-bar",
-                                       std::chrono::seconds(4), _, _, _, _))
+                                       std::chrono::seconds(4), _, _, _, _, _))
       .WillOnce(
           Invoke([&id_token_bar](
                      token::TokenType, const std::string&, const std::string&,
-                     std::chrono::seconds, token::UpdateTokenCallback callback,
+                     std::chrono::seconds, DependencyErrorBehavior,
+                     token::UpdateTokenCallback callback,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      const ::google::protobuf::RepeatedPtrField<std::string>&,
                      token::GetTokenFunc access_token_fn)

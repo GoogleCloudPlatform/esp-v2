@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "api/envoy/v9/http/common/base.pb.h"
 #include "src/envoy/token/iam_token_info.h"
 #include "src/envoy/token/imds_token_info.h"
 #include "src/envoy/token/token_subscriber.h"
@@ -32,11 +33,13 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
   TokenSubscriberPtr createImdsTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
       const std::string& token_url, std::chrono::seconds fetch_timeout,
+      ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior
+          error_behavior,
       UpdateTokenCallback callback) const override {
     TokenInfoPtr info = std::make_unique<ImdsTokenInfo>();
     TokenSubscriberPtr subscriber = std::make_unique<TokenSubscriber>(
-        context_, token_type, token_cluster, token_url, fetch_timeout, callback,
-        std::move(info));
+        context_, token_type, token_cluster, token_url, fetch_timeout,
+        error_behavior, callback, std::move(info));
     subscriber->init();
     return subscriber;
   }
@@ -44,6 +47,8 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
   TokenSubscriberPtr createIamTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
       const std::string& token_url, std::chrono::seconds fetch_timeout,
+      ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior
+          error_behavior,
       UpdateTokenCallback callback,
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,
       const ::google::protobuf::RepeatedPtrField<std::string>& scopes,
@@ -51,8 +56,8 @@ class TokenSubscriberFactoryImpl : public TokenSubscriberFactory {
     TokenInfoPtr info = std::make_unique<IamTokenInfo>(
         delegates, scopes, token_type == IdentityToken, access_token_fn);
     TokenSubscriberPtr subscriber = std::make_unique<TokenSubscriber>(
-        context_, token_type, token_cluster, token_url, fetch_timeout, callback,
-        std::move(info));
+        context_, token_type, token_cluster, token_url, fetch_timeout,
+        error_behavior, callback, std::move(info));
     subscriber->init();
     return subscriber;
   }
