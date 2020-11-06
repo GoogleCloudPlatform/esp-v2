@@ -513,6 +513,59 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   ASSERT_TRUE(init_ready_);
 }
 
+TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccessWithAlwaysInit) {
+  // Part 1: Failed due to missing precondition
+
+  // Setup mocks for info. Fail on the first time, then work later.
+  Envoy::Http::RequestHeaderMapPtr req_headers(
+      new Envoy::Http::TestRequestHeaderMapImpl());
+  EXPECT_CALL(*info_, prepareRequest(_))
+      .WillOnce(Return(ByMove(nullptr)))
+      .WillRepeatedly(
+          Return(ByMove(std::make_unique<Envoy::Http::RequestMessageImpl>(
+              std::move(req_headers)))));
+
+  // Setup fake parse status.
+  EXPECT_CALL(*info_, parseAccessToken(_, _))
+      .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
+        ret->token = "fake-token";
+        ret->expiry_duration = std::chrono::seconds(30);
+        return true;
+      }));
+
+  // Expect subscriber does not succeed at first, but then does.
+  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_,
+              enableTimer(std::chrono::milliseconds(25 * 1000), nullptr))
+      .Times(1);
+  EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
+
+  // Start class under test.
+  setUp(TokenType::AccessToken, DependencyErrorBehavior::ALWAYS_INIT);
+
+  // Assert subscriber did not succeed, but init allowed.
+  ASSERT_EQ(call_count_, 0);
+  ASSERT_TRUE(init_ready_);
+
+  // Part 2: Retry the callback for the timer, will result in a success.
+  timer_cb_();
+
+  // Setup fake response.
+  Envoy::Http::ResponseHeaderMapPtr resp_headers(
+      new Envoy::Http::TestResponseHeaderMapImpl({
+          {":status", "200"},
+      }));
+  Envoy::Http::ResponseMessagePtr response(
+      new Envoy::Http::ResponseMessageImpl(std::move(resp_headers)));
+
+  // Start the response.
+  client_callback_->onSuccess(client_request_, std::move(response));
+
+  // Assert subscriber did succeed.
+  ASSERT_EQ(call_count_, 1);
+  ASSERT_TRUE(init_ready_);
+}
+
 TEST_F(TokenSubscriberTest, RetryShortExpiryTime) {
   // Setup fake remote request.
   EXPECT_CALL(*info_, prepareRequest(token_url_))
