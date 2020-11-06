@@ -20,7 +20,6 @@ The current implementation of ESPv2 uses [Envoy](https://www.envoyproxy.io/) as 
 * [Repository Structure](#repository-structure)
 * [Contributing and Support](#contributing-and-support)
 * [License](#license)
-* [Disclaimer](#disclaimer)
 
 ## Introduction
 
@@ -86,7 +85,7 @@ across multiple remote upstream services.
 The official Google Cloud Endpoints documentation contains tutorials and detailed documentation
 on deploying ESPv2 and managing API traffic.
 
-Getting started with Extensible Service Proxy V2 Beta (ESPv2 Beta) tutorials:
+Getting started with Extensible Service Proxy V2(ESPv2) tutorials:
 
 * [Cloud Endpoints for OpenAPI](https://cloud.google.com/endpoints/docs/openapi/tutorials)
 
@@ -94,7 +93,7 @@ Getting started with Extensible Service Proxy V2 Beta (ESPv2 Beta) tutorials:
 
 Configuring ESPv2:
 
-* [ESPv2 Beta Startup Options](https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options)
+* [ESPv2 Startup Options](https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options)
 
 Understanding ESPv2:
 
@@ -161,7 +160,3 @@ Your contributions are welcome:
 ## License
 
 [Apache v2](LICENSE) - Google LLC
-
-## Disclaimer
-
-ESPv2 is currently in Beta for both sidecar and reverse proxy deployment modes.
