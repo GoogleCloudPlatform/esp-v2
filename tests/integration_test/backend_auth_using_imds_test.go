@@ -145,8 +145,8 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 				t.Fatalf("Test Desc(%s): expected failure (%v), got failure (%v)", tc.desc, tc.wantInitialErr, err)
 			}
 
-			// Sleep enough time for IMDS to become healthy. This depends on the retry timer in TokenSubscriber.
-			time.Sleep(time.Duration(2*tc.wantNumFails) * time.Second)
+			// Sleep enough time for IMDS to become healthy. This depends on the retry timer in TokenSubscriber (with some slack).
+			time.Sleep(time.Duration(tc.wantNumFails) * time.Second * 4)
 
 			// The second request should work.
 			resp, err := client.DoWithHeaders(url, tc.method, "", nil)
