@@ -500,7 +500,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 			}, utils.CommonArgs()...),
 			requestHeader: incomingTraceContexts,
 			wantRespHeaders: map[string]string{
-				// Trace id and span is is changed, so it's not checked.
+				// Trace id and span id are changed, so they not checked.
 				"Echo-Traceparent": "00-",
 				// All other headers are not changed.
 				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
