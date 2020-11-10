@@ -113,15 +113,17 @@ func TestIamImdsDataPath(t *testing.T) {
 			}
 
 			if tc.wantErr != "" {
-				// Skip health checks since we expect an error.
 				s.SkipHealthChecks()
-				glog.Infof("Sleeping to ensure Envoy is starting")
-				time.Sleep(7 * time.Second)
 			}
 
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			if tc.wantErr != "" {
+				glog.Infof("Sleeping to ensure Envoy is starting")
+				time.Sleep(10 * time.Second)
 			}
 
 			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bearertoken/constant/42")
