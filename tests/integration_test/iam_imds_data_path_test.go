@@ -113,6 +113,7 @@ func TestIamImdsDataPath(t *testing.T) {
 			}
 
 			if tc.wantErr != "" {
+				// When we expect a Envoy startup error, we must skip health checks. Otherwise they will prevent the test from running.
 				s.SkipHealthChecks()
 			}
 
@@ -122,6 +123,7 @@ func TestIamImdsDataPath(t *testing.T) {
 			}
 
 			if tc.wantErr != "" {
+				// When health checks are skipped (above), we need to manually sleep some time. Otherwise Envoy will not have time to try starting up.
 				glog.Infof("Sleeping to ensure Envoy is starting")
 				time.Sleep(10 * time.Second)
 			}
