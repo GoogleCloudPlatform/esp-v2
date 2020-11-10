@@ -444,7 +444,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 		notWantRespHeaders map[string]string
 	}{
 		{
-			desc: "trace context propagation is disabled",
+			desc: "trace context propagation is disabled, all headers are preserved",
 			confArgs: append([]string{
 				"--tracing_incoming_context=",
 				"--tracing_outgoing_context=",
