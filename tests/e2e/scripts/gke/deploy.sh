@@ -44,8 +44,6 @@ PROJECT_ID="cloudesf-testing"
 ARGS="$ARGS \"--service=${APIPROXY_SERVICE}\","
 ARGS="$ARGS \"--rollout_strategy=${ROLLOUT_STRATEGY}\","
 ARGS="$ARGS \"--tracing_sample_rate=0.05\","
-ARGS="$ARGS \"--tracing_incoming_context=traceparent\","
-ARGS="$ARGS \"--tracing_outgoing_context=traceparent\","
 ARGS="$ARGS \"--admin_port=8001\""
 case "${BACKEND}" in
   'bookstore')
