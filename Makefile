@@ -200,6 +200,8 @@ integration-debug: build build-envoy-debug build-grpc-interop build-grpc-echo
 
 integration-test-asan: build-msan build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run-sequential
 
+# next line is to work around issue: https://github.com/google/sanitizers/issues/953
+integration-test-tsan: export TSAN_OPTIONS=report_atomic_races=0
 integration-test-tsan: build-race build-envoy-tsan build-grpc-interop build-grpc-echo integration-test-run-sequential
 
 
