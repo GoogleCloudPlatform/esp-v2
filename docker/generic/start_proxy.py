@@ -456,15 +456,21 @@ environment variable or by passing "-k" flag to this script.
         help="An alias to override --tracing_sample_rate to 0")
     parser.add_argument(
         '--tracing_incoming_context',
-        default="",
+        default="traceparent",
         help='''
-        comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)'''
+        Comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
+        
+        See official documentation for more details:
+        https://cloud.google.com/endpoints/docs/openapi/tracing'''
     )
     parser.add_argument(
         '--tracing_outgoing_context',
-        default="",
+        default="traceparent",
         help='''
-        comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)'''
+        Comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
+        
+        See official documentation for more details:
+        https://cloud.google.com/endpoints/docs/openapi/tracing'''
     )
     parser.add_argument(
         '--cloud_trace_url_override',

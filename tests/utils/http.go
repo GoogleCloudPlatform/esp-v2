@@ -95,3 +95,18 @@ func DoWithHeaders(url, method, message string, headers map[string]string) (http
 	}
 	return resp.Header, bodyBytes, err
 }
+
+type HeaderValueChecker func(gotHeaderVal string) bool
+
+// CheckHeaderExist will check for the given header name in the headers.
+// If a value is provided, it will check the value is contained in the original header value.
+func CheckHeaderExist(headers http.Header, wantHeaderName string, valueChecker HeaderValueChecker) bool {
+	for headerName, headerVals := range headers {
+		if headerName == wantHeaderName {
+			if len(headerVals) > 0 && valueChecker(headerVals[0]) {
+				return true
+			}
+		}
+	}
+	return false
+}

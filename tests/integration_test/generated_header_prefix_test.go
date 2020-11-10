@@ -16,7 +16,6 @@ package integration_test
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
@@ -26,17 +25,6 @@ import (
 
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
-
-func checkHeaderExist(headers http.Header, wantHeaderName, wantHeaderVal string) bool {
-	for headerName, headerVals := range headers {
-		if headerName == wantHeaderName {
-			if len(headerVals) > 0 || headerVals[0] == wantHeaderVal {
-				return true
-			}
-		}
-	}
-	return false
-}
 
 func TestGeneratedHeaders(t *testing.T) {
 	t.Parallel()
@@ -106,7 +94,9 @@ func TestGeneratedHeaders(t *testing.T) {
 			}
 
 			for wantHeaderName, wantHeaderVal := range tc.wantRespHeader {
-				if !checkHeaderExist(headers, wantHeaderName, wantHeaderVal) {
+				if !utils.CheckHeaderExist(headers, wantHeaderName, func(gotHeaderVal string) bool {
+					return wantHeaderVal == gotHeaderVal
+				}) {
 					t.Errorf("Test (%s): get headers %v, not find expected header %s:%s,  ", tc.desc, headers, wantHeaderName, wantHeaderVal)
 				}
 			}

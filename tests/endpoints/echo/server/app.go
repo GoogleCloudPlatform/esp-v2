@@ -175,10 +175,8 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 // echoHandler echo received with prefix `Fake-Header-Key` and prefix `X-` after appending `Echo-`
 func echoHeaderHandler(w http.ResponseWriter, r *http.Request) {
 	for key, vals := range r.Header {
-		if strings.HasPrefix(key, "Fake-Header-Key") || strings.HasPrefix(key, "X-") {
-			for _, val := range vals {
-				w.Header().Add(fmt.Sprintf("Echo-%s", key), val)
-			}
+		for _, val := range vals {
+			w.Header().Add(fmt.Sprintf("Echo-%s", key), val)
 		}
 	}
 
