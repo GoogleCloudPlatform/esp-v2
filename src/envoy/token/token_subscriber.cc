@@ -72,6 +72,17 @@ TokenSubscriber::~TokenSubscriber() {
 void TokenSubscriber::handleFailResponse() {
   active_request_ = nullptr;
   refresh_timer_->enableTimer(kFailedRequestRetryTime);
+
+  switch (error_behavior_) {
+    case DependencyErrorBehavior::ALWAYS_INIT:
+      ENVOY_LOG(debug,
+                "{}: Response failed, but signalling ready due to "
+                "DependencyErrorBehavior config.");
+      init_target_->ready();
+      break;
+    default:
+      break;
+  }
 }
 
 void TokenSubscriber::handleSuccessResponse(absl::string_view token,
@@ -93,17 +104,6 @@ void TokenSubscriber::handleSuccessResponse(absl::string_view token,
 }
 
 void TokenSubscriber::refresh() {
-  switch (error_behavior_) {
-    case DependencyErrorBehavior::ALWAYS_INIT:
-      ENVOY_LOG(debug,
-                "{}: Token not fetched yet, but signalling ready due to "
-                "DependencyErrorBehavior config.");
-      init_target_->ready();
-      break;
-    default:
-      break;
-  }
-
   if (active_request_) {
     active_request_->cancel();
   }

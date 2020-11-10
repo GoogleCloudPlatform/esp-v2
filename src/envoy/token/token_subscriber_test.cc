@@ -209,9 +209,6 @@ TEST_F(TokenSubscriberTest, ProcessNon200ResponseButInitAllowed) {
   // Start class under test.
   setUp(TokenType::IdentityToken, DependencyErrorBehavior::ALWAYS_INIT);
 
-  // Assert init already allowed.
-  ASSERT_TRUE(init_ready_);
-
   // Setup fake response.
   Envoy::Http::ResponseHeaderMapPtr resp_headers(
       new Envoy::Http::TestResponseHeaderMapImpl({
