@@ -140,11 +140,11 @@ class TestStartProxy(unittest.TestCase):
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             # legacy ssl_port specified
-            (['-R=managed','--ssl_port=9000'],
+            (['-R=managed','--ssl_port=9000', '--disable_tracing'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--ssl_server_cert_path', '/etc/nginx/ssl',
-              '--listener_port', '9000',
+              '--listener_port', '9000', '--disable_tracing',
               ]),
             # ssl_backend_client_cert_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -293,24 +293,27 @@ class TestStartProxy(unittest.TestCase):
             # grpc backend with fixed version and tracing
             (['--service=test_bookstore.gloud.run', '--version=2019-11-09r0',
               '--backend=grpc://127.0.0.1:8000', '--http_request_timeout_s=10',
-              '--log_jwt_payloads=aud,exp'],
+              '--log_jwt_payloads=aud,exp', '--disable_tracing'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--log_jwt_payloads', 'aud,exp',
               '--service', 'test_bookstore.gloud.run',
               '--http_request_timeout_s', '10',
               '--service_config_id', '2019-11-09r0',
+              '--disable_tracing',
               ]),
             # json-grpc transcoder json print options
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
               '--transcoding_always_print_primitive_fields',
               '--transcoding_preserve_proto_field_names',
-              '--transcoding_always_print_enums_as_ints'
+              '--transcoding_always_print_enums_as_ints',
+              '--disable_tracing',
               ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
               '--transcoding_always_print_primitive_fields',
               '--transcoding_always_print_enums_as_ints',
               '--transcoding_preserve_proto_field_names',
@@ -318,47 +321,56 @@ class TestStartProxy(unittest.TestCase):
             # json-grpc transcoder ignore unknown parameters
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
-              '--transcoding_ignore_query_parameters=foo,bar'
+              '--transcoding_ignore_query_parameters=foo,bar',
+              '--disable_tracing'
               ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
               '--transcoding_ignore_query_parameters', 'foo,bar'
               ]),
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
-              '--transcoding_ignore_unknown_query_parameters'
+              '--transcoding_ignore_unknown_query_parameters',
+              '--disable_tracing',
               ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
               '--transcoding_ignore_unknown_query_parameters'
               ]),
             # Connection buffer limit bytes
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
-              '--envoy_connection_buffer_limit_bytes=1024'
+              '--envoy_connection_buffer_limit_bytes=1024',
+              '--disable_tracing',
               ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
               '--connection_buffer_limit_bytes', '1024'
               ]),
             # --enable_debug, with default http schema
             (['--service=test_bookstore.gloud.run',
               '--backend=echo:8000',
               '--enable_debug',
+              '--disable_tracing',
               ],
              ['bin/configmanager', '--logtostderr',
               '--rollout_strategy', 'fixed',
               '--backend_address', 'http://echo:8000',
               '--v', '1',
               '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
               '--suppress_envoy_headers=false'
               ]),
             (['--service=test_bookstore.gloud.run',
               '--backend=127.0.0.1:8000',
-              '--access_log=/foo/bar', "--access_log_format=%START_TIME%"
+              '--access_log=/foo/bar', "--access_log_format=%START_TIME%",
+              '--disable_tracing',
               ],
              ['bin/configmanager', '--logtostderr',
               '--rollout_strategy', 'fixed',
@@ -366,7 +378,8 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--access_log', '/foo/bar',
-              '--access_log_format', '%START_TIME%'
+              '--access_log_format', '%START_TIME%',
+              '--disable_tracing',
               ]),
             # Tracing disabled on non-gcp
             (['--service=test_bookstore.gloud.run',
@@ -387,6 +400,8 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--tracing_project_id', 'test_project_1234',
+              '--tracing_incoming_context', 'traceparent',
+              '--tracing_outgoing_context', 'traceparent',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
             # Tracing params preserved.
@@ -418,43 +433,51 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000',
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
+              '--tracing_incoming_context', 'traceparent',
+              '--tracing_outgoing_context', 'traceparent',
               '--tracing_sample_rate', '0',
               ]),
             # --disable_tracing overrides all other tracing flags
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
               '--tracing_sample_rate=1',
-              '--disable_tracing'
+              '--disable_tracing',
               ],
              ['bin/configmanager', '--logtostderr',
               '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000',
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
-              '--disable_tracing'
+              '--disable_tracing',
               ]),
             # Service account key does not assume non-gcp
             # and does not disable tracing.
             (['--service=test_bookstore.gloud.run',
               '--backend=http://127.0.0.1',
-              '--service_account_key', '/tmp/service_account_key'],
+              '--service_account_key', '/tmp/service_account_key',
+              '--disable_tracing',
+              ],
              ['bin/configmanager', '--logtostderr',
               '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1',
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
               '--service_account_key', '/tmp/service_account_key',
               ]),
             # Serverless sets compute platform and xff_num_trusted_hops.
             (['--on_serverless',
               '--http_port=8080',
               '--rollout_strategy=fixed',
-              '--service_json_path=/tmp/service_config.json'],
+              '--service_json_path=/tmp/service_config.json',
+              '--disable_tracing',
+              ],
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--envoy_xff_num_trusted_hops', '0',
               '--listener_port', '8080',
               '--service_json_path', '/tmp/service_config.json',
+              '--disable_tracing',
               '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # Serverless with override for xff_num_trusted_hops.
@@ -462,20 +485,25 @@ class TestStartProxy(unittest.TestCase):
               '--http_port=8080',
               '--rollout_strategy=fixed',
               '--service_json_path=/tmp/service_config.json',
-              '--envoy_xff_num_trusted_hops=3'],
+              '--envoy_xff_num_trusted_hops=3',
+              '--disable_tracing',
+              ],
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--envoy_xff_num_trusted_hops', '3',
               '--listener_port', '8080',
               '--service_json_path', '/tmp/service_config.json',
+              '--disable_tracing',
               '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
         ]
 
+        i = 0
         for flags, wantedArgs in testcases:
             gotArgs = gen_proxy_config(self.parser.parse_args(flags))
             self.assertEqual(gotArgs, wantedArgs,
-                             msg="Fail for input [{}] : got != want".format(', '.join(flags)))
+                             msg="Fail for input #{} [{}] : got != want".format(i, ', '.join(flags)))
+            i += 1
 
     def test_gen_proxy_config_error(self):
         testcases = [
