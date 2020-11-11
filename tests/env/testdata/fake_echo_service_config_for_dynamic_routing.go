@@ -40,6 +40,9 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
 					},
 					{
+						Name: "EchoHeader",
+					},
+					{
 						Name: "dynamic_routing_GetPetById",
 					},
 					{
@@ -124,6 +127,12 @@ var (
 						Post: "/echo",
 					},
 					Body: "message",
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/echoHeader",
+					},
 				},
 				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
@@ -333,6 +342,10 @@ var (
 		Usage: &confpb.Usage{
 			Rules: []*confpb.UsageRule{
 				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader",
+					AllowUnregisteredCalls: true,
+				},
+				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
 					AllowUnregisteredCalls: true,
 				},
@@ -430,6 +443,11 @@ var (
 					Address:         fmt.Sprintf("https://localhost:%s/echo", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					// No authentication on this rule, essentially the same as `disable_auth`
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader",
+					Address:         fmt.Sprintf("https://localhost:%s/echoHeader", platform.WorkingBackendPort),
+					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",

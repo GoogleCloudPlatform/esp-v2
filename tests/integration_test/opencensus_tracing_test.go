@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -421,5 +422,132 @@ func TestTracesDynamicRouting(t *testing.T) {
 		if err := checkSpanNames(s, tc.wantSpanNames); err != nil {
 			t.Errorf("Test (%s) failed: %v", tc.desc, err)
 		}
+	}
+}
+
+func TestTraceContextPropagationHeaders(t *testing.T) {
+	t.Parallel()
+
+	// Some real-world examples.
+	incomingTraceContexts := map[string]string{
+		"traceparent":           "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+		"X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+	}
+
+	testData := []struct {
+		desc          string
+		confArgs      []string
+		requestHeader map[string]string
+		// Headers wanted in the response.
+		wantRespHeaders map[string]string
+		// Headers that should not exist in the response.
+		notWantRespHeaders map[string]string
+	}{
+		{
+			desc: "trace context propagation is disabled, all headers are preserved",
+			confArgs: append([]string{
+				"--tracing_incoming_context=",
+				"--tracing_outgoing_context=",
+			}, utils.CommonArgs()...),
+			requestHeader: incomingTraceContexts,
+			wantRespHeaders: map[string]string{
+				// All headers are not changed.
+				"Echo-Traceparent":           "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+			},
+		},
+		{
+			desc: "traceparent context propagation is enabled, the trace id is preserved",
+			confArgs: append([]string{
+				"--tracing_incoming_context=traceparent",
+				"--tracing_outgoing_context=traceparent",
+			}, utils.CommonArgs()...),
+			requestHeader: incomingTraceContexts,
+			wantRespHeaders: map[string]string{
+				// Trace id is maintained. Span id is changed, so it's not checked.
+				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-",
+				// All other headers are not changed.
+				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+			},
+			notWantRespHeaders: map[string]string{
+				// The span id should have changed.
+				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+			},
+		},
+		{
+			desc: "x-cloud-trace-context context propagation is enabled, the trace id is preserved",
+			confArgs: append([]string{
+				"--tracing_incoming_context=x-cloud-trace-context",
+				"--tracing_outgoing_context=x-cloud-trace-context",
+			}, utils.CommonArgs()...),
+			requestHeader: incomingTraceContexts,
+			wantRespHeaders: map[string]string{
+				// Trace id is maintained. Span id is changed, so it's not checked.
+				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/",
+				// All other headers are not changed.
+				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+			},
+			notWantRespHeaders: map[string]string{
+				// The span id should have changed.
+				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+			},
+		},
+		{
+			desc: "traceparent context propagation is enabled for outgoing only, so the incoming header is fully overwritten",
+			confArgs: append([]string{
+				"--tracing_incoming_context=",
+				"--tracing_outgoing_context=traceparent",
+			}, utils.CommonArgs()...),
+			requestHeader: incomingTraceContexts,
+			wantRespHeaders: map[string]string{
+				// Trace id and span id are changed, so they not checked.
+				"Echo-Traceparent": "00-",
+				// All other headers are not changed.
+				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+			},
+			notWantRespHeaders: map[string]string{
+				// The trace id and span id should have changed.
+				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+			},
+		},
+		// grpc-trace-bin is not tested, it's difficult to test.
+		// We should be safe, opencensus has tests for this.
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+
+			s := env.NewTestEnv(platform.TestTraceContextPropagationHeaders, platform.EchoRemote)
+			s.SetupFakeTraceServer(1)
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoHeader", "")
+			headers, _, err := utils.DoWithHeaders(url, util.GET, "", tc.requestHeader)
+			if err != nil {
+				t.Fatalf("fail to make call to backend: %v", err)
+			}
+
+			for wantHeaderName, wantHeaderVal := range tc.wantRespHeaders {
+				if !utils.CheckHeaderExist(headers, wantHeaderName, func(gotHeaderVal string) bool {
+					return strings.Contains(gotHeaderVal, wantHeaderVal)
+				}) {
+					t.Errorf("got headers %+q, \ndid not find expected header %s = %s,  ", headers, wantHeaderName, wantHeaderVal)
+				}
+			}
+
+			for notWantHeaderName, notWantHeaderVal := range tc.notWantRespHeaders {
+				if utils.CheckHeaderExist(headers, notWantHeaderName, func(gotHeaderVal string) bool {
+					return strings.Contains(gotHeaderVal, notWantHeaderVal)
+				}) {
+					t.Errorf("got headers %+q, \nfound header %s = %s, but did not want it", headers, notWantHeaderName, notWantHeaderVal)
+				}
+			}
+
+			// Ignore the spans in this test, we do not check the names.
+			time.Sleep(5 * time.Second)
+			_, _ = s.FakeStackdriverServer.RetrieveSpanNames()
+		})
 	}
 }
