@@ -255,12 +255,12 @@ func TestAuthAllowMissing(t *testing.T) {
 			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
 		},
 		{
-			desc:           "Failed, wrong token",
+			desc:           "Failed, token with wrong issuer",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.Rs256Token,
-			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt issuer is not configured"}`,
 		},
 	}
 
