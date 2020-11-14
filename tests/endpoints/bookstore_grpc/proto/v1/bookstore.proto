@@ -144,7 +144,7 @@ message Book {
   // The book type.
   TYPE type = 4;
 
-  int32 priceInUsd=5 [json_name="price_in_usd"];
+  int32 price_in_usd=5;
 }
 
 // Response to ListShelves call.
