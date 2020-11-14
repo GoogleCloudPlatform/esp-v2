@@ -41,6 +41,7 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -431,7 +432,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	requirements := make(map[string]*jwtpb.JwtRequirement)
 	for _, rule := range auth.GetRules() {
 		if len(rule.GetRequirements()) > 0 {
-			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements())
+			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements(), rule.GetAllowWithoutCredential())
 		}
 	}
 
@@ -448,7 +449,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	return jwtAuthnFilter
 }
 
-func makeJwtRequirement(requirements []*confpb.AuthRequirement) *jwtpb.JwtRequirement {
+func makeJwtRequirement(requirements []*confpb.AuthRequirement, allow_missing bool) *jwtpb.JwtRequirement {
 	// By default, if there are multi requirements, treat it as RequireAny.
 	requires := &jwtpb.JwtRequirement{
 		RequiresType: &jwtpb.JwtRequirement_RequiresAny{
@@ -480,11 +481,19 @@ func makeJwtRequirement(requirements []*confpb.AuthRequirement) *jwtpb.JwtRequir
 				},
 			}
 		}
-		if len(requirements) == 1 {
+		if len(requirements) == 1 && !allow_missing {
 			requires = require
 		} else {
 			requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
 		}
+	}
+	if allow_missing {
+		require := &jwtpb.JwtRequirement{
+			RequiresType: &jwtpb.JwtRequirement_AllowMissing{
+				AllowMissing: &emptypb.Empty{},
+			},
+		}
+		requires.GetRequiresAny().Requirements = append(requires.GetRequiresAny().GetRequirements(), require)
 	}
 
 	return requires

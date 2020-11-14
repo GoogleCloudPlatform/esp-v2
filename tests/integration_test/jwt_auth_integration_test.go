@@ -186,6 +186,106 @@ func TestAsymmetricKeys(t *testing.T) {
 	}
 }
 
+func TestAuthAllowMissing(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+	args := []string{"--service_config_id=" + configID,
+		"--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(platform.TestAuthAllowMissing, platform.GrpcBookstoreSidecar)
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{
+			{
+				Selector:               "endpoints.examples.bookstore.Bookstore.ListShelves",
+				AllowWithoutCredential: true,
+				Requirements: []*confpb.AuthRequirement{
+					{
+						ProviderId: testdata.TestAuthProvider,
+						Audiences:  "ok_audience",
+					},
+					{
+						ProviderId: testdata.InvalidProvider,
+						Audiences:  "bookstore_test_client.cloud.goog",
+					},
+				},
+			},
+		},
+	})
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	time.Sleep(time.Duration(5 * time.Second))
+	tests := []struct {
+		desc               string
+		clientProtocol     string
+		httpMethod         string
+		method             string
+		queryInToken       bool
+		token              string
+		headers            map[string][]string
+		wantResp           string
+		wantError          string
+		wantGRPCWebError   string
+		wantGRPCWebTrailer client.GRPCWebTrailer
+	}{
+		{
+			desc:           "Succeeded with allow_missing. no JWT passed in.",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		},
+		{
+			desc:           "Succeeded, with right token",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.Es256Token,
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+		},
+		{
+			desc:           "Failed, provider providing wrong-format jwks",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeInvalidJwksProviderToken,
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
+		},
+		{
+			desc:           "Failed, wrong token",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.Rs256Token,
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		var resp string
+		var err error
+		if tc.queryInToken {
+			resp, err = client.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
+		} else {
+			resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
+		}
+
+		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+		} else if tc.wantError == "" && err != nil {
+			t.Errorf("Test (%s): failed, expected no error, got error: %s", tc.desc, err)
+		} else {
+			if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			}
+		}
+	}
+}
+
 // Tests that config translation will fail when the OpenID Connect Discovery protocol is not followed.
 func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 	t.Parallel()
