@@ -47,8 +47,8 @@ func TestTranscodingPrintOptions(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/100/books?key=api-key",
-			bodyBytes:      []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
-			wantResp:       `{"id":"4","author":"Mark","type":"COMIC","price_in_usd":100}`,
+			bodyBytes:      []byte(`{"id": 4, "type": 1, "author":"Mark", "priceInUsd": 100}`),
+			wantResp:       `{"id":"4","author":"Mark","type":"COMIC","priceInUsd":100}`,
 		},
 		{
 			desc:                                  "Success. Set transcoding_always_print_primitive_fields to true",
@@ -57,7 +57,7 @@ func TestTranscodingPrintOptions(t *testing.T) {
 			method:                                "/v1/shelves/100/books?key=api-key",
 			bodyBytes:                             []byte(`{"id": 4}`),
 			transcodingAlwaysPrintPrimitiveFields: true,
-			wantResp:                              `{"id":"4","author":"","title":"","type":"CLASSIC","price_in_usd":0}`,
+			wantResp:                              `{"id":"4","author":"","title":"","type":"CLASSIC","priceInUsd":0}`,
 		},
 		{
 			desc:                              "Success. Set transcoding_always_print_enums_as_ints to true",
@@ -73,9 +73,9 @@ func TestTranscodingPrintOptions(t *testing.T) {
 			clientProtocol:                     "http",
 			httpMethod:                         "POST",
 			method:                             "/v1/shelves/100/books?key=api-key",
-			bodyBytes:                          []byte(`{"id": 4, "price_in_usd": 100}`),
+			bodyBytes:                          []byte(`{"id": 4, "priceInUsd": 100}`),
 			transcodingPreserveProtoFieldNames: true,
-			wantResp:                           `{"id":"4","priceInUsd":100}`,
+			wantResp:                           `{"id":"4","price_in_usd":100}`,
 		},
 	}
 	for _, tc := range tests {
@@ -140,7 +140,7 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/100/books?key=api-key&unknown_parameter=val",
-			bodyBytes:      []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			bodyBytes:      []byte(`{"id": 4, "type": 1, "author":"Mark", "priceInUsd": 100}`),
 			wantError:      "503 Service Unavailable",
 		},
 		{
@@ -148,16 +148,16 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 			clientProtocol:                          "http",
 			httpMethod:                              "POST",
 			method:                                  "/v1/shelves/100/books?key=api-key&unknown_parameter_foo=val&unknown_parameter_bar=val",
-			bodyBytes:                               []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			bodyBytes:                               []byte(`{"id": 4, "type": 1, "author":"Mark", "priceInUsd": 100}`),
 			transcodingIgnoreUnknownQueryParameters: true,
-			wantResp:                                `{"id":"4","author":"Mark","type":"COMIC","price_in_usd":100}`,
+			wantResp:                                `{"id":"4","author":"Mark","type":"COMIC","priceInUsd":100}`,
 		},
 		{
 			desc:                             "Fail. Set transcodingIgnoreQueryParameters with insufficient ignore parameters.",
 			clientProtocol:                   "http",
 			httpMethod:                       "POST",
 			method:                           "/v1/shelves/100/books?key=api-key&unknown_parameter_foo=val&unknown_parameter_bar=val",
-			bodyBytes:                        []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			bodyBytes:                        []byte(`{"id": 4, "type": 1, "author":"Mark", "priceInUsd": 100}`),
 			transcodingIgnoreQueryParameters: "unknown_parameter_foo",
 			wantError:                        "503 Service Unavailable",
 		},
@@ -166,9 +166,9 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 			clientProtocol:                   "http",
 			httpMethod:                       "POST",
 			method:                           "/v1/shelves/100/books?key=api-key&unknown_parameter_foo=val&unknown_parameter_bar=val",
-			bodyBytes:                        []byte(`{"id": 4, "type": 1, "author":"Mark", "price_in_usd": 100}`),
+			bodyBytes:                        []byte(`{"id": 4, "type": 1, "author":"Mark", "priceInUsd": 100}`),
 			transcodingIgnoreQueryParameters: "unknown_parameter_foo,unknown_parameter_bar",
-			wantResp:                         `{"id":"4","author":"Mark","type":"COMIC","price_in_usd":100}`,
+			wantResp:                         `{"id":"4","author":"Mark","type":"COMIC","priceInUsd":100}`,
 		},
 	}
 	for _, tc := range tests {
