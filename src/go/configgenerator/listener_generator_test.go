@@ -382,6 +382,17 @@ func TestJwtAuthnFilter(t *testing.T) {
 							},
 						},
 					},
+					Rules: []*confpb.AuthenticationRule{
+						{
+							Selector:               "testapi.foo",
+							AllowWithoutCredential: true,
+							Requirements: []*confpb.AuthRequirement{
+								{
+									ProviderId: "auth_provider",
+								},
+							},
+						},
+					},
 				},
 			},
 			wantJwtAuthnFilter: `{
@@ -413,6 +424,20 @@ func TestJwtAuthnFilter(t *testing.T) {
                         "timeout": "30s",
                         "uri": "https://fake-jwks.com"
                     }
+                }
+            }
+        },
+        "requirementMap": {
+            "testapi.foo": {
+                 "requiresAny":{
+                    "requirements":[
+                     {
+                        "providerName":"auth_provider"
+                     },
+                     {
+                        "allowMissing":{}
+                     }
+                   ]
                 }
             }
         }

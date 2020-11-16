@@ -31,6 +31,7 @@ const (
 	TestAccessLog uint16 = iota
 	TestAsymmetricKeys
 	TestAsymmetricKeysTraces
+	TestAuthAllowMissing
 	TestAuthJwksCache
 	TestBackendAuthDisableAuth
 	TestBackendAuthUsingIamIdTokenWithDelegates
