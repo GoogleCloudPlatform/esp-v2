@@ -98,7 +98,7 @@ class ServiceControlCallImpl
 
  private:
   // Get thread local cache object.
-  ThreadLocalCache& getTLCache() { return tls_.get(); }
+  ThreadLocalCache& getTLCache() { return *tls_; }
 
   void createImdsTokenSub();
   void createIamTokenSub();
