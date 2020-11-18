@@ -45,10 +45,11 @@ void ServiceControlCallImpl::createImdsTokenSub() {
       TokenType::AccessToken, token_cluster, token_uri, fetch_timeout,
       error_behavior, [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_.runOnAllThreads([new_token](ThreadLocalCache& object) {
-          object.set_sc_token(new_token);
-          object.set_quota_token(new_token);
-        });
+        tls_.runOnAllThreads(
+            [new_token](Envoy::OptRef<ThreadLocalCache> object) {
+              object->set_sc_token(new_token);
+              object->set_quota_token(new_token);
+            });
       });
 }
 
@@ -90,10 +91,11 @@ void ServiceControlCallImpl::createIamTokenSub() {
       error_behavior,
       [this](absl::string_view token) {
         TokenSharedPtr new_token = std::make_shared<std::string>(token);
-        tls_.runOnAllThreads([new_token](ThreadLocalCache& object) {
-          object.set_sc_token(new_token);
-          object.set_quota_token(new_token);
-        });
+        tls_.runOnAllThreads(
+            [new_token](Envoy::OptRef<ThreadLocalCache> object) {
+              object->set_sc_token(new_token);
+              object->set_quota_token(new_token);
+            });
       },
       filter_config_.iam_token().delegates(), scopes,
       [this]() { return access_token_for_iam_; });

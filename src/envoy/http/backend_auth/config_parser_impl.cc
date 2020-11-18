@@ -45,8 +45,9 @@ AudienceContext::AudienceContext(
 
   UpdateTokenCallback callback = [this](absl::string_view token) {
     TokenSharedPtr new_token = std::make_shared<std::string>(token);
-    tls_.runOnAllThreads(
-        [new_token](TokenCache& obj) { obj.token_ = new_token; });
+    tls_.runOnAllThreads([new_token](Envoy::OptRef<TokenCache> obj) {
+      obj->token_ = new_token;
+    });
   };
 
   switch (filter_config.id_token_info_case()) {
