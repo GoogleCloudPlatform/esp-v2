@@ -117,7 +117,9 @@ class ServiceControlHandlerImpl
   std::string uuid_;
   std::string api_key_;
 
-  // The size of request headers.
+  // Considering the request headers can be modified, the original downstream
+  // header should be used as request_header_size. This variable is used to
+  // remember the downstream header size when HandlerImpl object is created.
   int request_header_size_;
 
   // The name of headers to send consumer info
