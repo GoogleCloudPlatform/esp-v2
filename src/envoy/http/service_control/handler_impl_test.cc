@@ -447,6 +447,34 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   handler.callReport(&headers, &response_headers, &resp_trailer_);
 }
 
+TEST_F(HandlerTest, RequestHeaderSizeWithModificationInUpstream) {
+  setPerRouteOperation("get_no_key");
+  TestRequestHeaderMapImpl request_headers{{":method", "GET"},
+                                           {":path", "/echo"}};
+  TestRequestHeaderMapImpl updated_request_headers{
+      {":method", "GET"}, {":path", "/echo"}, {"foo", "bar"}};
+
+  TestResponseHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(request_headers, mock_stream_info_,
+                                    "test-uuid", *cfg_parser_, test_time_,
+                                    stats_);
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
+  handler.callCheck(request_headers, *mock_span_, mock_check_done_callback_);
+
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.status = Status::OK;
+  expected_report_info.operation_name = "get_no_key";
+  // The request header size will be the size of request_headers even though
+  // the updated request headers are used in callReport.
+  EXPECT_CALL(*mock_call_, callReport(MatchesReportInfo(
+                               expected_report_info, request_headers,
+                               response_headers, resp_trailer_)));
+  handler.callReport(&updated_request_headers, &response_headers,
+                     &resp_trailer_);
+}
+
 TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   // Test: If the operation requires a check but none is found, check fails
   // and a report is made

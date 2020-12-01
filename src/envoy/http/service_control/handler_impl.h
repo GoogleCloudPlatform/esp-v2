@@ -117,6 +117,9 @@ class ServiceControlHandlerImpl
   std::string uuid_;
   std::string api_key_;
 
+  // The size of request headers.
+  int request_header_size_;
+
   // The name of headers to send consumer info
   const Envoy::Http::LowerCaseString consumer_type_header_;
   const Envoy::Http::LowerCaseString consumer_number_header_;

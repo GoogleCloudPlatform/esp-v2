@@ -69,6 +69,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       stream_info_(stream_info),
       time_source_(time_source),
       uuid_(uuid),
+      request_header_size_(headers.byteSize()),
       consumer_type_header_(cfg_parser_.config().generated_header_prefix() +
                             kConsumerTypeHeaderSuffix),
       consumer_number_header_(cfg_parser_.config().generated_header_prefix() +
@@ -338,18 +339,16 @@ void ServiceControlHandlerImpl::callReport(
   info.backend_protocol =
       getBackendProtocol(require_ctx_->service_ctx().config());
 
-  uint64_t request_header_size = 0;
   if (request_headers) {
     info.referer = std::string(utils::readHeaderEntry(
         request_headers->getInline(referer_handle.handle())));
-    request_header_size = request_headers->byteSize();
   }
 
   fillLatency(stream_info_, info.latency, filter_stats_);
 
   info.response_code = stream_info_.responseCode().value_or(500);
 
-  info.request_size = stream_info_.bytesReceived() + request_header_size;
+  info.request_size = stream_info_.bytesReceived() + request_header_size_;
 
   uint64_t response_header_size = 0;
   if (response_headers) {
