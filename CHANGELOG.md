@@ -1,3 +1,16 @@
+# Release 2.21.0 02-12-2020
+
+- b/173810289: fix request header size (#425)
+- Alias and expose targets (#422)
+- Update envoy to  jwt clock_skew change (#420)
+- Support AuthenticationRule.allow_without_credential (#419)
+- Fix transcoding_options_test (#418)
+- b/172831233: Enable traceparent trace context propagation by default (#416)
+- b/172866817: Fix timing issue causing ASan test to fail (#414)
+- b/172671425: work around tsan false alarm on atomic race (#415)
+- b/171326666 #2: Envoy changes to use DependencyErrorBehavior in TokenSubscriber (#406)
+- Remove beta in our doc (#410)
+
 # Release 2.20.0 05-11-2020
 
 - ConfigMgr changes: Jwt_authn use per-route config, remove path_matcher (#403)
