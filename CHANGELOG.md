@@ -1,3 +1,11 @@
+# Release 2.21.0 02-12-2020
+
+- Fix request header size (#425)
+- Update envoy to jwt clock_skew change (#420)
+- Support AuthenticationRule.allow_without_credential (#419)
+- Enable traceparent trace context propagation by default (#416)
+- Envoy changes to use DependencyErrorBehavior in TokenSubscriber (#406)
+
 # Release 2.20.0 05-11-2020
 
 - ConfigMgr changes: Jwt_authn use per-route config, remove path_matcher (#403)
