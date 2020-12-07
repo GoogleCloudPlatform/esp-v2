@@ -7,7 +7,6 @@ load(
     "envoy_cc_binary",
 )
 
-
 alias(
     name = "backend_auth",
     actual = "//src/envoy/http/backend_auth:filter_factory",
@@ -33,16 +32,14 @@ alias(
     actual = "@envoy//source/exe:envoy_main_entry_lib",
 )
 
-
 envoy_cc_binary(
     name = "envoy",
     repository = "@envoy",
     deps = [
         ":backend_auth",
         ":grpc_metadata_scrubber",
+        ":main",
         ":path_rewrite",
         ":service_control",
-        ":main",
     ],
 )
-
