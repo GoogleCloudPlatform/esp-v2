@@ -21,15 +21,28 @@ To get started building Envoy locally, following the instructions from [Envoy](h
 
 ## Install Clang-10
 
+Add the package sources with the following commands.
+If these commands fail, reference [the official clang installation instructions](https://apt.llvm.org/) for your OS.
+
 ```
-wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add -
-echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main" >> /etc/apt/sources.list
+# Commands require sudo. Force password prompt early to cache credentials.
+sudo echo "hello"
+
+wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main" | sudo tee -a /etc/apt/sources.list >/dev/null
+```
+
+Install the following packages:
+
+```
 sudo apt-get update
 sudo apt-get install -y llvm-10-dev libclang-10-dev clang-10 \
     clang-tools-10 clang-format-10 xz-utils lld-10
 ```
 
 ## Install Golang
+
+If these commands fail, reference [the official golang installation instructions](https://golang.org/doc/install) for your OS.
 
 ```
 sudo apt-get install golang-1.15
@@ -38,26 +51,34 @@ sudo apt-get install golang-1.15
 Add the following setting in .profile, then source it:
 
 ```
-export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
-export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 export GOBIN=$GOPATH/bin
+export PATH=$GOBIN:$PATH
+```
+
+## Install other tools
+
+```
+sudo apt-get install jq
 ```
 
 ## Download Source Code
 
-To download the source code, clone the APIProxy repository:
+To download the source code, use `go get`:
 
-* git clone  "https://github.com/GoogleCloudPlatform/esp-v2"
+```
+go get github.com/GoogleCloudPlatform/esp-v2
+```
 
-The following folder is required:
+This will create the following folder structure:
 
 ```
 - $HOME/go
   - bin
   - src
-    -  cloudesf.googlesource.com
-       -  gcpproxy
+    -  github.com
+       -  GoogleCloudPlatform
+          - esp-v2
 ```
 
 ## Build Envoy and Config Manager
@@ -66,29 +87,29 @@ In order to build Config Manager, need to install its dependent libraries:
 
 ```
 make depend.install
+make depend.install.endpoints
 ```
 
-To build Config Manager, run:
+To build:
 
 ```
+# Config Manager
 make build
-```
-
-To build Envoy, run:
-
-```
+# Envoy
 make build-envoy
 ```
 
-To run integration tests, run:
+To run unit tests:
 
 ```
-make integration-test
+# Config Manager
+make test
+# Envoy
+make test-envoy
 ```
 
-## Run Sanitizer Tests
+To run integration tests:
 
 ```
-make test-envoy-asan/tsan
-make integration-test-asan/tsan
+make integration-test-run-parallel
 ```
