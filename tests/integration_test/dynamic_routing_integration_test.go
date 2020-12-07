@@ -251,6 +251,12 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?s_1=a/1/b/2&s_2=x/9/8/7"}`,
 		},
 		{
+			desc:     "Succeed, CONSTANT_ADDRESS with query params for variable bindings with multiple segments and trailing slash",
+			path:     "/field_path/a/1/b/2/x/9/8/7/:upload",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?s_1=a/1/b/2&s_2=x/9/8/7/"}`,
+		},
+		{
 			desc:          "Fail, CONSTANT_ADDRESS but verb is incorrect",
 			path:          "/field_path/a/1/b/2/x/9/8/7:incorrect_verb",
 			method:        "GET",
