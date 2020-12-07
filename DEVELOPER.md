@@ -22,11 +22,13 @@ To get started building Envoy locally, following the instructions from [Envoy](h
 ## Install Clang-10
 
 ```
+sudo -i
 wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add -
 echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main" >> /etc/apt/sources.list
-sudo apt-get update
-sudo apt-get install -y llvm-10-dev libclang-10-dev clang-10 \
+apt-get update
+apt-get install -y llvm-10-dev libclang-10-dev clang-10 \
     clang-tools-10 clang-format-10 xz-utils lld-10
+exit
 ```
 
 ## Install Golang
