@@ -399,7 +399,7 @@ var (
                         ],
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/pet/[^\\/]+$"
+                          "regex": "^/pet/[^\\/]+\\/?$"
                         }
                       },
                       "route": {

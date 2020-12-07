@@ -12,4 +12,6 @@ const (
 	singleWildcardReplacementRegex = `[^\/]+`
 	// Matches any character or no characters at all.
 	doubleWildcardReplacementRegex = `.*`
+	// Matches a trailing slash at the end of a path.
+	optionalTrailingSlashRegex = `\/?`
 )
