@@ -152,6 +152,7 @@ func (u *UriTemplate) Regex() string {
 			regex.WriteString(segment)
 		}
 	}
+	regex.WriteString(optionalTrailingSlashRegex)
 
 	if u.Verb != "" {
 		regex.WriteString(":" + u.Verb)

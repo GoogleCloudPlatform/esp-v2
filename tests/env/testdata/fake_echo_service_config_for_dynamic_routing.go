@@ -43,6 +43,9 @@ var (
 						Name: "EchoHeader",
 					},
 					{
+						Name: "EchoAppendPath",
+					},
+					{
 						Name: "dynamic_routing_GetPetById",
 					},
 					{
@@ -132,6 +135,12 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/echoHeader",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoAppendPath",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/echo/{variable}/path",
 					},
 				},
 				{
@@ -346,6 +355,10 @@ var (
 					AllowUnregisteredCalls: true,
 				},
 				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoAppendPath",
+					AllowUnregisteredCalls: true,
+				},
+				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
 					AllowUnregisteredCalls: true,
 				},
@@ -448,6 +461,11 @@ var (
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader",
 					Address:         fmt.Sprintf("https://localhost:%s/echoHeader", platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+				},
+				{
+					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoAppendPath",
+					Address:         fmt.Sprintf("https://localhost:%s/prefix", platform.WorkingBackendPort),
+					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",

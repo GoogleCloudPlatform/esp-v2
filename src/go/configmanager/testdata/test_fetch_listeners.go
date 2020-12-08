@@ -596,7 +596,7 @@ var (
                                        "googleRe2":{
                                           
                                        },
-                                       "regex":"^/v1/shelves/[^\\/]+$"
+                                       "regex":"^/v1/shelves/[^\\/]+\\/?$"
                                     }
                                  },
                                  "route":{
@@ -879,7 +879,7 @@ var (
                                        "googleRe2":{
                                           
                                        },
-                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+$"
+                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                                     }
                                  },
                                  "route":{
@@ -908,7 +908,7 @@ var (
                                        "googleRe2":{
                                           
                                        },
-                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+$"
+                                       "regex":"^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                                     }
                                  },
                                  "route":{

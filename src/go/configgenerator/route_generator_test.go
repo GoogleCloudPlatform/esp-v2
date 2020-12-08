@@ -257,7 +257,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match":{
             "safeRegex":{
               "googleRe2":{},
-              "regex":"^/v1/[^\\/]+/test/.*$"
+              "regex":"^/v1/[^\\/]+/test/.*\\/?$"
             }
           },
           "route":{
@@ -364,7 +364,7 @@ func TestMakeRouteConfig(t *testing.T) {
             ],
             "safeRegex": {
               "googleRe2": {},
-              "regex": "^/v1/shelves/[^\\/]+$"
+              "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           },
           "route": {
@@ -400,7 +400,7 @@ func TestMakeRouteConfig(t *testing.T) {
             ],
             "safeRegex": {
               "googleRe2": {},
-              "regex": "^/v1/shelves/[^\\/]+$"
+              "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           },
           "route": {
@@ -717,7 +717,7 @@ func TestMakeRouteConfig(t *testing.T) {
             ],
             "safeRegex": {
               "googleRe2": {},
-              "regex": "^/foo/[^\\/]+$"
+              "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
           "route": {
@@ -756,7 +756,7 @@ func TestMakeRouteConfig(t *testing.T) {
             ],
             "safeRegex": {
               "googleRe2": {},
-              "regex": "^/foo/[^\\/]+$"
+              "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
           "route": {
@@ -1226,7 +1226,7 @@ func TestMakeRouteConfig(t *testing.T) {
             ],
             "safeRegex": {
               "googleRe2": {},
-              "regex": "^/foo/[^\\/]+$"
+              "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
           "route": {
@@ -1416,7 +1416,7 @@ func TestMakeRouteConfig(t *testing.T) {
                      "googleRe2":{
                         
                      },
-                     "regex":"^/foo/[^\\/]+$"
+                     "regex":"^/foo/[^\\/]+\\/?$"
                   }
                },
                "responseHeadersToAdd":[
@@ -1453,7 +1453,7 @@ func TestMakeRouteConfig(t *testing.T) {
                      "googleRe2":{
                         
                      },
-                     "regex":"^/foo/[^\\/]+/bar$"
+                     "regex":"^/foo/[^\\/]+/bar\\/?$"
                   }
                },
                "responseHeadersToAdd":[
@@ -1490,7 +1490,7 @@ func TestMakeRouteConfig(t *testing.T) {
                      "googleRe2":{
                         
                      },
-                     "regex":"^/foo/.*/bar$"
+                     "regex":"^/foo/.*/bar\\/?$"
                   }
                },
                "responseHeadersToAdd":[
@@ -1527,7 +1527,7 @@ func TestMakeRouteConfig(t *testing.T) {
                      "googleRe2":{
                         
                      },
-                     "regex":"^/foo/.*:verb$"
+                     "regex":"^/foo/.*\\/?:verb$"
                   }
                },
                "responseHeadersToAdd":[
@@ -1564,7 +1564,7 @@ func TestMakeRouteConfig(t *testing.T) {
                      "googleRe2":{
                         
                      },
-                     "regex":"^/foo/.*$"
+                     "regex":"^/foo/.*\\/?$"
                   }
                },
                "responseHeadersToAdd":[
@@ -1676,7 +1676,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		},
 		{
 			desc:        "Incorrect configured basic Cors",
-			params:      []string{"basic", "", `^https?://.+\\.example\\.com$`, "", "", ""},
+			params:      []string{"basic", "", `^https?://.+\\.example\\.com\/?$`, "", "", ""},
 			wantedError: "cors_allow_origin cannot be empty when cors_preset=basic",
 		},
 		{
@@ -1686,7 +1686,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		},
 		{
 			desc:        "Incorrect configured regex Cors",
-			params:      []string{"cors_with_regexs", "", `^https?://.+\\.example\\.com$`, "", "", ""},
+			params:      []string{"cors_with_regexs", "", `^https?://.+\\.example\\.com\/?$`, "", "", ""},
 			wantedError: `cors_preset must be either "basic" or "cors_with_regex"`,
 		},
 		{
@@ -1711,7 +1711,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		},
 		{
 			desc:   "Correct configured regex Cors, with allow headers",
-			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "Origin,Content-Type,Accept", ""},
+			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "Origin,Content-Type,Accept", ""},
 			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
@@ -1720,7 +1720,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 								EngineType: &matcher.RegexMatcher_GoogleRe2{
 									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
 								},
-								Regex: `^https?://.+\\.example\\.com$`,
+								Regex: `^https?://.+\\.example\\.com\/?$`,
 							},
 						},
 					},
@@ -1731,7 +1731,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		},
 		{
 			desc:             "Correct configured regex Cors, with expose headers",
-			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com$`, "", "", "Content-Length"},
+			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "", "Content-Length"},
 			allowCredentials: true,
 			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
@@ -1741,7 +1741,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 								EngineType: &matcher.RegexMatcher_GoogleRe2{
 									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
 								},
-								Regex: `^https?://.+\\.example\\.com$`,
+								Regex: `^https?://.+\\.example\\.com\/?$`,
 							},
 						},
 					},

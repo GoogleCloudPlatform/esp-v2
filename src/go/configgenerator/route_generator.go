@@ -245,8 +245,6 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 			HttpMethod:  httpPatternMethod.HttpMethod,
 		}
 
-		var routeMatcher *routepb.RouteMatch
-
 		// Response timeouts are not compatible with streaming methods (documented in Envoy).
 		// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
 		// This even applies for routes with gRPC-JSON transcoding where only the upstream is streaming.
@@ -257,6 +255,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 			respTimeout = method.BackendInfo.Deadline
 		}
 
+		var routeMatcher *routepb.RouteMatch
 		var err error
 		if routeMatcher, err = makeHttpRouteMatcher(httpRule); err != nil {
 			return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)

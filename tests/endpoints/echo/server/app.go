@@ -55,6 +55,7 @@ func main() {
 		HandlerFunc(echoHeaderHandler)
 	r.PathPrefix("/echoMethod").Methods("GET", "POST", "PUT", "DELETE", "PATCH").
 		HandlerFunc(echoMethodHandler)
+	r.Path("/prefix/echo/{variable}/path").Methods("GET").HandlerFunc(dynamicRoutingHandler)
 
 	r.Path("/websocketecho").HandlerFunc(websocketEchoHandler)
 	r.Path("/echo/nokey").Methods("POST").

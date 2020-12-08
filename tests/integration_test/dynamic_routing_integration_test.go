@@ -95,6 +95,18 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/bookinfo?SHELF=123&BOOK=987"}`,
 		},
 		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation with trailing slash works",
+			path:     "/shelves/123/books/info/987/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/bookinfo?SHELF=123&BOOK=987"}`,
+		},
+		{
+			desc:          "Succeed, CONSTANT_ADDRESS path translation with multiple trailing slashes fails",
+			path:          "/shelves/123/books/info/987//",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
 			desc:     "Succeed, CONSTANT_ADDRESS path translation with snake case is correct, supports {foo.bar} style path, if corresponding jsonName not found, origin snake case path is used.",
 			path:     "/shelves/221/books/id/2019",
 			method:   "GET",
@@ -239,6 +251,12 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?s_1=a/1/b/2&s_2=x/9/8/7"}`,
 		},
 		{
+			desc:     "Succeed, CONSTANT_ADDRESS with query params for variable bindings with multiple segments and trailing slash",
+			path:     "/field_path/a/1/b/2/x/9/8/7/:upload",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?s_1=a/1/b/2&s_2=x/9/8/7/"}`,
+		},
+		{
 			desc:          "Fail, CONSTANT_ADDRESS but verb is incorrect",
 			path:          "/field_path/a/1/b/2/x/9/8/7:incorrect_verb",
 			method:        "GET",
@@ -269,6 +287,46 @@ func TestDynamicRouting(t *testing.T) {
 		{
 			desc:     "Route match ordering - Match http pattern `POST /allow-all/{double_wildcard=**}`",
 			path:     "/allow-all/should-match/double-wildcard",
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?double_wildcard=should-match/double-wildcard"}`,
+		},
+		// Test regex route match with trailing slashes.
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS should work with variable binding",
+			path:     "/echo/123/path",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/123/path"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS should work with variable binding and trailing slash (preserved)",
+			path:     "/echo/123/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/123/path/"}`,
+		},
+		{
+			desc:          "APPEND_PATH_TO_ADDRESS fails with multiple trailing slashes",
+			path:          "/echo/123/path//",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
+			desc:     "Allow all with single wildcard works with trailing slash",
+			path:     "/allow-all/should-match-single-wildcard/",
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?single_wildcard=should-match-single-wildcard"}`,
+		},
+		{
+			desc:     "Allow all with double wildcard works with trailing slash",
+			path:     "/allow-all/should-match/double-wildcard/",
+			method:   "POST",
+			message:  "hello",
+			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?double_wildcard=should-match/double-wildcard"}`,
+		},
+		{
+			desc:     "Multiple trailing slashes are accepted by allow all with double wildcard, they are treated as empty segments",
+			path:     "/allow-all/should-match/double-wildcard///",
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?double_wildcard=should-match/double-wildcard"}`,

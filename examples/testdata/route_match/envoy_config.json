@@ -262,7 +262,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+$"
+                                "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$"
                               }
                             },
                             "route": {
@@ -301,7 +301,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+$"
+                                "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$"
                               }
                             },
                             "route": {
@@ -340,7 +340,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/.*$"
+                                "regex": "^/.*\\/?$"
                               }
                             },
                             "route": {
@@ -372,7 +372,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/.*$"
+                                "regex": "^/.*\\/?$"
                               }
                             },
                             "route": {
@@ -404,7 +404,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/.*$"
+                                "regex": "^/.*\\/?$"
                               }
                             },
                             "route": {
@@ -436,7 +436,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/.*$"
+                                "regex": "^/.*\\/?$"
                               }
                             },
                             "route": {
@@ -468,7 +468,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/.*$"
+                                "regex": "^/.*\\/?$"
                               }
                             },
                             "route": {
@@ -500,7 +500,7 @@
                               ],
                               "safeRegex": {
                                 "googleRe2": {},
-                                "regex": "^/.*$"
+                                "regex": "^/.*\\/?$"
                               }
                             },
                             "route": {
