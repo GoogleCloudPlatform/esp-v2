@@ -171,7 +171,6 @@ func TestBackendRetry(t *testing.T) {
 				"ingress Echo",
 			},
 		},
-
 		{
 			desc:                       "Failed request for remote backend, the retryNum is not enough",
 			backendRejectRequestStatus: 503,
@@ -213,7 +212,7 @@ func TestBackendRetry(t *testing.T) {
 			},
 		},
 		{
-			desc:                       "Successful request for local backend, sufficient retryNum and covered retryOn",
+			desc:                       "Successful request for remote backend, sufficient retryNum and covered retryOn",
 			backendRejectRequestStatus: 503,
 			backendRejectRequestNum:    2,
 			backendRetryOnsFlag:        "5xx",
