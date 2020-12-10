@@ -62,13 +62,15 @@ func TestBackendRetry(t *testing.T) {
 			},
 		},
 		// Hard to control making the successful TCP connection under certain retry
-		// by sending certain RST so this test case is to see ESPv2 are doing retry under reset.
+		// by sending certain RST so this test case is to see ESPv2 are doing retry
+		// under reset.
 		{
 			desc:                "Failure, simulate the scenario that upstream keeps sending RST in TCP connection and ESPv2 do 1 retry under the default retryOns(reset)",
 			backendRespondRST:   true,
 			backendRetryOnsFlag: defaultBackendRetryOns,
 			backendRetryNumFlag: defaultBackendRetryNum,
-			// It could be `connection termination` or `connection failure` in the end so don't specify it here.
+			// It could be `connection termination` or `connection failure` in the end
+			//so don't specify it here.
 			wantError: `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure`,
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -87,7 +89,8 @@ func TestBackendRetry(t *testing.T) {
 				"ingress Echo",
 			},
 		},
-		// Hard to control backend to launch right after certain retry so this test case is to see ESPv2 are doing retry under connection failure.
+		// Hard to control backend to launch right after certain retry so this test
+		// case is to see ESPv2 are doing retry under connection failure.
 		{
 			desc:                "Failure, simulate the scenario that upstream cannot be connected and and ESPv2 do 1 retry under the default retryOns(connect-failure)",
 			backendNotStart:     true,
