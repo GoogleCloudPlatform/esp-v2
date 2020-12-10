@@ -84,6 +84,10 @@ type TestEnv struct {
 	// Only implemented for a subset of backends.
 	backendMTLSCertFile         string
 	useWrongBackendCert         bool
+	backendAlwaysRespondRST     bool
+	backendNotStart             bool
+	backendRejectRequestNum     int
+	backendRejectRequestStatus  int
 	disableHttp2ForHttpsBackend bool
 }
 
@@ -156,6 +160,22 @@ func (e *TestEnv) OverrideBackendService(backend platform.Backend) {
 // is set to true, purposely fail HTTPS calls for testing.
 func (e *TestEnv) UseWrongBackendCertForDR(useWrongBackendCert bool) {
 	e.useWrongBackendCert = useWrongBackendCert
+}
+
+func (e *TestEnv) SetBackendAlwaysRespondRST(backendAlwaysRespondRST bool) {
+	e.backendAlwaysRespondRST = backendAlwaysRespondRST
+}
+
+func (e *TestEnv) SetBackendNotStart(backendNotStart bool) {
+	e.backendNotStart = backendNotStart
+}
+
+func (e *TestEnv) SetBackendRejectRequestNum(backendFaRequestNum int) {
+	e.backendRejectRequestNum = backendFaRequestNum
+}
+
+func (e *TestEnv) SetBackendRejectRequestStatus(backendFaRequestStatus int) {
+	e.backendRejectRequestStatus = backendFaRequestStatus
 }
 
 // SetBackendMTLSCert sets the backend cert file to enable mutual authentication.
@@ -418,61 +438,63 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	e.healthRegistry.RegisterHealthChecker(e.StatsVerifier)
 	e.FakeStackdriverServer.StartStackdriverServer(e.ports.FakeStackdriverPort)
 
-	switch e.backend {
-	case platform.EchoSidecar:
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend)
-		if err != nil {
-			return err
+	if !e.backendNotStart {
+		switch e.backend {
+		case platform.EchoSidecar:
+			e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend, e.backendAlwaysRespondRST, e.backendRejectRequestNum, e.backendRejectRequestStatus)
+			if err != nil {
+				return err
+			}
+			if err := e.echoBackend.StartAndWait(); err != nil {
+				return err
+			}
+		case platform.EchoRemote:
+			e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend, e.backendAlwaysRespondRST, e.backendRejectRequestNum, e.backendRejectRequestStatus)
+			if err != nil {
+				return err
+			}
+			if err := e.echoBackend.StartAndWait(); err != nil {
+				return err
+			}
+		case platform.GrpcBookstoreSidecar:
+			e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.BackendServerPort /*enableTLS=*/, false /*useAuthorizedBackendCert*/, false /*backendMTLSCertFile=*/, "")
+			if err != nil {
+				return err
+			}
+			e.bookstoreServer.StartServer()
+		case platform.GrpcBookstoreRemote:
+			e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.DynamicRoutingBackendPort /*enableTLS=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile)
+			if err != nil {
+				return err
+			}
+			e.bookstoreServer.StartServer()
+		case platform.GrpcInteropSidecar:
+			e.grpcInteropServer, err = components.NewGrpcInteropGrpcServer(e.ports.BackendServerPort)
+			if err != nil {
+				return err
+			}
+			if err := e.grpcInteropServer.StartAndWait(); err != nil {
+				return err
+			}
+		case platform.GrpcEchoSidecar:
+			e.grpcEchoServer, err = components.NewGrpcEchoGrpcServer(e.ports.BackendServerPort)
+			if err != nil {
+				return err
+			}
+			if err := e.grpcEchoServer.StartAndWait(); err != nil {
+				return err
+			}
+		case platform.GrpcEchoRemote:
+			e.grpcEchoServer, err = components.NewGrpcEchoGrpcServer(e.ports.DynamicRoutingBackendPort)
+			if err != nil {
+				return err
+			}
+			if err := e.grpcEchoServer.StartAndWait(); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("backend (%v) is not supported", e.backend)
 		}
-		if err := e.echoBackend.StartAndWait(); err != nil {
-			return err
-		}
-	case platform.EchoRemote:
-		e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend)
-		if err != nil {
-			return err
-		}
-		if err := e.echoBackend.StartAndWait(); err != nil {
-			return err
-		}
-	case platform.GrpcBookstoreSidecar:
-		e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.BackendServerPort /*enableTLS=*/, false /*useAuthorizedBackendCert*/, false /*backendMTLSCertFile=*/, "")
-		if err != nil {
-			return err
-		}
-		e.bookstoreServer.StartServer()
-	case platform.GrpcBookstoreRemote:
-		e.bookstoreServer, err = bookserver.NewBookstoreServer(e.ports.DynamicRoutingBackendPort /*enableTLS=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile)
-		if err != nil {
-			return err
-		}
-		e.bookstoreServer.StartServer()
-	case platform.GrpcInteropSidecar:
-		e.grpcInteropServer, err = components.NewGrpcInteropGrpcServer(e.ports.BackendServerPort)
-		if err != nil {
-			return err
-		}
-		if err := e.grpcInteropServer.StartAndWait(); err != nil {
-			return err
-		}
-	case platform.GrpcEchoSidecar:
-		e.grpcEchoServer, err = components.NewGrpcEchoGrpcServer(e.ports.BackendServerPort)
-		if err != nil {
-			return err
-		}
-		if err := e.grpcEchoServer.StartAndWait(); err != nil {
-			return err
-		}
-	case platform.GrpcEchoRemote:
-		e.grpcEchoServer, err = components.NewGrpcEchoGrpcServer(e.ports.DynamicRoutingBackendPort)
-		if err != nil {
-			return err
-		}
-		if err := e.grpcEchoServer.StartAndWait(); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("backend (%v) is not supported", e.backend)
 	}
 
 	time.Sleep(setupWaitTime)

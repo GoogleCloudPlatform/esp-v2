@@ -134,6 +134,20 @@ var (
 	TranscodingPreserveProtoFieldNames      = flag.Bool("transcoding_preserve_proto_field_names", false, "Whether to preserve proto field names for grpc-json transcoding")
 	TranscodingIgnoreQueryParameters        = flag.String("transcoding_ignore_query_parameters", "", "A list of query parameters(separated by comma) to be ignored for transcoding method mapping in grpc-json transcoding.")
 	TranscodingIgnoreUnknownQueryParameters = flag.Bool("transcoding_ignore_unknown_query_parameters", false, "Whether to ignore query parameters that cannot be mapped to a corresponding protobuf field in grpc-json transcoding.")
+
+	BackendRetryOns = flag.String("backend_retry_ons", "reset,connect-failure,refused-stream",
+		`The conditions under which ESPv2 does retry on the backends. One or more
+        retryOn conditions can be specified by comma-separated list. The default
+        is "reset,connect-failure,refused-stream". This retry setting will be
+        applied to all the backends if you have multiple ones.
+
+        All the retryOn conditions are defined in the following
+        x-envoy-retry-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on) and 
+        x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).`)
+	BackendRetryNum = flag.Uint("backend_retry_num", 1,
+		`The allowed number of retries. Must be >= 0 and defaults to 1. This retry
+	setting will be applied to all the backends if you have multiple ones. If
+	backend_retry_ons is not set, retry_num is effectless.`)
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -185,6 +199,8 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		EnableGrpcForHttp1:                      *EnableGrpcForHttp1,
 		ConnectionBufferLimitBytes:              *ConnectionBufferLimitBytes,
 		JwksCacheDurationInS:                    *JwksCacheDurationInS,
+		BackendRetryOns:                         *BackendRetryOns,
+		BackendRetryNum:                         *BackendRetryNum,
 		ScCheckTimeoutMs:                        *ScCheckTimeoutMs,
 		ScQuotaTimeoutMs:                        *ScQuotaTimeoutMs,
 		ScReportTimeoutMs:                       *ScReportTimeoutMs,

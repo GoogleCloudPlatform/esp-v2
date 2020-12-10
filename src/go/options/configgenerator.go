@@ -99,6 +99,8 @@ type ConfigGeneratorOptions struct {
 	ScQuotaTimeoutMs  int
 	ScReportTimeoutMs int
 
+	BackendRetryOns string
+	BackendRetryNum uint
 	ScCheckRetries  int
 	ScQuotaRetries  int
 	ScReportRetries int
@@ -137,6 +139,8 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ConnectionBufferLimitBytes:       -1,
 		ServiceManagementURL:             "https://servicemanagement.googleapis.com",
 		ServiceControlURL:                "https://servicecontrol.googleapis.com",
+		BackendRetryNum:                  1,
+		BackendRetryOns:                  "reset,connect-failure,refused-stream",
 		ScCheckRetries:                   -1,
 		ScQuotaRetries:                   -1,
 		ScReportRetries:                  -1,

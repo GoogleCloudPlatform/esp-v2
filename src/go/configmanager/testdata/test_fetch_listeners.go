@@ -146,6 +146,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"%s",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -322,6 +323,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"%s",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -512,6 +514,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -540,6 +543,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -568,6 +572,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -601,6 +606,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -827,6 +833,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -851,6 +858,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -884,6 +892,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -913,6 +922,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1118,6 +1128,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1142,6 +1153,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1166,6 +1178,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+"retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1190,6 +1203,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1373,6 +1387,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1401,6 +1416,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1562,6 +1578,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{
@@ -1586,6 +1603,7 @@ var (
                                  },
                                  "route":{
                                     "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                                    "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
                                     "timeout":"15s"
                                  },
                                  "typedPerFilterConfig":{

@@ -27,13 +27,21 @@ type EchoHTTPServer struct {
 	*Cmd
 }
 
-func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool, mtlsCertFile string, disableHttp2 bool) (*EchoHTTPServer, error) {
+func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, useWrongCert bool, mtlsCertFile string, disableHttp2, backendAlwaysRespondRST bool, backendRejectRequestNum, backendRejectRequestStatus int) (*EchoHTTPServer, error) {
 	serverArgs := []string{
 		fmt.Sprint("--alsologtostderr"),
 		fmt.Sprintf("--port=%v", port),
 		fmt.Sprintf("--enable_https=%v", enableHttps),
 		fmt.Sprintf("--enable_root_path_handler=%v", enableRootPathHandler),
 		fmt.Sprintf("--disable_http2=%v", disableHttp2),
+	}
+
+	if backendRejectRequestNum != 0 {
+		serverArgs = append(serverArgs, fmt.Sprintf("--reject_request_num=%v", backendRejectRequestNum))
+	}
+
+	if backendRejectRequestStatus != 0 {
+		serverArgs = append(serverArgs, fmt.Sprintf("--reject_request_status=%v", backendRejectRequestStatus))
 	}
 
 	// If Backend server uses different cert as Proxy, the HTTPS call fails.
@@ -51,6 +59,9 @@ func NewEchoHTTPServer(port uint16, enableHttps bool, enableRootPathHandler, use
 			fmt.Sprintf("--mtls_cert_file=%v", mtlsCertFile))
 	}
 
+	if backendAlwaysRespondRST {
+		serverArgs = append(serverArgs, "--always_respond_rst")
+	}
 	cmd := exec.Command(platform.GetFilePath(platform.Echo), serverArgs...)
 
 	cmd.Stderr = os.Stderr

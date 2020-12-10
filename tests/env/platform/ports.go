@@ -72,6 +72,7 @@ const (
 	TestGRPCStreaming
 	TestGRPCWeb
 	TestHttp1Basic
+	TestBackendRetry
 	TestRetryCallServiceManagement
 	TestHttp1JWT
 	TestHttpHeaders

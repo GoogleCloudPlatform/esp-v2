@@ -547,6 +547,8 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		Hostname:        hostname,
 		TranslationType: r.PathTranslation,
 		Deadline:        deadline,
+		RetryOns:        s.Options.BackendRetryOns,
+		RetryNum:        s.Options.BackendRetryNum,
 	}
 
 	jwtAud := s.determineBackendAuthJwtAud(r, scheme, hostname)
@@ -593,6 +595,8 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 		method.BackendInfo = &backendInfo{
 			ClusterName: s.LocalBackendCluster.ClusterName,
 			Deadline:    util.DefaultResponseDeadline,
+			RetryOns:    s.Options.BackendRetryOns,
+			RetryNum:    s.Options.BackendRetryNum,
 		}
 	}
 

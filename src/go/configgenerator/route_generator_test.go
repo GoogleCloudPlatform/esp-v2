@@ -68,50 +68,55 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantRouteConfig: `
 {
-  "name":"local_route",
-  "virtualHosts":[
+  "name": "local_route",
+  "virtualHosts": [
     {
-      "domains":[
+      "domains": [
         "*"
       ],
-      "name":"backend",
-      "routes":[
+      "name": "backend",
+      "routes": [
         {
-          "decorator":{
-            "operation":"ingress Echo"
+          "decorator": {
+            "operation": "ingress Echo"
           },
-          "match":{
-            "headers":[
+          "match": {
+            "headers": [
               {
-                "exactMatch":"GET",
-                "name":":method"
+                "exactMatch": "GET",
+                "name": ":method"
               }
             ],
-            "path":"/echo"
+            "path": "/echo"
           },
-          "responseHeadersToAdd":[
+          "responseHeadersToAdd": [
             {
-              "header":{
-                "key":"Strict-Transport-Security",
-                "value":"max-age=31536000; includeSubdomains"
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
               }
             }
           ],
-          "route":{
-            "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-            "timeout":"15s"
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
           },
-          "typedPerFilterConfig":{
-            "com.google.espv2.filters.http.service_control":{
-              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-              "operationName":"endpoints.examples.bookstore.Bookstore.Echo"
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo"
             }
           }
         }
       ]
     }
   ]
-}`,
+}
+`,
 		},
 		{
 			desc:                          "Enable Strict Transport Security for remote backend",
@@ -180,6 +185,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -242,44 +251,48 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantRouteConfig: `
 {
-  "name":"local_route",
-  "virtualHosts":[
+  "name": "local_route",
+  "virtualHosts": [
     {
-      "domains":[
+      "domains": [
         "*"
       ],
-      "name":"backend",
-      "routes":[
+      "name": "backend",
+      "routes": [
         {
-          "decorator":{
-            "operation":"ingress Foo"
+          "decorator": {
+            "operation": "ingress Foo"
           },
-          "match":{
-            "safeRegex":{
-              "googleRe2":{},
-              "regex":"^/v1/[^\\/]+/test/.*\\/?$"
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/v1/[^\\/]+/test/.*\\/?$"
             }
           },
-          "route":{
-            "cluster":"backend-cluster-testapipb.com:443",
-            "hostRewriteLiteral":"testapipb.com",
-            "timeout":"15s"
-          },
-          "typedPerFilterConfig":{
-            "com.google.espv2.filters.http.backend_auth":{
-              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
-              "jwtAudience":"bar.com"
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
             },
-            "com.google.espv2.filters.http.path_rewrite":{
-              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
-             "constantPath": {
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
                 "path": "/foo",
                 "urlTemplate": "/v1/{book_name=*}/test/**"
               }
             },
-            "com.google.espv2.filters.http.service_control":{
-              "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-              "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
             }
           }
         }
@@ -370,6 +383,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -406,6 +423,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -486,7 +507,8 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
+			wantRouteConfig: `
+{
   "name": "local_route",
   "virtualHosts": [
     {
@@ -511,6 +533,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -544,6 +570,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -629,7 +659,8 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
+			wantRouteConfig: `
+{
   "name": "local_route",
   "virtualHosts": [
     {
@@ -654,6 +685,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -687,6 +722,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -723,6 +762,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -762,6 +805,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -861,6 +908,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -890,6 +941,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -983,6 +1038,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -1018,6 +1077,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -1103,6 +1166,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -1194,6 +1261,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -1232,6 +1303,10 @@ func TestMakeRouteConfig(t *testing.T) {
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
             "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
             "timeout": "15s"
           },
           "typedPerFilterConfig": {
@@ -1335,260 +1410,278 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantRouteConfig: `
 {
-   "name":"local_route",
-   "virtualHosts":[
-      {
-         "domains":[
-            "*"
-         ],
-         "name":"backend",
-         "routes":[
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/foo/bar"
+          },
+          "responseHeadersToAdd": [
             {
-               "decorator":{
-                  "operation":"ingress Bar"
-               },
-               "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "path":"/foo/bar"
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               },
-               "typedPerFilterConfig":{
-                  "com.google.espv2.filters.http.service_control":{
-                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
-                  }
-               }
-            },
-            {
-               "decorator":{
-                  "operation":"ingress Bar"
-               },
-               "match":{
-                  "path":"/foo/bar"
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               },
-               "typedPerFilterConfig":{
-                  "com.google.espv2.filters.http.service_control":{
-                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
-                  }
-               }
-            },
-            {
-               "decorator":{
-                  "operation":"ingress Foo"
-               },
-               "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "safeRegex":{
-                     "googleRe2":{
-                        
-                     },
-                     "regex":"^/foo/[^\\/]+\\/?$"
-                  }
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               },
-               "typedPerFilterConfig":{
-                  "com.google.espv2.filters.http.service_control":{
-                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                     "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
-                  }
-               }
-            },
-            {
-               "decorator":{
-                  "operation":"ingress Bar"
-               },
-               "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "safeRegex":{
-                     "googleRe2":{
-                        
-                     },
-                     "regex":"^/foo/[^\\/]+/bar\\/?$"
-                  }
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               },
-               "typedPerFilterConfig":{
-                  "com.google.espv2.filters.http.service_control":{
-                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
-                  }
-               }
-            },
-            {
-               "decorator":{
-                  "operation":"ingress Foo"
-               },
-               "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "safeRegex":{
-                     "googleRe2":{
-                        
-                     },
-                     "regex":"^/foo/.*/bar\\/?$"
-                  }
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               },
-               "typedPerFilterConfig":{
-                  "com.google.espv2.filters.http.service_control":{
-                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                     "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
-                  }
-               }
-            },
-            {
-               "decorator":{
-                  "operation":"ingress Bar"
-               },
-               "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "safeRegex":{
-                     "googleRe2":{
-                        
-                     },
-                     "regex":"^/foo/.*\\/?:verb$"
-                  }
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               },
-               "typedPerFilterConfig":{
-                  "com.google.espv2.filters.http.service_control":{
-                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                     "operationName":"endpoints.examples.bookstore.Bookstore.Bar"
-                  }
-               }
-            },
-            {
-               "decorator":{
-                  "operation":"ingress Foo"
-               },
-               "match":{
-                  "headers":[
-                     {
-                        "exactMatch":"GET",
-                        "name":":method"
-                     }
-                  ],
-                  "safeRegex":{
-                     "googleRe2":{
-                        
-                     },
-                     "regex":"^/foo/.*\\/?$"
-                  }
-               },
-               "responseHeadersToAdd":[
-                  {
-                     "header":{
-                        "key":"Strict-Transport-Security",
-                        "value":"max-age=31536000; includeSubdomains"
-                     }
-                  }
-               ],
-               "route":{
-                  "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-                  "timeout":"15s"
-               },
-               "typedPerFilterConfig":{
-                  "com.google.espv2.filters.http.service_control":{
-                     "@type":"type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                     "operationName":"endpoints.examples.bookstore.Bookstore.Foo"
-                  }
-               }
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
             }
-         ]
-      }
-   ]
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Bar"
+          },
+          "match": {
+            "path": "/foo/bar"
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
+            }
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+/bar\\/?$"
+            }
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*/bar\\/?$"
+            }
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*\\/?:verb$"
+            }
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*\\/?$"
+            }
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
+            }
+          }
+        }
+      ]
+    }
+  ]
 }
 `,
 		},
