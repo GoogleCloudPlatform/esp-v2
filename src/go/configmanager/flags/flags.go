@@ -138,16 +138,15 @@ var (
 	BackendRetryOns = flag.String("backend_retry_ons", "reset,connect-failure,refused-stream",
 		`The conditions under which ESPv2 does retry on the backends. One or more
         retryOn conditions can be specified by comma-separated list. The default
-        is "reset,connect-failure,refused-stream". This retry setting will be
-        applied to all the backends if you have multiple ones.
+        is "reset,connect-failure,refused-stream". Disable retry by setting this flag to empty.
+				This retry setting will be applied to all the backends if you have multiple ones.
 
         All the retryOn conditions are defined in the following
         x-envoy-retry-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on) and 
         x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).`)
 	BackendRetryNum = flag.Uint("backend_retry_num", 1,
 		`The allowed number of retries. Must be >= 0 and defaults to 1. This retry
-	setting will be applied to all the backends if you have multiple ones. If
-	backend_retry_ons is not set, retry_num is effectless.`)
+	setting will be applied to all the backends if you have multiple ones.`)
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {

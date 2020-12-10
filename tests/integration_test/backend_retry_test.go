@@ -16,6 +16,7 @@ package integration
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -33,6 +34,13 @@ const (
 	defaultBackendRetryNum = 1
 )
 
+type backendType int32
+
+const (
+	remoteBackend backendType = iota
+	localBackend
+)
+
 func TestBackendRetry(t *testing.T) {
 	t.Parallel()
 
@@ -45,16 +53,18 @@ func TestBackendRetry(t *testing.T) {
 		backendRejectRequestStatus int
 		backendRetryOnsFlag        string
 		backendRetryNumFlag        int
+		backendTypeUsed            backendType
 		message                    string
 		wantResp                   string
 		wantError                  string
 		wantSpanNames              []string
 	}{
 		{
-			desc:                "Failure, reproduce the case that upstream keeps sending RST in TCP connection and ESPv2 doesn't do retry",
+			desc:                "Failed request for local backend, reproduce the case that upstream keeps sending RST in TCP connection and ESPv2 doesn't do retry",
 			backendRespondRST:   true,
 			backendRetryOnsFlag: "",
 			backendRetryNumFlag: 0,
+			backendTypeUsed:     localBackend,
 			wantError:           `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection termination`,
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -65,10 +75,11 @@ func TestBackendRetry(t *testing.T) {
 		// by sending certain RST so this test case is to see ESPv2 are doing retry
 		// under reset.
 		{
-			desc:                "Failure, simulate the scenario that upstream keeps sending RST in TCP connection and ESPv2 do 1 retry under the default retryOns(reset)",
+			desc:                "Failed request for local backend, simulate the scenario that upstream keeps sending RST in TCP connection and ESPv2 do 1 retry under the default retryOns(reset)",
 			backendRespondRST:   true,
 			backendRetryOnsFlag: defaultBackendRetryOns,
 			backendRetryNumFlag: defaultBackendRetryNum,
+			backendTypeUsed:     localBackend,
 			// It could be `connection termination` or `connection failure` in the end
 			//so don't specify it here.
 			wantError: `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure`,
@@ -79,10 +90,11 @@ func TestBackendRetry(t *testing.T) {
 			},
 		},
 		{
-			desc:                "Failure, simulate the scenario that upstream cannot be connected and ESPv2 doesn't do retry",
+			desc:                "Failed request for local backend, simulate the scenario that upstream cannot be connected and ESPv2 doesn't do retry",
 			backendNotStart:     true,
 			backendRetryOnsFlag: "",
 			backendRetryNumFlag: 0,
+			backendTypeUsed:     localBackend,
 			wantError:           `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure`,
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -92,10 +104,11 @@ func TestBackendRetry(t *testing.T) {
 		// Hard to control backend to launch right after certain retry so this test
 		// case is to see ESPv2 are doing retry under connection failure.
 		{
-			desc:                "Failure, simulate the scenario that upstream cannot be connected and and ESPv2 do 1 retry under the default retryOns(connect-failure)",
+			desc:                "Failed request for local backend, simulate the scenario that upstream cannot be connected and and ESPv2 do 1 retry under the default retryOns(connect-failure)",
 			backendNotStart:     true,
 			backendRetryOnsFlag: defaultBackendRetryOns,
 			backendRetryNumFlag: defaultBackendRetryNum,
+			backendTypeUsed:     localBackend,
 			wantError:           `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure`,
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -104,11 +117,12 @@ func TestBackendRetry(t *testing.T) {
 			},
 		},
 		{
-			desc:                       "Failure, the retryNum is not enough",
+			desc:                       "Failed request for local backend, the retryNum is not enough",
 			backendRejectRequestStatus: 503,
 			backendRejectRequestNum:    2,
 			backendRetryOnsFlag:        "5xx",
 			backendRetryNumFlag:        1,
+			backendTypeUsed:            localBackend,
 			wantError:                  "503 Service Unavailable",
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -117,11 +131,12 @@ func TestBackendRetry(t *testing.T) {
 			},
 		},
 		{
-			desc:                       "Failure, invalid retryOns",
+			desc:                       "Failed request for local backend, invalid retryOns",
 			backendRejectRequestStatus: 503,
 			backendRejectRequestNum:    2,
 			backendRetryOnsFlag:        "this-is-random-retryOn",
 			backendRetryNumFlag:        2,
+			backendTypeUsed:            localBackend,
 			wantError:                  "503 Service Unavailable",
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -129,11 +144,12 @@ func TestBackendRetry(t *testing.T) {
 			},
 		},
 		{
-			desc:                       "Failure, no retry as 5xx doesn't cover 403",
+			desc:                       "Failed request for local backend, no retry as 5xx doesn't cover 403",
 			backendRejectRequestStatus: 403,
 			backendRejectRequestNum:    2,
 			backendRetryOnsFlag:        "5xx",
 			backendRetryNumFlag:        2,
+			backendTypeUsed:            localBackend,
 			wantError:                  "403 Forbidden",
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -141,16 +157,73 @@ func TestBackendRetry(t *testing.T) {
 			},
 		},
 		{
-			desc:                       "Success, sufficient retryNum and covered retryOn",
+			desc:                       "Successful reuqest for local backend, sufficient retryNum and covered retryOn",
 			backendRejectRequestStatus: 503,
 			backendRejectRequestNum:    2,
 			backendRetryOnsFlag:        "5xx",
 			backendRetryNumFlag:        2,
+			backendTypeUsed:            localBackend,
 			wantResp:                   `{"message":""}`,
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
+				"ingress Echo",
+			},
+		},
+
+		{
+			desc:                       "Failed request for remote backend, the retryNum is not enough",
+			backendRejectRequestStatus: 503,
+			backendRejectRequestNum:    2,
+			backendRetryOnsFlag:        "5xx",
+			backendRetryNumFlag:        1,
+			backendTypeUsed:            remoteBackend,
+			wantError:                  "503 Service Unavailable",
+			wantSpanNames: []string{
+				"router backend-cluster-localhost:BACKEND_PORT egress",
+				"router backend-cluster-localhost:BACKEND_PORT egress",
+				"ingress Echo",
+			},
+		},
+		{
+			desc:                       "Failed request for remote backend, invalid retryOns",
+			backendRejectRequestStatus: 503,
+			backendRejectRequestNum:    2,
+			backendRetryOnsFlag:        "this-is-random-retryOn",
+			backendRetryNumFlag:        2,
+			backendTypeUsed:            remoteBackend,
+			wantError:                  "503 Service Unavailable",
+			wantSpanNames: []string{
+				"router backend-cluster-localhost:BACKEND_PORT egress",
+				"ingress Echo",
+			},
+		},
+		{
+			desc:                       "Failed request for remote backend, no retry as 5xx doesn't cover 403",
+			backendRejectRequestStatus: 403,
+			backendRejectRequestNum:    2,
+			backendRetryOnsFlag:        "5xx",
+			backendRetryNumFlag:        2,
+			backendTypeUsed:            remoteBackend,
+			wantError:                  "403 Forbidden",
+			wantSpanNames: []string{
+				"router backend-cluster-localhost:BACKEND_PORT egress",
+				"ingress Echo",
+			},
+		},
+		{
+			desc:                       "Successful request for local backend, sufficient retryNum and covered retryOn",
+			backendRejectRequestStatus: 503,
+			backendRejectRequestNum:    2,
+			backendRetryOnsFlag:        "5xx",
+			backendRetryNumFlag:        2,
+			backendTypeUsed:            remoteBackend,
+			wantResp:                   `{"message":""}`,
+			wantSpanNames: []string{
+				"router backend-cluster-localhost:BACKEND_PORT egress",
+				"router backend-cluster-localhost:BACKEND_PORT egress",
+				"router backend-cluster-localhost:BACKEND_PORT egress",
 				"ingress Echo",
 			},
 		},
@@ -171,7 +244,14 @@ func TestBackendRetry(t *testing.T) {
 				args = append(args, fmt.Sprintf("--backend_retry_num=%v", tc.backendRetryNumFlag))
 			}
 
-			s := env.NewTestEnv(platform.TestBackendRetry, platform.EchoSidecar)
+			var backendUsed platform.Backend
+			if tc.backendTypeUsed == localBackend {
+				backendUsed = platform.EchoSidecar
+			} else if tc.backendTypeUsed == remoteBackend {
+				backendUsed = platform.EchoRemote
+			}
+
+			s := env.NewTestEnv(platform.TestBackendRetry, backendUsed)
 			s.AppendUsageRules(
 				[]*confpb.UsageRule{
 					{
@@ -203,10 +283,23 @@ func TestBackendRetry(t *testing.T) {
 
 			time.Sleep(time.Second * 5)
 			gotSpanNames, _ := s.FakeStackdriverServer.RetrieveSpanNames()
-			if !reflect.DeepEqual(gotSpanNames, tc.wantSpanNames) {
-				t.Errorf("got span names: %+q, want span names: %+q", gotSpanNames, tc.wantSpanNames)
+			realWantSpanNames := tc.wantSpanNames
+			if tc.backendTypeUsed == remoteBackend {
+				realWantSpanNames = replaceBackendPort(tc.wantSpanNames, strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort)))
+			}
+			if !reflect.DeepEqual(gotSpanNames, realWantSpanNames) {
+				t.Errorf("Test (%s) failed, got span names: %+q, want span names: %+q", tc.desc, gotSpanNames, realWantSpanNames)
 			}
 
 		}()
 	}
+}
+
+func replaceBackendPort(spanNames []string, port string) []string {
+	var replacedSpanNames []string
+	for _, spanName := range spanNames {
+		replacedSpanNames = append(replacedSpanNames, strings.ReplaceAll(spanName, "BACKEND_PORT", port))
+	}
+
+	return replacedSpanNames
 }

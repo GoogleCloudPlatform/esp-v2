@@ -441,7 +441,16 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	if !e.backendNotStart {
 		switch e.backend {
 		case platform.EchoSidecar:
-			e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*enableHttps=*/, false /*enableRootPathHandler=*/, e.enableEchoServerRootPathHandler /*useAuthorizedBackendCert*/, false, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend, e.backendAlwaysRespondRST, e.backendRejectRequestNum, e.backendRejectRequestStatus)
+			e.echoBackend, err = components.NewEchoHTTPServer(e.ports.BackendServerPort /*useWrongCert*/, false, &components.EchoHTTPServerFlags{
+				EnableHttps:                false,
+				EnableRootPathHandler:      e.enableEchoServerRootPathHandler,
+				MtlsCertFile:               e.backendMTLSCertFile,
+				DisableHttp2:               e.disableHttp2ForHttpsBackend,
+				BackendAlwaysRespondRST:    e.backendAlwaysRespondRST,
+				BackendRejectRequestNum:    e.backendRejectRequestNum,
+				BackendRejectRequestStatus: e.backendRejectRequestStatus,
+			})
+
 			if err != nil {
 				return err
 			}
@@ -449,7 +458,15 @@ func (e *TestEnv) Setup(confArgs []string) error {
 				return err
 			}
 		case platform.EchoRemote:
-			e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*enableHttps=*/, true /*enableRootPathHandler=*/, true, e.useWrongBackendCert, e.backendMTLSCertFile, e.disableHttp2ForHttpsBackend, e.backendAlwaysRespondRST, e.backendRejectRequestNum, e.backendRejectRequestStatus)
+			e.echoBackend, err = components.NewEchoHTTPServer(e.ports.DynamicRoutingBackendPort /*useWrongCert*/, e.useWrongBackendCert, &components.EchoHTTPServerFlags{
+				EnableHttps:                true,
+				EnableRootPathHandler:      true,
+				MtlsCertFile:               e.backendMTLSCertFile,
+				DisableHttp2:               e.disableHttp2ForHttpsBackend,
+				BackendAlwaysRespondRST:    e.backendAlwaysRespondRST,
+				BackendRejectRequestNum:    e.backendRejectRequestNum,
+				BackendRejectRequestStatus: e.backendRejectRequestStatus,
+			})
 			if err != nil {
 				return err
 			}

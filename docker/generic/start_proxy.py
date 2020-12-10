@@ -415,7 +415,8 @@ environment variable or by passing "-k" flag to this script.
         help='''
         The conditions under which ESPv2 does retry on the backends. One or more
         retryOn conditions can be specified by comma-separated list. 
-        The default is `reset,connect-failure,refused-stream`. 
+        The default is `reset,connect-failure,refused-stream`. Disable retry by
+        setting this flag to empty.
         
         All the retryOn conditions are defined in the 
         x-envoy-retry-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on) and 
@@ -426,7 +427,6 @@ environment variable or by passing "-k" flag to this script.
         default=None,
         help='''
         The allowed number of retries. Must be >= 0 and defaults to 1. 
-        If backend_retry_ons is not set, retry_num is effectless.
         ''')
     parser.add_argument(
         '--access_log',
