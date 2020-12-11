@@ -62,7 +62,7 @@ type variable struct {
 	HasDoubleWildCard bool
 }
 
-func (u *UriTemplate) String() string {
+func (u *UriTemplate) ExactMatchString(acceptTrailingBackslash bool) string {
 	if len(u.Segments) == 0 {
 		return "/"
 	}
@@ -99,6 +99,10 @@ func (u *UriTemplate) String() string {
 
 		// Add path field.
 		buff.WriteString(fmt.Sprintf("/%s", seg))
+	}
+
+	if acceptTrailingBackslash {
+		buff.WriteString("/")
 	}
 
 	if u.Verb != "" {

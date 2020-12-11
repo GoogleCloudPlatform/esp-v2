@@ -73,18 +73,19 @@ func TestReplaceVariableFieldInUriTemplateRebuild(t *testing.T) {
 
 	for _, tc := range testCases {
 		// Some uri templates are equal in syntax through not equal in string comparison.
-		if getUriTemplate, _ := ParseUriTemplate(tc); !uriTemplateStrEqual(getUriTemplate.String(), tc) {
-			t.Errorf("fail to rebuild, want uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate)
+		if getUriTemplate, _ := ParseUriTemplate(tc); !uriTemplateStrEqual(getUriTemplate.ExactMatchString(false), tc) {
+			t.Errorf("fail to rebuild, want uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate.ExactMatchString(false))
 		}
 	}
 }
 
 func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 	testCases := []struct {
-		desc            string
-		uriTemplate     string
-		varReplace      map[string]string
-		wantUriTemplate string
+		desc                   string
+		uriTemplate            string
+		varReplace             map[string]string
+		allowTrailingBackslash bool
+		wantUriTemplate        string
 	}{
 		{
 			desc:        "replace with {var} syntax",
@@ -123,6 +124,16 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 			wantUriTemplate: "/a/{FOO.BAR=x/**}",
 		},
 		{
+			desc:        "replace with {a.b.c=x/**} syntax and trailing backslash",
+			uriTemplate: "/a/{b.c=x/**}",
+			varReplace: map[string]string{
+				"b": "FOO",
+				"c": "BAR",
+			},
+			allowTrailingBackslash: true,
+			wantUriTemplate:        "/a/{FOO.BAR=x/**}/",
+		},
+		{
 			desc:        "replace with verb syntax",
 			uriTemplate: "/a/{b=c/**}:verb",
 			varReplace: map[string]string{
@@ -130,13 +141,22 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 			},
 			wantUriTemplate: "/a/{BAR=c/**}:verb",
 		},
+		{
+			desc:        "replace with verb syntax and trailing backslash",
+			uriTemplate: "/a/{b=c/**}:verb",
+			varReplace: map[string]string{
+				"b": "BAR",
+			},
+			allowTrailingBackslash: true,
+			wantUriTemplate:        "/a/{BAR=c/**}/:verb",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			uriTemplate, _ := ParseUriTemplate(tc.uriTemplate)
 			uriTemplate.ReplaceVariableField(tc.varReplace)
-			if getUriTemplate := uriTemplate.String(); getUriTemplate != tc.wantUriTemplate {
+			if getUriTemplate := uriTemplate.ExactMatchString(tc.allowTrailingBackslash); getUriTemplate != tc.wantUriTemplate {
 				t.Errorf("fail to replace variable field, wante uriTemplate: %s, get uriTemplate: %s", tc.wantUriTemplate, getUriTemplate)
 			}
 		})

@@ -167,7 +167,7 @@ func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *httppattern.
 		}
 
 		if uriTemplate := httpRule.UriTemplate; uriTemplate != nil && len(uriTemplate.Variables) > 0 {
-			constPath.UrlTemplate = uriTemplate.String()
+			constPath.UrlTemplate = uriTemplate.ExactMatchString(false)
 		}
 		return &prpb.PerRouteFilterConfig{
 			PathTranslationSpecifier: &prpb.PerRouteFilterConfig_ConstantPath{
@@ -255,100 +255,113 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 			respTimeout = method.BackendInfo.Deadline
 		}
 
-		var routeMatcher *routepb.RouteMatch
+		var routeMatchers []*routepb.RouteMatch
 		var err error
-		if routeMatcher, err = makeHttpRouteMatcher(httpRule); err != nil {
+		if routeMatchers, err = makeHttpRouteMatchers(httpRule); err != nil {
 			return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
 		}
 
-		r := routepb.Route{
-			Match: routeMatcher,
-			Action: &routepb.Route_Route{
-				Route: &routepb.RouteAction{
-					ClusterSpecifier: &routepb.RouteAction_Cluster{
-						Cluster: method.BackendInfo.ClusterName,
-					},
-					Timeout: ptypes.DurationProto(respTimeout),
-					RetryPolicy: &routepb.RetryPolicy{
-						RetryOn: method.BackendInfo.RetryOns,
-						NumRetries: &wrapperspb.UInt32Value{
-							Value: uint32(method.BackendInfo.RetryNum),
+		for _, routeMatcher := range routeMatchers {
+			r := routepb.Route{
+				Match: routeMatcher,
+				Action: &routepb.Route_Route{
+					Route: &routepb.RouteAction{
+						ClusterSpecifier: &routepb.RouteAction_Cluster{
+							Cluster: method.BackendInfo.ClusterName,
+						},
+						Timeout: ptypes.DurationProto(respTimeout),
+						RetryPolicy: &routepb.RetryPolicy{
+							RetryOn: method.BackendInfo.RetryOns,
+							NumRetries: &wrapperspb.UInt32Value{
+								Value: uint32(method.BackendInfo.RetryNum),
+							},
 						},
 					},
 				},
-			},
-			Decorator: &routepb.Decorator{
-				// Note we don't add ApiName to reduce the length of the span name.
-				Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
-			},
-		}
-
-		r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
-		if err != nil {
-			return nil, fmt.Errorf("fail to make per-route filter config, %v", err)
-		}
-
-		if method.BackendInfo.Hostname != "" {
-			// For routing to remote backends.
-			r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
-				HostRewriteLiteral: method.BackendInfo.Hostname,
-			}
-		}
-
-		if serviceInfo.Options.EnableHSTS {
-			r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
-				{
-					Header: &corepb.HeaderValue{
-						Key:   util.HSTSHeaderKey,
-						Value: util.HSTSHeaderValue,
-					},
+				Decorator: &routepb.Decorator{
+					// Note we don't add ApiName to reduce the length of the span name.
+					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 				},
 			}
-		}
-		backendRoutes = append(backendRoutes, &r)
 
-		jsonStr, _ := util.ProtoToJson(&r)
-		glog.Infof("adding route: %v", jsonStr)
+			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
+			if err != nil {
+				return nil, fmt.Errorf("fail to make per-route filter config, %v", err)
+			}
+
+			if method.BackendInfo.Hostname != "" {
+				// For routing to remote backends.
+				r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
+					HostRewriteLiteral: method.BackendInfo.Hostname,
+				}
+			}
+
+			if serviceInfo.Options.EnableHSTS {
+				r.ResponseHeadersToAdd = []*corepb.HeaderValueOption{
+					{
+						Header: &corepb.HeaderValue{
+							Key:   util.HSTSHeaderKey,
+							Value: util.HSTSHeaderValue,
+						},
+					},
+				}
+			}
+			backendRoutes = append(backendRoutes, &r)
+
+			jsonStr, _ := util.ProtoToJson(&r)
+			glog.Infof("adding route: %v", jsonStr)
+		}
 	}
 	return backendRoutes, nil
 }
 
-func makeHttpRouteMatcher(httpRule *httppattern.Pattern) (*routepb.RouteMatch, error) {
+func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch, error) {
 	if httpRule == nil {
 		return nil, fmt.Errorf("httpRule is nil")
 	}
-	var routeMatcher routepb.RouteMatch
+	var routeMatchers []*routepb.RouteMatch
 
 	if httpRule.UriTemplate.IsExactMatch() {
-		routeMatcher = routepb.RouteMatch{
-			PathSpecifier: &routepb.RouteMatch_Path{
-				Path: httpRule.UriTemplate.String(),
+		routeMatchers = []*routepb.RouteMatch{
+			{
+				PathSpecifier: &routepb.RouteMatch_Path{
+					Path: httpRule.UriTemplate.ExactMatchString(false),
+				},
+			},
+			{
+				PathSpecifier: &routepb.RouteMatch_Path{
+					Path: httpRule.UriTemplate.ExactMatchString(true),
+				},
 			},
 		}
 	} else {
-		routeMatcher = routepb.RouteMatch{
-			PathSpecifier: &routepb.RouteMatch_SafeRegex{
-				SafeRegex: &matcher.RegexMatcher{
-					EngineType: &matcher.RegexMatcher_GoogleRe2{
-						GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+		routeMatchers = []*routepb.RouteMatch{
+			{
+				PathSpecifier: &routepb.RouteMatch_SafeRegex{
+					SafeRegex: &matcher.RegexMatcher{
+						EngineType: &matcher.RegexMatcher_GoogleRe2{
+							GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+						},
+						Regex: httpRule.UriTemplate.Regex(),
 					},
-					Regex: httpRule.UriTemplate.Regex(),
 				},
 			},
 		}
 	}
 
 	if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
-		routeMatcher.Headers = []*routepb.HeaderMatcher{
-			{
-				Name: ":method",
-				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-					ExactMatch: httpRule.HttpMethod,
+		for _, routeMatcher := range routeMatchers {
+			routeMatcher.Headers = []*routepb.HeaderMatcher{
+				{
+					Name: ":method",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+						ExactMatch: httpRule.HttpMethod,
+					},
 				},
-			},
+			}
 		}
 	}
-	return &routeMatcher, nil
+	return routeMatchers, nil
 }
 
 func getSortMethodsByHttpPattern(serviceInfo *configinfo.ServiceInfo) (*httppattern.MethodSlice, error) {
