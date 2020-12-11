@@ -478,6 +478,7 @@ environment variable or by passing "-k" flag to this script.
         default="",
         help='''
         Comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
+        Note the order matters. Default is 'traceparent,x-cloud-trace-context'.
         
         See official documentation for more details:
         https://cloud.google.com/endpoints/docs/openapi/tracing'''
@@ -487,6 +488,7 @@ environment variable or by passing "-k" flag to this script.
         default="",
         help='''
         Comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
+        Note the order matters. Default is 'traceparent,x-cloud-trace-context'.
         
         See official documentation for more details:
         https://cloud.google.com/endpoints/docs/openapi/tracing'''
