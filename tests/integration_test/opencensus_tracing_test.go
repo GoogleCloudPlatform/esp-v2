@@ -425,13 +425,33 @@ func TestTracesDynamicRouting(t *testing.T) {
 	}
 }
 
+func createTraceparentContextPrefix(traceId string) string {
+	return "00-" + traceId + "-"
+}
+
+func createTraceparentContext(traceId, spanId string) string {
+	return createTraceparentContextPrefix(traceId) + spanId + "-01"
+}
+
+func createCloudTraceContextPrefix(traceId string) string {
+	return traceId + "/"
+}
+
+func createCloudTraceContext(traceId, spanId string) string {
+	return createCloudTraceContextPrefix(traceId) + spanId + ";o=1"
+}
+
 func TestTraceContextPropagationHeaders(t *testing.T) {
 	t.Parallel()
 
 	// Some real-world examples.
+	traceparentTraceId := "0af7651916cd43dd8448eb211c80319c"
+	traceparentSpanId := "b7ad6b7169203331"
+	cloudTraceId := "105445aa7843bc8bf206b12000100000"
+	cloudSpanId := "1"
 	incomingTraceContexts := map[string]string{
-		"traceparent":           "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
-		"X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+		"traceparent":           createTraceparentContext(traceparentTraceId, traceparentSpanId),
+		"X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
 	}
 
 	testData := []struct {
@@ -452,8 +472,8 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 			requestHeader: incomingTraceContexts,
 			wantRespHeaders: map[string]string{
 				// All headers are not changed.
-				"Echo-Traceparent":           "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
-				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+				"Echo-Traceparent":           createTraceparentContext(traceparentTraceId, traceparentSpanId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
 			},
 		},
 		{
@@ -467,11 +487,11 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 				// Trace id is maintained. Span id is changed, so it's not checked.
 				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-",
 				// All other headers are not changed.
-				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
 			},
 			notWantRespHeaders: map[string]string{
 				// The span id should have changed.
-				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+				"Echo-Traceparent": createTraceparentContext(traceparentTraceId, traceparentSpanId),
 			},
 		},
 		{
@@ -483,13 +503,13 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 			requestHeader: incomingTraceContexts,
 			wantRespHeaders: map[string]string{
 				// Trace id is maintained. Span id is changed, so it's not checked.
-				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/",
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContextPrefix(cloudTraceId),
 				// All other headers are not changed.
-				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+				"Echo-Traceparent": createTraceparentContext(traceparentTraceId, traceparentSpanId),
 			},
 			notWantRespHeaders: map[string]string{
 				// The span id should have changed.
-				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
 			},
 		},
 		{
@@ -503,11 +523,50 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 				// Trace id and span id are changed, so they not checked.
 				"Echo-Traceparent": "00-",
 				// All other headers are not changed.
-				"Echo-X-Cloud-Trace-Context": "105445aa7843bc8bf206b12000100000/1;o=1",
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
 			},
 			notWantRespHeaders: map[string]string{
 				// The trace id and span id should have changed.
-				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+				"Echo-Traceparent": createTraceparentContextPrefix(traceparentTraceId),
+			},
+		},
+		{
+			desc: "When multiple context propagation are enabled, only the first match is used.",
+			confArgs: append([]string{
+				"--tracing_incoming_context=traceparent,x-cloud-trace-context",
+				"--tracing_outgoing_context=traceparent,x-cloud-trace-context",
+			}, utils.CommonArgs()...),
+			requestHeader: incomingTraceContexts,
+			wantRespHeaders: map[string]string{
+				// Both headers are created, but they use the trace id from the first configured header.
+				"Echo-Traceparent":           createTraceparentContextPrefix(traceparentTraceId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContextPrefix(traceparentTraceId),
+			},
+			notWantRespHeaders: map[string]string{
+				// The span id should have changed.
+				"Echo-Traceparent": createTraceparentContext(traceparentTraceId, traceparentSpanId),
+				// The trace id should have changed.
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContextPrefix(cloudTraceId),
+			},
+		},
+		{
+			desc: "When multiple context propagation are enabled, the second one is matched when the first is missing.",
+			confArgs: append([]string{
+				"--tracing_incoming_context=traceparent,x-cloud-trace-context",
+				"--tracing_outgoing_context=traceparent,x-cloud-trace-context",
+			}, utils.CommonArgs()...),
+			requestHeader: map[string]string{
+				// Only the 2nd header is provided.
+				"X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+			},
+			wantRespHeaders: map[string]string{
+				// Both headers are created with the same trace id.
+				"Echo-Traceparent":           createTraceparentContextPrefix(cloudTraceId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContextPrefix(cloudTraceId),
+			},
+			notWantRespHeaders: map[string]string{
+				// The span id should have changed.
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
 			},
 		},
 		// grpc-trace-bin is not tested, it's difficult to test.

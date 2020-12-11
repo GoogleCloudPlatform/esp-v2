@@ -205,6 +205,14 @@ func TestGcpOpenCensusConfig(t *testing.T) {
 				},
 				StackdriverExporterEnabled: true,
 				StackdriverProjectId:       fakeMetadataProjectId,
+				IncomingTraceContext: []tracepb.OpenCensusConfig_TraceContext{
+					tracepb.OpenCensusConfig_TRACE_CONTEXT,
+					tracepb.OpenCensusConfig_CLOUD_TRACE_CONTEXT,
+				},
+				OutgoingTraceContext: []tracepb.OpenCensusConfig_TraceContext{
+					tracepb.OpenCensusConfig_TRACE_CONTEXT,
+					tracepb.OpenCensusConfig_CLOUD_TRACE_CONTEXT,
+				},
 			},
 		},
 	}

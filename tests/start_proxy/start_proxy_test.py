@@ -400,8 +400,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--tracing_project_id', 'test_project_1234',
-              '--tracing_incoming_context', 'traceparent',
-              '--tracing_outgoing_context', 'traceparent',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
             # Tracing params preserved.
@@ -433,8 +431,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000',
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
-              '--tracing_incoming_context', 'traceparent',
-              '--tracing_outgoing_context', 'traceparent',
               '--tracing_sample_rate', '0',
               ]),
             # --disable_tracing overrides all other tracing flags

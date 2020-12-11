@@ -327,7 +327,7 @@ function setup() {
 
   # Redeploy ESPv2 to update the service config. Set flags as follows:
   # - Tracing: Support trace context propagation to the backend and from AppHosting.
-  proxy_args="^++^--tracing_sample_rate=1.00++--tracing_incoming_context=traceparent,x-cloud-trace-context++--tracing_outgoing_context=traceparent,x-cloud-trace-context"
+  proxy_args="^++^--tracing_sample_rate=0.05"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then

@@ -475,7 +475,7 @@ environment variable or by passing "-k" flag to this script.
         help="An alias to override --tracing_sample_rate to 0")
     parser.add_argument(
         '--tracing_incoming_context',
-        default="traceparent",
+        default="",
         help='''
         Comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
         
@@ -484,7 +484,7 @@ environment variable or by passing "-k" flag to this script.
     )
     parser.add_argument(
         '--tracing_outgoing_context',
-        default="traceparent",
+        default="",
         help='''
         Comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
         
