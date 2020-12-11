@@ -268,6 +268,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -307,6 +311,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -346,6 +354,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc9876-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc9876-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -378,6 +390,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc9876-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc9876-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -410,6 +426,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc9876-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc9876-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -442,6 +462,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc9876-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc9876-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -474,6 +498,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc9876-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc9876-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -506,6 +534,10 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc9876-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc9876-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {

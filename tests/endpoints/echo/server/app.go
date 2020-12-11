@@ -27,6 +27,8 @@ import (
 	"strings"
 	"time"
 
+	"net"
+
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
@@ -41,11 +43,23 @@ var (
 	enableRootPathHandler = flag.Bool("enable_root_path_handler", false, "true for adding root path for dynamic routing handler")
 	httpsCertPath         = flag.String("https_cert_path", "", "path for HTTPS cert path")
 	httpsKeyPath          = flag.String("https_key_path", "", "path for HTTPS key path")
+	alwaysRespondRST      = flag.Bool("always_respond_rst", false, "If true, the backend will respond RST all the time")
+	rejectRequestNum      = flag.Int("reject_request_num", 0, "The first N requests that the backend will reject")
+	rejectRequestStatus   = flag.Int("reject_request_status", 0, `The http status code when the backend uses to reject the first N requests defined by reject_request_num`)
 	webSocketUpgrader     = websocket.Upgrader{}
 )
 
 func main() {
 	flag.Parse()
+
+	if *alwaysRespondRST {
+		s, _ := NewRstListener(fmt.Sprintf(":%v", *port))
+		for {
+			// Keep sending RST to the downstream.
+			_, _ = s.Accept()
+			_ = s.Close()
+		}
+	}
 
 	r := mux.NewRouter()
 
@@ -100,7 +114,7 @@ func main() {
 			HandlerFunc(dynamicRoutingHandler)
 	}
 
-	http.Handle("/", r)
+	http.Handle("/", RejectMiddleWare(r))
 	if *port < 1024 || *port > 65535 {
 		log.Fatalf("port (%v) should be integer between 1024-65535", *port)
 	}
@@ -118,6 +132,51 @@ func main() {
 		err = server.ListenAndServe()
 	}
 	log.Fatal(err)
+}
+
+// RstListener is a listener that sends an RST when closed instead of a FIN.
+type RstListener struct {
+	l net.Listener
+}
+
+func NewRstListener(addr string) (*RstListener, error) {
+	l, err := net.Listen("tcp", addr)
+	return &RstListener{l: l}, err
+}
+
+// Accept is like a normal Accept except that it ses SO_LINGER time to 0, so that when
+// close is called on the socket it will send an RST instead of a FIN.
+func (l *RstListener) Accept() (net.Conn, error) {
+	conn, err := l.l.Accept()
+	if err != nil {
+		return nil, err
+	}
+
+	tcpConn, ok := conn.(*net.TCPConn)
+	if !ok {
+		return nil, fmt.Errorf("Expected a TCP connection")
+	}
+
+	err = tcpConn.SetLinger(0)
+	if err != nil {
+		fmt.Printf("get error before sending rst: %v", err)
+	}
+	return conn, err
+}
+
+func (l *RstListener) Close() error {
+	return l.l.Close()
+}
+
+func RejectMiddleWare(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if *rejectRequestNum > 0 {
+			*rejectRequestNum -= 1
+			w.WriteHeader(*rejectRequestStatus)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 // sleepHandler sleeps for the given duration, then responds with 200 OK

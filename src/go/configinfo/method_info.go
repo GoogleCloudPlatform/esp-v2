@@ -61,6 +61,10 @@ type backendInfo struct {
 
 	// Response timeout for the backend.
 	Deadline time.Duration
+
+	// Retry setting on the backend.
+	RetryOns string
+	RetryNum uint
 }
 
 type SnakeToJsonSegments = map[string]string

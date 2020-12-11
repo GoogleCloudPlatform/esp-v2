@@ -30,7 +30,6 @@ import (
 const (
 	TestAccessLog uint16 = iota
 	TestAsymmetricKeys
-	TestAsymmetricKeysTraces
 	TestAuthAllowMissing
 	TestAuthJwksCache
 	TestBackendAuthDisableAuth
@@ -42,62 +41,62 @@ const (
 	TestBackendAuthWithImdsIdTokenRetries
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
 	TestBackendHttpProtocol
-	TestDeadlinesForLocalBackend
+	TestBackendRetry
 	TestDeadlinesForDynamicRouting
 	TestDeadlinesForGrpcCatchAllBackend
 	TestDeadlinesForGrpcDynamicRouting
+	TestDeadlinesForLocalBackend
 	TestDifferentOriginPreflightCors
 	TestDifferentOriginSimpleCors
 	TestDnsResolver
-	TestDynamicBackendRoutingTLS
 	TestDynamicBackendRoutingMutualTLS
+	TestDynamicBackendRoutingTLS
 	TestDynamicGrpcBackendTLS
 	TestDynamicRouting
 	TestDynamicRoutingCorsByEnvoy
 	TestDynamicRoutingWithAllowCors
 	TestFrontendAndBackendAuthHeaders
-	TestGeneratedHeaders
 	TestGRPC
-	TestGrpcConnectionBufferLimit
-	TestGrpcBackendPreflightCors
-	TestGrpcBackendSimpleCors
 	TestGRPCErrors
 	TestGRPCFallback
 	TestGRPCInteropMiniStress
 	TestGRPCInterops
 	TestGRPCJwt
-	TestGRPCLongStreaming
 	TestGRPCMetadata
 	TestGRPCMinistress
 	TestGRPCStreaming
 	TestGRPCWeb
+	TestGeneratedHeaders
+	TestGrpcBackendPreflightCors
+	TestGrpcBackendSimpleCors
+	TestGrpcConnectionBufferLimit
 	TestHttp1Basic
-	TestRetryCallServiceManagement
 	TestHttp1JWT
 	TestHttpHeaders
 	TestHttpsClients
 	TestIamImdsDataPath
 	TestInvalidOpenIDConnectDiscovery
 	TestJwtLocations
+	TestManagedServiceConfig
 	TestMetadataRequestsPerPlatform
 	TestMetadataRequestsWithBackendAuthPerPlatform
-	TestManagedServiceConfig
-	TestMethodOverrideBackendMethod
 	TestMethodOverrideBackendBody
+	TestMethodOverrideBackendMethod
 	TestMethodOverrideScReport
 	TestMultiGrpcServices
 	TestPreflightCorsWithBasicPreset
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
 	TestReportGCPAttributesPerPlatform
-	TestServiceControlAccessTokenFromIam
-	TestServiceControlAccessTokenFromTokenAgent
-	TestServiceControlAllHTTPMethod
-	TestServiceControlAllHTTPPath
+	TestRetryCallServiceManagement
 	TestServiceControlAPIKeyCustomLocation
 	TestServiceControlAPIKeyDefaultLocation
 	TestServiceControlAPIKeyIpRestriction
 	TestServiceControlAPIKeyRestriction
+	TestServiceControlAccessTokenFromIam
+	TestServiceControlAccessTokenFromTokenAgent
+	TestServiceControlAllHTTPMethod
+	TestServiceControlAllHTTPPath
 	TestServiceControlBasic
 	TestServiceControlCache
 	TestServiceControlCheckError
@@ -128,9 +127,9 @@ const (
 	TestServiceControlTLSWithValidCert
 	TestServiceManagementWithInvalidCert
 	TestServiceManagementWithValidCert
-	TestStartupDuplicatedPathsWithAllowCors
 	TestSimpleCorsWithBasicPreset
 	TestSimpleCorsWithRegexPreset
+	TestStartupDuplicatedPathsWithAllowCors
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
 	TestTraceContextPropagationHeaders
@@ -140,9 +139,9 @@ const (
 	TestTracesServiceControlSkipUsage
 	TestTracingSampleRate
 	TestTranscodingBindings
+	TestTranscodingErrors
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
-	TestTranscodingErrors
 	TestTranscodingServiceUnavailableError
 	TestWebsocket
 	// The number of total tests. has to be the last one.

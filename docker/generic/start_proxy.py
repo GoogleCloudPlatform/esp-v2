@@ -410,6 +410,25 @@ environment variable or by passing "-k" flag to this script.
         Must be >= 0 and the default is 5 if not set.
         ''')
     parser.add_argument(
+        '--backend_retry_ons',
+        default=None,
+        help='''
+        The conditions under which ESPv2 does retry on the backends. One or more
+        retryOn conditions can be specified by comma-separated list. 
+        The default is `reset,connect-failure,refused-stream`. Disable retry by
+        setting this flag to empty.
+        
+        All the retryOn conditions are defined in the 
+        x-envoy-retry-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on) and 
+        x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).
+        ''')
+    parser.add_argument(
+        '--backend_retry_num',
+        default=None,
+        help='''
+        The allowed number of retries. Must be >= 0 and defaults to 1. 
+        ''')
+    parser.add_argument(
         '--access_log',
         help='''
         Path to a local file to which the access log entries will be written.
@@ -912,6 +931,12 @@ def gen_proxy_config(args):
 
     if args.underscores_in_headers:
         proxy_conf.append("--underscores_in_headers")
+
+    if args.backend_retry_ons:
+        proxy_conf.extend(["--backend_retry_ons", args.backend_retry_ons])
+
+    if args.backend_retry_num:
+        proxy_conf.extend(["--backend_retry_num", args.backend_retry_num])
 
     if args.access_log:
         proxy_conf.extend(["--access_log",

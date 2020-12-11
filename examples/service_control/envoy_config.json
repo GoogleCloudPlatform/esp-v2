@@ -748,6 +748,10 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
@@ -772,6 +776,10 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {

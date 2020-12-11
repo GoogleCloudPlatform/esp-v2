@@ -450,6 +450,25 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--disable_tracing',
               ]),
+            # backend retry setting
+            (['-R=managed',
+              '--http2_port=8079', '--backend_retry_ons=5xx',
+              '--disable_tracing'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8079',
+              '--backend_retry_ons', '5xx',
+              '--disable_tracing'
+              ]),
+            (['-R=managed',
+              '--http2_port=8079', '--backend_retry_num=10',
+              '--disable_tracing'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8079',
+              '--backend_retry_num', '10',
+              '--disable_tracing'
+              ]),
             # Service account key does not assume non-gcp
             # and does not disable tracing.
             (['--service=test_bookstore.gloud.run',

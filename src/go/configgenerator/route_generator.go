@@ -269,6 +269,12 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 						Cluster: method.BackendInfo.ClusterName,
 					},
 					Timeout: ptypes.DurationProto(respTimeout),
+					RetryPolicy: &routepb.RetryPolicy{
+						RetryOn: method.BackendInfo.RetryOns,
+						NumRetries: &wrapperspb.UInt32Value{
+							Value: uint32(method.BackendInfo.RetryNum),
+						},
+					},
 				},
 			},
 			Decorator: &routepb.Decorator{
