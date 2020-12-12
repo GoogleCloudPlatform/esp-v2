@@ -927,6 +927,39 @@
                           },
                           {
                             "decorator": {
+                              "operation": "ingress Echo"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/echo/"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.Echo"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
                               "operation": "ingress EchoReport"
                             },
                             "match": {
@@ -937,6 +970,39 @@
                                 }
                               ],
                               "path": "/echoreport"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoReport"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress EchoReport"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/echoreport/"
                             },
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -997,6 +1063,43 @@
                           },
                           {
                             "decorator": {
+                              "operation": "ingress EchoStream"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/echostream/"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "0s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoStream"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "test.grpc.Test.EchoStream"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
                               "operation": "ingress Cork"
                             },
                             "match": {
@@ -1007,6 +1110,39 @@
                                 }
                               ],
                               "path": "/test.grpc.Test/Cork"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "0s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.Cork"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress Cork"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/test.grpc.Test/Cork/"
                             },
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
@@ -1063,6 +1199,39 @@
                           },
                           {
                             "decorator": {
+                              "operation": "ingress Echo"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/test.grpc.Test/Echo/"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.Echo"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
                               "operation": "ingress EchoReport"
                             },
                             "match": {
@@ -1096,6 +1265,39 @@
                           },
                           {
                             "decorator": {
+                              "operation": "ingress EchoReport"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/test.grpc.Test/EchoReport/"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "300s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoReport"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
                               "operation": "ingress EchoStream"
                             },
                             "match": {
@@ -1106,6 +1308,43 @@
                                 }
                               ],
                               "path": "/test.grpc.Test/EchoStream"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
+                              "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "0s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.backend_auth": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app"
+                              },
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "test.grpc.Test.EchoStream"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "test.grpc.Test.EchoStream"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress EchoStream"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/test.grpc.Test/EchoStream/"
                             },
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",

@@ -111,6 +111,42 @@ func TestMakeRouteConfig(t *testing.T) {
               "operationName": "endpoints.examples.bookstore.Bookstore.Echo"
             }
           }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo/"
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo"
+            }
+          }
         }
       ]
     }
@@ -173,6 +209,53 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "path": "/foo"
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/foo"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/foo/"
           },
           "responseHeadersToAdd": [
             {
@@ -556,6 +639,43 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/bar/"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "pathPrefix": "/foo"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        },
+        {
+          "decorator": {
             "operation": "ingress foo"
           },
           "match": {
@@ -566,6 +686,45 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "path": "/foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "foo.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/foo"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/foo/"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -708,6 +867,43 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/bar/"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "pathPrefix": "/bar"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        },
+        {
+          "decorator": {
             "operation": "ingress ESPv2_Autogenerated_CORS_bar"
           },
           "match": {
@@ -718,6 +914,43 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "path": "/bar"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "bar.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "pathPrefix": "/bar"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.ESPv2_Autogenerated_CORS_bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress ESPv2_Autogenerated_CORS_bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "OPTIONS",
+                "name": ":method"
+              }
+            ],
+            "path": "/bar/"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -927,6 +1160,39 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/bar/"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        },
+        {
+          "decorator": {
             "operation": "ingress foo"
           },
           "match": {
@@ -937,6 +1203,39 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "path": "/foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/foo/"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -1063,6 +1362,45 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
+            "operation": "ingress bar"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/bar/"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.bar"
+            }
+          }
+        },
+        {
+          "decorator": {
             "operation": "ingress foo"
           },
           "match": {
@@ -1073,6 +1411,45 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "path": "/foo"
+          },
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.backend_auth": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+              "jwtAudience": "https://testapipb.com"
+            },
+            "com.google.espv2.filters.http.path_rewrite": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+              "constantPath": {
+                "path": "/"
+              }
+            },
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress foo"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/foo/"
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
@@ -1459,7 +1836,73 @@ func TestMakeRouteConfig(t *testing.T) {
             "operation": "ingress Bar"
           },
           "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/foo/bar/"
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Bar"
+          },
+          "match": {
             "path": "/foo/bar"
+          },
+          "responseHeadersToAdd": [
+            {
+              "header": {
+                "key": "Strict-Transport-Security",
+                "value": "max-age=31536000; includeSubdomains"
+              }
+            }
+          ],
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Bar"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Bar"
+          },
+          "match": {
+            "path": "/foo/bar/"
           },
           "responseHeadersToAdd": [
             {

@@ -349,6 +349,38 @@
                           },
                           {
                             "decorator": {
+                              "operation": "ingress ListShelves"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "GET",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/shelves/"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "15s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
                               "operation": "ingress CreateShelf"
                             },
                             "match": {
@@ -359,6 +391,38 @@
                                 }
                               ],
                               "path": "/shelves"
+                            },
+                            "route": {
+                              "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
+                              "retryPolicy": {
+                                "numRetries": 1,
+                                "retryOn": "reset,connect-failure,refused-stream"
+                              },
+                              "timeout": "15s"
+                            },
+                            "typedPerFilterConfig": {
+                              "com.google.espv2.filters.http.service_control": {
+                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                                "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
+                              },
+                              "envoy.filters.http.jwt_authn": {
+                                "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
+                                "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
+                              }
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress CreateShelf"
+                            },
+                            "match": {
+                              "headers": [
+                                {
+                                  "exactMatch": "POST",
+                                  "name": ":method"
+                                }
+                              ],
+                              "path": "/shelves/"
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",

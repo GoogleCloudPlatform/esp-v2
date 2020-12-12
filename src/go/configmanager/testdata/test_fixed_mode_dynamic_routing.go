@@ -323,6 +323,31 @@ var (
                     },
                     {
                       "decorator": {
+                        "operation": "ingress Echo"
+                      },
+                      "match": {
+                        "headers": [
+                          {
+                            "exactMatch": "POST",
+                            "name": ":method"
+                          }
+                        ],
+                        "path": "/echo/"
+                      },
+                      "route": {
+                        "cluster": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
+                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "timeout": "15s"
+                      },
+                      "typedPerFilterConfig": {
+                        "com.google.espv2.filters.http.service_control": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
+                        }
+                      }
+                    },
+                    {
+                      "decorator": {
                         "operation": "ingress dynamic_routing_Hello"
                       },
                       "match": {
@@ -357,6 +382,40 @@ var (
                     },
                     {
                       "decorator": {
+                        "operation": "ingress dynamic_routing_Hello"
+                      },
+                      "match": {
+                        "headers": [
+                          {
+                            "exactMatch": "GET",
+                            "name": ":method"
+                          }
+                        ],
+                        "path": "/hello/"
+                      },
+                      "route": {
+                        "cluster": "backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
+                        "hostRewriteLiteral": "us-central1-cloud-esf.cloudfunctions.net",
+                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "timeout": "15s"
+                      },
+                      "typedPerFilterConfig": {
+                        "com.google.espv2.filters.http.backend_auth": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                          "jwtAudience": "https://us-central1-cloud-esf.cloudfunctions.net/hello"
+                        },
+                        "com.google.espv2.filters.http.path_rewrite": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                          "pathPrefix": "/hello"
+                        },
+                        "com.google.espv2.filters.http.service_control": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
+                        }
+                      }
+                    },
+                    {
+                      "decorator": {
                         "operation": "ingress dynamic_routing_AddPet"
                       },
                       "match": {
@@ -367,6 +426,40 @@ var (
                           }
                         ],
                         "path": "/pet"
+                      },
+                      "route": {
+                        "cluster": "backend-cluster-pets.appspot.com:443",
+                        "hostRewriteLiteral": "pets.appspot.com",
+                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "timeout": "15s"
+                      },
+                      "typedPerFilterConfig": {
+                        "com.google.espv2.filters.http.backend_auth": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                          "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
+                        },
+                        "com.google.espv2.filters.http.path_rewrite": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                          "pathPrefix": "/api"
+                        },
+                        "com.google.espv2.filters.http.service_control": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
+                        }
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress dynamic_routing_AddPet"
+                      },
+                      "match": {
+                        "headers": [
+                          {
+                            "exactMatch": "POST",
+                            "name": ":method"
+                          }
+                        ],
+                        "path": "/pet/"
                       },
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
@@ -462,6 +555,40 @@ var (
                     },
                     {
                       "decorator": {
+                        "operation": "ingress dynamic_routing_ListPets"
+                      },
+                      "match": {
+                        "headers": [
+                          {
+                            "exactMatch": "GET",
+                            "name": ":method"
+                          }
+                        ],
+                        "path": "/pets/"
+                      },
+                      "route": {
+                        "cluster": "backend-cluster-pets.appspot.com:443",
+                        "hostRewriteLiteral": "pets.appspot.com",
+                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "timeout": "15s"
+                      },
+                      "typedPerFilterConfig": {
+                        "com.google.espv2.filters.http.backend_auth": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                          "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
+                        },
+                        "com.google.espv2.filters.http.path_rewrite": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                          "pathPrefix": "/api"
+                        },
+                        "com.google.espv2.filters.http.service_control": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
+                        }
+                      }
+                    },
+                    {
+                      "decorator": {
                         "operation": "ingress dynamic_routing_Search"
                       },
                       "match": {
@@ -472,6 +599,42 @@ var (
                           }
                         ],
                         "path": "/search"
+                      },
+                      "route": {
+                        "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
+                        "hostRewriteLiteral": "us-west2-cloud-esf.cloudfunctions.net",
+                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "timeout": "15s"
+                      },
+                      "typedPerFilterConfig": {
+                        "com.google.espv2.filters.http.backend_auth": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                          "jwtAudience": "https://us-west2-cloud-esf.cloudfunctions.net/search"
+                        },
+                        "com.google.espv2.filters.http.path_rewrite": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                          "constantPath": {
+                            "path": "/search"
+                          }
+                        },
+                        "com.google.espv2.filters.http.service_control": {
+                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
+                        }
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress dynamic_routing_Search"
+                      },
+                      "match": {
+                        "headers": [
+                          {
+                            "exactMatch": "GET",
+                            "name": ":method"
+                          }
+                        ],
+                        "path": "/search/"
                       },
                       "route": {
                         "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
