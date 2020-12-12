@@ -315,6 +315,14 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 	return backendRoutes, nil
 }
 
+func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
+	return &routepb.RouteMatch{
+		PathSpecifier: &routepb.RouteMatch_Path{
+			Path: path,
+		},
+	}
+}
+
 func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch, error) {
 	if httpRule == nil {
 		return nil, fmt.Errorf("httpRule is nil")
@@ -322,17 +330,12 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch
 	var routeMatchers []*routepb.RouteMatch
 
 	if httpRule.UriTemplate.IsExactMatch() {
-		routeMatchers = []*routepb.RouteMatch{
-			{
-				PathSpecifier: &routepb.RouteMatch_Path{
-					Path: httpRule.UriTemplate.ExactMatchString(false),
-				},
-			},
-			{
-				PathSpecifier: &routepb.RouteMatch_Path{
-					Path: httpRule.UriTemplate.ExactMatchString(true),
-				},
-			},
+		pathNoTrailingSlash := httpRule.UriTemplate.ExactMatchString(false)
+		pathWithTrailingSlash := httpRule.UriTemplate.ExactMatchString(true)
+
+		routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathNoTrailingSlash))
+		if pathWithTrailingSlash != pathNoTrailingSlash {
+			routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathWithTrailingSlash))
 		}
 	} else {
 		routeMatchers = []*routepb.RouteMatch{
