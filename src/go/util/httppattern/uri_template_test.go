@@ -94,7 +94,7 @@ func TestTrailingBackSlash(t *testing.T) {
 		wantUriTemplatesByTrailingBackslash map[bool]string
 	}{
 		{
-			desc:        "Exact path match outputs in different format",
+			desc:        "Exact path outputs in different format",
 			uriTemplate: "/book",
 			wantUriTemplatesByTrailingBackslash: map[bool]string{
 				false: "/book",
@@ -107,6 +107,14 @@ func TestTrailingBackSlash(t *testing.T) {
 			wantUriTemplatesByTrailingBackslash: map[bool]string{
 				false: "/shelves/{shelf=*}/books/{book=*}",
 				true:  "/shelves/{shelf=*}/books/{book=*}/",
+			},
+		},
+		{
+			desc:        "Exact path with verb outputs in different format",
+			uriTemplate: "/book",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/book:read",
+				true:  "/book/:read",
 			},
 		},
 		{
