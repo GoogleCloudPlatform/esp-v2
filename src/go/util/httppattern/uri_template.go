@@ -62,7 +62,7 @@ type variable struct {
 	HasDoubleWildCard bool
 }
 
-func (u *UriTemplate) String() string {
+func (u *UriTemplate) ExactMatchString(acceptTrailingBackslash bool) string {
 	if len(u.Segments) == 0 {
 		return "/"
 	}
@@ -101,11 +101,20 @@ func (u *UriTemplate) String() string {
 		buff.WriteString(fmt.Sprintf("/%s", seg))
 	}
 
+	if acceptTrailingBackslash {
+		buff.WriteString("/")
+	}
+
 	if u.Verb != "" {
 		buff.WriteString(fmt.Sprintf(":%s", u.Verb))
 	}
 
 	return buff.String()
+}
+
+// Output the string representation with defaults.
+func (u *UriTemplate) String() string {
+	return u.ExactMatchString(false)
 }
 
 // Check if two uriTemplates are equal. Ignore `Origin`

@@ -2921,7 +2921,7 @@ func TestProcessTypes(t *testing.T) {
 		}
 
 		for operation, wantUrlTemplate := range tc.wantUrlTemplateByOperation {
-			getUrlTemplate := serviceInfo.Methods[operation].HttpRule[0].UriTemplate.String()
+			getUrlTemplate := serviceInfo.Methods[operation].HttpRule[0].UriTemplate.ExactMatchString(false)
 			if getUrlTemplate != wantUrlTemplate {
 				t.Errorf("Test(%v): For operation (%v), expected urlTemplate (%v), got urlTemplate(%v)", tc.desc, operation, wantUrlTemplate, getUrlTemplate)
 			}

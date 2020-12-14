@@ -65,6 +65,12 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=123&number=987"}`,
 		},
 		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct with trailing slash",
+			path:     "/pet/123/num/987/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/getpetbyid?pet_id=123&number=987"}`,
+		},
+		{
 			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct with escaped path segment",
 			path:     "/pet/a%20b/num/9%3B8",
 			method:   "GET",
@@ -75,6 +81,18 @@ func TestDynamicRouting(t *testing.T) {
 			path:     "/empty_path",
 			method:   "POST",
 			wantResp: `{"RequestURI":"/"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation with empty path and trailing slash",
+			path:     "/empty_path/",
+			method:   "POST",
+			wantResp: `{"RequestURI":"/"}`,
+		},
+		{
+			desc:          "Succeed, CONSTANT_ADDRESS path translation with empty path and multiple trailing slash",
+			path:          "/empty_path//",
+			method:        "POST",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
 		},
 		{
 			desc:     "Succeed, CONSTANT_ADDRESS path translation is correct, original URL has query parameters, original query parameters should appear first and query parameters converted from path parameters appear later",
@@ -143,6 +161,12 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/searchpet/searchpet?timezone=PST&lang=US"}`,
 		},
 		{
+			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation with query parameter and trailing slash is correct, appends original URL to backend address (https://domain/base/path)",
+			path:     "/searchpet/?timezone=PST&lang=US",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/searchpet/searchpet/?timezone=PST&lang=US"}`,
+		},
+		{
 			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, appends original URL to backend address that ends with slash (https://domain/base/path/)",
 			path:     "/searchdog",
 			method:   "GET",
@@ -165,6 +189,12 @@ func TestDynamicRouting(t *testing.T) {
 			path:     "/pets/cat/year/2018",
 			method:   "GET",
 			wantResp: `{"RequestURI":"/dynamicrouting/listpet/pets/cat/year/2018"}`,
+		},
+		{
+			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, original URL has path parameters and trailing slash (preserved)",
+			path:     "/pets/cat/year/2018/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/listpet/pets/cat/year/2018/"}`,
 		},
 		{
 			desc:     "Succeed, APPEND_PATH_TO_ADDRESS path translation is correct, original URL has path parameters and escaped characters",

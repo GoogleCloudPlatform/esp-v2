@@ -73,18 +73,80 @@ func TestReplaceVariableFieldInUriTemplateRebuild(t *testing.T) {
 
 	for _, tc := range testCases {
 		// Some uri templates are equal in syntax through not equal in string comparison.
-		if getUriTemplate, _ := ParseUriTemplate(tc); !uriTemplateStrEqual(getUriTemplate.String(), tc) {
-			t.Errorf("fail to rebuild, want uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate)
+		if getUriTemplate, _ := ParseUriTemplate(tc); !uriTemplateStrEqual(getUriTemplate.ExactMatchString(false), tc) {
+			t.Errorf("fail to rebuild, want uriTemplate: %s, get uriTemplate: %s", tc, getUriTemplate.ExactMatchString(false))
 		}
+	}
+}
+
+func compareExactMatchString(t *testing.T, uriTemplate *UriTemplate, trailingBackslash bool, wantUriTemplates map[bool]string) {
+	got := uriTemplate.ExactMatchString(trailingBackslash)
+	want := wantUriTemplates[trailingBackslash]
+	if got != want {
+		t.Errorf("Want trailing backslash = (%v), got (%v), expected (%v)", trailingBackslash, got, want)
+	}
+}
+
+func TestTrailingBackSlash(t *testing.T) {
+	testCases := []struct {
+		desc                                string
+		uriTemplate                         string
+		wantUriTemplatesByTrailingBackslash map[bool]string
+	}{
+		{
+			desc:        "Exact path outputs in different format",
+			uriTemplate: "/book",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/book",
+				true:  "/book/",
+			},
+		},
+		{
+			desc:        "Exact path with variable bindings outputs in different format",
+			uriTemplate: "/shelves/{shelf}/books/{book}",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/shelves/{shelf=*}/books/{book=*}",
+				true:  "/shelves/{shelf=*}/books/{book=*}/",
+			},
+		},
+		{
+			desc:        "Exact path with verb outputs in different format",
+			uriTemplate: "/book:read",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/book:read",
+				true:  "/book/:read",
+			},
+		},
+		{
+			desc:        "Root path outputs in same format",
+			uriTemplate: "/",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/",
+				true:  "/",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			uriTemplate, err := ParseUriTemplate(tc.uriTemplate)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			compareExactMatchString(t, uriTemplate, false, tc.wantUriTemplatesByTrailingBackslash)
+			compareExactMatchString(t, uriTemplate, true, tc.wantUriTemplatesByTrailingBackslash)
+		})
 	}
 }
 
 func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 	testCases := []struct {
-		desc            string
-		uriTemplate     string
-		varReplace      map[string]string
-		wantUriTemplate string
+		desc                   string
+		uriTemplate            string
+		varReplace             map[string]string
+		allowTrailingBackslash bool
+		wantUriTemplate        string
 	}{
 		{
 			desc:        "replace with {var} syntax",
@@ -123,6 +185,16 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 			wantUriTemplate: "/a/{FOO.BAR=x/**}",
 		},
 		{
+			desc:        "replace with {a.b.c=x/**} syntax and trailing backslash",
+			uriTemplate: "/a/{b.c=x/**}",
+			varReplace: map[string]string{
+				"b": "FOO",
+				"c": "BAR",
+			},
+			allowTrailingBackslash: true,
+			wantUriTemplate:        "/a/{FOO.BAR=x/**}/",
+		},
+		{
 			desc:        "replace with verb syntax",
 			uriTemplate: "/a/{b=c/**}:verb",
 			varReplace: map[string]string{
@@ -130,17 +202,25 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 			},
 			wantUriTemplate: "/a/{BAR=c/**}:verb",
 		},
+		{
+			desc:        "replace with verb syntax and trailing backslash",
+			uriTemplate: "/a/{b=c/**}:verb",
+			varReplace: map[string]string{
+				"b": "BAR",
+			},
+			allowTrailingBackslash: true,
+			wantUriTemplate:        "/a/{BAR=c/**}/:verb",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			uriTemplate, _ := ParseUriTemplate(tc.uriTemplate)
 			uriTemplate.ReplaceVariableField(tc.varReplace)
-			if getUriTemplate := uriTemplate.String(); getUriTemplate != tc.wantUriTemplate {
+			if getUriTemplate := uriTemplate.ExactMatchString(tc.allowTrailingBackslash); getUriTemplate != tc.wantUriTemplate {
 				t.Errorf("fail to replace variable field, wante uriTemplate: %s, get uriTemplate: %s", tc.wantUriTemplate, getUriTemplate)
 			}
 		})
-
 	}
 }
 

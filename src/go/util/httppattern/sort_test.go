@@ -254,7 +254,7 @@ func TestSort(t *testing.T) {
 			}
 
 			for idx, r := range *methods {
-				if getHttpPattern := fmt.Sprintf("%s %s", r.HttpMethod, r.UriTemplate); getHttpPattern != tc.sortedHttpPattern[idx] {
+				if getHttpPattern := fmt.Sprintf("%s %s", r.HttpMethod, r.UriTemplate.ExactMatchString(false)); getHttpPattern != tc.sortedHttpPattern[idx] {
 					t.Errorf("expect http pattern: % s, get http pattern: %s", tc.sortedHttpPattern[idx], getHttpPattern)
 				}
 			}
