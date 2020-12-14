@@ -2025,6 +2025,8 @@ var (
                         "name":"envoy.tracers.opencensus",
                         "typedConfig":{
                            "@type":"type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
+                           "incomingTraceContext":["TRACE_CONTEXT","CLOUD_TRACE_CONTEXT"],
+                           "outgoingTraceContext":["TRACE_CONTEXT","CLOUD_TRACE_CONTEXT"],
                            "stackdriverExporterEnabled":true,
                            "stackdriverProjectId":"fake-project-id",
                            "traceConfig":{
