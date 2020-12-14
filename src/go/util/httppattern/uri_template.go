@@ -112,6 +112,11 @@ func (u *UriTemplate) ExactMatchString(acceptTrailingBackslash bool) string {
 	return buff.String()
 }
 
+// Output the string representation with defaults.
+func (u *UriTemplate) String() string {
+	return u.ExactMatchString(false)
+}
+
 // Check if two uriTemplates are equal. Ignore `Origin`
 func (u *UriTemplate) Equal(v *UriTemplate) bool {
 	return cmp.Equal(u.Segments, v.Segments) && cmp.Equal(u.Variables, v.Variables) && cmp.Equal(u.Verb, v.Verb)

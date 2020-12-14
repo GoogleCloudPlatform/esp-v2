@@ -79,6 +79,59 @@ func TestReplaceVariableFieldInUriTemplateRebuild(t *testing.T) {
 	}
 }
 
+func compareExactMatchString(t *testing.T, uriTemplate *UriTemplate, trailingBackslash bool, wantUriTemplates map[bool]string) {
+	got := uriTemplate.ExactMatchString(trailingBackslash)
+	want := wantUriTemplates[trailingBackslash]
+	if got != want {
+		t.Errorf("Want trailing backslash = (%v), got (%v), expected (%v)", trailingBackslash, got, want)
+	}
+}
+
+func TestTrailingBackSlash(t *testing.T) {
+	testCases := []struct {
+		desc                                string
+		uriTemplate                         string
+		wantUriTemplatesByTrailingBackslash map[bool]string
+	}{
+		{
+			desc:        "Exact path match outputs in different format",
+			uriTemplate: "/book",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/book",
+				true:  "/book/",
+			},
+		},
+		{
+			desc:        "Exact path with variable bindings outputs in different format",
+			uriTemplate: "/shelves/{shelf}/books/{book}",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/shelves/{shelf=*}/books/{book=*}",
+				true:  "/shelves/{shelf=*}/books/{book=*}/",
+			},
+		},
+		{
+			desc:        "Root path outputs in same format",
+			uriTemplate: "/",
+			wantUriTemplatesByTrailingBackslash: map[bool]string{
+				false: "/",
+				true:  "/",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			uriTemplate, err := ParseUriTemplate(tc.uriTemplate)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			compareExactMatchString(t, uriTemplate, false, tc.wantUriTemplatesByTrailingBackslash)
+			compareExactMatchString(t, uriTemplate, true, tc.wantUriTemplatesByTrailingBackslash)
+		})
+	}
+}
+
 func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 	testCases := []struct {
 		desc                   string
@@ -160,7 +213,6 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 				t.Errorf("fail to replace variable field, wante uriTemplate: %s, get uriTemplate: %s", tc.wantUriTemplate, getUriTemplate)
 			}
 		})
-
 	}
 }
 
