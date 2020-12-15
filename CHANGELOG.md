@@ -1,3 +1,9 @@
+# Release 2.22.0 15-12-2020
+
+- Enable fallback to x-cloud-trace-context by default (#439)
+- backend retry config options (#436)
+- Handle trailing backslash for match paths (#435) (#440)
+
 # Release 2.21.0 02-12-2020
 
 - Fix request header size (#425)
