@@ -359,7 +359,9 @@ const std::string get_service_agent() {
   return kServiceAgentPrefix + utils::Version::instance().get();
 }
 
-unsigned int getHttpOrGrpcCode(const ReportRequestInfo& info) {
+// Returns the relevant status code for the request protocol.
+// gRPC is a protocol on top of HTTP, so HTTP errors take priority.
+unsigned int get_status_code(const ReportRequestInfo& info) {
   if (info.http_response_code == 200 &&
       info.frontend_protocol == protocol::Protocol::GRPC) {
     return Envoy::Grpc::Utility::grpcToHttpStatus(info.grpc_response_code);
@@ -402,7 +404,7 @@ constexpr const char* error_types[10] = {"0xx", "1xx", "2xx", "3xx", "4xx",
 // /error_type
 Status set_error_type(const SupportedLabel& l, const ReportRequestInfo& info,
                       Map<std::string, std::string>* labels) {
-  int status_code = getHttpOrGrpcCode(info);
+  int status_code = get_status_code(info);
   if (status_code >= 400) {
     int code = (status_code / 100) % 10;
     if (error_types[code]) {
@@ -453,7 +455,7 @@ Status set_response_code(const SupportedLabel& l, const ReportRequestInfo& info,
                          Map<std::string, std::string>* labels) {
   char response_code_buf[20];
   snprintf(response_code_buf, sizeof(response_code_buf), "%d",
-           getHttpOrGrpcCode(info));
+           get_status_code(info));
   (*labels)[l.name] = response_code_buf;
   return Status::OK;
 }
@@ -462,7 +464,7 @@ Status set_response_code(const SupportedLabel& l, const ReportRequestInfo& info,
 Status set_response_code_class(const SupportedLabel& l,
                                const ReportRequestInfo& info,
                                Map<std::string, std::string>* labels) {
-  (*labels)[l.name] = error_types[(getHttpOrGrpcCode(info) / 100) % 10];
+  (*labels)[l.name] = error_types[(get_status_code(info) / 100) % 10];
   return Status::OK;
 }
 
@@ -818,15 +820,14 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
                   LogEntry* log_entry) {
   log_entry->set_name(name);
   *log_entry->mutable_timestamp() = current_time;
-  auto severity = (getHttpOrGrpcCode(info) >= 400)
-                      ? google::logging::type::ERROR
-                      : google::logging::type::INFO;
+  auto severity = (get_status_code(info) >= 400) ? google::logging::type::ERROR
+                                                 : google::logging::type::INFO;
   log_entry->set_severity(severity);
 
   // Fill in http request.
   auto* http_request = log_entry->mutable_http_request();
   http_request->set_protocol(protocol::ToString(info.frontend_protocol));
-  http_request->set_status(getHttpOrGrpcCode(info));
+  http_request->set_status(get_status_code(info));
   if (!info.method.empty()) {
     http_request->set_request_method(info.method);
   }

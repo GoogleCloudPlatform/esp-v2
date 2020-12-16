@@ -1068,6 +1068,8 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
 TEST_F(HandlerTest, HandlerReportGrpcStatus) {
   // Test: When grpc status header is present, it's value will be used in
   // addition to HTTP status.
+  EXPECT_CALL(mock_stream_info_, responseCode()).WillRepeatedly(Return(200));
+
   setPerRouteOperation("get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
@@ -1082,6 +1084,7 @@ TEST_F(HandlerTest, HandlerReportGrpcStatus) {
   initExpectedReportInfo(expected_report_info);
   expected_report_info.api_key = "foobar";
   expected_report_info.status = Status::OK;
+  expected_report_info.http_response_code = 200;
   expected_report_info.grpc_response_code = Code::UNAVAILABLE;
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,

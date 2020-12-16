@@ -305,7 +305,8 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
   // obvious.
   info.http_response_code = stream_info.responseCode().value_or(0);
 
-  if (info.frontend_protocol != Protocol::GRPC) {
+  if (info.http_response_code == 200 &&
+      info.frontend_protocol != Protocol::GRPC) {
     return;
   }
 

@@ -316,7 +316,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedByGrpcBackendTest) {
   info.backend_protocol = protocol::GRPC;
 
   // Test a case where HTTP request was successful, but gRPC backend returned
-  // and application error.
+  // an application error.
   info.http_response_code = 200;
   info.grpc_response_code = Code::NOT_FOUND;
 
