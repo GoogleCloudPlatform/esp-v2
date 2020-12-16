@@ -1065,6 +1065,30 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   handler.callReport(&headers, &response_headers, &resp_trailer_);
 }
 
+TEST_F(HandlerTest, HandlerReportGrpcStatus) {
+  // Test: When grpc status header is present, it's value will be used in
+  // addition to HTTP status.
+  setPerRouteOperation("get_header_key");
+  TestRequestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  TestResponseHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}, {"grpc-status", "14"}};
+  CheckDoneFunc stored_on_done;
+  CheckResponseInfo response_info;
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_, test_time_, stats_);
+
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_key = "foobar";
+  expected_report_info.status = Status::OK;
+  expected_report_info.grpc_response_code = Code::UNAVAILABLE;
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesReportInfo(expected_report_info, headers,
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_);
+}
+
 }  // namespace
 }  // namespace service_control
 }  // namespace http_filters

@@ -74,6 +74,12 @@ operations {
         }
       }
       fields {
+        key: "http_status_code"
+        value {
+          number_value: 0
+        }
+      }
+      fields {
         key: "producer_project_id"
         value {
           string_value: "project_id"
