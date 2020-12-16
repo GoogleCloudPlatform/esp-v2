@@ -87,7 +87,7 @@ void FillAllocateQuotaRequestInfo(QuotaRequestInfo* request) {
 
 void FillReportRequestInfo(ReportRequestInfo* request) {
   request->referer = "referer";
-  request->response_code = 200;
+  request->http_response_code = 200;
   request->location = "us-central";
   request->api_name = "api-name";
   request->api_version = "api-version";
@@ -295,7 +295,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   info.check_response_info.api_key_state = api_key::ApiKeyState::NOT_CHECKED;
 
   // Use 401 as a failed response code.
-  info.response_code = 401;
+  info.http_response_code = 401;
 
   // Use the corresponding status for that response code.
   info.status = Status(Code::PERMISSION_DENIED, "");
@@ -319,7 +319,7 @@ TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
   info.api_key = "invalid-api-key";
 
   // Use 401 as a failed response code.
-  info.response_code = 401;
+  info.http_response_code = 401;
 
   // Use the corresponding status for that response code.
   info.status = Status(Code::PERMISSION_DENIED, "");

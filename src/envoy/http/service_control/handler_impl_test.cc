@@ -287,6 +287,8 @@ MATCHER_P(MatchesQuotaInfo, expect, Envoy::EMPTY_STRING) {
   MATCH2(log_message, operation_name + " is called");          \
   MATCH(api_key);                                              \
   MATCH(status);                                               \
+  MATCH(http_response_code);                                   \
+  MATCH(grpc_response_code);                                   \
   MATCH(request_headers);                                      \
   MATCH(response_headers);                                     \
   MATCH(url);                                                  \

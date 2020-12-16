@@ -24,6 +24,8 @@ envoy_basic_cc_library(
         "request_builder.h",
     ],
     visibility = ["//visibility:public"],
+    # FIXME: Direct use of envoy function in non-envoy code. Consider copying
+    # relevant code to utils to remove this dependency in the future.
     deps = [
         ":request_info_lib",
         "//external:abseil_strings",
@@ -31,6 +33,7 @@ envoy_basic_cc_library(
         "@com_github_googleapis_googleapis//google/api:service_cc_proto",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:base64_lib",
+        "@envoy//source/common/grpc:status_lib",
         "@servicecontrol_client_git//:service_control_client_lib",
     ],
 )

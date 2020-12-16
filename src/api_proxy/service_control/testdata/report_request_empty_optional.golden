@@ -21,11 +21,11 @@ operations {
   }
   labels {
     key: "/response_code"
-    value: "200"
+    value: "0"
   }
   labels {
     key: "/response_code_class"
-    value: "2xx"
+    value: "0xx"
   }
   labels {
     key: "/status_code"
@@ -105,7 +105,6 @@ operations {
     }
     severity: INFO
     http_request {
-      status: 200
       protocol: "unknown"
     }
   }
