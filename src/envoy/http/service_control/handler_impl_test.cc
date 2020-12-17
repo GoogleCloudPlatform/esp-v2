@@ -1065,86 +1065,68 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   handler.callReport(&headers, &response_headers, &resp_trailer_);
 }
 
-TEST_F(HandlerTest, HandlerReportGrpcStatusFromHeaders) {
-  // Test: When grpc status header is present, it's value will be used in
-  // addition to HTTP status.
-  EXPECT_CALL(mock_stream_info_, responseCode()).WillRepeatedly(Return(200));
+class HandlerReportStatusTest : public HandlerTest {
+ protected:
+  void runTest(unsigned int http_response_code,
+               TestResponseHeaderMapImpl response_headers,
+               TestResponseTrailerMapImpl response_trailers,
+               Code expected_grpc_status) {
+    EXPECT_CALL(mock_stream_info_, responseCode())
+        .WillRepeatedly(Return(http_response_code));
 
-  setPerRouteOperation("get_header_key");
-  TestRequestHeaderMapImpl headers{
-      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  // Remember: Envoy treats a trailers-only response as headers-only.
-  TestResponseHeaderMapImpl response_headers{
-      {"content-type", "application/grpc"}, {"grpc-status", "14"}};
-  CheckDoneFunc stored_on_done;
-  CheckResponseInfo response_info;
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_, stats_);
+    setPerRouteOperation("get_header_key");
+    TestRequestHeaderMapImpl headers{
+        {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+    CheckDoneFunc stored_on_done;
+    CheckResponseInfo response_info;
+    ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                      *cfg_parser_, test_time_, stats_);
 
-  ReportRequestInfo expected_report_info;
-  initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_key = "foobar";
-  expected_report_info.status = Status::OK;
-  expected_report_info.http_response_code = 200;
-  expected_report_info.grpc_response_code = Code::UNAVAILABLE;
-  EXPECT_CALL(*mock_call_,
-              callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
-}
+    ReportRequestInfo expected_report_info;
+    initExpectedReportInfo(expected_report_info);
+    expected_report_info.api_key = "foobar";
+    expected_report_info.status = Status::OK;
+    expected_report_info.http_response_code = http_response_code;
+    expected_report_info.grpc_response_code = expected_grpc_status;
+    EXPECT_CALL(*mock_call_, callReport(MatchesReportInfo(
+                                 expected_report_info, headers,
+                                 response_headers, response_trailers)));
+    handler.callReport(&headers, &response_headers, &response_trailers);
+  }
+};
 
-TEST_F(HandlerTest, HandlerReportGrpcStatusFromTrailers) {
+TEST_F(HandlerReportStatusTest, HandlerReportGrpcStatusFromTrailers) {
   // Test: When grpc status trailer is present, it's value will be used in
   // addition to HTTP status.
-  EXPECT_CALL(mock_stream_info_, responseCode()).WillRepeatedly(Return(200));
-
-  setPerRouteOperation("get_header_key");
-  TestRequestHeaderMapImpl headers{
-      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  TestResponseHeaderMapImpl response_headers{
-      {"content-type", "application/grpc"}};
-  TestResponseTrailerMapImpl response_trailers{{"grpc-status", "7"}};
-  CheckDoneFunc stored_on_done;
-  CheckResponseInfo response_info;
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_, stats_);
-
-  ReportRequestInfo expected_report_info;
-  initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_key = "foobar";
-  expected_report_info.status = Status::OK;
-  expected_report_info.http_response_code = 200;
-  expected_report_info.grpc_response_code = Code::PERMISSION_DENIED;
-  EXPECT_CALL(*mock_call_, callReport(MatchesReportInfo(
-                               expected_report_info, headers, response_headers,
-                               response_trailers)));
-  handler.callReport(&headers, &response_headers, &response_trailers);
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "7"}},
+          Code::PERMISSION_DENIED);
 }
 
-TEST_F(HandlerTest, HandlerReportMissingGrpcStatus) {
+TEST_F(HandlerReportStatusTest, HandlerReportGrpcStatusFromHeaders) {
+  // Test: When grpc status header is present, it's value will be used in
+  // addition to HTTP status.
+  // Remember: grpc-status will show up in the headers during a trailers-only
+  // response.
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "14"}},
+          Code::UNAVAILABLE);
+}
+
+TEST_F(HandlerReportStatusTest, HandlerReportMissingGrpcStatus) {
   // Test: When grpc status header/trailer is missing, we fallback to HTTP
   // status.
-  EXPECT_CALL(mock_stream_info_, responseCode()).WillRepeatedly(Return(200));
+  runTest(200, {{"content-type", "application/grpc"}}, {}, Code::OK);
+}
 
-  setPerRouteOperation("get_header_key");
-  TestRequestHeaderMapImpl headers{
-      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
-  TestResponseHeaderMapImpl response_headers{
-      {"content-type", "application/grpc"}};
-  CheckDoneFunc stored_on_done;
-  CheckResponseInfo response_info;
-  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
-                                    *cfg_parser_, test_time_, stats_);
+TEST_F(HandlerReportStatusTest, HandlerReportBadGrpcStatus) {
+  // Test: When grpc status header is invalid, we should not crash on the cast.
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "-4"}},
+          Code::OK);
+}
 
-  ReportRequestInfo expected_report_info;
-  initExpectedReportInfo(expected_report_info);
-  expected_report_info.api_key = "foobar";
-  expected_report_info.status = Status::OK;
-  expected_report_info.http_response_code = 200;
-  EXPECT_CALL(*mock_call_,
-              callReport(MatchesReportInfo(expected_report_info, headers,
-                                           response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+TEST_F(HandlerReportStatusTest, HandlerReportBadHttpStatusForGrpc) {
+  // Test: When HTTP status is non-200, we do not care about gRPC status.
+  runTest(500, {{"content-type", "application/grpc"}}, {{"grpc-status", "7"}},
+          Code::OK);
 }
 
 }  // namespace

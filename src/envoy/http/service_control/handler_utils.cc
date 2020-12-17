@@ -305,18 +305,25 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
   // obvious, so 0.
   info.http_response_code = stream_info.responseCode().value_or(0);
 
-  if (info.http_response_code == 200 &&
+  if (info.http_response_code != 200 ||
       info.frontend_protocol != Protocol::GRPC) {
     return;
   }
 
-  absl::optional<Envoy::Grpc::Status::GrpcStatus> status =
-      Envoy::Grpc::Common::getGrpcStatus(*response_trailers, false);
-  if (!status.has_value()) {
+  absl::optional<Envoy::Grpc::Status::GrpcStatus> status;
+  if (response_trailers) {
+    // grpc-status should be in the trailers.
+    status = Envoy::Grpc::Common::getGrpcStatus(*response_trailers, false);
+  }
+  if (!status.has_value() && response_headers) {
     // Envoy http2 codec treats trailers-only response as headers-only response.
     status = Envoy::Grpc::Common::getGrpcStatus(*response_headers, false);
   }
   if (!status.has_value()) {
+    return;
+  }
+
+  if (status.value() == Envoy::Grpc::Status::WellKnownGrpcStatus::InvalidCode) {
     return;
   }
 
