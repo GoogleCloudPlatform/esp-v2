@@ -477,6 +477,12 @@ operations: <
         >
       >
       fields: <
+        key: "http_status_code"
+        value: <
+          number_value: 503
+        >
+      >
+      fields: <
         key: "error_cause"
         value: <
           string_value: "SERVICE UNAVAILABLE"
@@ -1185,69 +1191,9 @@ operations: <
         >
       >
       fields: <
-        key: "location"
+        key: "http_status_code"
         value: <
-          string_value: "us-central1"
-        >
-      >
-      fields: <
-        key: "log_message"
-        value: <
-          string_value: "Method: ListShelves"
-        >
-      >
-      fields: <
-        key: "producer_project_id"
-        value: <
-          string_value: "endpoints-test"
-        >
-      >
-      fields: <
-        key: "service_config_id"
-        value: <
-          string_value: "test-config-id"
-        >
-      >
-      fields: <
-        key: "response_code_detail"
-        value: <
-          string_value: "service_control_check_call_error{UNAVAILABLE}"
-        >
-      >
-    >
-  >
-  log_entries: <
-    name: "endpoints_log"
-    http_request: <
-		  request_method: "GET"
-		  request_url: "/shelves"
-		  status: 503
-		  remote_ip: "127.0.0.1"
-		>
-    severity: ERROR
-    struct_payload: <
-      fields: <
-        key: "api_key"
-        value: <
-          string_value: "api-key"
-        >
-      >
-      fields: <
-        key: "api_key_state"
-        value: <
-          string_value: "INVALID"
-        >
-      >
-      fields: <
-        key: "api_method"
-        value: <
-          string_value: "ListShelves"
-        >
-      >
-      fields: <
-        key: "api_name"
-        value: <
-          string_value: "API-NAME"
+          number_value: 503
         >
       >
       fields: <
@@ -1314,6 +1260,84 @@ operations: <
         key: "api_name"
         value: <
           string_value: "API-NAME"
+        >
+      >
+      fields: <
+        key: "http_status_code"
+        value: <
+          number_value: 503
+        >
+      >
+      fields: <
+        key: "location"
+        value: <
+          string_value: "us-central1"
+        >
+      >
+      fields: <
+        key: "log_message"
+        value: <
+          string_value: "Method: ListShelves"
+        >
+      >
+      fields: <
+        key: "producer_project_id"
+        value: <
+          string_value: "endpoints-test"
+        >
+      >
+      fields: <
+        key: "service_config_id"
+        value: <
+          string_value: "test-config-id"
+        >
+      >
+      fields: <
+        key: "response_code_detail"
+        value: <
+          string_value: "service_control_check_call_error{UNAVAILABLE}"
+        >
+      >
+    >
+  >
+  log_entries: <
+    name: "endpoints_log"
+    http_request: <
+		  request_method: "GET"
+		  request_url: "/shelves"
+		  status: 503
+		  remote_ip: "127.0.0.1"
+		>
+    severity: ERROR
+    struct_payload: <
+      fields: <
+        key: "api_key"
+        value: <
+          string_value: "api-key"
+        >
+      >
+      fields: <
+        key: "api_key_state"
+        value: <
+          string_value: "INVALID"
+        >
+      >
+      fields: <
+        key: "api_method"
+        value: <
+          string_value: "ListShelves"
+        >
+      >
+      fields: <
+        key: "api_name"
+        value: <
+          string_value: "API-NAME"
+        >
+      >
+      fields: <
+        key: "http_status_code"
+        value: <
+          number_value: 503
         >
       >
       fields: <
