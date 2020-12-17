@@ -63,9 +63,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		// Place in closure to allow deferring in loop.
-		func() {
-
+		t.Run(tc.desc, func(t *testing.T) {
 			httpProtocol := "http/1.1"
 			if tc.configHttp2 {
 				httpProtocol = "h2"
@@ -114,7 +112,6 @@ func TestBackendHttpProtocol(t *testing.T) {
 					t.Errorf("Test(%s) expected success: \n %s", tc.desc, err)
 				}
 			}
-
-		}()
+		})
 	}
 }

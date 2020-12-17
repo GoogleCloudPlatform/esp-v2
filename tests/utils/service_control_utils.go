@@ -83,6 +83,8 @@ type ExpectedReport struct {
 	HttpMethod                   string
 	LogMessage                   string
 	ResponseCode                 int
+	HttpResponseCode             int
+	GrpcStatusCode               string
 	Referer                      string
 	StatusCode                   string
 	ErrorCause                   string
@@ -289,7 +291,7 @@ func makeStringValue(v string) *structpb.Value {
 	return &structpb.Value{Kind: &structpb.Value_StringValue{v}}
 }
 
-func makeNumberValue(v int64) *structpb.Value {
+func makeNumberValue(v int) *structpb.Value {
 	return &structpb.Value{Kind: &structpb.Value_NumberValue{float64(v)}}
 }
 
@@ -366,6 +368,16 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	if er.ResponseCode >= 400 {
 		severity = ltypepb.LogSeverity_ERROR
 	}
+
+	// HTTP status code is always populated. gRPC status code is only for gRPC
+	// requests.
+	if er.GrpcStatusCode != "" {
+		pl["grpc_status_code"] = makeStringValue(er.GrpcStatusCode)
+	} else {
+		// They should match by default.
+		er.HttpResponseCode = er.ResponseCode
+	}
+	pl["http_status_code"] = makeNumberValue(er.HttpResponseCode)
 
 	return &scpb.LogEntry{
 		Name:     "endpoints_log",
