@@ -66,7 +66,7 @@ class HttpCallTest : public testing::Test {
     http_uri_.set_cluster("test_cluster");
     http_uri_.set_uri("http://test_host/test_path");
 
-    ON_CALL(cm_, httpAsyncClientForCluster("test_cluster"))
+    ON_CALL(cm_.thread_local_cluster_, httpAsyncClient())
         .WillByDefault(ReturnRef(http_client_));
     ON_CALL(http_client_, send_(_, _, _))
         .WillByDefault(

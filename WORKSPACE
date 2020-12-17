@@ -39,9 +39,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # 3) Check if envoy_build_config/extensions_build_config.bzl is up-to-date.
 # Try to match it with the one in source/extensions and comment out unneeded extensions.
 
-ENVOY_SHA1 = "c39a22e1ee744f4e6031c0b53f7ccd2b6165e29f"  # 2020-11-17: top of tree
+ENVOY_SHA1 = "689565c8f8d0aa8d2c9a1fa62ee45ae1c347db94"  # 2020-12-16: top of tree
 
-ENVOY_SHA256 = "57a1d595c0440e4f6e17559004b56e8a04e84eb96321702f0da7e065ab495a1d"
+ENVOY_SHA256 = "2c81b9ab16e8bedbab613622ae640ef89665a347f797c92ebef75fe520fa3c38"
 
 http_archive(
     name = "envoy",
@@ -90,9 +90,9 @@ load("//bazel:repositories.bzl", "service_control_repositories")
 
 service_control_repositories()
 
-load("@io_bazel_rules_python//python:pip.bzl", "pip_import")
+load("@io_bazel_rules_python//python:pip.bzl", "pip_install")
 
-pip_import(
+pip_install(
     name = "grpc_python_dependencies",
     requirements = "@com_github_grpc_grpc//:requirements.bazel.txt",
 )

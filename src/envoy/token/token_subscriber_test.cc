@@ -56,7 +56,8 @@ class TokenSubscriberTest : public testing::Test {
         }));
 
     // Setup mock http async client.
-    EXPECT_CALL(context_.cluster_manager_.async_client_, send_(_, _, _))
+    EXPECT_CALL(context_.cluster_manager_.thread_local_cluster_.async_client_,
+                send_(_, _, _))
         .WillRepeatedly(
             Invoke([this](Envoy::Http::RequestMessagePtr& message,
                           Envoy::Http::AsyncClient::Callbacks& callback,

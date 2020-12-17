@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load(
-    "@bazel_tools//tools/build_defs/repo:git.bzl",
-    "git_repository",
-)
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def bazel_rules_python_repositories(load_repo = True):
     if load_repo:
-        git_repository(
+        http_archive(
             name = "io_bazel_rules_python",
-            commit = "8b5d0683a7d878b28fffe464779c8a53659fc645",
-            remote = "https://github.com/bazelbuild/rules_python.git",
+            url = "https://github.com/bazelbuild/rules_python/releases/download/0.1.0/rules_python-0.1.0.tar.gz",
+            sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
         )
