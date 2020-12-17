@@ -1095,14 +1095,14 @@ class HandlerReportStatusTest : public HandlerTest {
   }
 };
 
-TEST_F(HandlerReportStatusTest, HandlerReportGrpcStatusFromTrailers) {
+TEST_F(HandlerReportStatusTest, GrpcStatusFromTrailers) {
   // Test: When grpc status trailer is present, it's value will be used in
   // addition to HTTP status.
   runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "7"}},
           Code::PERMISSION_DENIED);
 }
 
-TEST_F(HandlerReportStatusTest, HandlerReportGrpcStatusFromHeaders) {
+TEST_F(HandlerReportStatusTest, GrpcStatusFromHeaders) {
   // Test: When grpc status header is present, it's value will be used in
   // addition to HTTP status.
   // Remember: grpc-status will show up in the headers during a trailers-only
@@ -1111,21 +1111,31 @@ TEST_F(HandlerReportStatusTest, HandlerReportGrpcStatusFromHeaders) {
           Code::UNAVAILABLE);
 }
 
-TEST_F(HandlerReportStatusTest, HandlerReportMissingGrpcStatus) {
+TEST_F(HandlerReportStatusTest, MissingGrpcStatus) {
   // Test: When grpc status header/trailer is missing, we fallback to HTTP
   // status.
   runTest(200, {{"content-type", "application/grpc"}}, {}, Code::OK);
 }
 
-TEST_F(HandlerReportStatusTest, HandlerReportBadGrpcStatus) {
-  // Test: When grpc status header is invalid, we should not crash on the cast.
-  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "-4"}},
+TEST_F(HandlerReportStatusTest, BadHttpStatusForGrpc) {
+  // Test: When HTTP status is non-200, we do not care about gRPC status.
+  runTest(500, {{"content-type", "application/grpc"}}, {{"grpc-status", "7"}},
           Code::OK);
 }
 
-TEST_F(HandlerReportStatusTest, HandlerReportBadHttpStatusForGrpc) {
-  // Test: When HTTP status is non-200, we do not care about gRPC status.
-  runTest(500, {{"content-type", "application/grpc"}}, {{"grpc-status", "7"}},
+TEST_F(HandlerReportStatusTest, WellKnownStatuses) {
+  // Test all canonical RPC codes.
+  for (int i = 0; i <= 16; i++) {
+    runTest(200, {{"content-type", "application/grpc"}},
+            {{"grpc-status", absl::StrCat("", i)}}, static_cast<Code>(i));
+  }
+}
+
+TEST_F(HandlerReportStatusTest, BadGrpcStatus) {
+  // Test: When grpc status header is invalid, we should not crash on the cast.
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "-1"}},
+          Code::OK);
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "17"}},
           Code::OK);
 }
 

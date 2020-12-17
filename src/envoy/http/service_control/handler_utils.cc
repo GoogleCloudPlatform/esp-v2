@@ -327,7 +327,7 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
     return;
   }
 
-  info.grpc_response_code = Code(status.value());
+  info.grpc_response_code = static_cast<Code>(status.value());
 }
 
 }  // namespace service_control
