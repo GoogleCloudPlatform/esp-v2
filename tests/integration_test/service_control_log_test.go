@@ -89,8 +89,9 @@ func TestServiceControlLogHeaders(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:     utils.ESPv2Version(),
-					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
+					Version:                      utils.ESPv2Version(),
+					ServiceName:                  "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:              "test-config-id",
 					URL:                          "/echo?key=api-key-2",
 					ApiKeyInOperationAndLogEntry: "api-key-2",
 					ApiKeyState:                  "VERIFIED",
