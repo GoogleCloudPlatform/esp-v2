@@ -302,7 +302,7 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
                 const Envoy::StreamInfo::StreamInfo& stream_info,
                 ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   // When response code is missing, we want to set to a value that makes it
-  // obvious.
+  // obvious, so 0.
   info.http_response_code = stream_info.responseCode().value_or(0);
 
   if (info.http_response_code == 200 &&
@@ -310,9 +310,12 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
     return;
   }
 
-  const absl::optional<Envoy::Grpc::Status::GrpcStatus> status =
-      Envoy::Grpc::Common::getGrpcStatus(*response_trailers, *response_headers,
-                                         stream_info);
+  absl::optional<Envoy::Grpc::Status::GrpcStatus> status =
+      Envoy::Grpc::Common::getGrpcStatus(*response_trailers, false);
+  if (!status.has_value()) {
+    // Envoy http2 codec treats trailers-only response as headers-only response.
+    status = Envoy::Grpc::Common::getGrpcStatus(*response_headers, false);
+  }
   if (!status.has_value()) {
     return;
   }
