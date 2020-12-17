@@ -59,6 +59,12 @@ func DoWithHeaders(url, method, message string, headers map[string]string) ([]by
 	return body, err
 }
 
+// DoWithHeadersAndTimeout performs a GET/POST/PUT/DELETE/PATCH request to a specified url with given headers and message(if provided) and timeout
+func DoWithHeadersAndTimeout(url, method, message string, headers map[string]string, timeout time.Duration) ([]byte, error) {
+	_, body, err := utils.DoWithHeadersAndTimeout(url, method, message, headers, timeout)
+	return body, err
+}
+
 // DoJWT performs an authenticated request using the credentials in the service account file.
 func DoJWT(host, method, path, apiKey, serviceAccount, token string) ([]byte, error) {
 	if serviceAccount != "" {
