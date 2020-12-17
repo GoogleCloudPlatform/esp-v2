@@ -218,6 +218,11 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 			Shelf: 100,
 		}
 		respMsg, err = cli.GetShelf(ctx, req)
+	case "GetShelfInvalid":
+		req := &bspbv1.GetShelfRequest{
+			Shelf: -1,
+		}
+		respMsg, err = cli.GetShelf(ctx, req)
 	case "CreateBook":
 		req := &bspbv1.CreateBookRequest{
 			Shelf: 200,
