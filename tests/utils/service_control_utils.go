@@ -83,7 +83,7 @@ type ExpectedReport struct {
 	HttpMethod                   string
 	LogMessage                   string
 	ResponseCode                 int
-	HttpResponseCode             int
+	HttpStatusCode               int
 	GrpcStatusCode               string
 	Referer                      string
 	StatusCode                   string
@@ -375,9 +375,9 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 		pl["grpc_status_code"] = makeStringValue(er.GrpcStatusCode)
 	} else {
 		// They should match by default.
-		er.HttpResponseCode = er.ResponseCode
+		er.HttpStatusCode = er.ResponseCode
 	}
-	pl["http_status_code"] = makeNumberValue(er.HttpResponseCode)
+	pl["http_status_code"] = makeNumberValue(er.HttpStatusCode)
 
 	return &scpb.LogEntry{
 		Name:     "endpoints_log",
