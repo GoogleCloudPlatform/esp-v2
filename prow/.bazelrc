@@ -7,11 +7,8 @@
 
 # The following flags enable the remote cache so action results can be shared
 # across machines, developers, and workspaces.
-build --remote_cache=remotebuildexecution.googleapis.com
-build --tls_enabled=true
-build --remote_timeout=3600
-build --auth_enabled=true
-build --experimental_guard_against_concurrent_changes=true
-build --incompatible_strict_action_env=true
+build --remote_cache=grpcs://remotebuildexecution.googleapis.com
+build --google_default_credentials=true
 build --host_platform_remote_properties_override='properties:{name:"cache-silo-key" value:"CACHE_SILO_NAME"}'
 build --remote_instance_name=projects/CACHE_PROJECT_ID/instances/default_instance
+build --remote_timeout=3600
