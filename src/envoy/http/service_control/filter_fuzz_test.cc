@@ -69,7 +69,7 @@ DEFINE_PROTO_FUZZER(
   // Setup mocks.
   NiceMock<MockFactoryContext> context;
   NiceMock<Envoy::Http::MockAsyncClientRequest> request(
-      &context.cluster_manager_.async_client_);
+      &context.cluster_manager_.thread_local_cluster_.async_client_);
   NiceMock<Envoy::Http::MockStreamDecoderFilterCallbacks>
       mock_decoder_callbacks;
 
