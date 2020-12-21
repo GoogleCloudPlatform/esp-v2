@@ -66,7 +66,9 @@ class HttpCallTest : public testing::Test {
     http_uri_.set_cluster("test_cluster");
     http_uri_.set_uri("http://test_host/test_path");
 
-    ON_CALL(cm_.thread_local_cluster_, httpAsyncClient())
+    EXPECT_CALL(cm_, getThreadLocalCluster(_))
+        .WillRepeatedly(Return(&thread_local_cluster_));
+    ON_CALL(thread_local_cluster_, httpAsyncClient())
         .WillByDefault(ReturnRef(http_client_));
     ON_CALL(http_client_, send_(_, _, _))
         .WillByDefault(
@@ -142,6 +144,7 @@ class HttpCallTest : public testing::Test {
   // Underlying http client mocks
   HttpUri http_uri_;
   NiceMock<Envoy::Upstream::MockClusterManager> cm_;
+  NiceMock<Envoy::Upstream::MockThreadLocalCluster> thread_local_cluster_;
   NiceMock<Envoy::Event::MockDispatcher> dispatcher_;
   NiceMock<Envoy::Http::MockAsyncClient> http_client_;
 

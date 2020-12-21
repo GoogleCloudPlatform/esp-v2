@@ -68,6 +68,7 @@ DEFINE_PROTO_FUZZER(
 
   // Setup mocks.
   NiceMock<MockFactoryContext> context;
+  NiceMock<Envoy::Upstream::MockThreadLocalCluster> thread_local_cluster;
   NiceMock<Envoy::Http::MockAsyncClientRequest> request(
       &context.cluster_manager_.thread_local_cluster_.async_client_);
   NiceMock<Envoy::Http::MockStreamDecoderFilterCallbacks>
@@ -89,7 +90,9 @@ DEFINE_PROTO_FUZZER(
 
   // Mock the http async client.
   int resp_num = 0;
-  EXPECT_CALL(context.cluster_manager_.async_client_, send_(_, _, _))
+  EXPECT_CALL(context.cluster_manager_, getThreadLocalCluster(_))
+      .WillRepeatedly(Return(&thread_local_cluster));
+  EXPECT_CALL(thread_local_cluster.async_client_, send_(_, _, _))
       .WillRepeatedly(Invoke([&request, &input, &resp_num](
                                  const Envoy::Http::RequestMessagePtr&,
                                  Envoy::Http::AsyncClient::Callbacks& callback,

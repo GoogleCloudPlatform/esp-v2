@@ -30,6 +30,7 @@ namespace token {
 namespace test {
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
+using ::Envoy::Upstream::MockThreadLocalCluster;
 using ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior;
 
 using ::testing::_;
@@ -56,8 +57,9 @@ class TokenSubscriberTest : public testing::Test {
         }));
 
     // Setup mock http async client.
-    EXPECT_CALL(context_.cluster_manager_.thread_local_cluster_.async_client_,
-                send_(_, _, _))
+    EXPECT_CALL(context_.cluster_manager_, getThreadLocalCluster(_))
+        .WillRepeatedly(Return(&thread_local_cluster_));
+    EXPECT_CALL(thread_local_cluster_.async_client_, send_(_, _, _))
         .WillRepeatedly(
             Invoke([this](Envoy::Http::RequestMessagePtr& message,
                           Envoy::Http::AsyncClient::Callbacks& callback,
@@ -95,8 +97,9 @@ class TokenSubscriberTest : public testing::Test {
 
   // Context
   NiceMock<MockFactoryContext> context_;
+  NiceMock<MockThreadLocalCluster> thread_local_cluster_;
   Envoy::Http::MockAsyncClientRequest client_request_{
-      &context_.cluster_manager_.async_client_};
+      &thread_local_cluster_.async_client_};
 
   // Params to class under test.
   std::string token_url_ = "http://iam/uri_suffix";
