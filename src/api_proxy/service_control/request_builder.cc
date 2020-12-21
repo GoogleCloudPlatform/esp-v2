@@ -362,9 +362,9 @@ const std::string get_service_agent() {
 // Returns the relevant status code for the request protocol.
 // gRPC is a protocol on top of HTTP, so HTTP errors take priority.
 unsigned int get_status_code(const ReportRequestInfo& info) {
-  if (info.http_response_code == 200 &&
-      info.frontend_protocol == protocol::Protocol::GRPC) {
-    return Envoy::Grpc::Utility::grpcToHttpStatus(info.grpc_response_code);
+  if (info.grpc_response_code.has_value()) {
+    return Envoy::Grpc::Utility::grpcToHttpStatus(
+        info.grpc_response_code.value());
   }
   return info.http_response_code;
 }
@@ -910,10 +910,10 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
         info.status.error_message().as_string());
   }
 
-  if (info.http_response_code == 200 &&
-      info.frontend_protocol == protocol::Protocol::GRPC) {
+  if (info.grpc_response_code.has_value()) {
     const std::string grpc_status_string =
-        Envoy::Grpc::Utility::grpcStatusToString(info.grpc_response_code);
+        Envoy::Grpc::Utility::grpcStatusToString(
+            info.grpc_response_code.value());
     (*fields)[kLogFieldNameGrpcStatusCode].set_string_value(grpc_status_string);
   }
 }

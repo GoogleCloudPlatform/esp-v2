@@ -15,6 +15,9 @@ envoy_basic_cc_library(
     hdrs = [
         "request_info.h",
     ],
+    deps = [
+        "@com_google_absl//absl/types:optional",
+    ],
 )
 
 envoy_basic_cc_library(
