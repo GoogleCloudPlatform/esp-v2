@@ -90,9 +90,9 @@ build-envoy-debug:
 
 build-grpc-echo:
 	@echo "--> building grpc-echo"
-	@bazel build  //tests/endpoints/grpc_echo:grpc-test-client --incompatible_no_support_tools_in_action_inputs=false
-	@bazel build  //tests/endpoints/grpc_echo:grpc-test-server --incompatible_no_support_tools_in_action_inputs=false
-	@bazel build  //tests/endpoints/grpc_echo:grpc-test_descriptor --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build  //tests/endpoints/grpc_echo:grpc-test-client
+	@bazel build  //tests/endpoints/grpc_echo:grpc-test-server
+	@bazel build  //tests/endpoints/grpc_echo:grpc-test_descriptor
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-client bin/grpc_echo_client
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-server bin/grpc_echo_server
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
@@ -100,7 +100,7 @@ build-grpc-echo:
 build-grpc-bookstore:
 	@echo "--> building bookstore-grpc"
 	@echo "Notice: please make sure to temporarily delete tests/endpoints/bookstore_grpc/BUILD in order to run this command"
-	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
+	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor
 	@cp -f bazel-bin/tests/endpoints/bookstore_grpc/proto/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
 	@bazel build @com_google_protobuf//:protoc
 	@bazel-bin/external/com_google_protobuf/protoc -I tests/endpoints/bookstore_grpc/proto/v1 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_github_googleapis_googleapis \
