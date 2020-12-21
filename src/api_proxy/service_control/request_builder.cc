@@ -776,7 +776,6 @@ constexpr char kLogFieldNameConfigId[] = "service_config_id";
 constexpr char kLogFieldNameTimestamp[] = "timestamp";
 constexpr char kLogFieldNameApiKeyState[] = "api_key_state";
 constexpr char kLogFieldNameResponseCodeDetail[] = "response_code_detail";
-;
 constexpr char kLogFieldNameHttpStatusCode[] = "http_status_code";
 constexpr char kLogFieldNameGrpcStatusCode[] = "grpc_status_code";
 
