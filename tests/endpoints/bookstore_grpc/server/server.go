@@ -365,3 +365,10 @@ func (s *BookstoreServerV1Impl) DeleteBook(ctx context.Context, req *bspbv1.Dele
 	// FIXME: this should return an error, but tests assume it will be OK
 	return &bspbv1.Empty{}, nil
 }
+
+func (s *BookstoreServerV1Impl) ReturnBadStatus(ctx context.Context, req *bspbv1.Empty) (*bspbv1.Empty, error) {
+	if err := testDecorator(ctx); err != nil {
+		return nil, err
+	}
+	return nil, status.New(74, "Returning a non-canonical status code").Err()
+}
