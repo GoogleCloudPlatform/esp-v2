@@ -70,6 +70,11 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.DeleteBookRequest",
 						ResponseTypeUrl: "type.googleapis.com/google.protobuf.Empty",
 					},
+					{
+						Name:            "ReturnBadStatus",
+						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
+						ResponseTypeUrl: "type.googleapis.com/google.protobuf.Empty",
+					},
 				},
 				Version: "1.0.0",
 			},

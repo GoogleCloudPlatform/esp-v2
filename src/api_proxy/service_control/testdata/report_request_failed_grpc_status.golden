@@ -2,6 +2,7 @@ service_name: "test_service"
 operations {
   operation_id: "operation_id"
   operation_name: "operation_name"
+  consumer_id: "api_key:api_key_x"
   start_time {
     seconds: 100000
     nanos: 100000
@@ -12,7 +13,7 @@ operations {
   }
   labels {
     key: "/credential_id"
-    value: "jwtauth:issuer=YXV0aC1pc3N1ZXI&audience=YXV0aC1hdWRpZW5jZQ"
+    value: "apikey:api_key_x"
   }
   labels {
     key: "/error_type"
@@ -20,7 +21,7 @@ operations {
   }
   labels {
     key: "/protocol"
-    value: "http"
+    value: "grpc"
   }
   labels {
     key: "/referer"
@@ -28,7 +29,7 @@ operations {
   }
   labels {
     key: "/response_code"
-    value: "401"
+    value: "404"
   }
   labels {
     key: "/response_code_class"
@@ -36,7 +37,7 @@ operations {
   }
   labels {
     key: "/status_code"
-    value: "7"
+    value: "0"
   }
   labels {
     key: "cloud.googleapis.com/location"
@@ -63,9 +64,41 @@ operations {
     value: "api-version"
   }
   metric_value_sets {
+    metric_name: "serviceruntime.googleapis.com/api/consumer/request_count"
+    metric_values {
+      int64_value: 1
+    }
+  }
+  metric_value_sets {
     metric_name: "serviceruntime.googleapis.com/api/producer/request_count"
     metric_values {
       int64_value: 1
+    }
+  }
+  metric_value_sets {
+    metric_name: "serviceruntime.googleapis.com/api/consumer/request_sizes"
+    metric_values {
+      distribution_value {
+        count: 1
+        mean: 100
+        minimum: 100
+        maximum: 100
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 1
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        exponential_buckets {
+          num_finite_buckets: 8
+          growth_factor: 10
+          scale: 1
+        }
+      }
     }
   }
   metric_value_sets {
@@ -84,6 +117,32 @@ operations {
         bucket_counts: 0
         bucket_counts: 0
         bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        exponential_buckets {
+          num_finite_buckets: 8
+          growth_factor: 10
+          scale: 1
+        }
+      }
+    }
+  }
+  metric_value_sets {
+    metric_name: "serviceruntime.googleapis.com/api/consumer/response_sizes"
+    metric_values {
+      distribution_value {
+        count: 1
+        mean: 1048576
+        minimum: 1048576
+        maximum: 1048576
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 1
         bucket_counts: 0
         bucket_counts: 0
         exponential_buckets {
@@ -116,6 +175,53 @@ operations {
           num_finite_buckets: 8
           growth_factor: 10
           scale: 1
+        }
+      }
+    }
+  }
+  metric_value_sets {
+    metric_name: "serviceruntime.googleapis.com/api/consumer/total_latencies"
+    metric_values {
+      distribution_value {
+        count: 1
+        mean: 0.123
+        minimum: 0.123
+        maximum: 0.123
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 1
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        bucket_counts: 0
+        exponential_buckets {
+          num_finite_buckets: 29
+          growth_factor: 2
+          scale: 1e-06
         }
       }
     }
@@ -264,9 +370,15 @@ operations {
   log_entries {
     struct_payload {
       fields {
+        key: "api_key"
+        value {
+          string_value: "api_key_x"
+        }
+      }
+      fields {
         key: "api_key_state"
         value {
-          string_value: "NOT CHECKED"
+          string_value: "VERIFIED"
         }
       }
       fields {
@@ -288,9 +400,15 @@ operations {
         }
       }
       fields {
+        key: "grpc_status_code"
+        value {
+          string_value: "NotFound"
+        }
+      }
+      fields {
         key: "http_status_code"
         value {
-          number_value: 401
+          number_value: 200
         }
       }
       fields {
@@ -344,13 +462,13 @@ operations {
     severity: ERROR
     http_request {
       request_size: 100
-      status: 401
+      status: 404
       response_size: 1048576
       referer: "referer"
       latency {
         nanos: 123000000
       }
-      protocol: "http"
+      protocol: "grpc"
     }
   }
 }

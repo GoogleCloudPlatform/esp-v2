@@ -114,6 +114,8 @@ results {
 				LogMessage:        "endpoints.examples.bookstore.Bookstore.Unspecified is called",
 				StatusCode:        "0",
 				ResponseCode:      200,
+				HttpStatusCode:    200,
+				GrpcStatusCode:    "OK",
 				Platform:          util.GCE,
 				Location:          "test-zone",
 			},

@@ -218,6 +218,11 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 			Shelf: 100,
 		}
 		respMsg, err = cli.GetShelf(ctx, req)
+	case "GetShelfInvalid":
+		req := &bspbv1.GetShelfRequest{
+			Shelf: -1,
+		}
+		respMsg, err = cli.GetShelf(ctx, req)
 	case "CreateBook":
 		req := &bspbv1.CreateBookRequest{
 			Shelf: 200,
@@ -230,6 +235,9 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 	case "DeleteShelf":
 		req := &bspbv1.DeleteShelfRequest{}
 		respMsg, err = cli.DeleteShelf(ctx, req)
+	case "ReturnBadStatus":
+		req := &bspbv1.Empty{}
+		respMsg, err = cli.ReturnBadStatus(ctx, req)
 	default:
 		return "", fmt.Errorf("unexpected method called")
 	}

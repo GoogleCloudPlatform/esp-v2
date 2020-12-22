@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 // rpcStatus is a type, used to parse the json format of google.rpc.Status,
@@ -42,8 +43,16 @@ func RpcStatusDeterministicJsonFormat(jsonBytes []byte) string {
 }
 
 // DoWithHeaders performs a GET/POST/PUT/DELETE/PATCH request to a specified url
-// with given headers and message(if provided)
+// with given headers and message(if provided).
 func DoWithHeaders(url, method, message string, headers map[string]string) (http.Header, []byte, error) {
+	return DoWithHeadersAndTimeout(url, method, message, headers, 0)
+}
+
+// DoWithHeadersAndTimeout performs a GET/POST/PUT/DELETE/PATCH request to a
+// specified url with given headers and message(if provided).
+// If a non-0 timeout is provided, the client will cancel the request when the
+// time limit is reached.
+func DoWithHeadersAndTimeout(url, method, message string, headers map[string]string, timeout time.Duration) (http.Header, []byte, error) {
 	var request *http.Request
 	var err error
 	if method == "DELETE" || method == "GET" {
@@ -74,7 +83,9 @@ func DoWithHeaders(url, method, message string, headers map[string]string) (http
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
-		}}
+		},
+		Timeout: timeout,
+	}
 
 	resp, err := client.Do(request)
 	if err != nil {

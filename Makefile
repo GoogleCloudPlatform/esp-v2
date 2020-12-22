@@ -99,7 +99,6 @@ build-grpc-echo:
 
 build-grpc-bookstore:
 	@echo "--> building bookstore-grpc"
-	@echo "Notice: please make sure to temporarily delete tests/endpoints/bookstore_grpc/BUILD in order to run this command"
 	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor --incompatible_no_support_tools_in_action_inputs=false
 	@cp -f bazel-bin/tests/endpoints/bookstore_grpc/proto/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
 	@bazel build @com_google_protobuf//:protoc
