@@ -57,7 +57,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			httpMethod:    "GET",
 			method:        "/noexistoperation?key=api-key",
-			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"Request `GET /noexistoperation?key=api-key` is not defined by this API.\"}",
+			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -77,7 +77,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:             util.GCE,
 					Location:             "test-zone",
 					BackendProtocol:      "grpc",
-					ResponseCodeDetail:   "service_control_undefined_request",
+					ResponseCodeDetail:   "direct_response",
 				},
 			},
 		},
@@ -86,7 +86,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			httpMethod:    "GET",
 			method:        "/noexistoperation",
-			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"Request `GET /noexistoperation` is not defined by this API.\"}",
+			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -105,7 +105,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:           util.GCE,
 					Location:           "test-zone",
 					BackendProtocol:    "grpc",
-					ResponseCodeDetail: "service_control_undefined_request",
+					ResponseCodeDetail: "direct_response",
 				},
 			},
 		},
@@ -175,7 +175,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	for _, tc := range testData {
 		_, err := client.MakeCall("http", tc.url, tc.httpMethod, tc.method, tc.token, nil)
 		if err == nil || !strings.Contains(err.Error(), tc.httpCallError) {
-			t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
+			t.Errorf("Test (%s): failed, different http errors, \nexpected: %v,\ngot: %v", tc.desc, tc.httpCallError, err)
 		}
 
 		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))

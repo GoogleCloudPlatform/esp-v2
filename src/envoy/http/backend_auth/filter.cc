@@ -53,6 +53,8 @@ const Envoy::Http::LowerCaseString kXForwardedAuthorization{
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // Make sure route is calculated
   auto route = decoder_callbacks_->route();
+
+  // This shouldn't happen as the fallback wildcard route match should catch the `Not Found` case.
   if (route == nullptr || route->routeEntry() == nullptr) {
     config_->stats().denied_by_no_route_.inc();
 

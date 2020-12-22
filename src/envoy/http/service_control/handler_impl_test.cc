@@ -333,8 +333,8 @@ MATCHER_P(MatchesDataReportInfo, expect, Envoy::EMPTY_STRING) {
 }
 
 TEST_F(HandlerTest, HandlerNoOperationFound) {
-  // Test: If no operation is found, check should 404 and report should be
-  // called.
+  // Test: If no operation is found, the request will be passed through without
+  // check and report should be called.
 
   // Note: The operation is set in mock_stream_info_.filter_state_. This test
   // should not set that value.
@@ -342,11 +342,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
 
-  EXPECT_CALL(
-      mock_check_done_callback_,
-      onCheckDone(Status(Code::NOT_FOUND,
-                         "Request `GET /echo` is not defined by this API."),
-                  "service_control_undefined_request"));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
@@ -360,14 +356,11 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
   handler.callReport(&headers, &resp_headers_, &resp_trailer_);
-
-  // Stats.
-  checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
 TEST_F(HandlerTest, HandlerMissingHeaders) {
-  // Test: If the request is missing :method and :path headers,
-  // report should still be created without crashes.
+  // Test: If the request is missing :method and :path headers,the request will be passed through without
+// check and report should be called.
 
   // Note: This test builds off of `HandlerNoOperationFound` to keep mocks
   // simple
@@ -375,10 +368,7 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
-  EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND,
-                                 "Request ` ` is not defined by this API."),
-                          "service_control_undefined_request"));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(req_headers_, *mock_span_, mock_check_done_callback_);
 
@@ -397,17 +387,13 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 }
 
 TEST_F(HandlerTest, HandlerNoRequirementMatched) {
-  // Test: If no requirement is matched for the operation, check should 404
-  // and report should do nothing
+  // Test: If no requirement is matched for the operation, the request will be passed through without
+  // check and report should be called.
   setPerRouteOperation("bad-operation-name");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
-  EXPECT_CALL(
-      mock_check_done_callback_,
-      onCheckDone(Status(Code::NOT_FOUND,
-                         "Request `GET /echo` is not defined by this API."),
-                  "service_control_undefined_request"));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 

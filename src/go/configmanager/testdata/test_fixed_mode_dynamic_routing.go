@@ -658,6 +658,20 @@ var (
                           "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
                         }
                       }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownMethod"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The request is not defined by this API."
+                        },
+                        "status": 404
+                      },
+                      "match": {
+                        "prefix": ""
+                      }
                     }
                   ]
                 }

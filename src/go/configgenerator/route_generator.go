@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
@@ -262,27 +263,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 		}
 
 		for _, routeMatcher := range routeMatchers {
-			r := routepb.Route{
-				Match: routeMatcher,
-				Action: &routepb.Route_Route{
-					Route: &routepb.RouteAction{
-						ClusterSpecifier: &routepb.RouteAction_Cluster{
-							Cluster: method.BackendInfo.ClusterName,
-						},
-						Timeout: ptypes.DurationProto(respTimeout),
-						RetryPolicy: &routepb.RetryPolicy{
-							RetryOn: method.BackendInfo.RetryOns,
-							NumRetries: &wrapperspb.UInt32Value{
-								Value: uint32(method.BackendInfo.RetryNum),
-							},
-						},
-					},
-				},
-				Decorator: &routepb.Decorator{
-					// Note we don't add ApiName to reduce the length of the span name.
-					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
-				},
-			}
+			r := makeRoute(routeMatcher, method, respTimeout)
 
 			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
 			if err != nil {
@@ -306,13 +287,62 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 					},
 				}
 			}
-			backendRoutes = append(backendRoutes, &r)
+			backendRoutes = append(backendRoutes, r)
 
-			jsonStr, _ := util.ProtoToJson(&r)
+			jsonStr, _ := util.ProtoToJson(r)
 			glog.Infof("adding route: %v", jsonStr)
 		}
 	}
+
+	backendRoutes = append(backendRoutes, makeCatchAllUnmatchedRoute())
 	return backendRoutes, nil
+}
+
+func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, respTimeout time.Duration) *routepb.Route {
+	return &routepb.Route{
+		Match: routeMatcher,
+		Action: &routepb.Route_Route{
+			Route: &routepb.RouteAction{
+				ClusterSpecifier: &routepb.RouteAction_Cluster{
+					Cluster: method.BackendInfo.ClusterName,
+				},
+				Timeout: ptypes.DurationProto(respTimeout),
+				RetryPolicy: &routepb.RetryPolicy{
+					RetryOn: method.BackendInfo.RetryOns,
+					NumRetries: &wrapperspb.UInt32Value{
+						Value: uint32(method.BackendInfo.RetryNum),
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			// Note we don't add ApiName to reduce the length of the span name.
+			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
+		},
+	}
+}
+
+func makeCatchAllUnmatchedRoute() *routepb.Route {
+	return &routepb.Route{
+		Match: &routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Prefix{
+				Prefix: "",
+			},
+		},
+		Action: &routepb.Route_DirectResponse{
+			DirectResponse: &routepb.DirectResponseAction{
+				Status: http.StatusNotFound,
+				Body: &corepb.DataSource{
+					Specifier: &corepb.DataSource_InlineString{
+						InlineString: `The request is not defined by this API.`,
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UnknownMethod"),
+		},
+	}
 }
 
 func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {

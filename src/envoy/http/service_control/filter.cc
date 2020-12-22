@@ -62,7 +62,10 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   // Make sure route is calculated
   auto route = decoder_callbacks_->route();
+
+  // This shouldn't happen as the fallback wildcard route match should catch the `Not Found` case.
   if (route == nullptr) {
+    stats_.filter_.denied_by_no_route_.inc();
     rejectRequest(
         Envoy::Http::Code::NotFound,
         absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
