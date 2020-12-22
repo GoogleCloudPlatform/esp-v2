@@ -43,8 +43,10 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	testData := []struct {
 		desc           string
 		url            string
+		clientProtocol string
 		httpMethod     string
 		method         string
+		headers        http.Header
 		token          string
 		requestHeader  map[string]string
 		message        string
@@ -55,6 +57,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		{
 			desc:          "Request with API Key does not match any operation. SC does report with untrusted API Key.",
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+				clientProtocol: "http",
 			httpMethod:    "GET",
 			method:        "/noexistoperation?key=api-key",
 			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
@@ -77,13 +80,14 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:             util.GCE,
 					Location:             "test-zone",
 					BackendProtocol:      "grpc",
-					ResponseCodeDetail:   "direct_response",
+					ResponseCodeDetail:   "service_control_undefined_request",
 				},
 			},
 		},
 		{
 			desc:          "Request withOUT API Key does not match any operation. SC does report withOUT API Key.",
 			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+				clientProtocol: "http",
 			httpMethod:    "GET",
 			method:        "/noexistoperation",
 			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
@@ -105,16 +109,17 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:           util.GCE,
 					Location:           "test-zone",
 					BackendProtocol:    "grpc",
-					ResponseCodeDetail: "direct_response",
+					ResponseCodeDetail: "service_control_undefined_request",
 				},
 			},
 		},
 		{
-			desc:          "For the request failed in Jwt Authn filter, return \"Unauthorized\" status and send report",
-			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
-			httpMethod:    "GET",
-			method:        "/v1/shelves?key=api-key",
-			httpCallError: `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
+			desc:           "For the request failed in Jwt Authn filter, return \"Unauthorized\" status and send report",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			httpCallError:  `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -141,12 +146,13 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			},
 		},
 		{
-			desc:          "For the request without api key but required to have, return \"Unauthorized\" status and send report",
-			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
-			token:         testdata.Es256Token,
-			httpMethod:    "GET",
-			method:        "/v1/shelves/0/books/0",
-			httpCallError: `401 Unauthorized, {"code":401,"message":"UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."}`,
+			desc:           "For the request without api key but required to have, return \"Unauthorized\" status and send report",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			token:          testdata.Es256Token,
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves/0/books/0",
+			httpCallError:  `401 Unauthorized, {"code":401,"message":"UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:            utils.ESPv2Version(),
@@ -171,17 +177,99 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc:           "gRPC backend returns canonical rpc status code",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "grpc",
+			headers:        http.Header{"x-api-key": []string{"api-key"}},
+			method:         "GetShelfInvalid",
+			httpCallError:  `code = NotFound`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "endpoints.examples.bookstore.Bookstore.GetShelf",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedReport{
+					Version:                      utils.ESPv2Version(),
+					ServiceName:                  "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:              "test-config-id",
+					URL:                          "/endpoints.examples.bookstore.Bookstore/GetShelf",
+					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.GetShelf",
+					ApiName:                      "endpoints.examples.bookstore.Bookstore",
+					ApiVersion:                   "1.0.0",
+					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiKeyState:                  "VERIFIED",
+					ProducerProjectID:            "producer project",
+					ConsumerProjectID:            "123456",
+					FrontendProtocol:             "grpc",
+					HttpMethod:                   "POST",
+					LogMessage:                   "endpoints.examples.bookstore.Bookstore.GetShelf is called",
+					StatusCode:                   "0",
+					// Final status code reflects converted gRPC status.
+					ResponseCode:   404,
+					HttpStatusCode: 200,
+					GrpcStatusCode: "NotFound",
+					Platform:       util.GCE,
+					Location:       "test-zone",
+				},
+			},
+		},
+		{
+			desc:           "gRPC backend returns NON-canonical rpc status code",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "grpc",
+			headers:        http.Header{"x-api-key": []string{"api-key"}},
+			method:         "ReturnBadStatus",
+			httpCallError:  `code = Code(74)`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "endpoints.examples.bookstore.Bookstore.ReturnBadStatus",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedReport{
+					Version:                      utils.ESPv2Version(),
+					ServiceName:                  "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:              "test-config-id",
+					URL:                          "/endpoints.examples.bookstore.Bookstore/ReturnBadStatus",
+					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.ReturnBadStatus",
+					ApiName:                      "endpoints.examples.bookstore.Bookstore",
+					ApiVersion:                   "1.0.0",
+					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiKeyState:                  "VERIFIED",
+					ProducerProjectID:            "producer project",
+					ConsumerProjectID:            "123456",
+					FrontendProtocol:             "grpc",
+					HttpMethod:                   "POST",
+					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ReturnBadStatus is called",
+					StatusCode:                   "0",
+					// Final status code falls back to HTTP status because gRPC status code is non canonical.
+					ResponseCode: 200,
+					Platform:     util.GCE,
+					Location:     "test-zone",
+				},
+			},
+		},
 	}
 	for _, tc := range testData {
-		_, err := client.MakeCall("http", tc.url, tc.httpMethod, tc.method, tc.token, nil)
-		if err == nil || !strings.Contains(err.Error(), tc.httpCallError) {
-			t.Errorf("Test (%s): failed, different http errors, \nexpected: %v,\ngot: %v", tc.desc, tc.httpCallError, err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := client.MakeCall(tc.clientProtocol, tc.url, tc.httpMethod, tc.method, tc.token, tc.headers)
+			if err == nil || !strings.Contains(err.Error(), tc.httpCallError) {
+				t.Errorf("Test (%s): failed,  expected Http call error: %v, got: %v", tc.desc, tc.httpCallError, err)
+			}
 
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
-		if err1 != nil {
-			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
-		}
-		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
+			scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+			if err1 != nil {
+				t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
+			}
+			utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
+		})
 	}
 }

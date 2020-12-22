@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/types/optional.h"
 #include "google/api/quota.pb.h"
 #include "google/protobuf/stubs/status.h"
 
@@ -199,8 +200,12 @@ struct QuotaResponseInfo {
 
 // Information to fill Report request protobuf.
 struct ReportRequestInfo : public OperationInfo {
-  // The HTTP response code.
-  unsigned int response_code;
+  // The HTTP response code, in the 1xx to 5xx range or 0 if not set.
+  unsigned int http_response_code;
+
+  // The gRPC response code, in the canonical RPC code range.
+  // Only valid when frontend protocol is gRPC.
+  absl::optional<::google::protobuf::util::error::Code> grpc_response_code;
 
   // The response status.
   ::google::protobuf::util::Status status;
@@ -257,7 +262,7 @@ struct ReportRequestInfo : public OperationInfo {
   std::string response_code_detail;
 
   ReportRequestInfo()
-      : response_code(200),
+      : http_response_code(0),
         request_size(-1),
         response_size(-1),
         frontend_protocol(protocol::UNKNOWN),

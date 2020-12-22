@@ -19,19 +19,23 @@
 
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
+#include "absl/types/optional.h"
 #include "api/envoy/v9/http/service_control/config.pb.h"
 #include "common/common/logger.h"
+#include "common/grpc/common.h"
 #include "common/http/header_utility.h"
 #include "common/http/utility.h"
 #include "envoy/http/header_map.h"
 #include "envoy/server/filter_config.h"
 #include "extensions/filters/http/well_known_names.h"
+#include "external/envoy/include/envoy/grpc/_virtual_includes/status/envoy/grpc/status.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
 using ::espv2::api::envoy::v9::http::service_control::ApiKeyLocation;
 using ::espv2::api::envoy::v9::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LatencyInfo;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
+using ::google::protobuf::util::error::Code;
 
 namespace espv2 {
 namespace envoy {
@@ -291,6 +295,39 @@ bool extractAPIKey(
     }
   }
   return false;
+}
+
+void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
+                const Envoy::Http::ResponseTrailerMap* response_trailers,
+                const Envoy::StreamInfo::StreamInfo& stream_info,
+                ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
+  // When response code is missing, we want to set to a value that makes it
+  // obvious, so 0.
+  info.http_response_code = stream_info.responseCode().value_or(0);
+
+  if (info.http_response_code != 200 ||
+      info.frontend_protocol != Protocol::GRPC) {
+    return;
+  }
+
+  absl::optional<Envoy::Grpc::Status::GrpcStatus> status;
+  if (response_trailers) {
+    // grpc-status should be in the trailers.
+    status = Envoy::Grpc::Common::getGrpcStatus(*response_trailers, false);
+  }
+  if (!status.has_value() && response_headers) {
+    // Envoy http2 codec treats trailers-only response as headers-only response.
+    status = Envoy::Grpc::Common::getGrpcStatus(*response_headers, false);
+  }
+  if (!status.has_value()) {
+    return;
+  }
+
+  if (status.value() == Envoy::Grpc::Status::WellKnownGrpcStatus::InvalidCode) {
+    return;
+  }
+
+  info.grpc_response_code = static_cast<Code>(status.value());
 }
 
 }  // namespace service_control

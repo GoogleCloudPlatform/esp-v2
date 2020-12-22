@@ -338,8 +338,7 @@ void ServiceControlHandlerImpl::callReport(
   }
 
   fillLatency(stream_info_, info.latency, filter_stats_);
-
-  info.response_code = stream_info_.responseCode().value_or(500);
+  fillStatus(response_headers, response_trailers, stream_info_, info);
 
   info.request_size = stream_info_.bytesReceived() + request_header_size_;
 

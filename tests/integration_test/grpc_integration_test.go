@@ -124,22 +124,31 @@ func TestGRPC(t *testing.T) {
 			method:         "/v1/shelves/200?key=api_key&foo=bar",
 			wantError:      "503 Service Unavailable", // Transcoder does not send an application/grpc to the backend
 		},
+		{
+			desc:           "gRPC client calling gRPC backend, backend returns gRPC error",
+			clientProtocol: "grpc",
+			method:         "GetShelfInvalid",
+			header:         http.Header{"x-api-key": []string{"api-key"}},
+			wantError:      `code = NotFound`,
+		},
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
-		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-			t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
+			}
 
-		if tc.wantError == "" && err != nil {
-			t.Errorf("Test (%s): got unexpected error: %s", tc.desc, resp)
-		}
+			if tc.wantError == "" && err != nil {
+				t.Errorf("Test (%s): got unexpected error: %s", tc.desc, resp)
+			}
 
-		if !strings.Contains(resp, tc.wantResp) {
-			t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
-		}
+			if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			}
+		})
 	}
 }
 

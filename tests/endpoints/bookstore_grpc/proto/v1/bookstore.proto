@@ -121,6 +121,9 @@ service Bookstore {
       delete: "/v1/shelves/{shelf}/books/{book}"
     };
   }
+
+  // Returns a user-defined non-canonical grpc status code.
+  rpc ReturnBadStatus(Empty) returns (Empty) {}
 }
 
 message Empty{}
