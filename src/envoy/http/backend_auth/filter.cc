@@ -95,6 +95,10 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   const Envoy::Http::HeaderEntry* existAuthToken =
       headers.getInline(authorization_handle.handle());
   if (existAuthToken != nullptr) {
+    // b/176165002: Clear out pre-existing header to prevent backends from
+    // unintentionally using the wrong value.
+    headers.remove(kXForwardedAuthorization);
+
     headers.addCopy(kXForwardedAuthorization,
                     existAuthToken->value().getStringView());
   }
