@@ -347,13 +347,13 @@ func makeCatchAllUnmatchedRoute() *routepb.Route {
 				Status: http.StatusNotFound,
 				Body: &corepb.DataSource{
 					Specifier: &corepb.DataSource_InlineString{
-						InlineString: `The request is not defined by this API.`,
+						InlineString: `The current request is not defined by this API.`,
 					},
 				},
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UnknownMethod"),
+			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UndefinedMethod"),
 		},
 	}
 }

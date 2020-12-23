@@ -1004,11 +1004,11 @@ func TestMakeListeners(t *testing.T) {
                   "routes": [
                     {
                       "decorator": {
-                        "operation": "ingress UnknownMethod"
+                        "operation": "ingress UndefinedMethod"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The request is not defined by this API."
+                          "inlineString": "The current request is not defined by this API."
                         },
                         "status": 404
                       },

@@ -61,7 +61,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation?key=api-key",
-			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The current request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -91,7 +91,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation",
-			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The current request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),

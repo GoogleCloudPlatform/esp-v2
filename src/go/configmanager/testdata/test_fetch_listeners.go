@@ -183,11 +183,11 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UnknownMethod"
+                                  "operation": "ingress UndefinedMethod"
                                 },
                                 "directResponse": {
                                   "body": {
-                                    "inlineString": "The request is not defined by this API."
+                                    "inlineString": "The current request is not defined by this API."
                                   },
                                   "status": 404
                                 },
@@ -407,11 +407,11 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UnknownMethod"
+                                  "operation": "ingress UndefinedMethod"
                                 },
                                 "directResponse": {
                                   "body": {
-                                    "inlineString": "The request is not defined by this API."
+                                    "inlineString": "The current request is not defined by this API."
                                   },
                                   "status": 404
                                 },
@@ -791,11 +791,11 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UnknownMethod"
+                                  "operation": "ingress UndefinedMethod"
                                 },
                                 "directResponse": {
                                   "body": {
-                                    "inlineString": "The request is not defined by this API."
+                                    "inlineString": "The current request is not defined by this API."
                                   },
                                   "status": 404
                                 },
@@ -1175,11 +1175,11 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UnknownMethod"
+                                  "operation": "ingress UndefinedMethod"
                                 },
                                 "directResponse": {
                                   "body": {
-                                    "inlineString": "The request is not defined by this API."
+                                    "inlineString": "The current request is not defined by this API."
                                   },
                                   "status": 404
                                 },
@@ -1566,11 +1566,11 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UnknownMethod"
+                                  "operation": "ingress UndefinedMethod"
                                 },
                                 "directResponse": {
                                   "body": {
-                                    "inlineString": "The request is not defined by this API."
+                                    "inlineString": "The current request is not defined by this API."
                                   },
                                   "status": 404
                                 },
@@ -1847,11 +1847,11 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UnknownMethod"
+                                  "operation": "ingress UndefinedMethod"
                                 },
                                 "directResponse": {
                                   "body": {
-                                    "inlineString": "The request is not defined by this API."
+                                    "inlineString": "The current request is not defined by this API."
                                   },
                                   "status": 404
                                 },
@@ -2098,11 +2098,11 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UnknownMethod"
+                                  "operation": "ingress UndefinedMethod"
                                 },
                                 "directResponse": {
                                   "body": {
-                                    "inlineString": "The request is not defined by this API."
+                                    "inlineString": "The current request is not defined by this API."
                                   },
                                   "status": 404
                                 },
