@@ -183,7 +183,7 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UndefinedMethod"
+                                  "operation": "ingress UnknownOperationName"
                                 },
                                 "directResponse": {
                                   "body": {
@@ -407,7 +407,7 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UndefinedMethod"
+                                  "operation": "ingress UnknownOperationName"
                                 },
                                 "directResponse": {
                                   "body": {
@@ -791,7 +791,7 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UndefinedMethod"
+                                  "operation": "ingress UnknownOperationName"
                                 },
                                 "directResponse": {
                                   "body": {
@@ -1175,7 +1175,7 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UndefinedMethod"
+                                  "operation": "ingress UnknownOperationName"
                                 },
                                 "directResponse": {
                                   "body": {
@@ -1566,7 +1566,7 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UndefinedMethod"
+                                  "operation": "ingress UnknownOperationName"
                                 },
                                 "directResponse": {
                                   "body": {
@@ -1847,7 +1847,7 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UndefinedMethod"
+                                  "operation": "ingress UnknownOperationName"
                                 },
                                 "directResponse": {
                                   "body": {
@@ -2098,7 +2098,7 @@ var (
                               },
                               {
                                 "decorator": {
-                                  "operation": "ingress UndefinedMethod"
+                                  "operation": "ingress UnknownOperationName"
                                 },
                                 "directResponse": {
                                   "body": {

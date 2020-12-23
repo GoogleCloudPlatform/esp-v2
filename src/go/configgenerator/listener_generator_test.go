@@ -1004,7 +1004,7 @@ func TestMakeListeners(t *testing.T) {
                   "routes": [
                     {
                       "decorator": {
-                        "operation": "ingress UndefinedMethod"
+                        "operation": "ingress UnknownOperationName"
                       },
                       "directResponse": {
                         "body": {

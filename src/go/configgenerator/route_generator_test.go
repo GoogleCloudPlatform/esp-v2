@@ -150,7 +150,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -307,7 +307,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -409,7 +409,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -574,7 +574,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -811,7 +811,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -1135,7 +1135,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -1345,7 +1345,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -1579,7 +1579,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -1682,7 +1682,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -1834,7 +1834,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {
@@ -2266,7 +2266,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UndefinedMethod"
+            "operation": "ingress UnknownOperationName"
           },
           "directResponse": {
             "body": {

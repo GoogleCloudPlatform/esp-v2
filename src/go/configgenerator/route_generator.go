@@ -353,7 +353,7 @@ func makeCatchAllUnmatchedRoute() *routepb.Route {
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UndefinedMethod"),
+			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UnknownOperationName"),
 		},
 	}
 }
