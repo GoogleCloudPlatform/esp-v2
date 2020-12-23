@@ -16,6 +16,7 @@ package integration_test
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -33,7 +34,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
-	s := env.NewTestEnv(platform.TestServiceControlFailedRequestReport, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlAccessTokenFromIam, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
@@ -55,12 +56,12 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		wantScRequests []interface{}
 	}{
 		{
-			desc:          "Request with API Key does not match any operation. SC does report with untrusted API Key.",
-			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
-				clientProtocol: "http",
-			httpMethod:    "GET",
-			method:        "/noexistoperation?key=api-key",
-			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
+			desc:           "Request with API Key does not match any operation. SC does report with untrusted API Key.",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/noexistoperation?key=api-key",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -80,17 +81,17 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:             util.GCE,
 					Location:             "test-zone",
 					BackendProtocol:      "grpc",
-					ResponseCodeDetail:   "service_control_undefined_request",
+					ResponseCodeDetail:   "route_not_found",
 				},
 			},
 		},
 		{
-			desc:          "Request withOUT API Key does not match any operation. SC does report withOUT API Key.",
-			url:           fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
-				clientProtocol: "http",
-			httpMethod:    "GET",
-			method:        "/noexistoperation",
-			httpCallError: "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
+			desc:           "Request withOUT API Key does not match any operation. SC does report withOUT API Key.",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/noexistoperation",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -109,7 +110,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:           util.GCE,
 					Location:           "test-zone",
 					BackendProtocol:    "grpc",
-					ResponseCodeDetail: "service_control_undefined_request",
+					ResponseCodeDetail: "route_not_found",
 				},
 			},
 		},

@@ -176,9 +176,16 @@ void ServiceControlHandlerImpl::prepareReportRequest(
 void ServiceControlHandlerImpl::callCheck(
     Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
     CheckDoneCallback& callback) {
-  // Don't have per-route config so pass through the request, regarded as the unknown method.
+  // NOTE: this shouldn't happen in practice because the request will be passed
+  // through with no route matched.
   if (!isConfigured()) {
-    callback.onCheckDone(Status::OK, "");
+    filter_stats_.filter_.denied_producer_error_.inc();
+    callback.onCheckDone(
+        Status(Code::NOT_FOUND,
+               absl::StrCat("Request `", http_method_, " ", path_,
+                            "` is not defined by this API.")),
+        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
+                                 utils::kRcDetailErrorTypeUndefinedRequest));
     return;
   }
   check_callback_ = &callback;

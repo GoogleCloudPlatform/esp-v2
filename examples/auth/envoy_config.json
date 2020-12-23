@@ -442,20 +442,6 @@
                                 "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
                               }
                             }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownMethod"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The request is not defined by this API."
-                              },
-                              "status": 404
-                            },
-                            "match": {
-                              "prefix": ""
-                            }
                           }
                         ]
                       }

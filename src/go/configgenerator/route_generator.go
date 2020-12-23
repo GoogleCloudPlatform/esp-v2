@@ -16,7 +16,6 @@ package configgenerator
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
@@ -56,13 +55,34 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	}
 	host.Routes = brRoutes
 
+	cors, corsRoute, err := makeRouteCors(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	if cors != nil {
+		host.Cors = cors
+		host.Routes = append(host.Routes, corsRoute)
+		jsonStr, _ := util.ProtoToJson(corsRoute)
+		glog.Infof("adding cors route configuration: %v", jsonStr)
+	}
+
+	virtualHosts = append(virtualHosts, &host)
+	return &routepb.RouteConfiguration{
+		Name:         routeName,
+		VirtualHosts: virtualHosts,
+	}, nil
+}
+
+func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, *routepb.Route, error) {
+	var cors *routepb.CorsPolicy
 	switch serviceInfo.Options.CorsPreset {
 	case "basic":
 		org := serviceInfo.Options.CorsAllowOrigin
 		if org == "" {
-			return nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
+			return nil, nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
 		}
-		host.Cors = &routepb.CorsPolicy{
+		cors = &routepb.CorsPolicy{
 			AllowOriginStringMatch: []*matcher.StringMatcher{
 				{
 					MatchPattern: &matcher.StringMatcher_Exact{
@@ -74,12 +94,12 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	case "cors_with_regex":
 		orgReg := serviceInfo.Options.CorsAllowOriginRegex
 		if orgReg == "" {
-			return nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
+			return nil, nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
 		}
 		if err := util.ValidateRegexProgramSize(orgReg, util.GoogleRE2MaxProgramSize); err != nil {
-			return nil, fmt.Errorf("invalid cors origin regex: %v", err)
+			return nil, nil, fmt.Errorf("invalid cors origin regex: %v", err)
 		}
-		host.Cors = &routepb.CorsPolicy{
+		cors = &routepb.CorsPolicy{
 			AllowOriginStringMatch: []*matcher.StringMatcher{
 				{
 					MatchPattern: &matcher.StringMatcher_SafeRegex{
@@ -96,56 +116,48 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	case "":
 		if serviceInfo.Options.CorsAllowMethods != "" || serviceInfo.Options.CorsAllowHeaders != "" ||
 			serviceInfo.Options.CorsExposeHeaders != "" || serviceInfo.Options.CorsAllowCredentials {
-			return nil, fmt.Errorf("cors_preset must be set in order to enable CORS support")
+			return nil, nil, fmt.Errorf("cors_preset must be set in order to enable CORS support")
 		}
 	default:
-		return nil, fmt.Errorf(`cors_preset must be either "basic" or "cors_with_regex"`)
+		return nil, nil, fmt.Errorf(`cors_preset must be either "basic" or "cors_with_regex"`)
 	}
 
-	if host.GetCors() != nil {
-		host.GetCors().AllowMethods = serviceInfo.Options.CorsAllowMethods
-		host.GetCors().AllowHeaders = serviceInfo.Options.CorsAllowHeaders
-		host.GetCors().ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
-		host.GetCors().AllowCredentials = &wrapperspb.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
-
-		// In order apply Envoy cors policy, need to have a route rule
-		// to route OPTIONS request to this host
-		corsRoute := &routepb.Route{
-			Match: &routepb.RouteMatch{
-				PathSpecifier: &routepb.RouteMatch_Prefix{
-					Prefix: "/",
-				},
-				Headers: []*routepb.HeaderMatcher{{
-					Name: ":method",
-					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-						ExactMatch: "OPTIONS",
-					},
-				}},
-			},
-			// Envoy requires to have a Route action in order to create a route
-			// for cors filter to work.
-			Action: &routepb.Route_Route{
-				Route: &routepb.RouteAction{
-					ClusterSpecifier: &routepb.RouteAction_Cluster{
-						Cluster: serviceInfo.LocalBackendClusterName(),
-					},
-				},
-			},
-			Decorator: &routepb.Decorator{
-				Operation: util.SpanNamePrefix,
-			},
-		}
-		host.Routes = append(host.Routes, corsRoute)
-
-		jsonStr, _ := util.ProtoToJson(corsRoute)
-		glog.Infof("adding cors route configuration: %v", jsonStr)
+	if cors == nil {
+		return nil, nil, nil
 	}
+	cors.AllowMethods = serviceInfo.Options.CorsAllowMethods
+	cors.AllowHeaders = serviceInfo.Options.CorsAllowHeaders
+	cors.ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
+	cors.AllowCredentials = &wrapperspb.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
 
-	virtualHosts = append(virtualHosts, &host)
-	return &routepb.RouteConfiguration{
-		Name:         routeName,
-		VirtualHosts: virtualHosts,
-	}, nil
+	// In order apply Envoy cors policy, need to have a route rule
+	// to route OPTIONS request to this host
+	corsRoute := &routepb.Route{
+		Match: &routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Prefix{
+				Prefix: "/",
+			},
+			Headers: []*routepb.HeaderMatcher{{
+				Name: ":method",
+				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+					ExactMatch: "OPTIONS",
+				},
+			}},
+		},
+		// Envoy requires to have a Route action in order to create a route
+		// for cors filter to work.
+		Action: &routepb.Route_Route{
+			Route: &routepb.RouteAction{
+				ClusterSpecifier: &routepb.RouteAction_Cluster{
+					Cluster: serviceInfo.LocalBackendClusterName(),
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: util.SpanNamePrefix,
+		},
+	}
+	return cors, corsRoute, nil
 }
 
 func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern) *prpb.PerRouteFilterConfig {
@@ -294,7 +306,6 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 		}
 	}
 
-	backendRoutes = append(backendRoutes, makeCatchAllUnmatchedRoute())
 	return backendRoutes, nil
 }
 
@@ -318,29 +329,6 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 		Decorator: &routepb.Decorator{
 			// Note we don't add ApiName to reduce the length of the span name.
 			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
-		},
-	}
-}
-
-func makeCatchAllUnmatchedRoute() *routepb.Route {
-	return &routepb.Route{
-		Match: &routepb.RouteMatch{
-			PathSpecifier: &routepb.RouteMatch_Prefix{
-				Prefix: "",
-			},
-		},
-		Action: &routepb.Route_DirectResponse{
-			DirectResponse: &routepb.DirectResponseAction{
-				Status: http.StatusNotFound,
-				Body: &corepb.DataSource{
-					Specifier: &corepb.DataSource_InlineString{
-						InlineString: `The request is not defined by this API.`,
-					},
-				},
-			},
-		},
-		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UnknownMethod"),
 		},
 	}
 }

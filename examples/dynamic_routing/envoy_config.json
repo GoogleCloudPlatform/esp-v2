@@ -395,20 +395,6 @@
                                 "operationName": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf"
                               }
                             }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownMethod"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The request is not defined by this API."
-                              },
-                              "status": 404
-                            },
-                            "match": {
-                              "prefix": ""
-                            }
                           }
                         ]
                       }

@@ -87,32 +87,16 @@ class BackendAuthFilterTest : public ::testing::Test {
   std::unique_ptr<Filter> filter_;
 };
 
-TEST_F(BackendAuthFilterTest, NoRouteRejected) {
+TEST_F(BackendAuthFilterTest, NoRoutePassThrough) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
   EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
 
-  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
-              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound));
-
-  EXPECT_CALL(
-      mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::NotFound,
-                     "Request `GET /books/1` is not defined by this API.", _, _,
-                     "backend_auth_undefined_request"));
-
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
-
-  // Stats.
-  const Envoy::Stats::CounterSharedPtr counter =
-      Envoy::TestUtility::findCounter(scope_,
-                                      "backend_auth.denied_by_no_route");
-  ASSERT_NE(counter, nullptr);
-  EXPECT_EQ(counter->value(), 1);
+  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
 TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {

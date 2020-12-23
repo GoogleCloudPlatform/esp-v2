@@ -132,31 +132,16 @@ TEST_F(FilterTest, FragmentPathHeaderBlocked) {
   EXPECT_EQ(counter->value(), 1);
 }
 
-TEST_F(FilterTest, NoRouteRejected) {
+TEST_F(FilterTest, NoRoutePassThrough) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
   EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
 
-  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
-              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound));
-  EXPECT_CALL(
-      mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::NotFound,
-                     "Request `GET /books/1` is not defined by this API.", _, _,
-                     "path_rewrite_undefined_request"));
-
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
-  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
-
-  // Stats.
-  const Envoy::Stats::CounterSharedPtr counter =
-      Envoy::TestUtility::findCounter(scope_,
-                                      "path_rewrite.denied_by_no_route");
-  EXPECT_NE(counter, nullptr);
-  EXPECT_EQ(counter->value(), 1);
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
 TEST_F(FilterTest, NotPerRouteConfigNotChanged) {

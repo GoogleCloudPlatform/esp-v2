@@ -110,16 +110,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersMissingHeaders) {
 TEST_F(ServiceControlFilterTest, MissingRoute) {
   EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
 
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
-
-  EXPECT_CALL(mock_decoder_callbacks_,
-              sendLocalReply(Envoy::Http::Code::NotFound,
-                             "Request `GET /bar` is not defined by this API.",
-                             _, _, "service_control_undefined_request"));
-  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
+  EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(req_headers_, true));
 }
 

@@ -54,20 +54,10 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // Make sure route is calculated
   auto route = decoder_callbacks_->route();
 
-  // This shouldn't happen as the fallback wildcard route match should catch the `Not Found` case.
+  // If no route is matched, pass through the request and it will be rejected by
+  // router.
   if (route == nullptr || route->routeEntry() == nullptr) {
-    config_->stats().denied_by_no_route_.inc();
-
-    rejectRequest(
-        Envoy::Http::Code::NotFound,
-        absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
-                     utils::readHeaderEntry(headers.Path()),
-                     "` is not defined by this API."),
-        utils::generateRcDetails(utils::kRcDetailFilterBackendAuth,
-                                 utils::kRcDetailErrorTypeUndefinedRequest));
-    decoder_callbacks_->streamInfo().setResponseFlag(
-        Envoy::StreamInfo::ResponseFlag::NoRouteFound);
-    return FilterHeadersStatus::StopIteration;
+    return FilterHeadersStatus::Continue;
   }
 
   const auto* per_route =

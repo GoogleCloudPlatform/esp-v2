@@ -517,7 +517,7 @@ func TestDynamicRoutingCorsByEnvoy(t *testing.T) {
 
 		for key, value := range respHeaderMap {
 			if respHeader.Get(key) != value {
-				t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
+				t.Errorf("Test(%s) failed, %s expected: %s, got: %s", tc.desc, key, value, respHeader.Get(key))
 			}
 		}
 	}

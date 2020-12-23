@@ -35,7 +35,6 @@ constexpr const char kFilterName[] =
   COUNTER(denied_by_no_path)                   \
   COUNTER(denied_by_invalid_path)              \
   COUNTER(denied_by_oversize_path)             \
-  COUNTER(denied_by_no_route)                  \
   COUNTER(denied_by_url_template_mismatch)
 
 /**
