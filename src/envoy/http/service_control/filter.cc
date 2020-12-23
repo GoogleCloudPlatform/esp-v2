@@ -65,17 +65,7 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   // This shouldn't happen as the fallback wildcard route match should catch all
   // the undefined requests.
-  if (route == nullptr) {
-    stats_.filter_.denied_by_no_route_.inc();
-    rejectRequest(
-        Envoy::Http::Code::NotFound,
-        absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
-                     utils::readHeaderEntry(headers.Path()),
-                     "` is not defined by this API."),
-        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
-                                 utils::kRcDetailErrorTypeUndefinedRequest));
-    return Envoy::Http::FilterHeadersStatus::StopIteration;
-  }
+  ASSERT(route != nullptr && route->routeEntry() != nullptr);
 
   handler_ =
       factory_.createHandler(headers, decoder_callbacks_->streamInfo(), stats_);

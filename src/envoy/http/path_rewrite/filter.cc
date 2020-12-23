@@ -82,20 +82,7 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
 
   // This shouldn't happen as the fallback wildcard route match should catch all
   // the undefined requests.
-  if (route == nullptr || route->routeEntry() == nullptr) {
-    config_->stats().denied_by_no_route_.inc();
-
-    rejectRequest(
-        Envoy::Http::Code::NotFound,
-        absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
-                     utils::readHeaderEntry(headers.Path()),
-                     "` is not defined by this API."),
-        utils::generateRcDetails(utils::kRcDetailFilterPathRewrite,
-                                 utils::kRcDetailErrorTypeUndefinedRequest));
-    decoder_callbacks_->streamInfo().setResponseFlag(
-        Envoy::StreamInfo::ResponseFlag::NoRouteFound);
-    return FilterHeadersStatus::StopIteration;
-  }
+  ASSERT(route != nullptr && route->routeEntry() != nullptr);
 
   const auto* per_route =
       route->routeEntry()->perFilterConfigTyped<PerRouteFilterConfig>(
