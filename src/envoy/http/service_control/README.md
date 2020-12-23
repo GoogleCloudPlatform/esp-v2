@@ -26,6 +26,7 @@ This filter records statistics.
  to exceeding the quota configured by the API Producer.
 - `denied_producer_error`: Number of API consumer requests denied due
  to errors in the producer ESPv2 deployment (authentication, roles, etc).
+ - `denied_by_no_route`: Number of API Consumer requests that are denied due to not route configured.
 
 ### Histograms
 

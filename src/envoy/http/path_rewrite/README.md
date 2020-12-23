@@ -23,4 +23,5 @@ This filter records statistics.
 - `denied_by_no_path`: Number of API Consumer requests that are denied due to path header not present.
 - `denied_by_invalid_path`: Number of API Consumer requests that are denied due to path has fragments.
 - `denied_by_oversize_path`: Number of API Consumer requests that are denied due to path is too long.
+- `denied_by_no_route`: Number of API Consumer requests that are denied due to not route configured.
 - `denied_by_url_template_mismatch`: Number of API Consumer requests that are denied due to mismatched url_template.

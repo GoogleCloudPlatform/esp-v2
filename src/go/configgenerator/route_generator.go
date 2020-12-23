@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
@@ -306,6 +307,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 		}
 	}
 
+	backendRoutes = append(backendRoutes, makeCatchAllUnmatchedRoute())
 	return backendRoutes, nil
 }
 
@@ -329,6 +331,29 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 		Decorator: &routepb.Decorator{
 			// Note we don't add ApiName to reduce the length of the span name.
 			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
+		},
+	}
+}
+
+func makeCatchAllUnmatchedRoute() *routepb.Route {
+	return &routepb.Route{
+		Match: &routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Prefix{
+				Prefix: "/",
+			},
+		},
+		Action: &routepb.Route_DirectResponse{
+			DirectResponse: &routepb.DirectResponseAction{
+				Status: http.StatusNotFound,
+				Body: &corepb.DataSource{
+					Specifier: &corepb.DataSource_InlineString{
+						InlineString: `The request is not defined by this API.`,
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UnknownMethod"),
 		},
 	}
 }

@@ -34,7 +34,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
-	s := env.NewTestEnv(platform.TestServiceControlAccessTokenFromIam, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlFailedRequestReport, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
@@ -61,7 +61,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation?key=api-key",
-			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"\"}",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -81,7 +81,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:             util.GCE,
 					Location:             "test-zone",
 					BackendProtocol:      "grpc",
-					ResponseCodeDetail:   "route_not_found",
+					ResponseCodeDetail:   "direct_response",
 				},
 			},
 		},
@@ -91,7 +91,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation",
-			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"\"}",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -110,7 +110,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:           util.GCE,
 					Location:           "test-zone",
 					BackendProtocol:    "grpc",
-					ResponseCodeDetail: "route_not_found",
+					ResponseCodeDetail: "direct_response",
 				},
 			},
 		},
