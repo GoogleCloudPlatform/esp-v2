@@ -411,6 +411,20 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 			},
 		},
 		{
+			desc: "Frontend auth preserves `Authorization` and overrides `X-Endpoint-API-UserInfo`." +
+				"Backend auth is disabled, so no further header modifications.",
+			method: "GET",
+			path:   "/disableauthsettotrue/constant/disableauthsettotrue",
+			headers: map[string]string{
+				"Authorization":           "Bearer " + testdata.Es256Token,
+				"X-Endpoint-API-UserInfo": "untrusted-payload",
+			},
+			wantHeaders: map[string]string{
+				"Authorization":           "Bearer " + testdata.Es256Token,
+				"X-Endpoint-API-UserInfo": testdata.Es256TokenPayloadBase64,
+			},
+		},
+		{
 			desc: "Frontend auth preserves `Authorization` and creates `X-Endpoint-API-UserInfo`." +
 				"Backend auth then modifies `Authorization` and creates `X-Forwarded-Authorization`.",
 			method: "GET",
