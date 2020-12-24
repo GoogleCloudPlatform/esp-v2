@@ -68,6 +68,8 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 		glog.Infof("adding cors route configuration: %v", jsonStr)
 	}
 
+	host.Routes = append(host.Routes, makeCatchAllUnmatchedRoute())
+
 	virtualHosts = append(virtualHosts, &host)
 	return &routepb.RouteConfiguration{
 		Name:         routeName,
@@ -307,7 +309,6 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 		}
 	}
 
-	backendRoutes = append(backendRoutes, makeCatchAllUnmatchedRoute())
 	return backendRoutes, nil
 }
 
