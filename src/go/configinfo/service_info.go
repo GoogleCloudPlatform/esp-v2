@@ -719,8 +719,9 @@ func (s *ServiceInfo) processTypes() error {
 	// For each method, lookup the request type.
 	for operation, mi := range s.Methods {
 		requestTypeName := mi.RequestTypeName
+		// Only methods generated from Apis have non empty requestTypeName.
+		// Skip the methods with empty requestTypeName.
 		if requestTypeName == "" {
-			glog.Warningf("for operation (%v): request type was malformed", operation)
 			continue
 		}
 
