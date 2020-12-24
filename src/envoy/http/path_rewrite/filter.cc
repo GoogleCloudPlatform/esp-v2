@@ -80,9 +80,14 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // Make sure route is calculated
   auto route = decoder_callbacks_->route();
 
-  // This shouldn't happen as the fallback wildcard route match should catch all
+  // This shouldn't happen as the catch-all route match should catch all
   // the undefined requests.
-  ASSERT(route != nullptr && route->routeEntry() != nullptr);
+  ASSERT(route != nullptr);
+
+  // The catch-all route match case.
+  if (route->routeEntry() == nullptr) {
+    return FilterHeadersStatus::Continue;
+  }
 
   const auto* per_route =
       route->routeEntry()->perFilterConfigTyped<PerRouteFilterConfig>(

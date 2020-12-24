@@ -19,6 +19,7 @@
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/http/service_control/mocks.h"
 #include "test/mocks/server/mocks.h"
@@ -57,6 +58,7 @@ class ServiceControlFilterTest : public ::testing::Test {
 
     mock_handler_ = new testing::NiceMock<MockServiceControlHandler>();
     mock_handler_ptr_.reset(mock_handler_);
+    mock_route_ = std::make_shared<NiceMock<Envoy::Router::MockRoute>>();
     ON_CALL(mock_handler_factory_, createHandler(_, _, _))
         .WillByDefault(Return(ByMove(std::move(mock_handler_ptr_))));
 
@@ -72,6 +74,7 @@ class ServiceControlFilterTest : public ::testing::Test {
   testing::NiceMock<Envoy::MockBuffer> mock_buffer_;
   testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> mock_stats_scope_;
   ServiceControlFilterStats stats_;
+  std::shared_ptr<NiceMock<Envoy::Router::MockRoute>> mock_route_;
   Envoy::Http::TestRequestHeaderMapImpl req_headers_;
   Envoy::Http::TestRequestTrailerMapImpl req_trailer_;
   Envoy::Http::TestResponseHeaderMapImpl resp_headers_;

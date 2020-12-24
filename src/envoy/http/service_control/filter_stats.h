@@ -37,7 +37,6 @@ namespace service_control {
   COUNTER(denied_consumer_error)         \
   COUNTER(denied_consumer_quota)         \
   COUNTER(denied_producer_error)         \
-  COUNTER(denied_by_no_route)            \
   HISTOGRAM(request_time, Milliseconds)  \
   HISTOGRAM(backend_time, Milliseconds)  \
   HISTOGRAM(overhead_time, Milliseconds)
