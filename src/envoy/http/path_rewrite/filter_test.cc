@@ -132,6 +132,16 @@ TEST_F(FilterTest, FragmentPathHeaderBlocked) {
   EXPECT_EQ(counter->value(), 1);
 }
 
+TEST_F(FilterTest, NoRouteRejected) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+
+  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
+
+  EXPECT_EQ(filter_->decodeHeaders(headers, false),
+            Envoy::Http::FilterHeadersStatus::Continue);
+}
+
 TEST_F(FilterTest, NotPerRouteConfigNotChanged) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};

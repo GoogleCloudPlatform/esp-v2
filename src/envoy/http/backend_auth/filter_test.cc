@@ -87,6 +87,16 @@ class BackendAuthFilterTest : public ::testing::Test {
   std::unique_ptr<Filter> filter_;
 };
 
+TEST_F(BackendAuthFilterTest, NoRouteRejectAllow) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
+                                                {":path", "/books/1"}};
+
+  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
+
+  ASSERT_EQ(filter_->decodeHeaders(headers, false),
+            Envoy::Http::FilterHeadersStatus::Continue);
+}
+
 TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};

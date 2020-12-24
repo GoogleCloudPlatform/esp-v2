@@ -65,7 +65,9 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   // This shouldn't happen as the catch-all route match should catch all
   // the undefined requests.
-  ASSERT(route != nullptr);
+  if (route == nullptr) {
+    return Envoy::Http::FilterHeadersStatus::Continue;
+  }
 
   handler_ =
       factory_.createHandler(headers, decoder_callbacks_->streamInfo(), stats_);
