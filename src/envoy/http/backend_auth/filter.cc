@@ -58,7 +58,7 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // the undefined requests.
   ASSERT(route != nullptr);
 
-  // The catch-all route match case.
+  // The catch-all route match case for all the undefined requests.
   if (route->routeEntry() == nullptr) {
     return FilterHeadersStatus::Continue;
   }
