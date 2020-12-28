@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
 
@@ -90,9 +89,9 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			clientProtocol: "http",
 			// "DELETE" is not defined for "/v1/shelves".
-			httpMethod:     "DELETE",
-			method:         "/v1/shelves?key=api-key",
-			httpCallError:  "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to defined url template \"/echoMethod\" but the http method is not allowed\"}",
+			httpMethod:    "DELETE",
+			method:        "/v1/shelves?key=api-key",
+			httpCallError: "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to defined url template \"/v1/shelves\" but the http method is not allowed\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
