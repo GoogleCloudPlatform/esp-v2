@@ -154,6 +154,34 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "directResponse": {
             "body": {
+              "inlineString": "The current request is matched to defined url template \"/echo\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/echo/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
               "inlineString": "The current request is not defined by this API."
             },
             "status": 404
@@ -303,6 +331,34 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
           }
         },
         {
@@ -578,6 +634,40 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "directResponse": {
             "body": {
+              "inlineString": "The current request is matched to defined url template \"^/v1/shelves/[^\\/]+\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/v1/shelves/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/v1/shelves/[^\\/]+\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/v1/shelves/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
               "inlineString": "The current request is not defined by this API."
             },
             "status": 404
@@ -590,7 +680,6 @@ func TestMakeRouteConfig(t *testing.T) {
     }
   ]
 }
-
 `,
 		},
 		{
@@ -807,6 +896,62 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
           }
         },
         {
@@ -1139,6 +1284,96 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "directResponse": {
             "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/[^\\/]+\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/[^\\/]+\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
               "inlineString": "The current request is not defined by this API."
             },
             "status": 404
@@ -1341,6 +1576,62 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
           }
         },
         {
@@ -1583,6 +1874,62 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "directResponse": {
             "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/bar/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
               "inlineString": "The current request is not defined by this API."
             },
             "status": 404
@@ -1678,6 +2025,20 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/"
           }
         },
         {
@@ -1829,6 +2190,37 @@ func TestMakeRouteConfig(t *testing.T) {
             "com.google.espv2.filters.http.service_control": {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/[^\\/]+\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
         },
@@ -2270,6 +2662,119 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "directResponse": {
             "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo/bar\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"/foo/bar/\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/[^\\/]+\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/[^\\/]+/bar\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+/bar\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/.*/bar\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*/bar\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/.*\\/?:verb$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*\\/?:verb$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to defined url template \"^/foo/.*\\/?$\" but the http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
               "inlineString": "The current request is not defined by this API."
             },
             "status": 404
@@ -2282,7 +2787,6 @@ func TestMakeRouteConfig(t *testing.T) {
     }
   ]
 }
-
 `,
 		},
 		{

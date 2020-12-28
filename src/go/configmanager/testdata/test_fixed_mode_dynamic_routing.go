@@ -254,7 +254,7 @@ var (
                     "timeout": "30s",
                     "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
                   },
-                  "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
+                  "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                   "jwtAudienceList": [
                     "1083071298623-e...t.apps.googleusercontent.com",
                     "https://us-central1-cloud-esf.cloudfunctions.net/hello",
@@ -279,7 +279,7 @@ var (
             "httpProtocolOptions": {
               "enableTrailers": true
             },
-           "localReplyConfig": {
+            "localReplyConfig": {
               "bodyFormat": {
                 "jsonFormat": {
                   "code": "%RESPONSE_CODE%",
@@ -311,7 +311,10 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -336,7 +339,10 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -362,7 +368,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-central1-cloud-esf.cloudfunctions.net",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -396,7 +405,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-central1-cloud-esf.cloudfunctions.net",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -430,7 +442,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -464,7 +479,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -501,7 +519,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:8008",
                         "hostRewriteLiteral": "pets.appspot.com",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -535,7 +556,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -569,7 +593,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -603,7 +630,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-west2-cloud-esf.cloudfunctions.net",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -639,7 +669,10 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-west2-cloud-esf.cloudfunctions.net",
-                        "retryPolicy":{"numRetries":1,"retryOn":"reset,connect-failure,refused-stream"},
+                        "retryPolicy": {
+                          "numRetries": 1,
+                          "retryOn": "reset,connect-failure,refused-stream"
+                        },
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
@@ -657,6 +690,163 @@ var (
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                           "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
                         }
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/echo\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/echo"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/echo/\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/echo/"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/hello\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/hello"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/hello/\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/hello/"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/pet\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/pet"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/pet/\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/pet/"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"^/pet/[^\\/]+\\/?$\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "safeRegex": {
+                          "googleRe2": {},
+                          "regex": "^/pet/[^\\/]+\\/?$"
+                        }
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/pets\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/pets"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/pets/\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/pets/"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/search\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/search"
+                      }
+                    },
+                    {
+                      "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                      },
+                      "directResponse": {
+                        "body": {
+                          "inlineString": "The current request is matched to defined url template \"/search/\" but the http method is not allowed"
+                        },
+                        "status": 405
+                      },
+                      "match": {
+                        "path": "/search/"
                       }
                     },
                     {

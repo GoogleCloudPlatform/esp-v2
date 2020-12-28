@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
 
@@ -34,7 +33,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
-	s := env.NewTestEnv(platform.TestServiceControlFailedRequestReport, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlBasic, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
@@ -78,6 +77,37 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					LogMessage:           "<Unknown Operation Name> is called",
 					StatusCode:           "0",
 					ResponseCode:         404,
+					Platform:             util.GCE,
+					Location:             "test-zone",
+					BackendProtocol:      "grpc",
+					ResponseCodeDetail:   "direct_response",
+				},
+			},
+		},
+		{
+			desc:           "Request matches uri template but not method. SC does report with untrusted API Key.",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "http",
+			// "DELETE" is not defined for "/v1/shelves".
+			httpMethod:     "DELETE",
+			method:         "/v1/shelves?key=api-key",
+			httpCallError:  "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to defined url template `/echoMethod` but the http method is not allowed\"}",
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					URL:             "/v1/shelves?key=api-key",
+					ApiMethod:       "<Unknown Operation Name>",
+					// API Key is extracted but not trusted.
+					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
+					ProducerProjectID:    "producer project",
+					FrontendProtocol:     "http",
+					HttpMethod:           "DELETE",
+					LogMessage:           "<Unknown Operation Name> is called",
+					StatusCode:           "0",
+					ResponseCode:         405,
 					Platform:             util.GCE,
 					Location:             "test-zone",
 					BackendProtocol:      "grpc",

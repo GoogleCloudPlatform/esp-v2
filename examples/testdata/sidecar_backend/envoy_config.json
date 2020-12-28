@@ -272,6 +272,62 @@
                             },
                             "directResponse": {
                               "body": {
+                                "inlineString": "The current request is matched to defined url template \"/shelves\" but the http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownOperationName"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to defined url template \"/shelves/\" but the http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownOperationName"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to defined url template \"/shelves\" but the http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownOperationName"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to defined url template \"/shelves/\" but the http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownOperationName"
+                            },
+                            "directResponse": {
+                              "body": {
                                 "inlineString": "The current request is not defined by this API."
                               },
                               "status": 404
