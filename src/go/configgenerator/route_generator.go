@@ -283,6 +283,9 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 			respTimeout = method.BackendInfo.Deadline
 		}
 
+		// The `methodNotAllowedRouteMatchers` are the route matches covers all the defined uri templates
+		// but no specific methods. As all the defined requests are matched by `routeMatchers`, the rest
+		// matched by `methodNotAllowedRouteMatchers` fall in the category of `405 Method Not Allowed`.
 		var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
 		var err error
 		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule); err != nil {
