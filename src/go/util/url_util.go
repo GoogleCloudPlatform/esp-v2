@@ -150,7 +150,7 @@ func IamAccessTokenPath(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateAccessToken", IamServiceAccount)
 }
 
-func ExtraAddressFromURI(jwksUri string) (string, error) {
+func ExtractAddressFromURI(jwksUri string) (string, error) {
 	_, hostname, port, _, err := ParseURI(jwksUri)
 	if err != nil {
 		return "", fmt.Errorf("Fail to parse uri %s with error %v", jwksUri, err)

@@ -557,7 +557,7 @@ func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 					},
 				},
 			},
-			wantedErrorPrefix: `JwtLocation_Query should be set without valuePrefix`,
+			wantedErrorPrefix: `error processing authentication provider (auth_provider): JwtLocation type [Query] should be set without valuePrefix, but it was set to [jwt_query_header_prefix]`,
 		},
 		{
 			desc: "Success. Custom jwt locations with transcoding_ignore_query_params flag",
@@ -1488,7 +1488,7 @@ func TestMethods(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantError:      "operation(1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo): invalid uri template invalid-uri-template",
+			wantError:      "(1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo): invalid uri template invalid-uri-template",
 		},
 		{
 			desc: "Succeed for multiple url Pattern",
@@ -1648,8 +1648,8 @@ func TestMethods(t *testing.T) {
 			opts.Healthz = tc.healthz
 			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if tc.wantError != "" {
-				if err == nil || err.Error() != tc.wantError {
-					t.Fatalf("Error mismatch \ngot : %v, want: %v", err, tc.wantError)
+				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
+					t.Fatalf("Error mismatch \ngot : %v, \nwant: %v", err, tc.wantError)
 				}
 				return
 			}
@@ -2528,7 +2528,7 @@ func TestProcessApis(t *testing.T) {
 			serviceConfig: tc.fakeServiceConfig,
 			Methods:       make(map[string]*MethodInfo),
 		}
-		serviceInfo.processApis()
+		_ = serviceInfo.processApis()
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
@@ -2627,7 +2627,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 					},
 				},
 			},
-			wantError: "adding httpRules for grpc method api-streaming-test.***: invalid uri template /api-streaming-test/***",
+			wantError: "error parsing auto-generated gRPC http rule's URI template",
 		},
 	}
 
@@ -2638,13 +2638,12 @@ func TestProcessApisForGrpc(t *testing.T) {
 			GrpcSupportRequired: true,
 			Methods:             make(map[string]*MethodInfo),
 		}
-		serviceInfo.processApis()
+		_ = serviceInfo.processApis()
 		if err := serviceInfo.addGrpcHttpRules(); err != nil {
-			if err.Error() == tc.wantError {
-				continue
-			} else {
-				t.Fatalf("For processGrpcHttpRules error, expect: %s, get: %s", tc.wantError, err.Error())
+			if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("For processGrpcHttpRules error,\ngot : %s, \nwant: %s", err.Error(), tc.wantError)
 			}
+			continue
 		}
 
 		for key, gotMethod := range serviceInfo.Methods {

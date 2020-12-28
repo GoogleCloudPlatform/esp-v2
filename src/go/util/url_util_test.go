@@ -473,12 +473,12 @@ func TestExtraAddressFromURI(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		generatedClusterName, err := ExtraAddressFromURI(tc.uri)
+		generatedClusterName, err := ExtractAddressFromURI(tc.uri)
 		if generatedClusterName != tc.wantedAddress {
-			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, generatedClusterName, tc.wantedAddress)
+			t.Errorf("Test Desc(%d): %s, ExtractAddressFromURI got: %v, want: %v", i, tc.desc, generatedClusterName, tc.wantedAddress)
 		}
 		if err != nil && !strings.Contains(err.Error(), tc.wantedError) {
-			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, err.Error(), tc.wantedError)
+			t.Errorf("Test Desc(%d): %s, ExtractAddressFromURI got: %v, want: %v", i, tc.desc, err.Error(), tc.wantedError)
 		}
 	}
 }

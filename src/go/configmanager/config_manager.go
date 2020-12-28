@@ -105,7 +105,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	if m.serviceName == "" && checkMetadata && mf != nil {
 		m.serviceName, err = mf.FetchServiceName()
 		if m.serviceName == "" || err != nil {
-			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server")
+			return nil, fmt.Errorf("failed to read metadata with key endpoints-service-name from metadata server: %v", err)
 		}
 	} else if m.serviceName == "" && !checkMetadata {
 		return nil, fmt.Errorf("service name is not specified, required because metadata fetching is disabled")
@@ -129,7 +129,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	// set to generate accessToken.
 	// The inverse is not true. We can still use IMDS on GCP when service account key is specified.
 	if mf == nil && opts.ServiceAccountKey == "" {
-		return nil, fmt.Errorf("If --non_gcp is specified, --service_account_key has to be specified.")
+		return nil, fmt.Errorf("if flag --non_gcp is specified, flag --service_account_key must be specified")
 	}
 
 	accessToken := func() (string, time.Duration, error) {
@@ -161,7 +161,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 			configId, err = mf.FetchConfigId()
 			if configId == "" || err != nil {
-				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server")
+				return nil, fmt.Errorf("failed to read metadata with key endpoints-service-version from metadata server: %v", err)
 			}
 		}
 	} else if rolloutStrategy == util.ManagedRolloutStrategy {
@@ -239,7 +239,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 	if m.metadataFetcher != nil {
 		attrs, err := m.metadataFetcher.FetchGCPAttributes()
 		if err != nil {
-			m.Infof("metadata server was not reached, skipping GCP Attributes")
+			m.Infof("metadata server was not reached, skipping GCP Attributes: %v", err)
 		} else {
 			m.serviceInfo.GcpAttributes = attrs
 		}
