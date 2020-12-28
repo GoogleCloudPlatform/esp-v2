@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 )
 
@@ -33,7 +34,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
-	s := env.NewTestEnv(platform.TestServiceControlBasic, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlFailedRequestReport, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
