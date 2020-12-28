@@ -791,6 +791,8 @@ func (s *ServiceInfo) processTypes() error {
 // get the MethodInfo by full name, and create a new one if not exists.
 // Ideally, all selector name in service config rules should exist in the api
 // methods.
+// TODO(b/176433373): Clean-up usage of this method. Non-`apis` aspects should
+// not be creating new methods, they should error if not found.
 func (s *ServiceInfo) getOrCreateMethod(name string) (*MethodInfo, error) {
 	if s.Methods[name] == nil {
 		names := strings.Split(name, ".")
