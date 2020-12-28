@@ -61,7 +61,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation?key=api-key",
-			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"Request `GET /noexistoperation?key=api-key` is not defined by this API.\"}",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The current request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -81,7 +81,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:             util.GCE,
 					Location:             "test-zone",
 					BackendProtocol:      "grpc",
-					ResponseCodeDetail:   "service_control_undefined_request",
+					ResponseCodeDetail:   "direct_response",
 				},
 			},
 		},
@@ -91,7 +91,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation",
-			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"Request `GET /noexistoperation` is not defined by this API.\"}",
+			httpCallError:  "404 Not Found, {\"code\":404,\"message\":\"The current request is not defined by this API.\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -110,7 +110,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					Platform:           util.GCE,
 					Location:           "test-zone",
 					BackendProtocol:    "grpc",
-					ResponseCodeDetail: "service_control_undefined_request",
+					ResponseCodeDetail: "direct_response",
 				},
 			},
 		},

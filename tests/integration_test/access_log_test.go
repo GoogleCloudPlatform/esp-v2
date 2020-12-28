@@ -84,8 +84,8 @@ func TestAccessLog(t *testing.T) {
 			requestPath: "/noexistpath",
 			wantError:   `http response status is not 200 OK: 404 Not Found`,
 			wantAccessLog: "\"GET /noexistpath?key=test-api-key HTTP/1.1\"404" +
-				" - 0 97\"-\" \"Go-http-client/1.1\" " +
-				"- -\n",
+				" - 0 73\"-\" \"Go-http-client/1.1\" " +
+				"\"\\u003cUnknown Operation Name\\u003e\" \"test-api-key\"\n",
 		},
 	}
 

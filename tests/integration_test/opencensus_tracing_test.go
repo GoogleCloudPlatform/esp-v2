@@ -412,7 +412,7 @@ func TestTracesDynamicRouting(t *testing.T) {
 			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/random/path", ""),
 			method: util.GET,
 			wantSpanNames: []string{
-				"ingress",
+				"ingress UnknownOperationName",
 			},
 		},
 	}

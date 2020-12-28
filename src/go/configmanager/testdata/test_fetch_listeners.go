@@ -180,6 +180,20 @@ var (
                                        "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
+                              },
+                              {
+                                "decorator": {
+                                  "operation": "ingress UnknownOperationName"
+                                },
+                                "directResponse": {
+                                  "body": {
+                                    "inlineString": "The current request is not defined by this API."
+                                  },
+                                  "status": 404
+                                },
+                                "match": {
+                                  "prefix": "/"
+                                }
                               }
                            ]
                         }
@@ -390,6 +404,20 @@ var (
                                        "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
+                              },
+                              {
+                                "decorator": {
+                                  "operation": "ingress UnknownOperationName"
+                                },
+                                "directResponse": {
+                                  "body": {
+                                    "inlineString": "The current request is not defined by this API."
+                                  },
+                                  "status": 404
+                                },
+                                "match": {
+                                  "prefix": "/"
+                                }
                               }
                            ]
                         }
@@ -760,6 +788,20 @@ var (
                                        "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
+                              },
+                              {
+                                "decorator": {
+                                  "operation": "ingress UnknownOperationName"
+                                },
+                                "directResponse": {
+                                  "body": {
+                                    "inlineString": "The current request is not defined by this API."
+                                  },
+                                  "status": 404
+                                },
+                                "match": {
+                                  "prefix": "/"
+                                }
                               }
                            ]
                         }
@@ -1130,6 +1172,20 @@ var (
                                        "requirementName": "endpoints.examples.bookstore.Bookstore.GetBook"
                                     }
                                  }
+                              },
+                              {
+                                "decorator": {
+                                  "operation": "ingress UnknownOperationName"
+                                },
+                                "directResponse": {
+                                  "body": {
+                                    "inlineString": "The current request is not defined by this API."
+                                  },
+                                  "status": 404
+                                },
+                                "match": {
+                                  "prefix": "/"
+                                }
                               }
                            ]
                         }
@@ -1507,6 +1563,20 @@ var (
                                        "operationName":"endpoints.examples.bookstore.Bookstore.CreateShelf"
                                     }
                                  }
+                              },
+                              {
+                                "decorator": {
+                                  "operation": "ingress UnknownOperationName"
+                                },
+                                "directResponse": {
+                                  "body": {
+                                    "inlineString": "The current request is not defined by this API."
+                                  },
+                                  "status": 404
+                                },
+                                "match": {
+                                  "prefix": "/"
+                                }
                               }
                            ]
                         }
@@ -1774,6 +1844,20 @@ var (
                                        "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
                                     }
                                  }
+                              },
+                              {
+                                "decorator": {
+                                  "operation": "ingress UnknownOperationName"
+                                },
+                                "directResponse": {
+                                  "body": {
+                                    "inlineString": "The current request is not defined by this API."
+                                  },
+                                  "status": 404
+                                },
+                                "match": {
+                                  "prefix": "/"
+                                }
                               }
                            ]
                         }
@@ -2011,6 +2095,20 @@ var (
                                        "operationName":"1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_simplegetcors"
                                     }
                                  }
+                              },
+                              {
+                                "decorator": {
+                                  "operation": "ingress UnknownOperationName"
+                                },
+                                "directResponse": {
+                                  "body": {
+                                    "inlineString": "The current request is not defined by this API."
+                                  },
+                                  "status": 404
+                                },
+                                "match": {
+                                  "prefix": "/"
+                                }
                               }
                            ]
                         }
