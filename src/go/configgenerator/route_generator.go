@@ -292,13 +292,13 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 		addedMethodNotAllowedRouteMatchers := map[string]bool{}
 		for _, methodNotAllowedRouteMatcher := range methodNotAllowedRouteMatchers {
 			var uriTemplate string
-			switch methodNotAllowedRouteMatcher.PathSpecifier.(type) {
+			switch v := methodNotAllowedRouteMatcher.PathSpecifier.(type) {
 			case *routepb.RouteMatch_Path:
 				uriTemplate = methodNotAllowedRouteMatcher.PathSpecifier.(*routepb.RouteMatch_Path).Path
 			case *routepb.RouteMatch_SafeRegex:
 				uriTemplate = methodNotAllowedRouteMatcher.PathSpecifier.(*routepb.RouteMatch_SafeRegex).SafeRegex.Regex
 			default:
-				return nil, nil, fmt.Errorf("")
+				return nil, nil, fmt.Errorf("during adding methodNotAllowedRouterMatcher, cannot handle RouteMatch type: %v", v)
 			}
 
 			if ok, _ := addedMethodNotAllowedRouteMatchers[uriTemplate]; ok {
