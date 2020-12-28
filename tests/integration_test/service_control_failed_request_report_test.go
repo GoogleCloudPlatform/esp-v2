@@ -92,7 +92,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			// "DELETE" is not defined for "/v1/shelves".
 			httpMethod:     "DELETE",
 			method:         "/v1/shelves?key=api-key",
-			httpCallError:  "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to defined url template `/echoMethod` but the http method is not allowed\"}",
+			httpCallError:  "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to defined url template \"/echoMethod\" but the http method is not allowed\"}",
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
