@@ -221,7 +221,7 @@ func (s *ServiceInfo) processApis() error {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
 			mi, err := s.getOrCreateMethod(selector)
 			if err != nil {
-				return fmt.Errorf("error processing operation (%v): %v", selector, err)
+				return fmt.Errorf("error creating method info for operation (%v): %v", selector, err)
 			}
 
 			// Keep track of non-unary gRPC methods.
@@ -253,7 +253,7 @@ func (s *ServiceInfo) addGrpcHttpRules() error {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
 			mi, err := s.getOrCreateMethod(selector)
 			if err != nil {
-				return fmt.Errorf("error processing auto-generated gRPC http rule for operation (%s.%s): %v", api.GetName(), method.GetName(), err)
+				return fmt.Errorf("error creating auto-generated gRPC http rule for operation (%s.%s): %v", api.GetName(), method.GetName(), err)
 			}
 
 			path := fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())
@@ -384,7 +384,7 @@ func (s *ServiceInfo) processHttpRule() error {
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
 		method, err := s.getOrCreateMethod(rule.GetSelector())
 		if err != nil {
-			return fmt.Errorf("error processing http rule for operation (%v): %v", rule.Selector, err)
+			return fmt.Errorf("error creating http rule for operation (%v): %v", rule.Selector, err)
 		}
 		if err := addHttpRule(method, rule, addedRouteMatchWithOptionsSet); err != nil {
 			return err
@@ -438,7 +438,7 @@ func (s *ServiceInfo) processHttpRule() error {
 
 		hcMethod, err := s.getOrCreateMethod(methodName)
 		if err != nil {
-			return fmt.Errorf("error adding auto-generated HealthCheck http rule: %v", err)
+			return fmt.Errorf("error creating auto-generated HealthCheck http rule for operation (%v): %v", methodName, err)
 		}
 		if !strings.HasPrefix(s.Options.Healthz, "/") {
 			s.Options.Healthz = fmt.Sprintf("/%s", s.Options.Healthz)
