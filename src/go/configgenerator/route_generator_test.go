@@ -150,7 +150,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/echo"
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
           },
           "directResponse": {
             "body": {
@@ -164,7 +164,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/echo"
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
           },
           "directResponse": {
             "body": {
@@ -334,7 +334,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -348,7 +348,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -629,7 +629,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/v1/shelves/{shelves=*}"
+            "operation": "ingress UnknownHttpMethodForPath_/v1/shelves/{shelves=*}"
           },
           "directResponse": {
             "body": {
@@ -881,7 +881,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -895,7 +895,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -909,7 +909,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -923,7 +923,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -1260,7 +1260,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -1274,7 +1274,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -1288,7 +1288,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/{x=*}"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/{x=*}"
           },
           "directResponse": {
             "body": {
@@ -1515,7 +1515,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -1529,7 +1529,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -1543,7 +1543,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -1557,7 +1557,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -1805,7 +1805,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -1819,7 +1819,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
           },
           "directResponse": {
             "body": {
@@ -1833,7 +1833,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -1847,7 +1847,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo"
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
           },
           "directResponse": {
             "body": {
@@ -1964,7 +1964,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/"
+            "operation": "ingress UnknownHttpMethodForPath_/"
           },
           "directResponse": {
             "body": {
@@ -2130,7 +2130,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/"
+            "operation": "ingress UnknownHttpMethodForPath_/"
           },
           "directResponse": {
             "body": {
@@ -2144,7 +2144,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/{abc=*}"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/{abc=*}"
           },
           "directResponse": {
             "body": {
@@ -2593,7 +2593,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/bar"
           },
           "directResponse": {
             "body": {
@@ -2607,7 +2607,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/bar"
           },
           "directResponse": {
             "body": {
@@ -2621,7 +2621,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/*"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/*"
           },
           "directResponse": {
             "body": {
@@ -2638,7 +2638,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/*/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/*/bar"
           },
           "directResponse": {
             "body": {
@@ -2655,7 +2655,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/**/bar"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/**/bar"
           },
           "directResponse": {
             "body": {
@@ -2672,7 +2672,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/**:verb"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/**:verb"
           },
           "directResponse": {
             "body": {
@@ -2689,7 +2689,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/foo/**"
+            "operation": "ingress UnknownHttpMethodForPath_/foo/**"
           },
           "directResponse": {
             "body": {
@@ -2947,7 +2947,7 @@ func TestMakeFallbackRoute(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/echo"
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
           },
           "directResponse": {
             "body": {
@@ -2961,7 +2961,7 @@ func TestMakeFallbackRoute(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/echo"
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
           },
           "directResponse": {
             "body": {
@@ -3091,7 +3091,7 @@ func TestMakeFallbackRoute(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/echo/{id}"
+            "operation": "ingress UnknownHttpMethodForPath_/echo/{id}"
           },
           "directResponse": {
             "body": {
@@ -3301,7 +3301,7 @@ func TestMakeFallbackRoute(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/echo"
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
           },
           "directResponse": {
             "body": {
@@ -3315,7 +3315,7 @@ func TestMakeFallbackRoute(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownOperationName_/echo"
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
           },
           "directResponse": {
             "body": {

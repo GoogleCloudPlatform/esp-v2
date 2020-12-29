@@ -371,7 +371,7 @@ func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch,
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s_%s", util.SpanNamePrefix, util.UnknownOperationName, uriTemplateInSc),
+			Operation: fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc),
 		},
 	}
 }
@@ -393,7 +393,7 @@ func makeCatchAllNotFoundRoute() *routepb.Route {
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, util.UnknownOperationName),
+			Operation: fmt.Sprintf("%s UnknownOperationName", util.SpanNamePrefix),
 		},
 	}
 }

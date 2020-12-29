@@ -1372,7 +1372,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/echo"
+                              "operation": "ingress UnknownHttpMethodForPath_/echo"
                             },
                             "directResponse": {
                               "body": {
@@ -1386,7 +1386,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/echo"
+                              "operation": "ingress UnknownHttpMethodForPath_/echo"
                             },
                             "directResponse": {
                               "body": {
@@ -1400,7 +1400,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/echoreport"
+                              "operation": "ingress UnknownHttpMethodForPath_/echoreport"
                             },
                             "directResponse": {
                               "body": {
@@ -1414,7 +1414,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/echoreport"
+                              "operation": "ingress UnknownHttpMethodForPath_/echoreport"
                             },
                             "directResponse": {
                               "body": {
@@ -1428,7 +1428,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/echostream"
+                              "operation": "ingress UnknownHttpMethodForPath_/echostream"
                             },
                             "directResponse": {
                               "body": {
@@ -1442,7 +1442,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/echostream"
+                              "operation": "ingress UnknownHttpMethodForPath_/echostream"
                             },
                             "directResponse": {
                               "body": {
@@ -1456,7 +1456,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/Cork"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Cork"
                             },
                             "directResponse": {
                               "body": {
@@ -1470,7 +1470,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/Cork"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Cork"
                             },
                             "directResponse": {
                               "body": {
@@ -1484,7 +1484,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/Echo"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Echo"
                             },
                             "directResponse": {
                               "body": {
@@ -1498,7 +1498,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/Echo"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Echo"
                             },
                             "directResponse": {
                               "body": {
@@ -1512,7 +1512,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/EchoReport"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoReport"
                             },
                             "directResponse": {
                               "body": {
@@ -1526,7 +1526,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/EchoReport"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoReport"
                             },
                             "directResponse": {
                               "body": {
@@ -1540,7 +1540,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/EchoStream"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoStream"
                             },
                             "directResponse": {
                               "body": {
@@ -1554,7 +1554,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/test.grpc.Test/EchoStream"
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoStream"
                             },
                             "directResponse": {
                               "body": {

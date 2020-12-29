@@ -113,9 +113,6 @@ const (
 
 	// All traces created by ESPv2 should have this prefix.
 	SpanNamePrefix = "ingress"
-
-	// The operation name used in the trace annotation for the 404/405 request
-	UnknownOperationName = "UnknownOperationName"
 )
 
 type BackendProtocol int32

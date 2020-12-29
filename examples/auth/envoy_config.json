@@ -445,7 +445,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/shelves"
+                              "operation": "ingress UnknownHttpMethodForPath_/shelves"
                             },
                             "directResponse": {
                               "body": {
@@ -459,7 +459,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/shelves"
+                              "operation": "ingress UnknownHttpMethodForPath_/shelves"
                             },
                             "directResponse": {
                               "body": {

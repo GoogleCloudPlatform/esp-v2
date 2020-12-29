@@ -553,7 +553,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/libraries/{library_id}/shelves/{shelf_id}"
+                              "operation": "ingress UnknownHttpMethodForPath_/libraries/{library_id}/shelves/{shelf_id}"
                             },
                             "directResponse": {
                               "body": {
@@ -570,7 +570,7 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName_/**"
+                              "operation": "ingress UnknownHttpMethodForPath_/**"
                             },
                             "directResponse": {
                               "body": {
