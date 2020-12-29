@@ -3346,6 +3346,229 @@ func TestMakeFallbackRoute(t *testing.T) {
   ]
 }`,
 		},
+		{
+			desc: "span name length check",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Long_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Short_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/this-is-short-uri-template",
+						},
+					},
+				},
+				},
+			},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Short_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-short-uri-template"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Short_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Short_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-short-uri-template/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Short_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Long_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Long_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Long_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Long_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-short-uri-template"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-short-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-short-uri-template"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-short-uri-template"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-short-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-short-uri-template/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethod"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethod"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}
+`,
+		},
 	}
 
 	for _, tc := range testData {

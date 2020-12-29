@@ -351,6 +351,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 			},
 		},
 		Decorator: &routepb.Decorator{
+			// TODO(taoxuy@): check if the generated span name length less than the limit.
 			// Note we don't add ApiName to reduce the length of the span name.
 			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 		},
@@ -358,6 +359,14 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 }
 
 func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch, uriTemplateInSc string) *routepb.Route {
+	spanName := fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc)
+
+	if len(spanName) > util.SpanNameMaxByteNum {
+		newSpanName := fmt.Sprintf("%s UnknownHttpMethod", util.SpanNamePrefix)
+		glog.Warningf("oversized spanName: %s, replace it with the span name: %s", spanName, newSpanName)
+		spanName = newSpanName
+	}
+
 	return &routepb.Route{
 		Match: methodNotAllowedRouteMatcher,
 		Action: &routepb.Route_DirectResponse{
@@ -371,7 +380,7 @@ func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch,
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc),
+			Operation: spanName,
 		},
 	}
 }
