@@ -54,7 +54,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	// Right now, the order of routes are:
 	// - backend routes
 	// - cors routes
-	// - `method not allowed` routes
+	// - fallback `method not allowed` routes
 	// - catch all `not found` routes
 	//
 	//

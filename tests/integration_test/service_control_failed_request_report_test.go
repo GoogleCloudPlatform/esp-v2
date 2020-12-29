@@ -86,7 +86,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			},
 		},
 		{
-			desc:           "Request matches uri template but not method. SC does report with untrusted API Key.",
+			desc:           "Request matches uri template but not method.",
 			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			clientProtocol: "http",
 			// "DELETE" is not defined for "/v1/shelves".

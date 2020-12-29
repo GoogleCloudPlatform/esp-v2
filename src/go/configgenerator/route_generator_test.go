@@ -2860,7 +2860,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *confpb.Service
-		params []string
+		params            []string
 		wantRouteConfig   string
 	}{
 		{
@@ -3111,7 +3111,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 				},
 				},
 			},
-			wantRouteConfig:  `
+			wantRouteConfig: `
 {
   "name": "local_route",
   "virtualHosts": [
