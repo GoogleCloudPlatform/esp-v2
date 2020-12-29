@@ -249,12 +249,12 @@ var (
                 "name": "com.google.espv2.filters.http.backend_auth",
                 "typedConfig": {
                   "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
+                  "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                   "imdsToken": {
                     "cluster": "metadata-cluster",
                     "timeout": "30s",
                     "uri": "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
                   },
-                  "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                   "jwtAudienceList": [
                     "1083071298623-e...t.apps.googleusercontent.com",
                     "https://us-central1-cloud-esf.cloudfunctions.net/hello",
@@ -694,11 +694,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/echo"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/echo\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -708,11 +708,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/echo"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/echo/\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -722,11 +722,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/hello"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/hello\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/hello\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -736,11 +736,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/hello"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/hello/\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/hello\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -750,11 +750,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/pet"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/pet\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/pet\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -764,11 +764,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/pet"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/pet/\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/pet\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -778,11 +778,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/pet/{pet_id}"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"^/pet/[^\\/]+\\/?$\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/pet/{pet_id}\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -795,11 +795,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/pets"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/pets\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/pets\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -809,11 +809,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/pets"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/pets/\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/pets\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -823,11 +823,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/search"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/search\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/search\" but its http method is not allowed"
                         },
                         "status": 405
                       },
@@ -837,11 +837,11 @@ var (
                     },
                     {
                       "decorator": {
-                        "operation": "ingress UnknownOperationName"
+                        "operation": "ingress UnknownHttpMethodForPath_/search"
                       },
                       "directResponse": {
                         "body": {
-                          "inlineString": "The current request is matched to defined url template \"/search/\" but the http method is not allowed"
+                          "inlineString": "The current request is matched to the defined url template \"/search\" but its http method is not allowed"
                         },
                         "status": 405
                       },
