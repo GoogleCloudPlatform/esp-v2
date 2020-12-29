@@ -50,7 +50,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 		Domains: []string{"*"},
 	}
 
-	// The router matches request by sequence of routes and the first matched one will be picked, so the order of routes matters.
+	// The router will use the first matched route, so the order of routes is important.
 	// Right now, the order of routes are:
 	// - backend routes
 	// - cors routes
@@ -265,6 +265,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 		return nil, nil, fmt.Errorf("fail to sort route match, %v", err)
 	}
 
+	seenUriTemplatesInRoute := map[string]bool{}
 	for _, httpPatternMethod := range *httpPatternMethods {
 		operation := httpPatternMethod.Operation
 		method := serviceInfo.Methods[operation]
@@ -287,30 +288,14 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 		// but no specific methods. As all the defined requests are matched by `routeMatchers`, the rest
 		// matched by `methodNotAllowedRouteMatchers` fall in the category of `405 Method Not Allowed`.
 		var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
+
 		var err error
-		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule); err != nil {
+		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule, seenUriTemplatesInRoute); err != nil {
 			return nil, nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
 		}
 
-		addedMethodNotAllowedRouteMatchers := map[string]bool{}
 		for _, methodNotAllowedRouteMatcher := range methodNotAllowedRouteMatchers {
-			var uriTemplate string
-			switch v := methodNotAllowedRouteMatcher.PathSpecifier.(type) {
-			case *routepb.RouteMatch_Path:
-				uriTemplate = methodNotAllowedRouteMatcher.PathSpecifier.(*routepb.RouteMatch_Path).Path
-			case *routepb.RouteMatch_SafeRegex:
-				uriTemplate = methodNotAllowedRouteMatcher.PathSpecifier.(*routepb.RouteMatch_SafeRegex).SafeRegex.Regex
-			default:
-				return nil, nil, fmt.Errorf("during adding methodNotAllowedRouterMatcher, cannot handle RouteMatch type: %v", v)
-			}
-
-			if ok, _ := addedMethodNotAllowedRouteMatchers[uriTemplate]; ok {
-				continue
-			} else {
-				addedMethodNotAllowedRouteMatchers[uriTemplate] = true
-			}
-
-			methodNotAllowedRoutes = append(methodNotAllowedRoutes, makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher, uriTemplate))
+			methodNotAllowedRoutes = append(methodNotAllowedRoutes, makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher, httpRule.UriTemplate.Origin))
 		}
 
 		for _, routeMatcher := range routeMatchers {
@@ -372,7 +357,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 	}
 }
 
-func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch, uriTemplate string) *routepb.Route {
+func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch, uriTemplateInSc string) *routepb.Route {
 	return &routepb.Route{
 		Match: methodNotAllowedRouteMatcher,
 		Action: &routepb.Route_DirectResponse{
@@ -380,13 +365,13 @@ func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch,
 				Status: http.StatusMethodNotAllowed,
 				Body: &corepb.DataSource{
 					Specifier: &corepb.DataSource_InlineString{
-						InlineString: fmt.Sprintf("The current request is matched to defined url template \"%s\" but the http method is not allowed", uriTemplate),
+						InlineString: fmt.Sprintf("The current request is matched to the defined url template \"%s\" but its http method is not allowed", uriTemplateInSc),
 					},
 				},
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, util.UnknownOperationName),
+			Operation: fmt.Sprintf("%s %s_%s", util.SpanNamePrefix, util.UnknownOperationName, uriTemplateInSc),
 		},
 	}
 }
@@ -408,7 +393,7 @@ func makeCatchAllNotFoundRoute() *routepb.Route {
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UnknownOperationName"),
+			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, util.UnknownOperationName),
 		},
 	}
 }
@@ -421,21 +406,25 @@ func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 	}
 }
 
-func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch, []*routepb.RouteMatch, error) {
+func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRoute map[string]bool) ([]*routepb.RouteMatch, []*routepb.RouteMatch, error) {
 	if httpRule == nil {
 		return nil, nil, fmt.Errorf("httpRule is nil")
 	}
 	var routeMatchers []*routepb.RouteMatch
+	var uriTemplates []string
 
 	if httpRule.UriTemplate.IsExactMatch() {
 		pathNoTrailingSlash := httpRule.UriTemplate.ExactMatchString(false)
 		pathWithTrailingSlash := httpRule.UriTemplate.ExactMatchString(true)
 
+		uriTemplates = append(uriTemplates, pathNoTrailingSlash)
 		routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathNoTrailingSlash))
 		if pathWithTrailingSlash != pathNoTrailingSlash {
+			uriTemplates = append(uriTemplates, pathWithTrailingSlash)
 			routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathWithTrailingSlash))
 		}
 	} else {
+		uriTemplates = append(uriTemplates, httpRule.UriTemplate.Regex())
 		routeMatchers = []*routepb.RouteMatch{
 			{
 				PathSpecifier: &routepb.RouteMatch_SafeRegex{
@@ -448,13 +437,18 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch
 				},
 			},
 		}
+
 	}
 
 	var methodNotAllowedRouteMatchers []*routepb.RouteMatch
 	if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
-		for _, routeMatcher := range routeMatchers {
-			methodUndefinedRouterMatcherMsg := proto.Clone(routeMatcher)
-			methodNotAllowedRouteMatchers = append(methodNotAllowedRouteMatchers, methodUndefinedRouterMatcherMsg.(*routepb.RouteMatch))
+		for idx, routeMatcher := range routeMatchers {
+			uriTemplate := uriTemplates[idx]
+			if ok, _ := seenUriTemplatesInRoute[uriTemplate]; !ok {
+				seenUriTemplatesInRoute[uriTemplate] = true
+				methodUndefinedRouterMatcherMsg := proto.Clone(routeMatcher)
+				methodNotAllowedRouteMatchers = append(methodNotAllowedRouteMatchers, methodUndefinedRouterMatcherMsg.(*routepb.RouteMatch))
+			}
 
 			routeMatcher.Headers = []*routepb.HeaderMatcher{
 				{

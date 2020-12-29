@@ -445,11 +445,11 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName"
+                              "operation": "ingress UnknownOperationName_/shelves"
                             },
                             "directResponse": {
                               "body": {
-                                "inlineString": "The current request is matched to defined url template \"/shelves\" but the http method is not allowed"
+                                "inlineString": "The current request is matched to the defined url template \"/shelves\" but its http method is not allowed"
                               },
                               "status": 405
                             },
@@ -459,39 +459,11 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName"
+                              "operation": "ingress UnknownOperationName_/shelves"
                             },
                             "directResponse": {
                               "body": {
-                                "inlineString": "The current request is matched to defined url template \"/shelves/\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "path": "/shelves/"
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"/shelves\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "path": "/shelves"
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"/shelves/\" but the http method is not allowed"
+                                "inlineString": "The current request is matched to the defined url template \"/shelves\" but its http method is not allowed"
                               },
                               "status": 405
                             },

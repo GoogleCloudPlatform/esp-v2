@@ -553,11 +553,11 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName"
+                              "operation": "ingress UnknownOperationName_/libraries/{library_id}/shelves/{shelf_id}"
                             },
                             "directResponse": {
                               "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$\" but the http method is not allowed"
+                                "inlineString": "The current request is matched to the defined url template \"/libraries/{library_id}/shelves/{shelf_id}\" but its http method is not allowed"
                               },
                               "status": 405
                             },
@@ -570,113 +570,11 @@
                           },
                           {
                             "decorator": {
-                              "operation": "ingress UnknownOperationName"
+                              "operation": "ingress UnknownOperationName_/**"
                             },
                             "directResponse": {
                               "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "safeRegex": {
-                                "googleRe2": {},
-                                "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$"
-                              }
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/.*\\/?$\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "safeRegex": {
-                                "googleRe2": {},
-                                "regex": "^/.*\\/?$"
-                              }
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/.*\\/?$\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "safeRegex": {
-                                "googleRe2": {},
-                                "regex": "^/.*\\/?$"
-                              }
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/.*\\/?$\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "safeRegex": {
-                                "googleRe2": {},
-                                "regex": "^/.*\\/?$"
-                              }
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/.*\\/?$\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "safeRegex": {
-                                "googleRe2": {},
-                                "regex": "^/.*\\/?$"
-                              }
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/.*\\/?$\" but the http method is not allowed"
-                              },
-                              "status": 405
-                            },
-                            "match": {
-                              "safeRegex": {
-                                "googleRe2": {},
-                                "regex": "^/.*\\/?$"
-                              }
-                            }
-                          },
-                          {
-                            "decorator": {
-                              "operation": "ingress UnknownOperationName"
-                            },
-                            "directResponse": {
-                              "body": {
-                                "inlineString": "The current request is matched to defined url template \"^/.*\\/?$\" but the http method is not allowed"
+                                "inlineString": "The current request is matched to the defined url template \"/**\" but its http method is not allowed"
                               },
                               "status": 405
                             },
