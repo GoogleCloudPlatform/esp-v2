@@ -85,7 +85,7 @@ func TestMethodOverrideBackendMethod(t *testing.T) {
 			headers: map[string]string{
 				"X-HTTP-Method-Override": "DELETE",
 			},
-			httpCallError: fmt.Errorf("{\"code\":405,\"message\":\"The current request is matched to defined url template \"/echoMethod\" but the http method is not allowed\"}"),
+			httpCallError: fmt.Errorf("{\"code\":405,\"message\":\"The current request is matched to the defined url template \"/echoMethod\" but its http method is not allowed\"}"),
 		},
 	}
 	for _, tc := range testData {
