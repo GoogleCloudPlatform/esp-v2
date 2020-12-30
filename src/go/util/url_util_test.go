@@ -31,7 +31,7 @@ func TestParseURI(t *testing.T) {
 		wantedScheme   string
 		wantedHostname string
 		wantedPort     uint32
-		wantURI        string
+		wantPath       string
 		wantErr        string
 	}{
 		{
@@ -40,8 +40,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for https url, ends with slash",
@@ -49,8 +47,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abcde.google.org",
 			wantedPort:     443,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for https url, ends with path",
@@ -58,8 +54,7 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     443,
-			wantURI:        "/api",
-			wantErr:        "",
+			wantPath:       "/api",
 		},
 		{
 			desc:           "successful for https url with custom port",
@@ -67,8 +62,7 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     8989,
-			wantURI:        "/api",
-			wantErr:        "",
+			wantPath:       "/api",
 		},
 		{
 			desc:           "successful for http url",
@@ -76,7 +70,7 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "http",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     8989,
-			wantURI:        "/api",
+			wantPath:       "/api",
 		},
 		{
 			desc:           "successful for https url, path ends with slash",
@@ -84,7 +78,7 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
-			wantURI:        "/path/to",
+			wantPath:       "/path/to",
 		},
 		{
 			desc:           "successful for https url, path ends without slash",
@@ -92,7 +86,7 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
-			wantURI:        "/path",
+			wantPath:       "/path",
 		},
 		{
 			desc:           "successful for grpc",
@@ -100,7 +94,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "grpc",
 			wantedHostname: "abc.example.org",
 			wantedPort:     80,
-			wantURI:        "",
 		},
 		{
 			desc:           "successful for grpcs",
@@ -108,7 +101,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "grpcs",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
-			wantURI:        "",
 		},
 		{
 			desc:           "default port depends on last char",
@@ -116,7 +108,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "r",
 			wantedHostname: "abc.example.org",
 			wantedPort:     80,
-			wantURI:        "",
 		},
 		{
 			desc:           "default port depends on last char",
@@ -124,7 +115,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "s",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
-			wantURI:        "",
 		},
 		{
 			desc:           "successful for https url with port and path in the same time",
@@ -132,7 +122,7 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     8000,
-			wantURI:        "/path",
+			wantPath:       "/path",
 		},
 		{
 			desc:           "successful for url without scheme",
@@ -140,7 +130,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abc.example.org",
 			wantedPort:     443,
-			wantURI:        "",
 		},
 		{
 			desc:           "successful with query params ignored",
@@ -148,8 +137,7 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "abcde.youtube.com",
 			wantedPort:     443,
-			wantURI:        "/api",
-			wantErr:        "",
+			wantPath:       "/api",
 		},
 		{
 			desc:           "successful for http IP with default port",
@@ -157,8 +145,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "http",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     80,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for https IP with default port",
@@ -166,8 +152,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     443,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for http IP with custom port",
@@ -175,8 +159,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "http",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     8080,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for https IP with custom port",
@@ -184,8 +166,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "https",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     8080,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for grpc IP with default port",
@@ -193,8 +173,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "grpc",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     80,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for grpcs IP with default port",
@@ -202,8 +180,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "grpcs",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     443,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for grpc IP with custom port",
@@ -211,8 +187,6 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "grpc",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     8080,
-			wantURI:        "",
-			wantErr:        "",
 		},
 		{
 			desc:           "successful for grpcs IP with custom port",
@@ -220,13 +194,37 @@ func TestParseURI(t *testing.T) {
 			wantedScheme:   "grpcs",
 			wantedHostname: "127.0.0.1",
 			wantedPort:     8080,
-			wantURI:        "",
-			wantErr:        "",
+		},
+		{
+			desc: "fail for bad port number",
+			url:  "grpcs://127.0.0.1:80bad",
+			// Check for truncated error message, it changes between go versions.
+			wantErr: `parse grpcs://127.0.0.1:80bad: `,
+		},
+		{
+			desc:    "fail for too many colons before port",
+			url:     "grpcs://127.0.0.1:::80",
+			wantErr: `address 127.0.0.1:::80: too many colons in address`,
+		},
+		{
+			desc:    "bad escape sequence in path",
+			url:     "127.0.0.1:80/hello%20%XX",
+			wantErr: `parse https://127.0.0.1:80/hello%20%XX: invalid URL escape "%XX"`,
+		},
+		{
+			desc:    "bad control character in host",
+			url:     `http://www.google\0.com`,
+			wantErr: `parse http://www.google\0.com: invalid character "\\" in host name`,
+		},
+		{
+			desc:    "bad brackets in ipv6 address",
+			url:     "https://[::1:80",
+			wantErr: `parse https://[::1:80: missing ']' in host`,
 		},
 	}
 
 	for i, tc := range testData {
-		scheme, hostname, port, uri, err := ParseURI(tc.url)
+		scheme, hostname, port, path, err := ParseURI(tc.url)
 		if scheme != tc.wantedScheme {
 			t.Errorf("Test Desc(%d): %s, extract backend address scheme, got: %v, want: %v", i, tc.desc, scheme, tc.wantedScheme)
 		}
@@ -236,10 +234,10 @@ func TestParseURI(t *testing.T) {
 		if port != tc.wantedPort {
 			t.Errorf("Test Desc(%d): %s, extract backend address port got: %v, want: %v", i, tc.desc, port, tc.wantedPort)
 		}
-		if uri != tc.wantURI {
-			t.Errorf("Test Desc(%d): %s, extract backend address uri got: %v, want: %v", i, tc.desc, uri, tc.wantURI)
+		if path != tc.wantPath {
+			t.Errorf("Test Desc(%d): %s, extract backend address path got: %v, want: %v", i, tc.desc, path, tc.wantPath)
 		}
-		if (err == nil && tc.wantErr != "") || (err != nil && err.Error() != tc.wantErr) {
+		if (err == nil && tc.wantErr != "") || (err != nil && !strings.Contains(err.Error(), tc.wantErr)) {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantErr)
 		}
 	}
@@ -473,12 +471,12 @@ func TestExtraAddressFromURI(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		generatedClusterName, err := ExtraAddressFromURI(tc.uri)
+		generatedClusterName, err := ExtractAddressFromURI(tc.uri)
 		if generatedClusterName != tc.wantedAddress {
-			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, generatedClusterName, tc.wantedAddress)
+			t.Errorf("Test Desc(%d): %s, ExtractAddressFromURI got: %v, want: %v", i, tc.desc, generatedClusterName, tc.wantedAddress)
 		}
 		if err != nil && !strings.Contains(err.Error(), tc.wantedError) {
-			t.Errorf("Test Desc(%d): %s, ExtraAddressFromURI got: %v, want: %v", i, tc.desc, err.Error(), tc.wantedError)
+			t.Errorf("Test Desc(%d): %s, ExtractAddressFromURI got: %v, want: %v", i, tc.desc, err.Error(), tc.wantedError)
 		}
 	}
 }
