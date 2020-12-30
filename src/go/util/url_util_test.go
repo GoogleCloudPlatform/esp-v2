@@ -196,9 +196,10 @@ func TestParseURI(t *testing.T) {
 			wantedPort:     8080,
 		},
 		{
-			desc:    "fail for bad port number",
-			url:     "grpcs://127.0.0.1:80bad",
-			wantErr: `parse grpcs://127.0.0.1:80bad: strconv.Atoi: parsing "80bad": invalid syntax`,
+			desc: "fail for bad port number",
+			url:  "grpcs://127.0.0.1:80bad",
+			// Check for truncated error message, it changes between go versions.
+			wantErr: `parse grpcs://127.0.0.1:80bad: `,
 		},
 		{
 			desc:    "fail for too many colons before port",
@@ -236,7 +237,7 @@ func TestParseURI(t *testing.T) {
 		if path != tc.wantPath {
 			t.Errorf("Test Desc(%d): %s, extract backend address path got: %v, want: %v", i, tc.desc, path, tc.wantPath)
 		}
-		if (err == nil && tc.wantErr != "") || (err != nil && err.Error() != tc.wantErr) {
+		if (err == nil && tc.wantErr != "") || (err != nil && !strings.Contains(err.Error(), tc.wantErr)) {
 			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantErr)
 		}
 	}
