@@ -455,7 +455,8 @@ func TestJwtAuthnFilter(t *testing.T) {
 		}
 
 		marshaler := &jsonpb.Marshaler{}
-		gotFilter, err := marshaler.MarshalToString(makeJwtAuthnFilter(fakeServiceInfo))
+		gotProto, _ := makeJwtAuthnFilter(fakeServiceInfo)
+		gotFilter, err := marshaler.MarshalToString(gotProto)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -122,7 +122,7 @@ func addDnsResolversToClusters(dnsResolverAddresses string, clusters []*clusterp
 func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
 	scheme, hostname, port, _, err := util.ParseURI(serviceInfo.Options.MetadataURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to parse metadata cluster URI: %v", err)
 	}
 
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
@@ -166,7 +166,7 @@ func makeIamCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
 	}
 	scheme, hostname, port, _, err := util.ParseURI(serviceInfo.Options.IamURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to parse IAM cluster URI: %v", err)
 	}
 
 	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
@@ -200,9 +200,9 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster,
 
 	for _, provider := range authn.GetProviders() {
 		jwksUri := provider.GetJwksUri()
-		addr, err := util.ExtraAddressFromURI(jwksUri)
+		addr, err := util.ExtractAddressFromURI(jwksUri)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
 		}
 
 		clusterName := util.JwtProviderClusterName(addr)
@@ -212,9 +212,8 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster,
 		generatedClusters[clusterName] = true
 
 		scheme, hostname, port, _, err := util.ParseURI(jwksUri)
-
 		if err != nil {
-			return nil, fmt.Errorf("Fail to parse jwksUri %s with error %v", jwksUri, err)
+			return nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
 		}
 
 		connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
@@ -308,7 +307,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster,
 		return nil, err
 	}
 	if path != "" {
-		return nil, fmt.Errorf("Invalid uri: service control should not have path part: %s, %s", uri, path)
+		return nil, fmt.Errorf("error parsing service control URI: should not have path part: %s, %s", uri, path)
 	}
 
 	connectTimeoutProto := ptypes.DurationProto(5 * time.Second)

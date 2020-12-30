@@ -88,7 +88,8 @@ func makeListener(serviceInfo *sc.ServiceInfo) (*listenerpb.Listener, error) {
 
 	// Add JWT Authn filter if needed.
 	if !serviceInfo.Options.SkipJwtAuthnFilter {
-		jwtAuthnFilter := makeJwtAuthnFilter(serviceInfo)
+		// TODO(b/176432170): Handle errors here, prevent startup.
+		jwtAuthnFilter, _ := makeJwtAuthnFilter(serviceInfo)
 		if jwtAuthnFilter != nil {
 			httpFilters = append(httpFilters, jwtAuthnFilter)
 			jsonStr, _ := util.ProtoToJson(jwtAuthnFilter)
@@ -332,7 +333,7 @@ func needPathRewrite(serviceInfo *sc.ServiceInfo) bool {
 	return false
 }
 
-func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string) {
+func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string, error) {
 	return []*jwtpb.JwtHeader{
 			{
 				Name:        util.DefaultJwtHeaderNameAuthorization,
@@ -343,10 +344,10 @@ func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string) {
 			},
 		}, []string{
 			util.DefaultJwtQueryParamAccessToken,
-		}
+		}, nil
 }
 
-func processJwtLocations(provider *confpb.AuthProvider) ([]*jwtpb.JwtHeader, []string) {
+func processJwtLocations(provider *confpb.AuthProvider) ([]*jwtpb.JwtHeader, []string, error) {
 	if len(provider.JwtLocations) == 0 {
 		return defaultJwtLocations()
 	}
@@ -364,25 +365,30 @@ func processJwtLocations(provider *confpb.AuthProvider) ([]*jwtpb.JwtHeader, []s
 		case *confpb.JwtLocation_Query:
 			jwtParams = append(jwtParams, jwtLocation.GetQuery())
 		default:
-			fmt.Errorf("provider.JwtLocations as unexpected type %T", x)
+			// TODO(b/176432170): Handle errors here, prevent startup.
+			glog.Errorf("error processing JWT location for provider (%v): unexpected type %T", provider.Id, x)
+			continue
 		}
 	}
-	return jwtHeaders, jwtParams
+	return jwtHeaders, jwtParams, nil
 }
 
-func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
+func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
-		return nil
+		return nil, nil
 	}
 	providers := make(map[string]*jwtpb.JwtProvider)
 	for _, provider := range auth.GetProviders() {
-		addr, err := util.ExtraAddressFromURI(provider.GetJwksUri())
+		addr, err := util.ExtractAddressFromURI(provider.GetJwksUri())
 		if err != nil {
-			return nil
+			return nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
 		}
 		clusterName := util.JwtProviderClusterName(addr)
-		fromHeaders, fromParams := processJwtLocations(provider)
+		fromHeaders, fromParams, err := processJwtLocations(provider)
+		if err != nil {
+			return nil, err
+		}
 
 		jp := &jwtpb.JwtProvider{
 			Issuer: provider.GetIssuer(),
@@ -426,7 +432,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 	}
 
 	if len(providers) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	requirements := make(map[string]*jwtpb.JwtRequirement)
@@ -446,7 +452,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) *hcmpb.HttpFilter {
 		Name:       util.JwtAuthn,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{jas},
 	}
-	return jwtAuthnFilter
+	return jwtAuthnFilter, nil
 }
 
 func makeJwtRequirement(requirements []*confpb.AuthRequirement, allow_missing bool) *jwtpb.JwtRequirement {

@@ -291,7 +291,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 
 		var err error
 		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule, seenUriTemplatesInRoute); err != nil {
-			return nil, nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
+			return nil, nil, fmt.Errorf("error making HTTP route matcher for operation (%v): %v", operation, err)
 		}
 
 		for _, methodNotAllowedRouteMatcher := range methodNotAllowedRouteMatchers {
@@ -303,7 +303,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 
 			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
 			if err != nil {
-				return nil, nil, fmt.Errorf("fail to make per-route filter config, %v", err)
+				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation (%v): %v", operation, err)
 			}
 
 			if method.BackendInfo.Hostname != "" {
@@ -325,7 +325,10 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 			}
 			backendRoutes = append(backendRoutes, r)
 
-			jsonStr, _ := util.ProtoToJson(r)
+			jsonStr, err := util.ProtoToJson(r)
+			if err != nil {
+				return nil, nil, err
+			}
 			glog.Infof("adding route: %v", jsonStr)
 		}
 	}
