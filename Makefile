@@ -312,7 +312,7 @@ test-ssl-files:
 	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/server.key -out tests/env/testdata/server.crt
 	@cp tests/env/testdata/server.crt tests/env/testdata/client.crt
 	@cp tests/env/testdata/server.key tests/env/testdata/client.key
-	# add cmd for proxy.crt and proxy.key
+	# TODO(taoxuy@): also add cmd for proxy.crt and proxy.key
 
 
 
