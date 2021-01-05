@@ -253,9 +253,9 @@ func (s *ServiceInfo) addGrpcHttpRules() error {
 	for _, api := range s.serviceConfig.GetApis() {
 		for _, method := range api.GetMethods() {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
-			mi, err := s.getOrCreateMethod(selector)
+			mi, err := s.getMethod(selector)
 			if err != nil {
-				return fmt.Errorf("error creating auto-generated gRPC http rule for operation (%s.%s): %v", api.GetName(), method.GetName(), err)
+				return fmt.Errorf("error processing auto-generated gRPC http rule: %v", err)
 			}
 
 			path := fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())
