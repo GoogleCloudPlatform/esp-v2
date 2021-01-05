@@ -362,13 +362,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 }
 
 func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch, uriTemplateInSc string) *routepb.Route {
-	spanName := fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc)
-
-	if len(spanName) > util.SpanNameMaxByteNum {
-		newSpanName := spanName[:util.SpanNameMaxByteNum-3] + "..."
-		glog.Warningf("oversized spanName: %s, replace it with the span name: %s", spanName, newSpanName)
-		spanName = newSpanName
-	}
+	spanName := util.MaybeTruncateSpanName(fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc))
 
 	return &routepb.Route{
 		Match: methodNotAllowedRouteMatcher,

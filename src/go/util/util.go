@@ -132,3 +132,11 @@ const (
 	HTTP2
 	GRPC
 )
+
+func MaybeTruncateSpanName(spanName string) string {
+	if len(spanName) <= SpanNameMaxByteNum {
+		return spanName
+	}
+	newSpanName := spanName[:SpanNameMaxByteNum-3] + "..."
+	return newSpanName
+}
