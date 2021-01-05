@@ -246,7 +246,7 @@ func TestHSTS(t *testing.T) {
 	args = append(args, "--ssl_server_cert_path=../env/testdata/")
 	args = append(args, "--enable_strict_transport_security")
 
-	s := env.NewTestEnv(platform.TestHttpsClients, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestHSTS, platform.EchoSidecar)
 	defer s.TearDown(t)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{

@@ -199,7 +199,7 @@ func TestParseURI(t *testing.T) {
 			desc: "fail for bad port number",
 			url:  "grpcs://127.0.0.1:80bad",
 			// Check for truncated error message, it changes between go versions.
-			wantErr: `parse grpcs://127.0.0.1:80bad: `,
+			wantErr: `parse "grpcs://127.0.0.1:80bad": `,
 		},
 		{
 			desc:    "fail for too many colons before port",
@@ -209,17 +209,17 @@ func TestParseURI(t *testing.T) {
 		{
 			desc:    "bad escape sequence in path",
 			url:     "127.0.0.1:80/hello%20%XX",
-			wantErr: `parse https://127.0.0.1:80/hello%20%XX: invalid URL escape "%XX"`,
+			wantErr: `parse "https://127.0.0.1:80/hello%20%XX": invalid URL escape "%XX"`,
 		},
 		{
 			desc:    "bad control character in host",
 			url:     `http://www.google\0.com`,
-			wantErr: `parse http://www.google\0.com: invalid character "\\" in host name`,
+			wantErr: `parse "http://www.google\\0.com": invalid character "\\" in host name`,
 		},
 		{
 			desc:    "bad brackets in ipv6 address",
 			url:     "https://[::1:80",
-			wantErr: `parse https://[::1:80: missing ']' in host`,
+			wantErr: `parse "https://[::1:80": missing ']' in host`,
 		},
 	}
 

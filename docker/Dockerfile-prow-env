@@ -13,7 +13,7 @@
 # limitations under the License.
 
 FROM debian:buster
-LABEL maintainer="jilinxia@google.com"
+LABEL maintainer="esp-eng@google.com"
 
 # add env we can debug with the image name:tag
 ARG IMAGE_ARG
@@ -64,8 +64,8 @@ ENV GOPATH /go
 ENV PATH /usr/local/go/bin:$PATH
 ENV PATH $GOPATH/bin:$PATH
 
-ENV GO_TARBALL "go1.13.linux-amd64.tar.gz"
-RUN wget -q "https://storage.googleapis.com/golang/${GO_TARBALL}" && \
+ENV GO_TARBALL "go1.15.6.linux-amd64.tar.gz"
+RUN wget -q "https://golang.org/dl/${GO_TARBALL}" && \
     tar xzf "${GO_TARBALL}" -C /usr/local && \
     rm "${GO_TARBALL}"
 
