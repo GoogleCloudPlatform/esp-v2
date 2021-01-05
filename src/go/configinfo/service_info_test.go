@@ -2336,6 +2336,7 @@ func TestProcessQuota(t *testing.T) {
 		desc              string
 		fakeServiceConfig *confpb.Service
 		wantMethods       map[string]*MethodInfo
+		wantError         string
 	}{
 		{
 			desc: "Succeed, simple case",
@@ -2433,13 +2434,42 @@ func TestProcessQuota(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Typo in operation name does not crash",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Quota: &confpb.Quota{
+					MetricRules: []*confpb.MetricRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.BadOperationName",
+							MetricCosts: map[string]int64{
+								"metric_a": 2,
+								"metric_b": 1,
+							},
+						},
+					},
+				},
+			},
+			wantError: "error processing quota metric rule: selector (endpoints.examples.bookstore.Bookstore.BadOperationName) was not defined in the API",
+		},
 	}
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://127.0.0.1:80"
-			serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+			if err != nil {
+				if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
+					t.Fatalf("error mismatch, \ngot : %s, \nwant: %s", err.Error(), tc.wantError)
+				}
+				return
+			}
 
 			for key, gotMethod := range serviceInfo.Methods {
 				wantMethod := tc.wantMethods[key]
