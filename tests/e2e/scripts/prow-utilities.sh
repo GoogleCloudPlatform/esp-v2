@@ -99,6 +99,11 @@ function long_running_test() {
   echo "ESPv2 listening at ${scheme}://${address}:${port}"
   echo ${api_key}
   echo ${apiproxy_service}
+
+  if [ "${platform}" = "gke" ]; then
+    status_server_init "${address}"
+  fi
+
   case "${BACKEND}" in
     'bookstore')
       retry -n 20 check_http_service "${scheme}://${address}:${port}/version" ${http_code} "${host_header}"
@@ -152,6 +157,10 @@ function long_running_test() {
       echo "Invalid backend ${BACKEND}"
       return 1 ;;
   esac
+
+  if [ "${platform}" = "gke" ]; then
+    log_stats "${address}"
+  fi
 
   create_status_file  \
     -f "${json_file}"  \

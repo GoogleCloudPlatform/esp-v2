@@ -188,17 +188,17 @@ __EOF__
   return 0
 }
 
-# Uses 3 functions to detect memory leak for stress tests.
-# 1) call detect_memory_leak_init() before your loop
-# 2) call detect_memory_leak_check() for each iteration
-# 3) call detect_memory_leak_final() at the end.
-function detect_memory_leak_init() {
+function status_server_init() {
   local host=${1}
   # host format has to be: proto://host:port.
   STATUS_SERVER="http://${host}:8001"
   echo "STATUS_SERVER: ${STATUS_SERVER}"
 }
 
+# Uses 3 functions to detect memory leak for stress tests.
+# 1) call status_server_init() before your loop
+# 2) call detect_memory_leak_check() for each iteration
+# 3) call detect_memory_leak_final() at the end.
 function detect_memory_leak_check() {
   local run_count=${1}
   local local_json="$(mktemp /tmp/XXXXXX.json)"
@@ -241,6 +241,16 @@ function detect_memory_leak_final() {
     echo "************ Memory leak is found!!! *************"
     return 1
   fi
+}
+
+# Uses 2 functions to log all envoy stats to the console.
+# 1) call status_server_init() at the start of the test.
+# 2) call log_stats() at the end of the test.
+function log_stats() {
+  echo "************ Used envoy stats are logged below *************"
+  curl "${STATUS_SERVER}/stats?usedonly"
+  echo "************ Used envoy stats are logged above *************"
+  return 0;
 }
 
 # Extract key from test env json created from
