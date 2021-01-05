@@ -365,7 +365,7 @@ func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch,
 	spanName := fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc)
 
 	if len(spanName) > util.SpanNameMaxByteNum {
-		newSpanName := fmt.Sprintf("%s UnknownHttpMethod", util.SpanNamePrefix)
+		newSpanName := spanName[:util.SpanNameMaxByteNum-3] + "..."
 		glog.Warningf("oversized spanName: %s, replace it with the span name: %s", spanName, newSpanName)
 		spanName = newSpanName
 	}
@@ -422,23 +422,31 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRout
 	if httpRule == nil {
 		return nil, nil, fmt.Errorf("httpRule is nil")
 	}
-	var routeMatchers []*routepb.RouteMatch
-	var uriTemplates []string
 
+	type routeMatchWrapper struct {
+		*routepb.RouteMatch
+		UriTemplate string
+	}
+
+	var routeMatchWrappers []*routeMatchWrapper
 	if httpRule.UriTemplate.IsExactMatch() {
 		pathNoTrailingSlash := httpRule.UriTemplate.ExactMatchString(false)
 		pathWithTrailingSlash := httpRule.UriTemplate.ExactMatchString(true)
 
-		uriTemplates = append(uriTemplates, pathNoTrailingSlash)
-		routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathNoTrailingSlash))
+		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+			RouteMatch:  makeHttpExactPathRouteMatcher(pathNoTrailingSlash),
+			UriTemplate: pathNoTrailingSlash,
+		})
+
 		if pathWithTrailingSlash != pathNoTrailingSlash {
-			uriTemplates = append(uriTemplates, pathWithTrailingSlash)
-			routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathWithTrailingSlash))
+			routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+				RouteMatch:  makeHttpExactPathRouteMatcher(pathWithTrailingSlash),
+				UriTemplate: pathWithTrailingSlash,
+			})
 		}
 	} else {
-		uriTemplates = append(uriTemplates, httpRule.UriTemplate.Regex())
-		routeMatchers = []*routepb.RouteMatch{
-			{
+		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+			RouteMatch: &routepb.RouteMatch{
 				PathSpecifier: &routepb.RouteMatch_SafeRegex{
 					SafeRegex: &matcher.RegexMatcher{
 						EngineType: &matcher.RegexMatcher_GoogleRe2{
@@ -448,14 +456,18 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRout
 					},
 				},
 			},
-		}
+			UriTemplate: httpRule.UriTemplate.Regex(),
+		})
 
 	}
 
-	var methodNotAllowedRouteMatchers []*routepb.RouteMatch
-	if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
-		for idx, routeMatcher := range routeMatchers {
-			uriTemplate := uriTemplates[idx]
+	var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
+	for _, routeMatch := range routeMatchWrappers {
+		routeMatcher := routeMatch.RouteMatch
+		routeMatchers = append(routeMatchers, routeMatcher)
+
+		if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
+			uriTemplate := routeMatch.UriTemplate
 			if ok, _ := seenUriTemplatesInRoute[uriTemplate]; !ok {
 				seenUriTemplatesInRoute[uriTemplate] = true
 				methodUndefinedRouterMatcherMsg := proto.Clone(routeMatcher)

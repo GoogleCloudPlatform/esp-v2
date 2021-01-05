@@ -34,7 +34,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	configId := "test-config-id"
 	args := []string{"--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
-	s := env.NewTestEnv(platform.TestServiceControlFailedRequestReport, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestServiceControlBasic, platform.GrpcBookstoreSidecar)
 	defer s.TearDown(t)
 
 	if err := s.Setup(args); err != nil {
@@ -117,10 +117,41 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			},
 		},
 		{
-			desc:           "Request matches uri template(regex) but not method.",
+			desc:           "Request matches uri template with trailing slash(exact path) but not method.",
 			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
 			clientProtocol: "http",
 			// "DELETE" is not defined for "/v1/shelves".
+			httpMethod:    "DELETE",
+			method:        "/v1/shelves/?key=api-key",
+			httpCallError: "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to the defined url template \"/v1/shelves\" but its http method is not allowed\"}",
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					URL:             "/v1/shelves/?key=api-key",
+					ApiMethod:       "<Unknown Operation Name>",
+					// API Key is extracted but not trusted.
+					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
+					ProducerProjectID:    "producer project",
+					FrontendProtocol:     "http",
+					HttpMethod:           "DELETE",
+					LogMessage:           "<Unknown Operation Name> is called",
+					StatusCode:           "0",
+					ResponseCode:         405,
+					Platform:             util.GCE,
+					Location:             "test-zone",
+					BackendProtocol:      "grpc",
+					ResponseCodeDetail:   "direct_response",
+				},
+			},
+		},
+		{
+			desc:           "Request matches uri template(regex) but not method.",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "http",
+			// "POST" is not defined for "/v1/shelves/{shelf_id}".
 			httpMethod:    "POST",
 			method:        "/v1/shelves/100?key=api-key",
 			httpCallError: "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to the defined url template \"/v1/shelves/{shelf}\" but its http method is not allowed\"}",
@@ -130,6 +161,37 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					ServiceConfigID: "test-config-id",
 					URL:             "/v1/shelves/100?key=api-key",
+					ApiMethod:       "<Unknown Operation Name>",
+					// API Key is extracted but not trusted.
+					ApiKeyInLogEntryOnly: "api-key",
+					ApiKeyState:          "NOT CHECKED",
+					ProducerProjectID:    "producer project",
+					FrontendProtocol:     "http",
+					HttpMethod:           "POST",
+					LogMessage:           "<Unknown Operation Name> is called",
+					StatusCode:           "0",
+					ResponseCode:         405,
+					Platform:             util.GCE,
+					Location:             "test-zone",
+					BackendProtocol:      "grpc",
+					ResponseCodeDetail:   "direct_response",
+				},
+			},
+		},
+		{
+			desc:           "Request matches uri template with trailing slash(regex) but not method.",
+			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			clientProtocol: "http",
+			// "POST" is not defined for "/v1/shelves/{shelf_id}".
+			httpMethod:    "POST",
+			method:        "/v1/shelves/100/?key=api-key",
+			httpCallError: "405 Method Not Allowed, {\"code\":405,\"message\":\"The current request is matched to the defined url template \"/v1/shelves/{shelf}\" but its http method is not allowed\"}",
+			wantScRequests: []interface{}{
+				&utils.ExpectedReport{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					URL:             "/v1/shelves/100/?key=api-key",
 					ApiMethod:       "<Unknown Operation Name>",
 					// API Key is extracted but not trusted.
 					ApiKeyInLogEntryOnly: "api-key",

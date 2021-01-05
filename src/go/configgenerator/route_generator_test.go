@@ -3523,7 +3523,7 @@ func TestMakeFallbackRoute(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownHttpMethod"
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-temp..."
           },
           "directResponse": {
             "body": {
@@ -3537,7 +3537,7 @@ func TestMakeFallbackRoute(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownHttpMethod"
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-temp..."
           },
           "directResponse": {
             "body": {
@@ -3600,7 +3600,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
-				t.Errorf("MakeRouteConfig failed, \n %v", err)
+				t.Errorf("Test(%s): MakeRouteConfig failed, \n %v", tc.desc, err)
 			}
 		})
 	}
