@@ -68,7 +68,7 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 
 	portVal, err := strconv.Atoi(port)
 	if err != nil {
-		return "", "", 0, "", fmt.Errorf("parse %v: %v", uri, err)
+		return "", "", 0, "", fmt.Errorf("parse \"%v\": %v", uri, err)
 	}
 
 	pathNoTrailingSlash := strings.TrimSuffix(u.Path, "/")

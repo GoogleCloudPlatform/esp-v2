@@ -51,7 +51,7 @@ func TestCancellationReport(t *testing.T) {
 			desc:                 "Client timeout causes request cancellation before backend responds",
 			backendSleepDuration: 10 * time.Second,
 			clientTimeout:        5 * time.Second,
-			wantErr:              `request canceled`,
+			wantErr:              `Client.Timeout exceeded`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:           utils.ESPv2Version(),
