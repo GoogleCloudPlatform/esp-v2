@@ -111,4 +111,4 @@ fi
 unset GRPC_GO_LOG_SEVERITY_LEVEL
 
 # We fail the test if memory increase is large.
-return $(detect_memory_leak_final ${RUN_COUNT})
+detect_memory_leak_final ${RUN_COUNT}
