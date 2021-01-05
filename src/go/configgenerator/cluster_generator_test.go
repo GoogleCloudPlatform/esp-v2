@@ -15,6 +15,7 @@
 package configgenerator
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -87,12 +88,17 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "ListShelves",
+							},
+						},
 					},
 				},
 				Http: &annotationspb.Http{
 					Rules: []*annotationspb.HttpRule{
 						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
+							Selector: fmt.Sprintf("%s.ListShelves", testApiName),
 							Pattern: &annotationspb.HttpRule_Get{
 								Get: "/v1/shelves",
 							},
@@ -115,21 +121,23 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = tc.BackendAddress
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = tc.BackendAddress
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		cluster, err := makeServiceControlCluster(fakeServiceInfo)
-		if err != nil {
-			t.Fatal(err)
-		}
+			cluster, err := makeServiceControlCluster(fakeServiceInfo)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if !proto.Equal(cluster, &tc.wantedCluster) {
-			t.Errorf("Test Desc(%d): %s, makeServiceControlCluster\ngot Clusters: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
-		}
+			if !proto.Equal(cluster, &tc.wantedCluster) {
+				t.Errorf("Test Desc(%d): %s, makeServiceControlCluster\ngot Clusters: %v,\nwant: %v", i, tc.desc, cluster, tc.wantedCluster)
+			}
+		})
 	}
 }
 
@@ -156,16 +164,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 							},
 							{
 								Name: "Bar",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
 							},
 						},
 					},
@@ -216,16 +214,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						},
 					},
 				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
-							},
-						},
-					},
-				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -262,16 +250,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 							},
 							{
 								Name: "Bar",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
 							},
 						},
 					},
@@ -323,16 +301,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						},
 					},
 				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
-							},
-						},
-					},
-				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -372,16 +340,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 						},
 					},
 				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
-							},
-						},
-					},
-				},
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -415,16 +373,6 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 							},
 							{
 								Name: "Bar",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
 							},
 						},
 					},
@@ -468,20 +416,10 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
-						Name: "1.cloudesf_testing_cloud_goog.run.app",
+						Name: "1.cloudesf_testing_cloud_goog",
 						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
 							},
 						},
 					},
@@ -518,20 +456,10 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
-						Name: "1.cloudesf_testing_cloud_goog.run.app",
+						Name: "1.cloudesf_testing_cloud_goog",
 						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.ListShelves",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/v1/shelves",
 							},
 						},
 					},
@@ -555,27 +483,29 @@ func TestMakeBackendRoutingCluster(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = tc.BackendAddress
-		if tc.backendDnsLookupFamily != "" {
-			opts.BackendDnsLookupFamily = tc.backendDnsLookupFamily
-		}
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		clusters, err := makeRemoteBackendClusters(fakeServiceInfo)
-		if err != nil {
-			if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
-				t.Fatal(err)
-
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = tc.BackendAddress
+			if tc.backendDnsLookupFamily != "" {
+				opts.BackendDnsLookupFamily = tc.backendDnsLookupFamily
 			}
-		}
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if tc.wantedClusters != nil && !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
-			t.Errorf("Test Desc(%d): %s, makeRemoteBackendClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
-		}
+			clusters, err := makeRemoteBackendClusters(fakeServiceInfo)
+			if err != nil {
+				if tc.wantedError == "" || !strings.Contains(err.Error(), tc.wantedError) {
+					t.Fatal(err)
+
+				}
+			}
+
+			if tc.wantedClusters != nil && !cmp.Equal(clusters, tc.wantedClusters, cmp.Comparer(proto.Equal)) {
+				t.Errorf("Test Desc(%d): %s, makeRemoteBackendClusters\ngot: %v,\nwant: %v", i, tc.desc, clusters, tc.wantedClusters)
+			}
+		})
 	}
 }
 

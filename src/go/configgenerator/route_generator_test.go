@@ -203,6 +203,11 @@ func TestMakeRouteConfig(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -387,6 +392,11 @@ func TestMakeRouteConfig(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
