@@ -14,7 +14,9 @@
 
 package util
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	// DefaultRootCAPaths is the default certs path.
@@ -113,6 +115,9 @@ const (
 
 	// All traces created by ESPv2 should have this prefix.
 	SpanNamePrefix = "ingress"
+
+	// The maximum byte number of a span name. This restriction is from StackDriver.
+	SpanNameMaxByteNum = 128
 )
 
 type BackendProtocol int32
@@ -127,3 +132,11 @@ const (
 	HTTP2
 	GRPC
 )
+
+func MaybeTruncateSpanName(spanName string) string {
+	if len(spanName) <= SpanNameMaxByteNum {
+		return spanName
+	}
+	newSpanName := spanName[:SpanNameMaxByteNum-3] + "..."
+	return newSpanName
+}

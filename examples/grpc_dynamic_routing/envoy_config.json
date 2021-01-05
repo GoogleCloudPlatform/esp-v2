@@ -1372,6 +1372,202 @@
                           },
                           {
                             "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/echo"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/echo"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/echo"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/echo/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/echoreport"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/echoreport\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/echoreport"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/echoreport"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/echoreport\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/echoreport/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/echostream"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/echostream\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/echostream"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/echostream"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/echostream\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/echostream/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Cork"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/Cork\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/Cork"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Cork"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/Cork\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/Cork/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Echo"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/Echo\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/Echo"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/Echo"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/Echo\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/Echo/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoReport"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/EchoReport\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/EchoReport"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoReport"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/EchoReport\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/EchoReport/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoStream"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/EchoStream\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/EchoStream"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/test.grpc.Test/EchoStream"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/test.grpc.Test/EchoStream\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/test.grpc.Test/EchoStream/"
+                            }
+                          },
+                          {
+                            "decorator": {
                               "operation": "ingress UnknownOperationName"
                             },
                             "directResponse": {

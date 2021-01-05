@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 
@@ -49,12 +50,20 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 		Domains: []string{"*"},
 	}
 
-	// Per-selector routes for both local and remote backends.
-	brRoutes, err := makeRouteTable(serviceInfo)
+	// The router will use the first matched route, so the order of routes is important.
+	// Right now, the order of routes are:
+	// - backend routes
+	// - cors routes
+	// - fallback `method not allowed` routes
+	// - catch all `not found` routes
+	//
+	//
+	// // Per-selector routes for both local and remote backends.
+	backendRoutes, methodNotAllowedRoutes, err := makeRouteTable(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
-	host.Routes = brRoutes
+	host.Routes = backendRoutes
 
 	cors, corsRoute, err := makeRouteCors(serviceInfo)
 	if err != nil {
@@ -68,7 +77,9 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 		glog.Infof("adding cors route configuration: %v", jsonStr)
 	}
 
-	host.Routes = append(host.Routes, makeCatchAllUnmatchedRoute())
+	host.Routes = append(host.Routes, methodNotAllowedRoutes...)
+
+	host.Routes = append(host.Routes, makeCatchAllNotFoundRoute())
 
 	virtualHosts = append(virtualHosts, &host)
 	return &routepb.RouteConfiguration{
@@ -246,13 +257,15 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 	return perFilterConfig, nil
 }
 
-func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
+func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
+	var methodNotAllowedRoutes []*routepb.Route
 	httpPatternMethods, err := getSortMethodsByHttpPattern(serviceInfo)
 	if err != nil {
-		return nil, fmt.Errorf("fail to sort route match, %v", err)
+		return nil, nil, fmt.Errorf("fail to sort route match, %v", err)
 	}
 
+	seenUriTemplatesInRoute := map[string]bool{}
 	for _, httpPatternMethod := range *httpPatternMethods {
 		operation := httpPatternMethod.Operation
 		method := serviceInfo.Methods[operation]
@@ -271,10 +284,18 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 			respTimeout = method.BackendInfo.Deadline
 		}
 
-		var routeMatchers []*routepb.RouteMatch
+		// The `methodNotAllowedRouteMatchers` are the route matches covers all the defined uri templates
+		// but no specific methods. As all the defined requests are matched by `routeMatchers`, the rest
+		// matched by `methodNotAllowedRouteMatchers` fall in the category of `405 Method Not Allowed`.
+		var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
+
 		var err error
-		if routeMatchers, err = makeHttpRouteMatchers(httpRule); err != nil {
-			return nil, fmt.Errorf("error making HTTP route matcher for operation (%v): %v", operation, err)
+		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule, seenUriTemplatesInRoute); err != nil {
+			return nil, nil, fmt.Errorf("error making HTTP route matcher for operation (%v): %v", operation, err)
+		}
+
+		for _, methodNotAllowedRouteMatcher := range methodNotAllowedRouteMatchers {
+			methodNotAllowedRoutes = append(methodNotAllowedRoutes, makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher, httpRule.UriTemplate.Origin))
 		}
 
 		for _, routeMatcher := range routeMatchers {
@@ -282,7 +303,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 
 			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
 			if err != nil {
-				return nil, fmt.Errorf("fail to make per-route filter config for operation (%v): %v", operation, err)
+				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation (%v): %v", operation, err)
 			}
 
 			if method.BackendInfo.Hostname != "" {
@@ -306,13 +327,13 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 
 			jsonStr, err := util.ProtoToJson(r)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			glog.Infof("adding route: %v", jsonStr)
 		}
 	}
 
-	return backendRoutes, nil
+	return backendRoutes, methodNotAllowedRoutes, nil
 }
 
 func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, respTimeout time.Duration) *routepb.Route {
@@ -333,13 +354,34 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 			},
 		},
 		Decorator: &routepb.Decorator{
+			// TODO(taoxuy@): check if the generated span name length less than the limit.
 			// Note we don't add ApiName to reduce the length of the span name.
 			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
 		},
 	}
 }
 
-func makeCatchAllUnmatchedRoute() *routepb.Route {
+func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch, uriTemplateInSc string) *routepb.Route {
+	spanName := util.MaybeTruncateSpanName(fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc))
+
+	return &routepb.Route{
+		Match: methodNotAllowedRouteMatcher,
+		Action: &routepb.Route_DirectResponse{
+			DirectResponse: &routepb.DirectResponseAction{
+				Status: http.StatusMethodNotAllowed,
+				Body: &corepb.DataSource{
+					Specifier: &corepb.DataSource_InlineString{
+						InlineString: fmt.Sprintf("The current request is matched to the defined url template \"%s\" but its http method is not allowed", uriTemplateInSc),
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: spanName,
+		},
+	}
+}
+func makeCatchAllNotFoundRoute() *routepb.Route {
 	return &routepb.Route{
 		Match: &routepb.RouteMatch{
 			PathSpecifier: &routepb.RouteMatch_Prefix{
@@ -357,7 +399,7 @@ func makeCatchAllUnmatchedRoute() *routepb.Route {
 			},
 		},
 		Decorator: &routepb.Decorator{
-			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, "UnknownOperationName"),
+			Operation: fmt.Sprintf("%s UnknownOperationName", util.SpanNamePrefix),
 		},
 	}
 }
@@ -370,23 +412,35 @@ func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 	}
 }
 
-func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch, error) {
+func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRoute map[string]bool) ([]*routepb.RouteMatch, []*routepb.RouteMatch, error) {
 	if httpRule == nil {
-		return nil, fmt.Errorf("httpRule is nil")
+		return nil, nil, fmt.Errorf("httpRule is nil")
 	}
-	var routeMatchers []*routepb.RouteMatch
 
+	type routeMatchWrapper struct {
+		*routepb.RouteMatch
+		UriTemplate string
+	}
+
+	var routeMatchWrappers []*routeMatchWrapper
 	if httpRule.UriTemplate.IsExactMatch() {
 		pathNoTrailingSlash := httpRule.UriTemplate.ExactMatchString(false)
 		pathWithTrailingSlash := httpRule.UriTemplate.ExactMatchString(true)
 
-		routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathNoTrailingSlash))
+		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+			RouteMatch:  makeHttpExactPathRouteMatcher(pathNoTrailingSlash),
+			UriTemplate: pathNoTrailingSlash,
+		})
+
 		if pathWithTrailingSlash != pathNoTrailingSlash {
-			routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathWithTrailingSlash))
+			routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+				RouteMatch:  makeHttpExactPathRouteMatcher(pathWithTrailingSlash),
+				UriTemplate: pathWithTrailingSlash,
+			})
 		}
 	} else {
-		routeMatchers = []*routepb.RouteMatch{
-			{
+		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+			RouteMatch: &routepb.RouteMatch{
 				PathSpecifier: &routepb.RouteMatch_SafeRegex{
 					SafeRegex: &matcher.RegexMatcher{
 						EngineType: &matcher.RegexMatcher_GoogleRe2{
@@ -396,11 +450,24 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch
 					},
 				},
 			},
-		}
+			UriTemplate: httpRule.UriTemplate.Regex(),
+		})
+
 	}
 
-	if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
-		for _, routeMatcher := range routeMatchers {
+	var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
+	for _, routeMatch := range routeMatchWrappers {
+		routeMatcher := routeMatch.RouteMatch
+		routeMatchers = append(routeMatchers, routeMatcher)
+
+		if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
+			uriTemplate := routeMatch.UriTemplate
+			if ok, _ := seenUriTemplatesInRoute[uriTemplate]; !ok {
+				seenUriTemplatesInRoute[uriTemplate] = true
+				methodUndefinedRouterMatcherMsg := proto.Clone(routeMatcher)
+				methodNotAllowedRouteMatchers = append(methodNotAllowedRouteMatchers, methodUndefinedRouterMatcherMsg.(*routepb.RouteMatch))
+			}
+
 			routeMatcher.Headers = []*routepb.HeaderMatcher{
 				{
 					Name: ":method",
@@ -411,7 +478,8 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch
 			}
 		}
 	}
-	return routeMatchers, nil
+
+	return routeMatchers, methodNotAllowedRouteMatchers, nil
 }
 
 func getSortMethodsByHttpPattern(serviceInfo *configinfo.ServiceInfo) (*httppattern.MethodSlice, error) {
