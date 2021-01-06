@@ -1755,25 +1755,224 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 				"abc.com.api": util.DefaultResponseDeadline,
 			},
 		},
+		{
+			desc: "Missing deadline is defaulted",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline,
+			},
+		},
 	}
 
-	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
-		if err != nil {
-			t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline error not expected, got: %v", i, tc.desc, err)
-			return
-		}
-
-		for _, rule := range tc.fakeServiceConfig.Backend.Rules {
-			gotDeadline := s.Methods[rule.Selector].BackendInfo.Deadline
-			wantDeadline := tc.wantedMethodDeadlines[rule.Selector]
-
-			if wantDeadline != gotDeadline {
-				t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline, Deadline not expected, got: %v, want: %v", i, tc.desc, gotDeadline, wantDeadline)
+			if err != nil {
+				t.Errorf("error not expected, got: %v", err)
+				return
 			}
-		}
+
+			for operation, mi := range s.Methods {
+				gotDeadline := mi.BackendInfo.Deadline
+				wantDeadline := tc.wantedMethodDeadlines[operation]
+
+				if wantDeadline != gotDeadline {
+					t.Errorf("Deadline not expected, got: %v, want: %v", gotDeadline, wantDeadline)
+				}
+			}
+		})
+	}
+}
+
+func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		globalIdleTimeout time.Duration
+		// Map of selector to the expected idle timeout for the corresponding route.
+		wantedMethodIdleTimeout map[string]time.Duration
+	}{
+		{
+			desc:              "Global idle timeout takes priority over small deadline",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultIdleTimeout,
+			},
+		},
+		{
+			desc:              "Deadline takes priority over small global idle timeout",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 10*time.Second + 500*time.Millisecond,
+			},
+		},
+		{
+			desc:              "Global idle timeout takes priority over missing deadline",
+			globalIdleTimeout: 30 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 30 * time.Second,
+			},
+		},
+		{
+			desc:              "Global idle timeout takes priority over negative deadline",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultIdleTimeout,
+			},
+		},
+		{
+			desc:              "Default deadline takes priority over small global idle timeout with missing deadline",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline,
+			},
+		},
+		{
+			desc:              "Default deadline takes priority over small global idle timeout and negative deadline",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline,
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.StreamIdleTimeout = tc.globalIdleTimeout
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+			if err != nil {
+				t.Errorf("error not expected, got: %v", err)
+				return
+			}
+
+			for operation, mi := range s.Methods {
+				gotIdleTimeout := mi.BackendInfo.IdleTimeout
+				wantIdleTimeout := tc.wantedMethodIdleTimeout[operation]
+
+				if gotIdleTimeout != wantIdleTimeout {
+					t.Errorf("IdleTimeout not expected, got: %v, want: %v", gotIdleTimeout, wantIdleTimeout)
+				}
+			}
+		})
 	}
 }
 

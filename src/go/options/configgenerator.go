@@ -125,7 +125,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		BackendDnsLookupFamily:           "auto",
 		BackendAddress:                   fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
 		ClusterConnectTimeout:            20 * time.Second,
-		StreamIdleTimeout:                5 * time.Minute,
+		StreamIdleTimeout:                util.DefaultIdleTimeout,
 		EnvoyXffNumTrustedHops:           2,
 		JwksCacheDurationInS:             300,
 		ListenerAddress:                  "0.0.0.0",

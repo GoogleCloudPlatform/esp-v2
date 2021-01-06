@@ -77,6 +77,9 @@ const (
 	// Default response deadline used if user does not specify one in the BackendRule.
 	DefaultResponseDeadline = 15 * time.Second
 
+	// Default idle timeout applied globally if not specified via flag.
+	DefaultIdleTimeout = 5 * time.Minute
+
 	// A limit configured to restrict resource usage in Envoy's SafeRegex GoogleRE2 matcher.
 	// It will be validated on configmanager side though it may use different GoogleRE2 library.
 	// b/148606900: It is safe to set this to a fairly high value.

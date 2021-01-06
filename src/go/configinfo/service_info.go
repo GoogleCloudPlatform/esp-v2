@@ -611,11 +611,13 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 			continue
 		}
 
+		idleTimeout := util.MaxDuration(util.DefaultResponseDeadline, s.Options.StreamIdleTimeout)
+
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{
 			ClusterName: s.LocalBackendCluster.ClusterName,
 			Deadline:    util.DefaultResponseDeadline,
-			IdleTimeout: s.Options.StreamIdleTimeout,
+			IdleTimeout: idleTimeout,
 			RetryOns:    s.Options.BackendRetryOns,
 			RetryNum:    s.Options.BackendRetryNum,
 		}
