@@ -556,9 +556,9 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		deadline = time.Duration(deadlineMs) * time.Millisecond
 	}
 
-	// Support idle streams up to the deadline per request.
-	// Allow global flag to override per-request deadline to a higher value.
-	idleTimeout := util.MaxDuration(deadline, s.Options.StreamIdleTimeout)
+	// Allow per-route deadlines to override the global flag.
+	// Add an extra second to ensure errors are 504s, not 408s.
+	idleTimeout := util.MaxDuration(deadline+time.Second, s.Options.StreamIdleTimeout)
 
 	method.BackendInfo = &backendInfo{
 		ClusterName:     backendClusterName,
@@ -611,7 +611,8 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 			continue
 		}
 
-		idleTimeout := util.MaxDuration(util.DefaultResponseDeadline, s.Options.StreamIdleTimeout)
+		// Add an extra second to ensure errors are 504s, not 408s.
+		idleTimeout := util.MaxDuration(util.DefaultResponseDeadline+time.Second, s.Options.StreamIdleTimeout)
 
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{

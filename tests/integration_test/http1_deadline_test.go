@@ -33,6 +33,18 @@ const (
 	Default
 )
 
+// Decide which path to call based on which configured deadline to test against.
+func configuredDeadlineToPath(c ConfiguredDeadline) string {
+	switch c {
+	case Default:
+		return "/sleepDefault"
+	case Short:
+		return "/sleepShort"
+	default:
+		return ""
+	}
+}
+
 // Tests the deadlines configured in backend rules for a HTTP/1.x backend (no streaming).
 func TestDeadlinesForDynamicRouting(t *testing.T) {
 	t.Parallel()
@@ -83,15 +95,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
-			// Decide which path to call based on which configured deadline to test against.
-			var basePath string
-			switch tc.deadlineToTest {
-			case Default:
-				basePath = "/sleepDefault"
-			case Short:
-				basePath = "/sleepShort"
-			}
-
+			basePath := configuredDeadlineToPath(tc.deadlineToTest)
 			path := fmt.Sprintf("%v?duration=%v", basePath, tc.reqDuration.String())
 			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
 
@@ -177,6 +181,81 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, err, tc.wantErr)
 			}
 
+		})
+	}
+}
+
+// Tests the stream idle timeouts configured via deadline in backend rules for a HTTP/1.x backend.
+func TestIdleTimeoutsForDynamicRouting(t *testing.T) {
+	t.Parallel()
+
+	testData := []struct {
+		desc           string
+		confArgs       []string
+		reqDuration    time.Duration
+		deadlineToTest ConfiguredDeadline
+		wantErr        string
+	}{
+		// Please be cautious about adding too many time-based tests here.
+		// This can slow down our CI system if we sleep for too long.
+		{
+			desc: "When deadline is NOT specified, ESPv2 does not honor the idle timeout flag if the value is too low. Request still succeeds.",
+			confArgs: append([]string{
+				"--stream_idle_timeout=5s",
+			}, utils.CommonArgs()...),
+			reqDuration:    time.Second * 10,
+			deadlineToTest: Default,
+		},
+		{
+			desc: "When deadline is specified, deadline overrides global idle timeout flag. Request still succeeds.",
+			confArgs: append([]string{
+				"--stream_idle_timeout=1s",
+			}, utils.CommonArgs()...),
+			reqDuration:    time.Second * 2,
+			deadlineToTest: Short,
+		},
+		{
+			desc: "When deadline overrides global idle timeout, requests exceeding deadline always error with 504, not 408",
+			confArgs: append([]string{
+				"--stream_idle_timeout=1s",
+			}, utils.CommonArgs()...),
+			reqDuration:    time.Second * 8,
+			deadlineToTest: Short,
+			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+		},
+	}
+
+	for _, tc := range testData {
+
+		// Place in closure to allow efficient measuring of elapsed time.
+		// Elapsed time is not checked in the test, it's just for debugging.
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestDeadlinesForDynamicRouting, platform.EchoRemote)
+
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
+
+			basePath := configuredDeadlineToPath(tc.deadlineToTest)
+			path := fmt.Sprintf("%v?duration=%v", basePath, tc.reqDuration.String())
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
+
+			_, err := client.DoWithHeaders(url, "GET", "", nil)
+
+			if tc.wantErr == "" && err != nil {
+				t.Errorf("Test (%s): failed, expected no err, got err (%v)", tc.desc, err)
+			}
+
+			if tc.wantErr != "" && err == nil {
+				t.Errorf("Test (%s): failed, got no err, expected err (%v)", tc.desc, tc.wantErr)
+			}
+
+			if err != nil && !strings.Contains(err.Error(), tc.wantErr) {
+				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, err, tc.wantErr)
+			}
 		})
 	}
 }

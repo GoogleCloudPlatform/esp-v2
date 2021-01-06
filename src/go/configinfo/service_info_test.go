@@ -1760,7 +1760,12 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 			},
@@ -1853,7 +1858,7 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 				},
 			},
 			wantedMethodIdleTimeout: map[string]time.Duration{
-				"abc.com.api": 10*time.Second + 500*time.Millisecond,
+				"abc.com.api": 10*time.Second + 500*time.Millisecond + time.Second,
 			},
 		},
 		{
@@ -1919,7 +1924,7 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 				},
 			},
 			wantedMethodIdleTimeout: map[string]time.Duration{
-				"abc.com.api": util.DefaultResponseDeadline,
+				"abc.com.api": util.DefaultResponseDeadline + time.Second,
 			},
 		},
 		{
@@ -1947,7 +1952,7 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 				},
 			},
 			wantedMethodIdleTimeout: map[string]time.Duration{
-				"abc.com.api": util.DefaultResponseDeadline,
+				"abc.com.api": util.DefaultResponseDeadline + time.Second,
 			},
 		},
 	}
