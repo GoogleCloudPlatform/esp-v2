@@ -23,8 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-	apipb "google.golang.org/genproto/protobuf/api"
-
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
@@ -474,40 +472,6 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 
 	s := env.NewTestEnv(platform.TestServiceControlRequestWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
-	s.AppendApiMethods([]*apipb.Method{
-		{
-			Name: "ListShelves",
-		},
-		{
-			Name: "CorsShelves",
-		},
-		{
-			Name: "GetShelf",
-		},
-	})
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/bookstore/shelves",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
-			Pattern: &annotationspb.HttpRule_Custom{
-				Custom: &annotationspb.CustomHttpPattern{
-					Kind: "OPTIONS",
-					Path: "/bookstore/shelves",
-				},
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/bookstore/shelves/{shelf}",
-			},
-		},
-	})
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -658,29 +622,6 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(platform.TestServiceControlRequestWithoutAllowCors, platform.EchoSidecar)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ListShelves",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/bookstore/shelves",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
-			Pattern: &annotationspb.HttpRule_Custom{
-				Custom: &annotationspb.CustomHttpPattern{
-					Kind: "OPTIONS",
-					Path: "/bookstore/shelves",
-				},
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/bookstore/shelves/{shelf}",
-			},
-		},
-	})
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -724,6 +665,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",
@@ -794,12 +736,6 @@ func TestStartupDuplicatedPathsWithAllowCors(t *testing.T) {
 	s := env.NewTestEnv(platform.TestStartupDuplicatedPathsWithAllowCors, platform.EchoSidecar)
 	s.SetAllowCors()
 	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/bookstore/shelves/{shelf}",
-			},
-		},
 		{
 			// URL is exactly the same even though method differs.
 			// When the bug was reported, our code already handles this.

@@ -78,6 +78,9 @@ var (
 					{
 						Name: "GetShelfAutoBind",
 					},
+					{
+						Name: "Unspecified",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -223,7 +226,12 @@ var (
 			},
 		},
 		Usage: &confpb.Usage{
-			Rules: []*confpb.UsageRule{},
+			Rules: []*confpb.UsageRule{
+				{
+					Selector:               "endpoints.examples.bookstore.Bookstore.Unspecified",
+					AllowUnregisteredCalls: true,
+				},
+			},
 		},
 	}
 )

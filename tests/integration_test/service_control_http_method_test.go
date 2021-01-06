@@ -39,18 +39,6 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 	s := env.NewTestEnv(platform.TestServiceControlAllHTTPMethod, platform.EchoSidecar)
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/echoMethod",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPOST",
-			Pattern: &annotationspb.HttpRule_Post{
-				Post: "/echoMethod",
-			},
-		},
-		{
 			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPUT",
 			Pattern: &annotationspb.HttpRule_Put{
 				Put: "/echoMethod",
@@ -109,6 +97,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",
@@ -145,6 +134,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPOST",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",
@@ -181,6 +171,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPUT",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",
@@ -217,6 +208,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPATCH",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",
@@ -252,6 +244,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoDELETE",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",

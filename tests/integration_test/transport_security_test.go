@@ -27,7 +27,6 @@ import (
 
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
-	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 func TestServiceManagementWithTLS(t *testing.T) {
@@ -174,14 +173,6 @@ func TestHttpsClients(t *testing.T) {
 
 	s := env.NewTestEnv(platform.TestHttpsClients, platform.EchoSidecar)
 	defer s.TearDown(t)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/simpleget",
-			},
-		},
-	})
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -248,14 +239,6 @@ func TestHSTS(t *testing.T) {
 
 	s := env.NewTestEnv(platform.TestHSTS, platform.EchoSidecar)
 	defer s.TearDown(t)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/simpleget",
-			},
-		},
-	})
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
