@@ -62,6 +62,24 @@ var (
 					{
 						Name: "SleepWithBackendRule",
 					},
+					{
+						Name: "Auth0",
+					},
+					{
+						Name: "EchoHeader",
+					},
+					{
+						Name: "EchoGetWithBody",
+					},
+					{
+						Name: "Root",
+					},
+					{
+						Name: "Echo_nokey",
+					},
+					{
+						Name: "post_anypath",
+					},
 				},
 				Version: "1.0.0",
 			},
