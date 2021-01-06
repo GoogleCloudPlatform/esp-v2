@@ -268,6 +268,7 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -305,6 +306,7 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -342,6 +344,7 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -377,6 +380,7 @@
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"

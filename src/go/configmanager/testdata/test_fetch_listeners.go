@@ -146,6 +146,7 @@ var (
                       },
                       "route": {
                         "cluster": "%s",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -174,6 +175,7 @@ var (
                       },
                       "route": {
                         "cluster": "%s",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -396,6 +398,7 @@ var (
                       },
                       "route": {
                         "cluster": "%s",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -428,6 +431,7 @@ var (
                       },
                       "route": {
                         "cluster": "%s",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -672,6 +676,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -704,6 +709,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -736,6 +742,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -768,6 +775,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -800,6 +808,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -832,6 +841,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -867,6 +877,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1222,6 +1233,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1250,6 +1262,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1278,6 +1291,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1310,6 +1324,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1345,6 +1360,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1376,6 +1392,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1681,6 +1698,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1709,6 +1727,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1737,6 +1756,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1765,6 +1785,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1793,6 +1814,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1821,6 +1843,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1849,6 +1872,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -1877,6 +1901,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2170,6 +2195,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2202,6 +2228,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2234,6 +2261,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2262,6 +2290,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2505,6 +2534,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2533,6 +2563,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2561,6 +2592,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -2589,6 +2621,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"

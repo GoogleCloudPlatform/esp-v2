@@ -274,16 +274,6 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 			HttpMethod:  httpPatternMethod.HttpMethod,
 		}
 
-		// Response timeouts are not compatible with streaming methods (documented in Envoy).
-		// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
-		// This even applies for routes with gRPC-JSON transcoding where only the upstream is streaming.
-		var respTimeout time.Duration
-		if method.IsStreaming {
-			respTimeout = 0 * time.Second
-		} else {
-			respTimeout = method.BackendInfo.Deadline
-		}
-
 		// The `methodNotAllowedRouteMatchers` are the route matches covers all the defined uri templates
 		// but no specific methods. As all the defined requests are matched by `routeMatchers`, the rest
 		// matched by `methodNotAllowedRouteMatchers` fall in the category of `405 Method Not Allowed`.
@@ -299,7 +289,7 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 		}
 
 		for _, routeMatcher := range routeMatchers {
-			r := makeRoute(routeMatcher, method, respTimeout)
+			r := makeRoute(routeMatcher, method)
 
 			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
 			if err != nil {
@@ -336,7 +326,17 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 	return backendRoutes, methodNotAllowedRoutes, nil
 }
 
-func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, respTimeout time.Duration) *routepb.Route {
+func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
+	// Response timeouts are not compatible with streaming methods (documented in Envoy).
+	// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
+	// This even applies for routes with gRPC-JSON transcoding where only the upstream is streaming.
+	var respTimeout time.Duration
+	if method.IsStreaming {
+		respTimeout = 0 * time.Second
+	} else {
+		respTimeout = method.BackendInfo.Deadline
+	}
+
 	return &routepb.Route{
 		Match: routeMatcher,
 		Action: &routepb.Route_Route{
@@ -344,7 +344,8 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 				ClusterSpecifier: &routepb.RouteAction_Cluster{
 					Cluster: method.BackendInfo.ClusterName,
 				},
-				Timeout: ptypes.DurationProto(respTimeout),
+				Timeout:     ptypes.DurationProto(respTimeout),
+				IdleTimeout: ptypes.DurationProto(method.BackendInfo.IdleTimeout),
 				RetryPolicy: &routepb.RetryPolicy{
 					RetryOn: method.BackendInfo.RetryOns,
 					NumRetries: &wrapperspb.UInt32Value{

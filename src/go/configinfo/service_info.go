@@ -541,12 +541,12 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 	}
 
 	var deadline time.Duration
-	if r.Deadline == 0 {
-		// If no deadline specified by the user, explicitly use default.
-		deadline = util.DefaultResponseDeadline
-	} else if r.Deadline < 0 {
-		glog.Warningf("Negative deadline of %v specified for method %v. "+
-			"Using default deadline %v instead.", r.Deadline, r.Selector, util.DefaultResponseDeadline)
+	if r.Deadline <= 0 {
+		if r.Deadline < 0 {
+			glog.Warningf("Negative deadline of %v specified for method %v. "+
+				"Using default deadline %v instead.", r.Deadline, r.Selector, util.DefaultResponseDeadline)
+		}
+		// If no deadline specified by the user, explicitly use defaults.
 		deadline = util.DefaultResponseDeadline
 	} else {
 		// The backend deadline from the BackendRule is a float64 that represents seconds.
@@ -556,12 +556,17 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		deadline = time.Duration(deadlineMs) * time.Millisecond
 	}
 
+	// Support idle streams up to the deadline per request.
+	// Allow global flag to override per-request deadline to a higher value.
+	idleTimeout := util.MaxDuration(deadline, s.Options.StreamIdleTimeout)
+
 	method.BackendInfo = &backendInfo{
 		ClusterName:     backendClusterName,
 		Path:            path,
 		Hostname:        hostname,
 		TranslationType: r.PathTranslation,
 		Deadline:        deadline,
+		IdleTimeout:     idleTimeout,
 		RetryOns:        s.Options.BackendRetryOns,
 		RetryNum:        s.Options.BackendRetryNum,
 	}
@@ -610,6 +615,7 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 		method.BackendInfo = &backendInfo{
 			ClusterName: s.LocalBackendCluster.ClusterName,
 			Deadline:    util.DefaultResponseDeadline,
+			IdleTimeout: s.Options.StreamIdleTimeout,
 			RetryOns:    s.Options.BackendRetryOns,
 			RetryNum:    s.Options.BackendRetryNum,
 		}

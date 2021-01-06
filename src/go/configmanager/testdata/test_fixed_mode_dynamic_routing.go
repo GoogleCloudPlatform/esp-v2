@@ -311,6 +311,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -339,6 +340,7 @@ var (
                       },
                       "route": {
                         "cluster": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -368,6 +370,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-central1-cloud-esf.cloudfunctions.net",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -405,6 +408,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-central1-cloud-esf.cloudfunctions.net",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -442,6 +446,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -479,6 +484,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -519,6 +525,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:8008",
                         "hostRewriteLiteral": "pets.appspot.com",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -556,6 +563,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -593,6 +601,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -630,6 +639,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-west2-cloud-esf.cloudfunctions.net",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"
@@ -669,6 +679,7 @@ var (
                       "route": {
                         "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-west2-cloud-esf.cloudfunctions.net",
+                        "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
                           "retryOn": "reset,connect-failure,refused-stream"

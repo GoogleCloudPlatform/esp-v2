@@ -1661,7 +1661,10 @@ func TestMethods(t *testing.T) {
 			}
 			for key, gotMethod := range serviceInfo.Methods {
 				wantMethod, ok := tc.wantMethods[key]
+
+				// Remove some items we have other specific tests for.
 				gotMethod.GeneratedCorsMethod = nil
+				gotMethod.BackendInfo.IdleTimeout = 0
 
 				if !ok {
 					t.Errorf("cannot find key: %v\n got methods : %+v\nwant methods: %+v", key, serviceInfo.Methods, tc.wantMethods)
