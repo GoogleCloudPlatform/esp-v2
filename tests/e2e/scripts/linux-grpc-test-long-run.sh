@@ -170,7 +170,7 @@ GRPC_STRESS_FAILURES=0
 HTTP_STRESS_FAILURES=0
 
 if [ "$PLATFORM" = "gke" ]; then
-  detect_memory_leak_init ${HOST}
+  status_server_init ${HOST}
 fi
 
 # ${ROOT}/tests/client/esp_client.py needs to run at that folder.
