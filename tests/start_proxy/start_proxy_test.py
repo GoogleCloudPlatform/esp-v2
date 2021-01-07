@@ -511,16 +511,6 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing',
               '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
-            # stream_idle_timeout
-            (['-R=managed',
-              '--http2_port=8079', '--stream_idle_timeout=1h',
-              '--disable_tracing'],
-             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
-              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
-              '--listener_port', '8079',
-              '--disable_tracing',
-              '--stream_idle_timeout', '1h',
-              ]),
         ]
 
         i = 0

@@ -591,27 +591,6 @@ environment variable or by passing "-k" flag to this script.
         Otherwise use ignored_query_parameters. Defaults to false.
         ''')
 
-    parser.add_argument(
-        '--stream_idle_timeout', action=None,
-        help='''
-        The amount of time client connections can exist without any activity.
-        
-        For non-streaming HTTP traffic, prefer to set `deadline` in the service
-        config to override this global value on a per-route basis. 
-        A large deadline will ensure the stream idle timeout never occurs for a
-        request on that route.
-        
-        For streaming gRPC traffic, prefer to set this flag to a higher value to
-        ensure ESPv2 does not terminate an idle stream while maintaining a short
-        deadline for each request in the stream.
-        
-        Defaults to 5 minutes (5m).
-        Specify the value as a duration. Examples: 30s, 2m, 1h, etc.
-        
-        ESPv2 will not honor small values for this flag, such as values under
-        the default deadline of 15s.
-        ''')
-
     # Start Deprecated Flags Section
 
     parser.add_argument(
@@ -1004,10 +983,6 @@ def gen_proxy_config(args):
 
     if args.transcoding_ignore_unknown_query_parameters:
         proxy_conf.append("--transcoding_ignore_unknown_query_parameters")
-
-    if args.stream_idle_timeout:
-        proxy_conf.extend(["--stream_idle_timeout",
-                           args.stream_idle_timeout])
 
     if args.on_serverless:
         proxy_conf.extend([
