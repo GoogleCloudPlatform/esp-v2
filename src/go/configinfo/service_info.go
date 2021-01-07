@@ -556,9 +556,8 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		deadline = time.Duration(deadlineMs) * time.Millisecond
 	}
 
-	// Allow per-route deadlines to override the global flag.
-	// Add an extra second to ensure errors are 504s, not 408s.
-	idleTimeout := util.MaxDuration(deadline+time.Second, s.Options.StreamIdleTimeout)
+	// Allow per-route response deadlines to override the global stream idle timeout.
+	idleTimeout := calculateStreamIdleTimeout(deadline, s.Options)
 
 	method.BackendInfo = &backendInfo{
 		ClusterName:     backendClusterName,
@@ -611,8 +610,8 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 			continue
 		}
 
-		// Add an extra second to ensure errors are 504s, not 408s.
-		idleTimeout := util.MaxDuration(util.DefaultResponseDeadline+time.Second, s.Options.StreamIdleTimeout)
+		// Idle timeout cannot be smaller than the default response deadline.
+		idleTimeout := calculateStreamIdleTimeout(util.DefaultResponseDeadline, s.Options)
 
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{
@@ -842,4 +841,14 @@ func getJwtAudienceFromBackendAddr(scheme, hostname string) string {
 		return fmt.Sprintf("https://%s", hostname)
 	}
 	return fmt.Sprintf("http://%s", hostname)
+}
+
+// Calculates the stream idle timeout based on the response deadline for that route and the global stream idle timeout.
+func calculateStreamIdleTimeout(operationDeadline time.Duration, opts options.ConfigGeneratorOptions) time.Duration {
+	// If the deadline and stream idle timeout have the exact same timeout,
+	// the error code returned to the client is inconsistent based on which event is processed first.
+	// (504 for response deadline, 408 for idle timeout)
+	// So offset the idle timeout to ensure response deadline is always hit first.
+	operationIdleTimeout := operationDeadline + time.Second
+	return util.MaxDuration(operationIdleTimeout, opts.StreamIdleTimeout)
 }

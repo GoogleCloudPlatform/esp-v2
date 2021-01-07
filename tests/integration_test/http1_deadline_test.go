@@ -29,7 +29,9 @@ import (
 type ConfiguredDeadline int
 
 const (
+	// 5s: configured in service config backend rule.
 	Short ConfiguredDeadline = iota
+	// 15s: Corresponding backend rule does not configure deadline, so default is used.
 	Default
 )
 

@@ -46,7 +46,7 @@ var (
 
 	// Envoy specific configurations.
 	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", 20*time.Second, "cluster connect timeout in seconds")
-	StreamIdleTimeout     = flag.Duration("stream_idle_timeout", util.DefaultIdleTimeout, "The amount of time client connections can exist without any activity. "+
+	StreamIdleTimeout     = flag.Duration("stream_idle_timeout", util.DefaultIdleTimeout, "The amount of time HTTP/2 streams can exist without any activity. "+
 		"Set `deadline` in the service config to override this global value on a per-route basis.")
 
 	// Network related configurations.
