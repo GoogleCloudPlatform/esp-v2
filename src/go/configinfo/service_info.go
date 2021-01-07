@@ -117,7 +117,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if err := serviceInfo.processApis(); err != nil {
 		return nil, err
 	}
-	serviceInfo.processQuota()
+	if err := serviceInfo.processQuota(); err != nil {
+		return nil, err
+	}
 	if err := serviceInfo.processBackendRule(); err != nil {
 		return nil, err
 	}
@@ -251,9 +253,9 @@ func (s *ServiceInfo) addGrpcHttpRules() error {
 	for _, api := range s.serviceConfig.GetApis() {
 		for _, method := range api.GetMethods() {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
-			mi, err := s.getOrCreateMethod(selector)
+			mi, err := s.getMethod(selector)
 			if err != nil {
-				return fmt.Errorf("error creating auto-generated gRPC http rule for operation (%s.%s): %v", api.GetName(), method.GetName(), err)
+				return fmt.Errorf("error processing auto-generated gRPC http rule: %v", err)
 			}
 
 			path := fmt.Sprintf("/%s/%s", api.GetName(), method.GetName())
@@ -303,7 +305,7 @@ func (s *ServiceInfo) processAccessToken() {
 
 }
 
-func (s *ServiceInfo) processQuota() {
+func (s *ServiceInfo) processQuota() error {
 	for _, metricRule := range s.ServiceConfig().GetQuota().GetMetricRules() {
 		var metricCosts []*scpb.MetricCost
 		for name, cost := range metricRule.GetMetricCosts() {
@@ -312,8 +314,15 @@ func (s *ServiceInfo) processQuota() {
 				Cost: cost,
 			})
 		}
-		s.Methods[metricRule.GetSelector()].MetricCosts = metricCosts
+
+		mi, err := s.getMethod(metricRule.GetSelector())
+		if err != nil {
+			return fmt.Errorf("error processing quota metric rule: %v", err)
+		}
+		mi.MetricCosts = metricCosts
 	}
+
+	return nil
 }
 
 func (s *ServiceInfo) processEndpoints() {
@@ -382,9 +391,9 @@ func (s *ServiceInfo) processHttpRule() error {
 	addedRouteMatchWithOptionsSet := make(map[string]bool)
 
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
-		method, err := s.getOrCreateMethod(rule.GetSelector())
+		method, err := s.getMethod(rule.GetSelector())
 		if err != nil {
-			return fmt.Errorf("error creating http rule for operation (%v): %v", rule.Selector, err)
+			return fmt.Errorf("error processing http rule for operation (%v): %v", rule.Selector, err)
 		}
 		if err := addHttpRule(method, rule, addedRouteMatchWithOptionsSet); err != nil {
 			return err
@@ -405,7 +414,11 @@ func (s *ServiceInfo) processHttpRule() error {
 	// urls except the ones already with options.
 	if s.AllowCors {
 		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
-			method := s.Methods[r.GetSelector()]
+			method, err := s.getMethod(r.GetSelector())
+			if err != nil {
+				return fmt.Errorf("error processing http rule for operation (%v): %v", r.GetSelector(), err)
+			}
+
 			for _, httpRule := range method.HttpRule {
 				if httpRule.HttpMethod != util.OPTIONS {
 					uriTemplate, err := httppattern.ParseUriTemplate(httpRule.UriTemplate.Origin)
@@ -529,7 +542,7 @@ func (s *ServiceInfo) processBackendRule() error {
 }
 
 func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string) error {
-	method, err := s.getOrCreateMethod(r.GetSelector())
+	method, err := s.getMethod(r.GetSelector())
 	if err != nil {
 		return err
 	}
@@ -620,7 +633,7 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 
 func (s *ServiceInfo) processUsageRule() error {
 	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
-		method, err := s.getOrCreateMethod(r.GetSelector())
+		method, err := s.getMethod(r.GetSelector())
 		if err != nil {
 			return fmt.Errorf("error processing usage rule for operation (%v): %v", r.Selector, err)
 		}
@@ -676,7 +689,7 @@ func (s *ServiceInfo) processApiKeyLocations() error {
 			}
 		}
 
-		method, err := s.getOrCreateMethod(rule.GetSelector())
+		method, err := s.getMethod(rule.GetSelector())
 		if err != nil {
 			return fmt.Errorf("error processing system parameter rule for operation (%v): %v", rule.Selector, err)
 		}
@@ -788,11 +801,18 @@ func (s *ServiceInfo) processTypes() error {
 	return nil
 }
 
-// get the MethodInfo by full name, and create a new one if not exists.
+// Get the MethodInfo by full name. Prefer to use this function when getting methods,
+// as it outputs an actionable error message.
+func (s *ServiceInfo) getMethod(name string) (*MethodInfo, error) {
+	if s.Methods[name] == nil {
+		return nil, fmt.Errorf("selector (%v) was not defined in the API", name)
+	}
+	return s.Methods[name], nil
+}
+
+// Get the MethodInfo by full name, and create a new one if not exists.
 // Ideally, all selector name in service config rules should exist in the api
-// methods.
-// TODO(b/176433373): Clean-up usage of this method. Non-`apis` aspects should
-// not be creating new methods, they should error if not found.
+// aspect, so use getMethod(...) instead.
 func (s *ServiceInfo) getOrCreateMethod(name string) (*MethodInfo, error) {
 	if s.Methods[name] == nil {
 		names := strings.Split(name, ".")
@@ -817,10 +837,11 @@ func (s *ServiceInfo) processAuthRequirement() error {
 	auth := s.serviceConfig.GetAuthentication()
 	for _, rule := range auth.GetRules() {
 		if len(rule.GetRequirements()) > 0 {
-			if s.Methods[rule.GetSelector()] == nil {
+			mi, err := s.getMethod(rule.GetSelector())
+			if err != nil {
 				return fmt.Errorf("error processing authentication rule for operation (%v): selector not defined in Api.method or Http.rule", rule.GetSelector())
 			}
-			s.Methods[rule.GetSelector()].RequireAuth = true
+			mi.RequireAuth = true
 		}
 	}
 	return nil
