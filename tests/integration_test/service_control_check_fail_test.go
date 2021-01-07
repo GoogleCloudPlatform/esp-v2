@@ -197,6 +197,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Auth0",
 					ErrorCause:                   "Client project not valid. Please pass a valid project.",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",

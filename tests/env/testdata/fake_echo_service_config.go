@@ -47,6 +47,18 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/EchoMessage",
 					},
 					{
+						Name: "Simpleget",
+					},
+					{
+						Name: "SimplegetNotModified",
+					},
+					{
+						Name: "SimplegetUnauthorized",
+					},
+					{
+						Name: "SimplegetForbidden",
+					},
+					{
 						Name:            "Simplegetcors",
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
 						ResponseTypeUrl: "type.googleapis.com/SimpleCorsMessage",
@@ -61,6 +73,54 @@ var (
 					},
 					{
 						Name: "SleepWithBackendRule",
+					},
+					{
+						Name: "Auth0",
+					},
+					{
+						Name: "EchoHeader",
+					},
+					{
+						Name: "EchoGetWithBody",
+					},
+					{
+						Name: "echoGET",
+					},
+					{
+						Name: "echoPOST",
+					},
+					{
+						Name: "echoPUT",
+					},
+					{
+						Name: "echoPATCH",
+					},
+					{
+						Name: "echoDELETE",
+					},
+					{
+						Name: "Root",
+					},
+					{
+						Name: "Echo_nokey",
+					},
+					{
+						Name: "_post_anypath",
+					},
+					{
+						Name: "Echo_nokey_override_as_get",
+					},
+					{
+						Name: "CorsShelves",
+					},
+					{
+						Name: "GetShelf",
+					},
+					{
+						Name: "UpdateShelf",
+					},
+					{
+						Name: "DeleteShelf",
 					},
 				},
 				Version: "1.0.0",
@@ -131,6 +191,30 @@ var (
 					Body: "message",
 				},
 				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/simpleget",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/simpleget/304",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetUnauthorized",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/simpleget/401",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/simpleget/403",
+					},
+				},
+				{
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/simplegetcors",
@@ -158,6 +242,39 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SleepWithBackendRule",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/sleep/with/backend/rule",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/echo/nokey/OverrideAsGet",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.CorsShelves",
+					Pattern: &annotationspb.HttpRule_Custom{
+						Custom: &annotationspb.CustomHttpPattern{
+							Kind: "OPTIONS",
+							Path: "/bookstore/shelves",
+						},
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.GetShelf",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/bookstore/shelves/{shelf}",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/echoMethod",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPOST",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/echoMethod",
 					},
 				},
 			},
@@ -243,6 +360,18 @@ var (
 				},
 				{
 					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SleepWithBackendRule",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
+					AllowUnregisteredCalls: true,
+				},
+				{
+					Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
 					AllowUnregisteredCalls: true,
 				},
 			},

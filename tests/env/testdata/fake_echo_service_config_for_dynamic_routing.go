@@ -84,7 +84,19 @@ var (
 						Name: "dynamic_routing_BearertokenConstantAddress",
 					},
 					{
+						Name: "dynamic_routing_AuthenticationNotSet",
+					},
+					{
+						Name: "dynamic_routing_DisableAuthSetToFalse",
+					},
+					{
+						Name: "dynamic_routing_DisableAuthSetToTrue",
+					},
+					{
 						Name: "dynamic_routing_BearertokenAppendAddress",
+					},
+					{
+						Name: "dynamic_routing_EmptyPath",
 					},
 					{
 						Name: "dynamic_routing_Simplegetcors",
