@@ -30,7 +30,6 @@ import (
 	bookserver "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/server"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 const (
@@ -216,11 +215,6 @@ func (e *TestEnv) OverrideSystemParameters(systemParameters *confpb.SystemParame
 // OverrideQuota overrides Service.Quota.
 func (e *TestEnv) OverrideQuota(quota *confpb.Quota) {
 	e.fakeServiceConfig.Quota = quota
-}
-
-// AppendApiMethods appends methods to the service config.
-func (e *TestEnv) AppendApiMethods(methods []*apipb.Method) {
-	e.fakeServiceConfig.Apis[0].Methods = append(e.fakeServiceConfig.Apis[0].Methods, methods...)
 }
 
 // AppendHttpRules appends Service.Http.Rules.

@@ -24,9 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlReportResponseCode(t *testing.T) {
@@ -38,38 +35,6 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 		"--rollout_strategy=fixed"}
 
 	s := env.NewTestEnv(platform.TestServiceControlReportResponseCode, platform.EchoSidecar)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/simpleget/304",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetUnauthorized",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/simpleget/401",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/simpleget/403",
-			},
-		},
-	})
-	s.AppendUsageRules(
-		[]*confpb.UsageRule{
-			{
-				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
-				AllowUnregisteredCalls: true,
-			},
-			{
-				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
-				AllowUnregisteredCalls: true,
-			},
-		})
-
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -85,7 +50,6 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 		wantScRequests        []interface{}
 		wantGetScRequestError error
 	}{
-		// TODO(jcwang): add test cases for 304 and 403 to validate status in Check request
 		{
 			desc:          "succeed which has 304 response, no Jwt required, service control sends report request only with status code 304.",
 			url:           fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simpleget/304"),
@@ -98,6 +62,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 					URL:               "/simpleget/304",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetNotModified",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:        "1.0.0",
 					ApiKeyState:       "NOT CHECKED",
 					ProducerProjectID: "producer-project",
 					FrontendProtocol:  "http",
@@ -122,6 +87,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 					URL:               "/simpleget/403",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetForbidden",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:        "1.0.0",
 					ApiKeyState:       "NOT CHECKED",
 					ProducerProjectID: "producer-project",
 					FrontendProtocol:  "http",
@@ -146,6 +112,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 					URL:                "/simpleget/401",
 					ApiMethod:          "1.echo_api_endpoints_cloudesf_testing_cloud_goog.SimplegetUnauthorized",
 					ApiName:            "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:         "1.0.0",
 					ApiKeyState:        "NOT CHECKED",
 					ProducerProjectID:  "producer-project",
 					FrontendProtocol:   "http",
