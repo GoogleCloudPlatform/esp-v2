@@ -541,12 +541,12 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 	}
 
 	var deadline time.Duration
-	if r.Deadline <= 0 {
-		if r.Deadline < 0 {
-			glog.Warningf("Negative deadline of %v specified for method %v. "+
-				"Using default deadline %v instead.", r.Deadline, r.Selector, util.DefaultResponseDeadline)
-		}
-		// If no deadline specified by the user, explicitly use defaults.
+	if r.Deadline == 0 {
+		// If no deadline specified by the user, explicitly use default.
+		deadline = util.DefaultResponseDeadline
+	} else if r.Deadline < 0 {
+		glog.Warningf("Negative deadline of %v specified for method %v. "+
+			"Using default deadline %v instead.", r.Deadline, r.Selector, util.DefaultResponseDeadline)
 		deadline = util.DefaultResponseDeadline
 	} else {
 		// The backend deadline from the BackendRule is a float64 that represents seconds.
