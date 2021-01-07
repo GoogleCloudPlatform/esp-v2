@@ -46,7 +46,8 @@ var (
 
 	// Envoy specific configurations.
 	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", 20*time.Second, "cluster connect timeout in seconds")
-	StreamIdleTimeout     = flag.Duration("stream_idle_timeout", util.DefaultIdleTimeout, "The amount of time client connections can exist without any activity. Set `deadline` in the service config to override this global value on a per-route basis.")
+	StreamIdleTimeout     = flag.Duration("stream_idle_timeout", util.DefaultIdleTimeout, "The amount of time client connections can exist without any activity. "+
+		"Set `deadline` in the service config to override this global value on a per-route basis.")
 
 	// Network related configurations.
 	BackendAddress       = flag.String("backend_address", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
