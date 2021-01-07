@@ -18,11 +18,14 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/grpc_echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
+
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 // Tests the deadlines configured in backend rules for a gRPC remote backends.
@@ -96,7 +99,7 @@ plans {
 
 		// Place in closure to allow efficient measuring of elapsed time.
 		// Elapsed time is not checked in the test, it's just for debugging.
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
 			// For this client, `err` will always be "exit status 1" on failures.
@@ -114,8 +117,7 @@ plans {
 			if err != nil && !strings.Contains(resp, tc.wantErr) {
 				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, resp, tc.wantErr)
 			}
-
-		}()
+		})
 	}
 }
 
@@ -190,7 +192,121 @@ plans {
 
 		// Place in closure to allow efficient measuring of elapsed time.
 		// Elapsed time is not checked in the test, it's just for debugging.
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
+			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
+
+			// For this client, `err` will always be "exit status 1" on failures.
+			// Check for actual error in `resp` instead.
+			resp, err := client.RunGRPCEchoTest(tc.testPlan, s.Ports().ListenerPort)
+
+			if tc.wantErr == "" && err != nil {
+				t.Errorf("Test (%v): Error during running test: want no err, got err (%v)", tc.desc, resp)
+			}
+
+			if tc.wantErr != "" && err == nil {
+				t.Errorf("Test (%v): Error during running test: got no err, want err (%v)", tc.desc, tc.wantErr)
+			}
+
+			if err != nil && !strings.Contains(resp, tc.wantErr) {
+				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, resp, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestIdleTimeoutsForGrpcStreaming(t *testing.T) {
+	t.Parallel()
+
+	testData := []struct {
+		desc        string
+		confArgs    []string
+		addDeadline time.Duration
+		wantErr     string
+		testPlan    string
+	}{
+		// Please be cautious about adding too many time-based tests here.
+		// This can slow down our CI system if we sleep for too long.
+		{
+			desc: "When deadline is NOT specified for method, stream idle timeout specified via flag kicks in and the request fails.",
+			confArgs: append([]string{
+				"--stream_idle_timeout=15s",
+			}, utils.CommonArgs()...),
+			wantErr: `stream timeout`,
+			testPlan: `
+plans {
+  echo_stream {
+    call_config {
+      api_key: "this-is-an-api-key"
+    }
+    request {
+      text: "Hello, world!"
+      response_delay: 20
+    }
+    count: 1
+  }
+}`,
+		},
+		{
+			desc:        "When deadline is specified for method, it overrides the global stream idle timeout and the request succeeds.",
+			addDeadline: 25 * time.Second,
+			confArgs: append([]string{
+				"--stream_idle_timeout=15s",
+			}, utils.CommonArgs()...),
+			testPlan: `
+plans {
+  echo_stream {
+    call_config {
+      api_key: "this-is-an-api-key"
+    }
+    request {
+      text: "Hello, world!"
+      response_delay: 20
+    }
+    count: 1
+  }
+}`,
+		},
+		{
+			desc: "When deadline is NOT specified for method, a low stream idle timeout specified via flag is not honored and the request succeeds.",
+			confArgs: append([]string{
+				"--stream_idle_timeout=3s",
+			}, utils.CommonArgs()...),
+			testPlan: `
+plans {
+  echo_stream {
+    call_config {
+      api_key: "this-is-an-api-key"
+    }
+    request {
+      text: "Hello, world!"
+      response_delay: 7
+    }
+    count: 1
+  }
+}`,
+		},
+	}
+
+	for _, tc := range testData {
+		// Place in closure to allow efficient measuring of elapsed time.
+		// Elapsed time is not checked in the test, it's just for debugging.
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestDeadlinesForGrpcCatchAllBackend, platform.GrpcEchoSidecar)
+
+			if tc.addDeadline != 0 {
+				s.AppendBackendRules([]*confpb.BackendRule{
+					{
+						Selector: "test.grpc.Test.EchoStream",
+						Deadline: tc.addDeadline.Seconds(),
+					},
+				})
+			}
+
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
 			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
 			// For this client, `err` will always be "exit status 1" on failures.
@@ -209,6 +325,6 @@ plans {
 				t.Errorf("Test (%s): failed, got err (%v), expected err (%v)", tc.desc, resp, tc.wantErr)
 			}
 
-		}()
+		})
 	}
 }
