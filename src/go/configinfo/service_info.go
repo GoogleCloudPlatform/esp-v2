@@ -569,12 +569,18 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		deadline = time.Duration(deadlineMs) * time.Millisecond
 	}
 
+	// Response timeouts are not compatible with streaming methods (documented in Envoy).
+	// This applies to methods with a streaming upstream OR downstream.
 	var idleTimeout time.Duration
 	if method.IsStreaming {
-		// Response timeouts are not compatible with streaming methods (documented in Envoy).
-		// Instead, the stream idle timeout serves as the deadline.
-		// This applies to methods with a streaming upstream OR downstream.
-		idleTimeout = deadline
+		if r.Deadline <= 0 {
+			// User did not specify a deadline, use global stream idle timeout.
+			idleTimeout = s.Options.StreamIdleTimeout
+		} else {
+			// User configured deadline serves as the stream idle timeout.
+			idleTimeout = deadline
+		}
+
 		deadline = 0 * time.Second
 	} else {
 		// Allow per-route response deadlines to override the global stream idle timeout.
