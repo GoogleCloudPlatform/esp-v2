@@ -112,6 +112,11 @@ func TestTranscoderFilter(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				SourceInfo: &confpb.SourceInfo{
@@ -142,7 +147,7 @@ func TestTranscoderFilter(t *testing.T) {
 				SystemParameters: &confpb.SystemParameters{
 					Rules: []*confpb.SystemParameterRule{
 						{
-							Selector: testApiName,
+							Selector: fmt.Sprintf("%s.Foo", testApiName),
 							Parameters: []*confpb.SystemParameter{
 								{
 									Name:              "api_key",
@@ -233,27 +238,29 @@ func TestTranscoderFilter(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = "grpc://127.0.0.0:80"
-		opts.TranscodingAlwaysPrintPrimitiveFields = tc.transcodingAlwaysPrintPrimitiveFields
-		opts.TranscodingPreserveProtoFieldNames = tc.transcodingPreserveProtoFieldNames
-		opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
-		opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
-		opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = "grpc://127.0.0.0:80"
+			opts.TranscodingAlwaysPrintPrimitiveFields = tc.transcodingAlwaysPrintPrimitiveFields
+			opts.TranscodingPreserveProtoFieldNames = tc.transcodingPreserveProtoFieldNames
+			opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
+			opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
+			opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		marshaler := &jsonpb.Marshaler{}
-		gotFilter, err := marshaler.MarshalToString(makeTranscoderFilter(fakeServiceInfo))
-		if err != nil {
-			t.Fatal(err)
-		}
+			marshaler := &jsonpb.Marshaler{}
+			gotFilter, err := marshaler.MarshalToString(makeTranscoderFilter(fakeServiceInfo))
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if err := util.JsonEqual(tc.wantTranscoderFilter, gotFilter); err != nil {
-			t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, \n %v", i, tc.desc, err)
-		}
+			if err := util.JsonEqual(tc.wantTranscoderFilter, gotFilter); err != nil {
+				t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, \n %v", i, tc.desc, err)
+			}
+		})
 	}
 }
 
@@ -483,7 +490,7 @@ func TestBackendAuthFilter(t *testing.T) {
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
-						Name: "testapi",
+						Name: "testapipb",
 						Methods: []*apipb.Method{
 							{
 								Name: "foo",
@@ -544,7 +551,7 @@ func TestBackendAuthFilter(t *testing.T) {
 				},
 				Apis: []*apipb.Api{
 					{
-						Name: "testapi",
+						Name: "get_testapi",
 						Methods: []*apipb.Method{
 							{
 								Name: "foo",
@@ -616,7 +623,12 @@ func TestBackendAuthFilter(t *testing.T) {
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
-						Name: "testapi",
+						Name: "testapipb",
+						Methods: []*apipb.Method{
+							{
+								Name: "bar",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -666,7 +678,12 @@ func TestBackendAuthFilter(t *testing.T) {
 				Name: testProjectName,
 				Apis: []*apipb.Api{
 					{
-						Name: "testapi",
+						Name: "testapipb",
+						Methods: []*apipb.Method{
+							{
+								Name: "bar",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{

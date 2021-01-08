@@ -205,6 +205,11 @@ func TestMakeRouteConfig(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -391,6 +396,11 @@ func TestMakeRouteConfig(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2842,6 +2852,14 @@ func TestMakeFallbackRoute(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo_Get",
+							},
+							{
+								Name: "Echo_Post",
+							},
+						},
 					},
 				},
 				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
@@ -3040,6 +3058,14 @@ func TestMakeFallbackRoute(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo_Get",
+							},
+							{
+								Name: "Echo_Post",
+							},
+						},
 					},
 				},
 				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
@@ -3175,6 +3201,14 @@ func TestMakeFallbackRoute(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo_Get",
+							},
+							{
+								Name: "Echo_Post",
+							},
+						},
 					},
 				},
 				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
@@ -3400,6 +3434,14 @@ func TestMakeFallbackRoute(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Long_Get",
+							},
+							{
+								Name: "Short_Get",
+							},
+						},
 					},
 				},
 				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
