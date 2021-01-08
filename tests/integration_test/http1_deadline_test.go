@@ -188,7 +188,7 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 }
 
 // Tests the stream idle timeouts configured via deadline in backend rules for a HTTP/1.x backend.
-func TestIdleTimeoutsForDynamicRouting(t *testing.T) {
+func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 	t.Parallel()
 
 	testData := []struct {
@@ -201,7 +201,16 @@ func TestIdleTimeoutsForDynamicRouting(t *testing.T) {
 		// Please be cautious about adding too many time-based tests here.
 		// This can slow down our CI system if we sleep for too long.
 		{
-			desc: "When deadline is NOT specified, ESPv2 does not honor the idle timeout flag if the value is too low. Request still succeeds.",
+			desc: "When deadline is NOT specified, default deadline (15s) kicks in and the request fails.",
+			confArgs: append([]string{
+				"--stream_idle_timeout=25s",
+			}, utils.CommonArgs()...),
+			reqDuration:    time.Second * 20,
+			deadlineToTest: Default,
+			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+		},
+		{
+			desc: "When deadline is NOT specified, ESPv2 does not honor the global idle timeout flag if the value is lower than the default deadline (15s). Request still succeeds.",
 			confArgs: append([]string{
 				"--stream_idle_timeout=5s",
 			}, utils.CommonArgs()...),
@@ -209,7 +218,7 @@ func TestIdleTimeoutsForDynamicRouting(t *testing.T) {
 			deadlineToTest: Default,
 		},
 		{
-			desc: "When deadline is specified, deadline overrides global idle timeout flag. Request still succeeds.",
+			desc: "When a large deadline is specified, it overrides the global stream idle timeout specified by flag. The request succeeds.",
 			confArgs: append([]string{
 				"--stream_idle_timeout=1s",
 			}, utils.CommonArgs()...),
@@ -217,9 +226,18 @@ func TestIdleTimeoutsForDynamicRouting(t *testing.T) {
 			deadlineToTest: Short,
 		},
 		{
-			desc: "When deadline overrides global idle timeout, requests exceeding deadline always error with 504, not 408",
+			desc: "When a small deadline is specified, it overrides the larger global stream idle timeout specified by flag. The request fails with a 504, not 408.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=1s",
+				"--stream_idle_timeout=15s",
+			}, utils.CommonArgs()...),
+			reqDuration:    time.Second * 8,
+			deadlineToTest: Short,
+			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+		},
+		{
+			desc: "When a small deadline is specified, it overrides the smaller global stream idle timeout specified by flag. The request fails with a 504, not 408.",
+			confArgs: append([]string{
+				"--stream_idle_timeout=2s",
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,

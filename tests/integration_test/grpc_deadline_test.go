@@ -214,22 +214,24 @@ plans {
 	}
 }
 
+// Tests the stream idle timeouts configured via deadline in backend rules for gRPC streaming methods.
+// gRPC streaming methods do not adhere to deadlines, they use stream idle timeouts.
 func TestIdleTimeoutsForGrpcStreaming(t *testing.T) {
 	t.Parallel()
 
 	testData := []struct {
-		desc        string
-		confArgs    []string
-		addDeadline time.Duration
-		wantErr     string
-		testPlan    string
+		desc           string
+		confArgs       []string
+		methodDeadline time.Duration
+		wantErr        string
+		testPlan       string
 	}{
 		// Please be cautious about adding too many time-based tests here.
 		// This can slow down our CI system if we sleep for too long.
 		{
-			desc: "When deadline is NOT specified for method, stream idle timeout specified via flag kicks in and the request fails.",
+			desc: "When deadline is NOT specified, stream idle timeout specified via flag kicks in and the request fails.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=15s",
+				"--stream_idle_timeout=17s",
 			}, utils.CommonArgs()...),
 			wantErr: `stream timeout`,
 			testPlan: `
@@ -247,8 +249,27 @@ plans {
 }`,
 		},
 		{
-			desc:        "When deadline is specified for method, it overrides the global stream idle timeout and the request succeeds.",
-			addDeadline: 25 * time.Second,
+			desc: "When deadline is NOT specified, ESPv2 does not honor the global idle timeout flag if the value is lower than the default deadline (15s). Request still succeeds.",
+			confArgs: append([]string{
+				"--stream_idle_timeout=3s",
+			}, utils.CommonArgs()...),
+			testPlan: `
+plans {
+  echo_stream {
+    call_config {
+      api_key: "this-is-an-api-key"
+    }
+    request {
+      text: "Hello, world!"
+      response_delay: 7
+    }
+    count: 1
+  }
+}`,
+		},
+		{
+			desc:           "When a large deadline is specified, it overrides the global stream idle timeout specified by flag. The request succeeds.",
+			methodDeadline: 25 * time.Second,
 			confArgs: append([]string{
 				"--stream_idle_timeout=15s",
 			}, utils.CommonArgs()...),
@@ -267,9 +288,11 @@ plans {
 }`,
 		},
 		{
-			desc: "When deadline is NOT specified for method, a low stream idle timeout specified via flag is not honored and the request succeeds.",
+			desc:           "When a small deadline is specified, it overrides the larger global stream idle timeout specified by flag. The stream fails with a 408, not 504.",
+			methodDeadline: 5 * time.Second,
+			wantErr:        "stream timeout",
 			confArgs: append([]string{
-				"--stream_idle_timeout=3s",
+				"--stream_idle_timeout=15s",
 			}, utils.CommonArgs()...),
 			testPlan: `
 plans {
@@ -279,7 +302,28 @@ plans {
     }
     request {
       text: "Hello, world!"
-      response_delay: 7
+      response_delay: 10
+    }
+    count: 1
+  }
+}`,
+		},
+		{
+			desc:           "When a small deadline is specified, it overrides the smaller global stream idle timeout specified by flag. The stream fails with a 408, not 504.",
+			methodDeadline: 5 * time.Second,
+			wantErr:        "stream timeout",
+			confArgs: append([]string{
+				"--stream_idle_timeout=2s",
+			}, utils.CommonArgs()...),
+			testPlan: `
+plans {
+  echo_stream {
+    call_config {
+      api_key: "this-is-an-api-key"
+    }
+    request {
+      text: "Hello, world!"
+      response_delay: 8
     }
     count: 1
   }
@@ -293,11 +337,11 @@ plans {
 		t.Run(tc.desc, func(t *testing.T) {
 			s := env.NewTestEnv(platform.TestDeadlinesForGrpcCatchAllBackend, platform.GrpcEchoSidecar)
 
-			if tc.addDeadline != 0 {
+			if tc.methodDeadline != 0 {
 				s.AppendBackendRules([]*confpb.BackendRule{
 					{
 						Selector: "test.grpc.Test.EchoStream",
-						Deadline: tc.addDeadline.Seconds(),
+						Deadline: tc.methodDeadline.Seconds(),
 					},
 				})
 			}

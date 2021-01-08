@@ -1796,6 +1796,34 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 				"abc.com.api": util.DefaultResponseDeadline,
 			},
 		},
+		{
+			desc: "Streaming methods have no deadline",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:              "api",
+								ResponseStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": 0,
+			},
+		},
 	}
 
 	for _, tc := range testData {
@@ -1976,6 +2004,35 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 			},
 			wantedMethodIdleTimeout: map[string]time.Duration{
 				"abc.com.api": util.DefaultResponseDeadline + time.Second,
+			},
+		},
+		{
+			desc:              "Streaming methods set the idle timeout directly from the deadline, even if the global stream idle timeout is larger.",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:             "api",
+								RequestStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 10*time.Second + 500*time.Millisecond,
 			},
 		},
 	}

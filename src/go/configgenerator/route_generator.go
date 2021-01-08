@@ -17,7 +17,6 @@ package configgenerator
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -327,16 +326,6 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 }
 
 func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
-	// Response timeouts are not compatible with streaming methods (documented in Envoy).
-	// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
-	// This even applies for routes with gRPC-JSON transcoding where only the upstream is streaming.
-	var respTimeout time.Duration
-	if method.IsStreaming {
-		respTimeout = 0 * time.Second
-	} else {
-		respTimeout = method.BackendInfo.Deadline
-	}
-
 	return &routepb.Route{
 		Match: routeMatcher,
 		Action: &routepb.Route_Route{
@@ -344,7 +333,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) 
 				ClusterSpecifier: &routepb.RouteAction_Cluster{
 					Cluster: method.BackendInfo.ClusterName,
 				},
-				Timeout:     ptypes.DurationProto(respTimeout),
+				Timeout:     ptypes.DurationProto(method.BackendInfo.Deadline),
 				IdleTimeout: ptypes.DurationProto(method.BackendInfo.IdleTimeout),
 				RetryPolicy: &routepb.RetryPolicy{
 					RetryOn: method.BackendInfo.RetryOns,

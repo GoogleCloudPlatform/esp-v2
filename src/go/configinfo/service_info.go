@@ -569,8 +569,17 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		deadline = time.Duration(deadlineMs) * time.Millisecond
 	}
 
-	// Allow per-route response deadlines to override the global stream idle timeout.
-	idleTimeout := calculateStreamIdleTimeout(deadline, s.Options)
+	var idleTimeout time.Duration
+	if method.IsStreaming {
+		// Response timeouts are not compatible with streaming methods (documented in Envoy).
+		// Instead, the stream idle timeout serves as the deadline.
+		// This applies to methods with a streaming upstream OR downstream.
+		idleTimeout = deadline
+		deadline = 0 * time.Second
+	} else {
+		// Allow per-route response deadlines to override the global stream idle timeout.
+		idleTimeout = calculateStreamIdleTimeout(deadline, s.Options)
+	}
 
 	method.BackendInfo = &backendInfo{
 		ClusterName:     backendClusterName,
