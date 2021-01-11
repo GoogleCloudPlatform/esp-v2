@@ -251,9 +251,30 @@ plans {
 }`,
 		},
 		{
+			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 20, request = 17s
+			// Global stream idle timeout is used because route deadline is not configured. Request is under the route's stream idle timeout, so it succeeds.
+			desc: "When deadline is NOT specified, the global idle timeout flag is honored. But it is large, so the request succeeds.",
+			confArgs: append([]string{
+				"--stream_idle_timeout_test_only=20s",
+			}, utils.CommonArgs()...),
+			testPlan: `
+plans {
+  echo_stream {
+    call_config {
+      api_key: "this-is-an-api-key"
+    }
+    request {
+      text: "Hello, world!"
+      response_delay: 17
+    }
+    count: 1
+  }
+}`,
+		},
+		{
 			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 3s, request = 7s
 			// Stream idle timeout is automatically increased to match the default route deadline. Request is under the route's stream idle timeout, so it succeeds.
-			desc: "When deadline is NOT specified, ESPv2 does not honor the global idle timeout flag if the value is lower than the default deadline (15s). Request still succeeds.",
+			desc: "When deadline is NOT specified, ESPv2 does not honor the global idle timeout flag if the value is lower than the default deadline (15s). The request succeeds.",
 			confArgs: append([]string{
 				"--stream_idle_timeout_test_only=3s",
 			}, utils.CommonArgs()...),
