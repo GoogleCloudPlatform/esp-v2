@@ -208,9 +208,9 @@ class ApiProxyTranscodingFuzzTest(object):
     self._print_results_so_far()
 
     print 'Running /echo query param fuzz tests...'
-    self._run_query_param_fuzzer('/echo')
-    self._check_for_crash()
-    self._print_results_so_far()
+    # self._run_query_param_fuzzer('/echo')
+    # self._check_for_crash()
+    # self._print_results_so_far()
 
     print 'Running URL path fuzz tests...'
     self._run_url_path_fuzzer()
