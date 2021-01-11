@@ -201,43 +201,53 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 		// Please be cautious about adding too many time-based tests here.
 		// This can slow down our CI system if we sleep for too long.
 		{
-			desc: "When deadline is NOT specified, default deadline (15s) kicks in and the request fails.",
+			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 25s, request = 20s
+			// This 504 is caused by response timeout set from route deadline, not by the global stream idle timeout.
+			desc: "When deadline is NOT specified, default deadline (15s) kicks in and the request fails with 504.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=25s",
+				"--stream_idle_timeout_test_only=25s",
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 20,
 			deadlineToTest: Default,
 			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},
 		{
-			desc: "When deadline is NOT specified, ESPv2 does not honor the global idle timeout flag if the value is lower than the default deadline (15s). Request still succeeds.",
+			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 5s, request = 10s
+			// Stream idle timeout is automatically increased for the route. Request is under the response timeout set from route deadline, so it succeeds.
+			desc: "ESPv2 does not honor the global idle timeout flag for unary requests, even when deadline is NOT specified. The request succeeds.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=5s",
+				"--stream_idle_timeout_test_only=5s",
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 10,
 			deadlineToTest: Default,
 		},
 		{
-			desc: "When a large deadline is specified, it overrides the global stream idle timeout specified by flag. The request succeeds.",
+			// route deadline = 5s, global stream idle timeout = 1s, request = 2s
+			// Stream idle timeout is automatically increased for the route. Request is under the response timeout set from route deadline, so it succeeds.
+			desc: "ESPv2 does not honor the global idle timeout flag for unary requests, even when deadline is specified. The request succeeds.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=1s",
+				"--stream_idle_timeout_test_only=1s",
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 2,
 			deadlineToTest: Short,
 		},
 		{
-			desc: "When a small deadline is specified, it overrides the larger global stream idle timeout specified by flag. The request fails with a 504, not 408.",
+			// route deadline = 5s, global stream idle timeout = 15s, request = 8s
+			// This 504 is caused by response timeout set from route deadline, not by the global stream idle timeout.
+			desc: "ESPv2 does not honor the LARGE global idle timeout flag for unary requests. The request fails with a 504, not 408.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=15s",
+				"--stream_idle_timeout_test_only=15s",
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
 			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},
 		{
-			desc: "When a small deadline is specified, it overrides the smaller global stream idle timeout specified by flag. The request fails with a 504, not 408.",
+			// route deadline = 5s, global stream idle timeout = 2s, request = 8s
+			// This 504 is caused by response timeout set from route deadline, not by the global stream idle timeout.
+			desc: "ESPv2 does not honor the SMALL global idle timeout flag for unary requests. The request fails with a 504, not 408.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=2s",
+				"--stream_idle_timeout_test_only=2s",
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,

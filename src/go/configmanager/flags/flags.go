@@ -46,8 +46,6 @@ var (
 
 	// Envoy specific configurations.
 	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", 20*time.Second, "cluster connect timeout in seconds")
-	StreamIdleTimeout     = flag.Duration("stream_idle_timeout", util.DefaultIdleTimeout, "The amount of time HTTP/2 streams can exist without any activity. "+
-		"Set `deadline` in the service config to override this global value on a per-route basis.")
 
 	// Network related configurations.
 	BackendAddress       = flag.String("backend_address", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
@@ -127,9 +125,11 @@ var (
 
 	ComputePlatformOverride = flag.String("compute_platform_override", "", "the overridden platform where the proxy is running at")
 
-	// Flags for testing purpose.
+	// Flags for testing purpose. They are not exposed to the user via start_proxy.py
 	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
 	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", false, "skip service control filter, for test purpose")
+	StreamIdleTimeout        = flag.Duration("stream_idle_timeout_test_only", util.DefaultIdleTimeout, "The amount of time HTTP/2 streams can exist without any activity. "+
+		"Set `deadline` in the service config to override this global value on a per-route basis.")
 
 	TranscodingAlwaysPrintPrimitiveFields   = flag.Bool("transcoding_always_print_primitive_fields", false, "Whether to always print primitive fields for grpc-json transcoding")
 	TranscodingAlwaysPrintEnumsAsInts       = flag.Bool("transcoding_always_print_enums_as_ints", false, "Whether to always print enums as ints for grpc-json transcoding")

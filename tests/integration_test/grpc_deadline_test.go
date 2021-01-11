@@ -229,9 +229,11 @@ func TestIdleTimeoutsForGrpcStreaming(t *testing.T) {
 		// Please be cautious about adding too many time-based tests here.
 		// This can slow down our CI system if we sleep for too long.
 		{
-			desc: "When deadline is NOT specified, stream idle timeout specified via flag kicks in and the request fails.",
+			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 17s, request = 20s
+			// This 408 is caused by global stream idle timeout because deadline was not explicitly specified.
+			desc: "When deadline is NOT specified, stream idle timeout specified via flag kicks in and the request fails with 408.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=17s",
+				"--stream_idle_timeout_test_only=17s",
 			}, utils.CommonArgs()...),
 			wantErr: `stream timeout`,
 			testPlan: `
@@ -249,9 +251,11 @@ plans {
 }`,
 		},
 		{
+			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 3s, request = 7s
+			// Stream idle timeout is automatically increased to match the default route deadline. Request is under the route's stream idle timeout, so it succeeds.
 			desc: "When deadline is NOT specified, ESPv2 does not honor the global idle timeout flag if the value is lower than the default deadline (15s). Request still succeeds.",
 			confArgs: append([]string{
-				"--stream_idle_timeout=3s",
+				"--stream_idle_timeout_test_only=3s",
 			}, utils.CommonArgs()...),
 			testPlan: `
 plans {
@@ -268,10 +272,12 @@ plans {
 }`,
 		},
 		{
+			// route deadline = 25s, global stream idle timeout = 15s, request = 20s
+			// Stream idle timeout is automatically increased to match the specified route deadline. Request is under the route's stream idle timeout, so it succeeds.
 			desc:           "When a large deadline is specified, it overrides the global stream idle timeout specified by flag. The request succeeds.",
 			methodDeadline: 25 * time.Second,
 			confArgs: append([]string{
-				"--stream_idle_timeout=15s",
+				"--stream_idle_timeout_test_only=15s",
 			}, utils.CommonArgs()...),
 			testPlan: `
 plans {
@@ -288,11 +294,13 @@ plans {
 }`,
 		},
 		{
+			// route deadline = 5s, global stream idle timeout = 15s, request = 10s
+			// This 408 is caused by the route's stream idle timeout because deadline was explicitly configured.
 			desc:           "When a small deadline is specified, it overrides the larger global stream idle timeout specified by flag. The stream fails with a 408, not 504.",
 			methodDeadline: 5 * time.Second,
 			wantErr:        "stream timeout",
 			confArgs: append([]string{
-				"--stream_idle_timeout=15s",
+				"--stream_idle_timeout_test_only=15s",
 			}, utils.CommonArgs()...),
 			testPlan: `
 plans {
@@ -309,11 +317,13 @@ plans {
 }`,
 		},
 		{
+			// route deadline = 5s, global stream idle timeout = 2s, request = 8s
+			// This 408 is caused by the route's stream idle timeout because deadline was explicitly configured.
 			desc:           "When a small deadline is specified, it overrides the smaller global stream idle timeout specified by flag. The stream fails with a 408, not 504.",
 			methodDeadline: 5 * time.Second,
 			wantErr:        "stream timeout",
 			confArgs: append([]string{
-				"--stream_idle_timeout=2s",
+				"--stream_idle_timeout_test_only=2s",
 			}, utils.CommonArgs()...),
 			testPlan: `
 plans {
