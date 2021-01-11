@@ -569,12 +569,31 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		deadline = time.Duration(deadlineMs) * time.Millisecond
 	}
 
+	// Response timeouts are not compatible with streaming methods (documented in Envoy).
+	// This applies to methods with a streaming upstream OR downstream.
+	var idleTimeout time.Duration
+	if method.IsStreaming {
+		if r.Deadline <= 0 {
+			// User did not specify a deadline, use global stream idle timeout.
+			idleTimeout = s.Options.StreamIdleTimeout
+		} else {
+			// User configured deadline serves as the stream idle timeout.
+			idleTimeout = deadline
+		}
+
+		deadline = 0 * time.Second
+	} else {
+		// Allow per-route response deadlines to override the global stream idle timeout.
+		idleTimeout = calculateStreamIdleTimeout(deadline, s.Options)
+	}
+
 	method.BackendInfo = &backendInfo{
 		ClusterName:     backendClusterName,
 		Path:            path,
 		Hostname:        hostname,
 		TranslationType: r.PathTranslation,
 		Deadline:        deadline,
+		IdleTimeout:     idleTimeout,
 		RetryOns:        s.Options.BackendRetryOns,
 		RetryNum:        s.Options.BackendRetryNum,
 	}
@@ -619,10 +638,14 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 			continue
 		}
 
+		// Idle timeout cannot be smaller than the default response deadline.
+		idleTimeout := calculateStreamIdleTimeout(util.DefaultResponseDeadline, s.Options)
+
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{
 			ClusterName: s.LocalBackendCluster.ClusterName,
 			Deadline:    util.DefaultResponseDeadline,
+			IdleTimeout: idleTimeout,
 			RetryOns:    s.Options.BackendRetryOns,
 			RetryNum:    s.Options.BackendRetryNum,
 		}
@@ -854,4 +877,14 @@ func getJwtAudienceFromBackendAddr(scheme, hostname string) string {
 		return fmt.Sprintf("https://%s", hostname)
 	}
 	return fmt.Sprintf("http://%s", hostname)
+}
+
+// Calculates the stream idle timeout based on the response deadline for that route and the global stream idle timeout.
+func calculateStreamIdleTimeout(operationDeadline time.Duration, opts options.ConfigGeneratorOptions) time.Duration {
+	// If the deadline and stream idle timeout have the exact same timeout,
+	// the error code returned to the client is inconsistent based on which event is processed first.
+	// (504 for response deadline, 408 for idle timeout)
+	// So offset the idle timeout to ensure response deadline is always hit first.
+	operationIdleTimeout := operationDeadline + time.Second
+	return util.MaxDuration(operationIdleTimeout, opts.StreamIdleTimeout)
 }

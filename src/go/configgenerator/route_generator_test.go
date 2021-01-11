@@ -99,6 +99,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -135,6 +136,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -266,6 +268,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -313,6 +316,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -447,6 +451,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -572,6 +577,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -612,6 +618,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -752,6 +759,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -789,6 +797,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -826,6 +835,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -865,6 +875,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1049,6 +1060,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1086,6 +1098,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1123,6 +1136,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1160,6 +1174,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1200,6 +1215,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1243,6 +1259,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1406,6 +1423,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1439,6 +1457,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1472,6 +1491,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1505,6 +1525,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1672,6 +1693,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1711,6 +1733,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1750,6 +1773,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1789,6 +1813,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1948,6 +1973,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -2071,6 +2097,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -2113,6 +2140,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -2297,6 +2325,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2333,6 +2362,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2363,6 +2393,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2393,6 +2424,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2432,6 +2464,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2471,6 +2504,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2510,6 +2544,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2549,6 +2584,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2588,6 +2624,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2866,6 +2903,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2894,6 +2932,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2922,6 +2961,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2950,6 +2990,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3071,6 +3112,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3102,6 +3144,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3219,6 +3262,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3247,6 +3291,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3275,6 +3320,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3303,6 +3349,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3438,6 +3485,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3466,6 +3514,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3494,6 +3543,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -3522,6 +3572,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"

@@ -748,6 +748,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -776,6 +777,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -804,6 +806,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -832,6 +835,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-service-control.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"

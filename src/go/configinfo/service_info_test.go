@@ -1661,7 +1661,10 @@ func TestMethods(t *testing.T) {
 			}
 			for key, gotMethod := range serviceInfo.Methods {
 				wantMethod, ok := tc.wantMethods[key]
+
+				// Remove some items we have other specific tests for.
 				gotMethod.GeneratedCorsMethod = nil
+				gotMethod.BackendInfo.IdleTimeout = 0
 
 				if !ok {
 					t.Errorf("cannot find key: %v\n got methods : %+v\nwant methods: %+v", key, serviceInfo.Methods, tc.wantMethods)
@@ -1775,24 +1778,312 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 				"abc.com.api": util.DefaultResponseDeadline,
 			},
 		},
+		{
+			desc: "Missing deadline is defaulted",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline,
+			},
+		},
+		{
+			desc: "Streaming methods have no deadline",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:              "api",
+								ResponseStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": 0,
+			},
+		},
 	}
 
-	for i, tc := range testData {
+	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
 			if err != nil {
-				t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline error not expected, got: %v", i, tc.desc, err)
+				t.Errorf("error not expected, got: %v", err)
 				return
 			}
 
-			for _, rule := range tc.fakeServiceConfig.Backend.Rules {
-				gotDeadline := s.Methods[rule.Selector].BackendInfo.Deadline
-				wantDeadline := tc.wantedMethodDeadlines[rule.Selector]
+			for operation, mi := range s.Methods {
+				gotDeadline := mi.BackendInfo.Deadline
+				wantDeadline := tc.wantedMethodDeadlines[operation]
 
 				if wantDeadline != gotDeadline {
-					t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline, Deadline not expected, got: %v, want: %v", i, tc.desc, gotDeadline, wantDeadline)
+					t.Errorf("Deadline not expected, got: %v, want: %v", gotDeadline, wantDeadline)
+				}
+			}
+		})
+	}
+}
+
+func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		globalIdleTimeout time.Duration
+		// Map of selector to the expected idle timeout for the corresponding route.
+		wantedMethodIdleTimeout map[string]time.Duration
+	}{
+		{
+			desc:              "Global idle timeout takes priority over small deadline",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultIdleTimeout,
+			},
+		},
+		{
+			desc:              "Deadline takes priority over small global idle timeout",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 10*time.Second + 500*time.Millisecond + time.Second,
+			},
+		},
+		{
+			desc:              "Global idle timeout takes priority over missing deadline",
+			globalIdleTimeout: 30 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 30 * time.Second,
+			},
+		},
+		{
+			desc:              "Global idle timeout takes priority over negative deadline",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultIdleTimeout,
+			},
+		},
+		{
+			desc:              "Default deadline takes priority over small global idle timeout with missing deadline",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline + time.Second,
+			},
+		},
+		{
+			desc:              "Default deadline takes priority over small global idle timeout and negative deadline",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline + time.Second,
+			},
+		},
+		{
+			desc:              "Streaming methods set the idle timeout directly from the deadline, even if the global stream idle timeout is larger.",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:             "api",
+								RequestStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 10*time.Second + 500*time.Millisecond,
+			},
+		},
+		{
+			desc:              "Streaming methods with NO deadline specified use the default stream timeout.",
+			globalIdleTimeout: 25 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:             "api",
+								RequestStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							// Missing deadline
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 25 * time.Second,
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.StreamIdleTimeout = tc.globalIdleTimeout
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+			if err != nil {
+				t.Errorf("error not expected, got: %v", err)
+				return
+			}
+
+			for operation, mi := range s.Methods {
+				gotIdleTimeout := mi.BackendInfo.IdleTimeout
+				wantIdleTimeout := tc.wantedMethodIdleTimeout[operation]
+
+				if gotIdleTimeout != wantIdleTimeout {
+					t.Errorf("IdleTimeout not expected, got: %v, want: %v", gotIdleTimeout, wantIdleTimeout)
 				}
 			}
 		})

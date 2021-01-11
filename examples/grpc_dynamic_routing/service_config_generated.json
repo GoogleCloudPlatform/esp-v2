@@ -88,25 +88,25 @@
     "rules": [
       {
         "address": "grpcs://grpc-echo-oxouww7xzq-uc.a.run.app",
-        "deadline": 300,
+        "deadline": 400,
         "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
         "selector": "test.grpc.Test.Echo"
       },
       {
         "address": "grpcs://grpc-echo-oxouww7xzq-uc.a.run.app",
-        "deadline": 300,
+        "deadline": 400,
         "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
         "selector": "test.grpc.Test.EchoStream"
       },
       {
         "address": "grpcs://grpc-echo-oxouww7xzq-uc.a.run.app",
-        "deadline": 300,
+        "deadline": 400,
         "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
         "selector": "test.grpc.Test.Cork"
       },
       {
         "address": "grpcs://grpc-echo-oxouww7xzq-uc.a.run.app",
-        "deadline": 300,
+        "deadline": 400,
         "jwtAudience": "https://grpc-echo-oxouww7xzq-uc.a.run.app",
         "selector": "test.grpc.Test.EchoReport"
       }
