@@ -147,10 +147,12 @@ void ServiceControlHandlerImpl::fillOperationInfo(
       require_ctx_->service_ctx().config().producer_project_id();
   info.current_time = time_source_.systemTime();
 
-  if (stream_info_.downstreamRemoteAddress()->type() ==
+  if (stream_info_.downstreamAddressProvider().remoteAddress()->type() ==
       Envoy::Network::Address::Type::Ip) {
-    info.client_ip =
-        stream_info_.downstreamRemoteAddress()->ip()->addressAsString();
+    info.client_ip = stream_info_.downstreamAddressProvider()
+                         .remoteAddress()
+                         ->ip()
+                         ->addressAsString();
   }
 
   info.api_key = api_key_;
