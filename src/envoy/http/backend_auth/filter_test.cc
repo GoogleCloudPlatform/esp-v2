@@ -87,32 +87,14 @@ class BackendAuthFilterTest : public ::testing::Test {
   std::unique_ptr<Filter> filter_;
 };
 
-TEST_F(BackendAuthFilterTest, NoRouteRejected) {
+TEST_F(BackendAuthFilterTest, NoRouteRejectAllow) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
   EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
 
-  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
-              setResponseFlag(Envoy::StreamInfo::ResponseFlag::NoRouteFound));
-
-  EXPECT_CALL(
-      mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::NotFound,
-                     "Request `GET /books/1` is not defined by this API.", _, _,
-                     "backend_auth_undefined_request"));
-
-  Envoy::Http::FilterHeadersStatus status =
-      filter_->decodeHeaders(headers, false);
-
-  ASSERT_EQ(status, Envoy::Http::FilterHeadersStatus::StopIteration);
-
-  // Stats.
-  const Envoy::Stats::CounterSharedPtr counter =
-      Envoy::TestUtility::findCounter(scope_,
-                                      "backend_auth.denied_by_no_route");
-  ASSERT_NE(counter, nullptr);
-  EXPECT_EQ(counter->value(), 1);
+  ASSERT_EQ(filter_->decodeHeaders(headers, false),
+            Envoy::Http::FilterHeadersStatus::Continue);
 }
 
 TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {
@@ -202,10 +184,47 @@ TEST_F(BackendAuthFilterTest, SucceedTokenCopied) {
   Envoy::Http::FilterHeadersStatus status =
       filter_->decodeHeaders(headers, false);
 
+  ASSERT_EQ(headers.get(Envoy::Http::CustomHeaders::get().Authorization).size(),
+            1);
   EXPECT_EQ(headers.get(Envoy::Http::CustomHeaders::get().Authorization)[0]
                 ->value()
                 .getStringView(),
             "Bearer new-id-token");
+  ASSERT_EQ(headers.get(kXForwardedAuthorization).size(), 1);
+  EXPECT_EQ(headers.get(kXForwardedAuthorization)[0]->value().getStringView(),
+            "Bearer origin-token");
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
+
+  // Stats.
+  const Envoy::Stats::CounterSharedPtr counter =
+      Envoy::TestUtility::findCounter(scope_, "backend_auth.token_added");
+  ASSERT_NE(counter, nullptr);
+  EXPECT_EQ(counter->value(), 1);
+}
+
+TEST_F(BackendAuthFilterTest, SucceedTokenOverridden) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {":method", "GET"},
+      {":path", "/books/1"},
+      {"authorization", "Bearer origin-token"},
+      {"x-forwarded-authorization", "Bearer untrusted-token"}};
+
+  setPerRouteJwtAudience("this-is-audience");
+
+  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken("this-is-audience"))
+      .Times(1)
+      .WillRepeatedly(Return(std::make_shared<std::string>("new-id-token")));
+
+  Envoy::Http::FilterHeadersStatus status =
+      filter_->decodeHeaders(headers, false);
+
+  ASSERT_EQ(headers.get(Envoy::Http::CustomHeaders::get().Authorization).size(),
+            1);
+  EXPECT_EQ(headers.get(Envoy::Http::CustomHeaders::get().Authorization)[0]
+                ->value()
+                .getStringView(),
+            "Bearer new-id-token");
+  ASSERT_EQ(headers.get(kXForwardedAuthorization).size(), 1);
   EXPECT_EQ(headers.get(kXForwardedAuthorization)[0]->value().getStringView(),
             "Bearer origin-token");
   EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);

@@ -87,7 +87,7 @@ void FillAllocateQuotaRequestInfo(QuotaRequestInfo* request) {
 
 void FillReportRequestInfo(ReportRequestInfo* request) {
   request->referer = "referer";
-  request->response_code = 200;
+  request->http_response_code = 200;
   request->location = "us-central";
   request->api_name = "api-name";
   request->api_version = "api-version";
@@ -295,7 +295,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   info.check_response_info.api_key_state = api_key::ApiKeyState::NOT_CHECKED;
 
   // Use 401 as a failed response code.
-  info.response_code = 401;
+  info.http_response_code = 401;
 
   // Use the corresponding status for that response code.
   info.status = Status(Code::PERMISSION_DENIED, "");
@@ -305,6 +305,27 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
 
   std::string text = ReportRequestToString(&request);
   std::string expected_text = ReadTestBaseline("report_request_failed.golden");
+  ASSERT_EQ(expected_text, text);
+}
+
+TEST_F(RequestBuilderTest, FillReportRequestFailedByGrpcBackendTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+  FillReportRequestInfo(&info);
+  info.frontend_protocol = protocol::GRPC;
+  info.backend_protocol = protocol::GRPC;
+
+  // Test a case where HTTP request was successful, but gRPC backend returned
+  // an application error.
+  info.http_response_code = 200;
+  info.grpc_response_code = Code::NOT_FOUND;
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  std::string text = ReportRequestToString(&request);
+  std::string expected_text =
+      ReadTestBaseline("report_request_failed_grpc_status.golden");
   ASSERT_EQ(expected_text, text);
 }
 
@@ -319,7 +340,7 @@ TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
   info.api_key = "invalid-api-key";
 
   // Use 401 as a failed response code.
-  info.response_code = 401;
+  info.http_response_code = 401;
 
   // Use the corresponding status for that response code.
   info.status = Status(Code::PERMISSION_DENIED, "");

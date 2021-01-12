@@ -77,7 +77,7 @@ RUN_COUNT=0
 FAIL_COUNT=0
 export GRPC_GO_LOG_SEVERITY_LEVEL=INFO
 
-detect_memory_leak_init "${HOST_IP}"
+status_server_init "${HOST_IP}"
 
 while true; do
   CURR_TIME=$(date +"%s")

@@ -53,19 +53,11 @@ const Envoy::Http::LowerCaseString kXForwardedAuthorization{
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   // Make sure route is calculated
   auto route = decoder_callbacks_->route();
-  if (route == nullptr || route->routeEntry() == nullptr) {
-    config_->stats().denied_by_no_route_.inc();
 
-    rejectRequest(
-        Envoy::Http::Code::NotFound,
-        absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
-                     utils::readHeaderEntry(headers.Path()),
-                     "` is not defined by this API."),
-        utils::generateRcDetails(utils::kRcDetailFilterBackendAuth,
-                                 utils::kRcDetailErrorTypeUndefinedRequest));
-    decoder_callbacks_->streamInfo().setResponseFlag(
-        Envoy::StreamInfo::ResponseFlag::NoRouteFound);
-    return FilterHeadersStatus::StopIteration;
+  // `route` shouldn't be nullptr as the catch-all route match should catch all
+  // the undefined requests.
+  if (route == nullptr || route->routeEntry() == nullptr) {
+    return Envoy::Http::FilterHeadersStatus::Continue;
   }
 
   const auto* per_route =
@@ -95,6 +87,10 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   const Envoy::Http::HeaderEntry* existAuthToken =
       headers.getInline(authorization_handle.handle());
   if (existAuthToken != nullptr) {
+    // b/176165002: Clear out pre-existing header to prevent backends from
+    // unintentionally using the wrong value.
+    headers.remove(kXForwardedAuthorization);
+
     headers.addCopy(kXForwardedAuthorization,
                     existAuthToken->value().getStringView());
   }

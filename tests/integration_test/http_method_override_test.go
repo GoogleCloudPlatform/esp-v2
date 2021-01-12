@@ -24,28 +24,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 )
 
 func TestMethodOverrideBackendMethod(t *testing.T) {
 	t.Parallel()
 
 	s := env.NewTestEnv(platform.TestMethodOverrideBackendMethod, platform.EchoSidecar)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoGET",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/echoMethod",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echoPOST",
-			Pattern: &annotationspb.HttpRule_Post{
-				Post: "/echoMethod",
-			},
-		},
-	})
 
 	defer s.TearDown(t)
 	if err := s.Setup(utils.CommonArgs()); err != nil {
@@ -85,7 +69,7 @@ func TestMethodOverrideBackendMethod(t *testing.T) {
 			headers: map[string]string{
 				"X-HTTP-Method-Override": "DELETE",
 			},
-			httpCallError: fmt.Errorf("404 Not Found"),
+			httpCallError: fmt.Errorf("{\"code\":405,\"message\":\"The current request is matched to the defined url template \"/echoMethod\" but its http method is not allowed\"}"),
 		},
 	}
 	for _, tc := range testData {
@@ -225,6 +209,7 @@ func TestMethodOverrideScReport(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoGetWithBody",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					HttpMethod:                   "GET",

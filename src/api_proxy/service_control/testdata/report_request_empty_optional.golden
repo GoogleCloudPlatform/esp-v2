@@ -21,11 +21,11 @@ operations {
   }
   labels {
     key: "/response_code"
-    value: "200"
+    value: "0"
   }
   labels {
     key: "/response_code_class"
-    value: "2xx"
+    value: "0xx"
   }
   labels {
     key: "/status_code"
@@ -74,6 +74,12 @@ operations {
         }
       }
       fields {
+        key: "http_status_code"
+        value {
+          number_value: 0
+        }
+      }
+      fields {
         key: "producer_project_id"
         value {
           string_value: "project_id"
@@ -105,7 +111,6 @@ operations {
     }
     severity: INFO
     http_request {
-      status: 200
       protocol: "unknown"
     }
   }

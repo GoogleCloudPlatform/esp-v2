@@ -557,7 +557,7 @@ func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 					},
 				},
 			},
-			wantedErrorPrefix: `JwtLocation_Query should be set without valuePrefix`,
+			wantedErrorPrefix: `error processing authentication provider (auth_provider): JwtLocation type [Query] should be set without valuePrefix, but it was set to [jwt_query_header_prefix]`,
 		},
 		{
 			desc: "Success. Custom jwt locations with transcoding_ignore_query_params flag",
@@ -1488,7 +1488,7 @@ func TestMethods(t *testing.T) {
 				},
 			},
 			BackendAddress: "http://127.0.0.1:80",
-			wantError:      "operation(1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo): invalid uri template invalid-uri-template",
+			wantError:      "(1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo): invalid uri template invalid-uri-template",
 		},
 		{
 			desc: "Succeed for multiple url Pattern",
@@ -1648,8 +1648,8 @@ func TestMethods(t *testing.T) {
 			opts.Healthz = tc.healthz
 			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if tc.wantError != "" {
-				if err == nil || err.Error() != tc.wantError {
-					t.Fatalf("Error mismatch \ngot : %v, want: %v", err, tc.wantError)
+				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
+					t.Fatalf("Error mismatch \ngot : %v, \nwant: %v", err, tc.wantError)
 				}
 				return
 			}
@@ -1661,7 +1661,10 @@ func TestMethods(t *testing.T) {
 			}
 			for key, gotMethod := range serviceInfo.Methods {
 				wantMethod, ok := tc.wantMethods[key]
+
+				// Remove some items we have other specific tests for.
 				gotMethod.GeneratedCorsMethod = nil
+				gotMethod.BackendInfo.IdleTimeout = 0
 
 				if !ok {
 					t.Errorf("cannot find key: %v\n got methods : %+v\nwant methods: %+v", key, serviceInfo.Methods, tc.wantMethods)
@@ -1685,7 +1688,20 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+					{
+						Name: "cnn.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -1713,7 +1729,12 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -1735,7 +1756,12 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -1752,25 +1778,315 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 				"abc.com.api": util.DefaultResponseDeadline,
 			},
 		},
+		{
+			desc: "Missing deadline is defaulted",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline,
+			},
+		},
+		{
+			desc: "Streaming methods have no deadline",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:              "api",
+								ResponseStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodDeadlines: map[string]time.Duration{
+				"abc.com.api": 0,
+			},
+		},
 	}
 
-	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
-		if err != nil {
-			t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline error not expected, got: %v", i, tc.desc, err)
-			return
-		}
-
-		for _, rule := range tc.fakeServiceConfig.Backend.Rules {
-			gotDeadline := s.Methods[rule.Selector].BackendInfo.Deadline
-			wantDeadline := tc.wantedMethodDeadlines[rule.Selector]
-
-			if wantDeadline != gotDeadline {
-				t.Errorf("Test Desc(%d): %s, TestProcessBackendRuleForDeadline, Deadline not expected, got: %v, want: %v", i, tc.desc, gotDeadline, wantDeadline)
+			if err != nil {
+				t.Errorf("error not expected, got: %v", err)
+				return
 			}
-		}
+
+			for operation, mi := range s.Methods {
+				gotDeadline := mi.BackendInfo.Deadline
+				wantDeadline := tc.wantedMethodDeadlines[operation]
+
+				if wantDeadline != gotDeadline {
+					t.Errorf("Deadline not expected, got: %v, want: %v", gotDeadline, wantDeadline)
+				}
+			}
+		})
+	}
+}
+
+func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		globalIdleTimeout time.Duration
+		// Map of selector to the expected idle timeout for the corresponding route.
+		wantedMethodIdleTimeout map[string]time.Duration
+	}{
+		{
+			desc:              "Global idle timeout takes priority over small deadline",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultIdleTimeout,
+			},
+		},
+		{
+			desc:              "Deadline takes priority over small global idle timeout",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 10*time.Second + 500*time.Millisecond + time.Second,
+			},
+		},
+		{
+			desc:              "Global idle timeout takes priority over missing deadline",
+			globalIdleTimeout: 30 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 30 * time.Second,
+			},
+		},
+		{
+			desc:              "Global idle timeout takes priority over negative deadline",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultIdleTimeout,
+			},
+		},
+		{
+			desc:              "Default deadline takes priority over small global idle timeout with missing deadline",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline + time.Second,
+			},
+		},
+		{
+			desc:              "Default deadline takes priority over small global idle timeout and negative deadline",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline + time.Second,
+			},
+		},
+		{
+			desc:              "Streaming methods set the idle timeout directly from the deadline, even if the global stream idle timeout is larger.",
+			globalIdleTimeout: util.DefaultIdleTimeout,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:             "api",
+								RequestStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 10*time.Second + 500*time.Millisecond,
+			},
+		},
+		{
+			desc:              "Streaming methods with NO deadline specified use the default stream timeout.",
+			globalIdleTimeout: 25 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:             "api",
+								RequestStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							// Missing deadline
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": 25 * time.Second,
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.StreamIdleTimeout = tc.globalIdleTimeout
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+			if err != nil {
+				t.Errorf("error not expected, got: %v", err)
+				return
+			}
+
+			for operation, mi := range s.Methods {
+				gotIdleTimeout := mi.BackendInfo.IdleTimeout
+				wantIdleTimeout := tc.wantedMethodIdleTimeout[operation]
+
+				if gotIdleTimeout != wantIdleTimeout {
+					t.Errorf("IdleTimeout not expected, got: %v, want: %v", gotIdleTimeout, wantIdleTimeout)
+				}
+			}
+		})
 	}
 }
 
@@ -1786,7 +2102,20 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+					{
+						Name: "cnn.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -1815,7 +2144,15 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "api.test",
+						Methods: []*apipb.Method{
+							{
+								Name: "1",
+							},
+							{
+								Name: "2",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -1840,27 +2177,29 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 
-		if err != nil {
-			t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
-			return
-		}
-
-		for _, gotBackendRoutingCluster := range s.RemoteBackendClusters {
-			gotProtocol := gotBackendRoutingCluster.Protocol
-			wantProtocol, ok := tc.wantedClusterProtocols[gotBackendRoutingCluster.ClusterName]
-
-			if !ok {
-				t.Errorf("Test Desc(%s): Unknown backend routing cluster generated: %+v", tc.desc, gotBackendRoutingCluster)
-				continue
+			if err != nil {
+				t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
+				return
 			}
 
-			if wantProtocol != gotProtocol {
-				t.Errorf("Test Desc(%s): Protocol not expected, got: %v, want: %v", tc.desc, gotProtocol, wantProtocol)
+			for _, gotBackendRoutingCluster := range s.RemoteBackendClusters {
+				gotProtocol := gotBackendRoutingCluster.Protocol
+				wantProtocol, ok := tc.wantedClusterProtocols[gotBackendRoutingCluster.ClusterName]
+
+				if !ok {
+					t.Errorf("Test Desc(%s): Unknown backend routing cluster generated: %+v", tc.desc, gotBackendRoutingCluster)
+					continue
+				}
+
+				if wantProtocol != gotProtocol {
+					t.Errorf("Test Desc(%s): Protocol not expected, got: %v, want: %v", tc.desc, gotProtocol, wantProtocol)
+				}
 			}
-		}
+		})
 	}
 }
 
@@ -1953,36 +2292,43 @@ func TestProcessBackendRuleForClusterName(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		fakeServiceConfig := &confpb.Service{
-			Apis: []*apipb.Api{
-				{
-					Name: testApiName,
-				},
-			},
-			Backend: &confpb.Backend{
-				Rules: []*confpb.BackendRule{
+		t.Run(tc.desc, func(t *testing.T) {
+			fakeServiceConfig := &confpb.Service{
+				Apis: []*apipb.Api{
 					{
-						Address:  tc.Address,
-						Selector: "http.abc.com.api",
+						Name: "http.abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
-			},
-		}
-		opts := options.DefaultConfigGeneratorOptions()
-		s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  tc.Address,
+							Selector: "http.abc.com.api",
+						},
+					},
+				},
+			}
+			opts := options.DefaultConfigGeneratorOptions()
+			s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
 
-		if err != nil {
-			t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
-			return
-		}
+			if err != nil {
+				t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
+				return
+			}
 
-		if len(s.RemoteBackendClusters) != 1 {
-			t.Errorf("Test Desc(%s): generated number of clusters is not 1", tc.desc)
-			return
-		}
-		if tc.ClusterName != s.RemoteBackendClusters[0].ClusterName {
-			t.Errorf("Test Desc(%s): cluster name is different, want: %s, got %s", tc.desc, tc.ClusterName, s.RemoteBackendClusters[0].ClusterName)
-		}
+			if len(s.RemoteBackendClusters) != 1 {
+				t.Errorf("Test Desc(%s): generated number of clusters is not 1", tc.desc)
+				return
+			}
+			if tc.ClusterName != s.RemoteBackendClusters[0].ClusterName {
+				t.Errorf("Test Desc(%s): cluster name is different, want: %s, got %s", tc.desc, tc.ClusterName, s.RemoteBackendClusters[0].ClusterName)
+			}
+		})
 	}
 }
 
@@ -1999,7 +2345,12 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2023,7 +2374,12 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2047,7 +2403,12 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2070,7 +2431,12 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2093,7 +2459,12 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2117,7 +2488,12 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2140,7 +2516,44 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+					{
+						Name: "def.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+					{
+						Name: "ghi.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+					{
+						Name: "jkl.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+					{
+						Name: "mno.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -2214,6 +2627,7 @@ func TestProcessQuota(t *testing.T) {
 		desc              string
 		fakeServiceConfig *confpb.Service
 		wantMethods       map[string]*MethodInfo
+		wantError         string
 	}{
 		{
 			desc: "Succeed, simple case",
@@ -2311,13 +2725,42 @@ func TestProcessQuota(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "Typo in operation name does not crash",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Quota: &confpb.Quota{
+					MetricRules: []*confpb.MetricRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.BadOperationName",
+							MetricCosts: map[string]int64{
+								"metric_a": 2,
+								"metric_b": 1,
+							},
+						},
+					},
+				},
+			},
+			wantError: "error processing quota metric rule: selector (endpoints.examples.bookstore.Bookstore.BadOperationName) was not defined in the API",
+		},
 	}
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://127.0.0.1:80"
-			serviceInfo, _ := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+			if err != nil {
+				if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
+					t.Fatalf("error mismatch, \ngot : %s, \nwant: %s", err.Error(), tc.wantError)
+				}
+				return
+			}
 
 			for key, gotMethod := range serviceInfo.Methods {
 				wantMethod := tc.wantMethods[key]
@@ -2528,7 +2971,7 @@ func TestProcessApis(t *testing.T) {
 			serviceConfig: tc.fakeServiceConfig,
 			Methods:       make(map[string]*MethodInfo),
 		}
-		serviceInfo.processApis()
+		_ = serviceInfo.processApis()
 
 		for key, gotMethod := range serviceInfo.Methods {
 			wantMethod := tc.wantMethods[key]
@@ -2627,7 +3070,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 					},
 				},
 			},
-			wantError: "adding httpRules for grpc method api-streaming-test.***: invalid uri template /api-streaming-test/***",
+			wantError: "error parsing auto-generated gRPC http rule's URI template",
 		},
 	}
 
@@ -2638,13 +3081,12 @@ func TestProcessApisForGrpc(t *testing.T) {
 			GrpcSupportRequired: true,
 			Methods:             make(map[string]*MethodInfo),
 		}
-		serviceInfo.processApis()
+		_ = serviceInfo.processApis()
 		if err := serviceInfo.addGrpcHttpRules(); err != nil {
-			if err.Error() == tc.wantError {
-				continue
-			} else {
-				t.Fatalf("For processGrpcHttpRules error, expect: %s, get: %s", tc.wantError, err.Error())
+			if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("For processGrpcHttpRules error,\ngot : %s, \nwant: %s", err.Error(), tc.wantError)
 			}
+			continue
 		}
 
 		for key, gotMethod := range serviceInfo.Methods {

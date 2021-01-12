@@ -176,16 +176,10 @@ void ServiceControlHandlerImpl::prepareReportRequest(
 void ServiceControlHandlerImpl::callCheck(
     Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
     CheckDoneCallback& callback) {
-  // NOTE: this shouldn't happen in practice because Path Matcher filter would
-  // have already rejected the request.
+  // Don't have per-route config so pass through the request, regarded as the
+  // unknown method.
   if (!isConfigured()) {
-    filter_stats_.filter_.denied_producer_error_.inc();
-    callback.onCheckDone(
-        Status(Code::NOT_FOUND,
-               absl::StrCat("Request `", http_method_, " ", path_,
-                            "` is not defined by this API.")),
-        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
-                                 utils::kRcDetailErrorTypeUndefinedRequest));
+    callback.onCheckDone(Status::OK, "");
     return;
   }
   check_callback_ = &callback;
@@ -345,8 +339,7 @@ void ServiceControlHandlerImpl::callReport(
   }
 
   fillLatency(stream_info_, info.latency, filter_stats_);
-
-  info.response_code = stream_info_.responseCode().value_or(500);
+  fillStatus(response_headers, response_trailers, stream_info_, info);
 
   info.request_size = stream_info_.bytesReceived() + request_header_size_;
 

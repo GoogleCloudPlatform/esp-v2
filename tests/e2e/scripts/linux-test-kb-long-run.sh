@@ -65,7 +65,7 @@ END_TIME=$((END_TIME + DURATION_IN_HOUR * 60 * 60))
 RUN_COUNT=0
 
 if [ "$PLATFORM" = "gke" ]; then
-  detect_memory_leak_init ${HOST}
+  status_server_init ${HOST}
 fi
 
 while true; do
@@ -147,8 +147,7 @@ while true; do
 done
 
 echo "Finished ${RUN_COUNT} test runs."
-
-# We fail the test if memory increase is large.
 if [ "$PLATFORM" = "gke" ]; then
+  # We fail the test if memory increase is large.
   detect_memory_leak_final ${RUN_COUNT}
 fi

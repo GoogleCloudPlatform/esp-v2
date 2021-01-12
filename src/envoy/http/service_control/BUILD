@@ -248,6 +248,7 @@ envoy_cc_test(
     ],
     repository = "@envoy",
     deps = [
+        ":config_parser_lib",
         ":filter_lib",
         ":mocks_lib",
         "@envoy//source/common/common:empty_string",

@@ -400,6 +400,12 @@ operations {
         }
       }
       fields {
+        key: "http_status_code"
+        value {
+          number_value: 200
+        }
+      }
+      fields {
         key: "location"
         value {
           string_value: "us-central"

@@ -70,6 +70,17 @@ var (
 						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.DeleteBookRequest",
 						ResponseTypeUrl: "type.googleapis.com/google.protobuf.Empty",
 					},
+					{
+						Name:            "ReturnBadStatus",
+						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
+						ResponseTypeUrl: "type.googleapis.com/google.protobuf.Empty",
+					},
+					{
+						Name: "GetShelfAutoBind",
+					},
+					{
+						Name: "Unspecified",
+					},
 				},
 				Version: "1.0.0",
 			},
@@ -215,7 +226,12 @@ var (
 			},
 		},
 		Usage: &confpb.Usage{
-			Rules: []*confpb.UsageRule{},
+			Rules: []*confpb.UsageRule{
+				{
+					Selector:               "endpoints.examples.bookstore.Bookstore.Unspecified",
+					AllowUnregisteredCalls: true,
+				},
+			},
 		},
 	}
 )

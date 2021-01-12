@@ -62,15 +62,11 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   // Make sure route is calculated
   auto route = decoder_callbacks_->route();
+
+  // This shouldn't happen as the catch-all route match should catch all
+  // the undefined requests.
   if (route == nullptr) {
-    rejectRequest(
-        Envoy::Http::Code::NotFound,
-        absl::StrCat("Request `", utils::readHeaderEntry(headers.Method()), " ",
-                     utils::readHeaderEntry(headers.Path()),
-                     "` is not defined by this API."),
-        utils::generateRcDetails(utils::kRcDetailFilterServiceControl,
-                                 utils::kRcDetailErrorTypeUndefinedRequest));
-    return Envoy::Http::FilterHeadersStatus::StopIteration;
+    return Envoy::Http::FilterHeadersStatus::Continue;
   }
 
   handler_ =

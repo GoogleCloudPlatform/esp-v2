@@ -42,6 +42,7 @@ const (
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
 	TestBackendHttpProtocol
 	TestBackendRetry
+	TestCancellationReport
 	TestDeadlinesForDynamicRouting
 	TestDeadlinesForGrpcCatchAllBackend
 	TestDeadlinesForGrpcDynamicRouting
@@ -56,7 +57,11 @@ const (
 	TestDynamicRoutingCorsByEnvoy
 	TestDynamicRoutingWithAllowCors
 	TestFrontendAndBackendAuthHeaders
+	TestGeneratedHeaders
 	TestGRPC
+	TestGrpcBackendPreflightCors
+	TestGrpcBackendSimpleCors
+	TestGrpcConnectionBufferLimit
 	TestGRPCErrors
 	TestGRPCFallback
 	TestGRPCInteropMiniStress
@@ -66,10 +71,7 @@ const (
 	TestGRPCMinistress
 	TestGRPCStreaming
 	TestGRPCWeb
-	TestGeneratedHeaders
-	TestGrpcBackendPreflightCors
-	TestGrpcBackendSimpleCors
-	TestGrpcConnectionBufferLimit
+	TestHSTS
 	TestHttp1Basic
 	TestHttp1JWT
 	TestHttpHeaders
@@ -89,14 +91,14 @@ const (
 	TestReportGCPAttributes
 	TestReportGCPAttributesPerPlatform
 	TestRetryCallServiceManagement
-	TestServiceControlAPIKeyCustomLocation
-	TestServiceControlAPIKeyDefaultLocation
-	TestServiceControlAPIKeyIpRestriction
-	TestServiceControlAPIKeyRestriction
 	TestServiceControlAccessTokenFromIam
 	TestServiceControlAccessTokenFromTokenAgent
 	TestServiceControlAllHTTPMethod
 	TestServiceControlAllHTTPPath
+	TestServiceControlAPIKeyCustomLocation
+	TestServiceControlAPIKeyDefaultLocation
+	TestServiceControlAPIKeyIpRestriction
+	TestServiceControlAPIKeyRestriction
 	TestServiceControlBasic
 	TestServiceControlCache
 	TestServiceControlCheckError
@@ -142,7 +144,7 @@ const (
 	TestTranscodingErrors
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
-	TestTranscodingServiceUnavailableError
+	TestTranscodingBackendUnavailableError
 	TestWebsocket
 	// The number of total tests. has to be the last one.
 	maxTestNum

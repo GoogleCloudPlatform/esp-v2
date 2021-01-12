@@ -53,18 +53,22 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 		return "", "", 0, "", err
 	}
 
-	_, port, _ := net.SplitHostPort(u.Host)
-	if port == "" {
-		// Determine the default port.
-		port = HTTPSDefaultPort
-		if !strings.HasSuffix(u.Scheme, "s") {
-			port = HTTPDefaultPort
+	_, port, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		if e, ok := err.(*net.AddrError); ok && strings.Contains(e.Error(), "missing port") {
+			// Determine the default port.
+			port = HTTPSDefaultPort
+			if !strings.HasSuffix(u.Scheme, "s") {
+				port = HTTPDefaultPort
+			}
+		} else {
+			return "", "", 0, "", err
 		}
 	}
 
 	portVal, err := strconv.Atoi(port)
 	if err != nil {
-		return "", "", 0, "", err
+		return "", "", 0, "", fmt.Errorf("parse \"%v\": %v", uri, err)
 	}
 
 	pathNoTrailingSlash := strings.TrimSuffix(u.Path, "/")
@@ -150,10 +154,10 @@ func IamAccessTokenPath(IamServiceAccount string) string {
 	return fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateAccessToken", IamServiceAccount)
 }
 
-func ExtraAddressFromURI(jwksUri string) (string, error) {
-	_, hostname, port, _, err := ParseURI(jwksUri)
+func ExtractAddressFromURI(uri string) (string, error) {
+	_, hostname, port, _, err := ParseURI(uri)
 	if err != nil {
-		return "", fmt.Errorf("Fail to parse uri %s with error %v", jwksUri, err)
+		return "", fmt.Errorf("Fail to parse uri %s with error %v", uri, err)
 	}
 	return fmt.Sprintf("%s:%v", hostname, port), nil
 }

@@ -99,6 +99,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -135,6 +136,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -147,12 +149,53 @@ func TestMakeRouteConfig(t *testing.T) {
               "operationName": "endpoints.examples.bookstore.Bookstore.Echo"
             }
           }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
         }
       ]
     }
   ]
-}
-`,
+}`,
 		},
 		{
 			desc:                          "Enable Strict Transport Security for remote backend",
@@ -162,6 +205,11 @@ func TestMakeRouteConfig(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -220,6 +268,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -267,6 +316,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -290,6 +340,48 @@ func TestMakeRouteConfig(t *testing.T) {
               "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
             }
           }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
         }
       ]
     }
@@ -304,6 +396,11 @@ func TestMakeRouteConfig(t *testing.T) {
 				Apis: []*apipb.Api{
 					{
 						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
 					},
 				},
 				Backend: &confpb.Backend{
@@ -354,6 +451,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -377,6 +475,20 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
           }
         }
       ]
@@ -465,6 +577,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -505,6 +618,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -529,12 +643,42 @@ func TestMakeRouteConfig(t *testing.T) {
               "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
             }
           }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/v1/shelves/{shelves=*}"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/v1/shelves/{shelves=*}\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/v1/shelves/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
         }
       ]
     }
   ]
-}
-`,
+}`,
 		},
 		{
 			desc: "path_rewrite: http rule url_templates without variable bindings.",
@@ -615,6 +759,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -652,6 +797,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -689,6 +835,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -728,6 +875,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -751,12 +899,81 @@ func TestMakeRouteConfig(t *testing.T) {
               "operationName": "testapi.foo"
             }
           }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
         }
       ]
     }
   ]
-}
-`,
+}`,
 		},
 		{
 			desc: "http rule url_templates with allow Cors",
@@ -843,6 +1060,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -880,6 +1098,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -917,6 +1136,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -954,6 +1174,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -994,6 +1215,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1037,6 +1259,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1060,6 +1283,65 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.ESPv2_Autogenerated_CORS_foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/{x=*}"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/{x=*}\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
           }
         }
       ]
@@ -1116,7 +1398,8 @@ func TestMakeRouteConfig(t *testing.T) {
 					},
 				},
 			},
-			wantRouteConfig: `{
+			wantRouteConfig: `
+{
   "name": "local_route",
   "virtualHosts": [
     {
@@ -1140,6 +1423,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1173,6 +1457,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1206,6 +1491,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1239,6 +1525,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1255,6 +1542,76 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
           }
         }
       ]
@@ -1336,6 +1693,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1375,6 +1733,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1414,6 +1773,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1453,6 +1813,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1475,6 +1836,76 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
           }
         }
       ]
@@ -1542,6 +1973,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1564,6 +1996,34 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
           }
         }
       ]
@@ -1637,6 +2097,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1679,6 +2140,7 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "route": {
             "cluster": "backend-cluster-testapipb.com:443",
+            "idleTimeout": "300s",
             "hostRewriteLiteral": "testapipb.com",
             "retryPolicy": {
               "numRetries": 1,
@@ -1702,6 +2164,51 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "testapi.foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/{abc=*}"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/{abc=*}\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
           }
         }
       ]
@@ -1818,6 +2325,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -1854,6 +2362,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -1884,6 +2393,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -1914,6 +2424,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -1953,6 +2464,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -1992,6 +2504,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2031,6 +2544,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2070,6 +2584,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2109,6 +2624,7 @@ func TestMakeRouteConfig(t *testing.T) {
           ],
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
               "retryOn": "reset,connect-failure,refused-stream"
@@ -2120,6 +2636,133 @@ func TestMakeRouteConfig(t *testing.T) {
               "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
               "operationName": "endpoints.examples.bookstore.Bookstore.Foo"
             }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/bar"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/foo/bar/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/*"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/*\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/*/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/*/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/[^\\/]+/bar\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/**/bar"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/**/bar\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*/bar\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/**:verb"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/**:verb\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*\\/?:verb$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/**"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/**\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/foo/.*\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
           }
         }
       ]
@@ -2190,6 +2833,867 @@ func TestMakeRouteConfig(t *testing.T) {
 
 			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
 				t.Errorf("MakeRouteConfig failed, \n %v", err)
+			}
+		})
+	}
+}
+
+func TestMakeFallbackRoute(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		params            []string
+		wantRouteConfig   string
+	}{
+		{
+			desc: "generate 404/405 fallback routes for exact path",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo_Get",
+							},
+							{
+								Name: "Echo_Post",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/echo",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Echo_Post", testApiName),
+						Pattern: &annotationspb.HttpRule_Post{
+							Post: "/echo",
+						},
+					},
+				},
+				},
+			},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Echo_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Post"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Post"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Post"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Post"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "generate 404/405 fallback routes for regex",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo_Get",
+							},
+							{
+								Name: "Echo_Post",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/echo/{id}",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Echo_Post", testApiName),
+						Pattern: &annotationspb.HttpRule_Post{
+							Post: "/echo/{id}",
+						},
+					},
+				},
+				},
+			},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Echo_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/echo/[^\\/]+\\/?$"
+            }
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Post"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/echo/[^\\/]+\\/?$"
+            }
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Post"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo/{id}"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo/{id}\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/echo/[^\\/]+\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "ensure the order of backend routes, 405 routes, cors routes and 404 route",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo_Get",
+							},
+							{
+								Name: "Echo_Post",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/echo",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Echo_Post", testApiName),
+						Pattern: &annotationspb.HttpRule_Post{
+							Post: "/echo",
+						},
+					},
+				},
+				},
+			},
+			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "cors": {
+        "allowCredentials": false,
+        "allowMethods": "GET,POST,PUT,OPTIONS",
+        "allowOriginStringMatch": [
+          {
+            "exact": "http://example.com"
+          }
+        ]
+      },
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Echo_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Post"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Post"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Post"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Echo_Post"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "OPTIONS",
+                "name": ":method"
+              }
+            ],
+            "prefix": "/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "span name length check",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Long_Get",
+							},
+							{
+								Name: "Short_Get",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Long_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Short_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/this-is-short-uri-template",
+						},
+					},
+				},
+				},
+			},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Short_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-short-uri-template"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Short_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Short_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-short-uri-template/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Short_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Long_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Long_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Long_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          },
+          "typedPerFilterConfig": {
+            "com.google.espv2.filters.http.service_control": {
+              "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
+              "operationName": "endpoints.examples.bookstore.Bookstore.Long_Get"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-short-uri-template"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-short-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-short-uri-template"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-short-uri-template"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-short-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-short-uri-template/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-temp..."
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-temp..."
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/this-is-super-long-uri-template/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}
+`,
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+
+			if tc.params != nil {
+				opts.CorsPreset = tc.params[0]
+				opts.CorsAllowOrigin = tc.params[1]
+				opts.CorsAllowOriginRegex = tc.params[2]
+				opts.CorsAllowMethods = tc.params[3]
+				opts.CorsAllowHeaders = tc.params[4]
+				opts.CorsExposeHeaders = tc.params[5]
+			}
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			gotRoute, err := MakeRouteConfig(fakeServiceInfo)
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
+			marshaler := &jsonpb.Marshaler{}
+			gotConfig, err := marshaler.MarshalToString(gotRoute)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
+				t.Errorf("Test(%s): MakeRouteConfig failed, \n %v", tc.desc, err)
 			}
 		})
 	}

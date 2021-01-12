@@ -21,6 +21,7 @@
 #include "absl/strings/str_cat.h"
 #include "common/common/assert.h"
 #include "common/common/base64.h"
+#include "common/grpc/status.h"
 #include "google/api/metric.pb.h"
 #include "google/protobuf/timestamp.pb.h"
 #include "google/protobuf/util/time_util.h"
@@ -358,6 +359,16 @@ const std::string get_service_agent() {
   return kServiceAgentPrefix + utils::Version::instance().get();
 }
 
+// Returns the relevant status code for the request protocol.
+// gRPC is a protocol on top of HTTP, so HTTP errors take priority.
+unsigned int get_status_code(const ReportRequestInfo& info) {
+  if (info.grpc_response_code.has_value()) {
+    return Envoy::Grpc::Utility::grpcToHttpStatus(
+        info.grpc_response_code.value());
+  }
+  return info.http_response_code;
+}
+
 // /credential_id
 Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
                          Map<std::string, std::string>* labels) {
@@ -393,8 +404,9 @@ constexpr const char* error_types[10] = {"0xx", "1xx", "2xx", "3xx", "4xx",
 // /error_type
 Status set_error_type(const SupportedLabel& l, const ReportRequestInfo& info,
                       Map<std::string, std::string>* labels) {
-  if (info.response_code >= 400) {
-    int code = (info.response_code / 100) % 10;
+  int status_code = get_status_code(info);
+  if (status_code >= 400) {
+    int code = (status_code / 100) % 10;
     if (error_types[code]) {
       (*labels)[l.name] = error_types[code];
     }
@@ -443,7 +455,7 @@ Status set_response_code(const SupportedLabel& l, const ReportRequestInfo& info,
                          Map<std::string, std::string>* labels) {
   char response_code_buf[20];
   snprintf(response_code_buf, sizeof(response_code_buf), "%d",
-           info.response_code);
+           get_status_code(info));
   (*labels)[l.name] = response_code_buf;
   return Status::OK;
 }
@@ -452,7 +464,7 @@ Status set_response_code(const SupportedLabel& l, const ReportRequestInfo& info,
 Status set_response_code_class(const SupportedLabel& l,
                                const ReportRequestInfo& info,
                                Map<std::string, std::string>* labels) {
-  (*labels)[l.name] = error_types[(info.response_code / 100) % 10];
+  (*labels)[l.name] = error_types[(get_status_code(info) / 100) % 10];
   return Status::OK;
 }
 
@@ -764,6 +776,8 @@ constexpr char kLogFieldNameConfigId[] = "service_config_id";
 constexpr char kLogFieldNameTimestamp[] = "timestamp";
 constexpr char kLogFieldNameApiKeyState[] = "api_key_state";
 constexpr char kLogFieldNameResponseCodeDetail[] = "response_code_detail";
+constexpr char kLogFieldNameHttpStatusCode[] = "http_status_code";
+constexpr char kLogFieldNameGrpcStatusCode[] = "grpc_status_code";
 
 // Convert time point to proto Timestamp
 Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
@@ -805,14 +819,14 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
                   LogEntry* log_entry) {
   log_entry->set_name(name);
   *log_entry->mutable_timestamp() = current_time;
-  auto severity = (info.response_code >= 400) ? google::logging::type::ERROR
-                                              : google::logging::type::INFO;
+  auto severity = (get_status_code(info) >= 400) ? google::logging::type::ERROR
+                                                 : google::logging::type::INFO;
   log_entry->set_severity(severity);
 
   // Fill in http request.
   auto* http_request = log_entry->mutable_http_request();
-  http_request->set_status(info.response_code);
   http_request->set_protocol(protocol::ToString(info.frontend_protocol));
+  http_request->set_status(get_status_code(info));
   if (!info.method.empty()) {
     http_request->set_request_method(info.method);
   }
@@ -839,8 +853,6 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   }
 
   // Fill in JSON struct.
-  // TODO(nareddyt): For backwards compatibility, some of the information from
-  // the `http_request` fields is duplicated. Decide if we should remove.
   auto* fields = log_entry->mutable_struct_payload()->mutable_fields();
   (*fields)[kLogFieldNameTimestamp].set_number_value(
       static_cast<double>(current_time.seconds()) +
@@ -851,6 +863,8 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
 
   (*fields)[kLogFieldNameApiKeyState].set_string_value(
       api_key::ToString(info.check_response_info.api_key_state));
+  (*fields)[kLogFieldNameHttpStatusCode].set_number_value(
+      info.http_response_code);
 
   if (!info.response_code_detail.empty()) {
     (*fields)[kLogFieldNameResponseCodeDetail].set_string_value(
@@ -890,9 +904,16 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   if (!info.jwt_payloads.empty()) {
     (*fields)[kLogFieldNameJwtPayloads].set_string_value(info.jwt_payloads);
   }
-  if (info.response_code >= 400 && info.status.error_message().length() > 0) {
+  if (!info.status.ok() && info.status.error_message().length() > 0) {
     (*fields)[kLogFieldNameErrorCause].set_string_value(
         info.status.error_message().as_string());
+  }
+
+  if (info.grpc_response_code.has_value()) {
+    const std::string grpc_status_string =
+        Envoy::Grpc::Utility::grpcStatusToString(
+            info.grpc_response_code.value());
+    (*fields)[kLogFieldNameGrpcStatusCode].set_string_value(grpc_status_string);
   }
 }
 

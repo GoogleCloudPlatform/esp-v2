@@ -16,12 +16,13 @@ package configgenerator
 
 import (
 	"fmt"
-	"time"
+	"net/http"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 
@@ -48,20 +49,53 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 		Domains: []string{"*"},
 	}
 
-	// Per-selector routes for both local and remote backends.
-	brRoutes, err := makeRouteTable(serviceInfo)
+	// The router will use the first matched route, so the order of routes is important.
+	// Right now, the order of routes are:
+	// - backend routes
+	// - cors routes
+	// - fallback `method not allowed` routes
+	// - catch all `not found` routes
+	//
+	//
+	// // Per-selector routes for both local and remote backends.
+	backendRoutes, methodNotAllowedRoutes, err := makeRouteTable(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
-	host.Routes = brRoutes
+	host.Routes = backendRoutes
 
+	cors, corsRoute, err := makeRouteCors(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	if cors != nil {
+		host.Cors = cors
+		host.Routes = append(host.Routes, corsRoute)
+		jsonStr, _ := util.ProtoToJson(corsRoute)
+		glog.Infof("adding cors route configuration: %v", jsonStr)
+	}
+
+	host.Routes = append(host.Routes, methodNotAllowedRoutes...)
+
+	host.Routes = append(host.Routes, makeCatchAllNotFoundRoute())
+
+	virtualHosts = append(virtualHosts, &host)
+	return &routepb.RouteConfiguration{
+		Name:         routeName,
+		VirtualHosts: virtualHosts,
+	}, nil
+}
+
+func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, *routepb.Route, error) {
+	var cors *routepb.CorsPolicy
 	switch serviceInfo.Options.CorsPreset {
 	case "basic":
 		org := serviceInfo.Options.CorsAllowOrigin
 		if org == "" {
-			return nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
+			return nil, nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
 		}
-		host.Cors = &routepb.CorsPolicy{
+		cors = &routepb.CorsPolicy{
 			AllowOriginStringMatch: []*matcher.StringMatcher{
 				{
 					MatchPattern: &matcher.StringMatcher_Exact{
@@ -73,12 +107,12 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	case "cors_with_regex":
 		orgReg := serviceInfo.Options.CorsAllowOriginRegex
 		if orgReg == "" {
-			return nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
+			return nil, nil, fmt.Errorf("cors_allow_origin_regex cannot be empty when cors_preset=cors_with_regex")
 		}
 		if err := util.ValidateRegexProgramSize(orgReg, util.GoogleRE2MaxProgramSize); err != nil {
-			return nil, fmt.Errorf("invalid cors origin regex: %v", err)
+			return nil, nil, fmt.Errorf("invalid cors origin regex: %v", err)
 		}
-		host.Cors = &routepb.CorsPolicy{
+		cors = &routepb.CorsPolicy{
 			AllowOriginStringMatch: []*matcher.StringMatcher{
 				{
 					MatchPattern: &matcher.StringMatcher_SafeRegex{
@@ -95,56 +129,48 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	case "":
 		if serviceInfo.Options.CorsAllowMethods != "" || serviceInfo.Options.CorsAllowHeaders != "" ||
 			serviceInfo.Options.CorsExposeHeaders != "" || serviceInfo.Options.CorsAllowCredentials {
-			return nil, fmt.Errorf("cors_preset must be set in order to enable CORS support")
+			return nil, nil, fmt.Errorf("cors_preset must be set in order to enable CORS support")
 		}
 	default:
-		return nil, fmt.Errorf(`cors_preset must be either "basic" or "cors_with_regex"`)
+		return nil, nil, fmt.Errorf(`cors_preset must be either "basic" or "cors_with_regex"`)
 	}
 
-	if host.GetCors() != nil {
-		host.GetCors().AllowMethods = serviceInfo.Options.CorsAllowMethods
-		host.GetCors().AllowHeaders = serviceInfo.Options.CorsAllowHeaders
-		host.GetCors().ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
-		host.GetCors().AllowCredentials = &wrapperspb.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
-
-		// In order apply Envoy cors policy, need to have a route rule
-		// to route OPTIONS request to this host
-		corsRoute := &routepb.Route{
-			Match: &routepb.RouteMatch{
-				PathSpecifier: &routepb.RouteMatch_Prefix{
-					Prefix: "/",
-				},
-				Headers: []*routepb.HeaderMatcher{{
-					Name: ":method",
-					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-						ExactMatch: "OPTIONS",
-					},
-				}},
-			},
-			// Envoy requires to have a Route action in order to create a route
-			// for cors filter to work.
-			Action: &routepb.Route_Route{
-				Route: &routepb.RouteAction{
-					ClusterSpecifier: &routepb.RouteAction_Cluster{
-						Cluster: serviceInfo.LocalBackendClusterName(),
-					},
-				},
-			},
-			Decorator: &routepb.Decorator{
-				Operation: util.SpanNamePrefix,
-			},
-		}
-		host.Routes = append(host.Routes, corsRoute)
-
-		jsonStr, _ := util.ProtoToJson(corsRoute)
-		glog.Infof("adding cors route configuration: %v", jsonStr)
+	if cors == nil {
+		return nil, nil, nil
 	}
+	cors.AllowMethods = serviceInfo.Options.CorsAllowMethods
+	cors.AllowHeaders = serviceInfo.Options.CorsAllowHeaders
+	cors.ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
+	cors.AllowCredentials = &wrapperspb.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
 
-	virtualHosts = append(virtualHosts, &host)
-	return &routepb.RouteConfiguration{
-		Name:         routeName,
-		VirtualHosts: virtualHosts,
-	}, nil
+	// In order apply Envoy cors policy, need to have a route rule
+	// to route OPTIONS request to this host
+	corsRoute := &routepb.Route{
+		Match: &routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Prefix{
+				Prefix: "/",
+			},
+			Headers: []*routepb.HeaderMatcher{{
+				Name: ":method",
+				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+					ExactMatch: "OPTIONS",
+				},
+			}},
+		},
+		// Envoy requires to have a Route action in order to create a route
+		// for cors filter to work.
+		Action: &routepb.Route_Route{
+			Route: &routepb.RouteAction{
+				ClusterSpecifier: &routepb.RouteAction_Cluster{
+					Cluster: serviceInfo.LocalBackendClusterName(),
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: util.SpanNamePrefix,
+		},
+	}
+	return cors, corsRoute, nil
 }
 
 func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern) *prpb.PerRouteFilterConfig {
@@ -230,13 +256,15 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 	return perFilterConfig, nil
 }
 
-func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, error) {
+func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
+	var methodNotAllowedRoutes []*routepb.Route
 	httpPatternMethods, err := getSortMethodsByHttpPattern(serviceInfo)
 	if err != nil {
-		return nil, fmt.Errorf("fail to sort route match, %v", err)
+		return nil, nil, fmt.Errorf("fail to sort route match, %v", err)
 	}
 
+	seenUriTemplatesInRoute := map[string]bool{}
 	for _, httpPatternMethod := range *httpPatternMethods {
 		operation := httpPatternMethod.Operation
 		method := serviceInfo.Methods[operation]
@@ -245,48 +273,26 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 			HttpMethod:  httpPatternMethod.HttpMethod,
 		}
 
-		// Response timeouts are not compatible with streaming methods (documented in Envoy).
-		// If this method is non-unary gRPC, explicitly set 0s to disable the timeout.
-		// This even applies for routes with gRPC-JSON transcoding where only the upstream is streaming.
-		var respTimeout time.Duration
-		if method.IsStreaming {
-			respTimeout = 0 * time.Second
-		} else {
-			respTimeout = method.BackendInfo.Deadline
+		// The `methodNotAllowedRouteMatchers` are the route matches covers all the defined uri templates
+		// but no specific methods. As all the defined requests are matched by `routeMatchers`, the rest
+		// matched by `methodNotAllowedRouteMatchers` fall in the category of `405 Method Not Allowed`.
+		var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
+
+		var err error
+		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule, seenUriTemplatesInRoute); err != nil {
+			return nil, nil, fmt.Errorf("error making HTTP route matcher for operation (%v): %v", operation, err)
 		}
 
-		var routeMatchers []*routepb.RouteMatch
-		var err error
-		if routeMatchers, err = makeHttpRouteMatchers(httpRule); err != nil {
-			return nil, fmt.Errorf("error making HTTP route matcher for selector (%v): %v", operation, err)
+		for _, methodNotAllowedRouteMatcher := range methodNotAllowedRouteMatchers {
+			methodNotAllowedRoutes = append(methodNotAllowedRoutes, makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher, httpRule.UriTemplate.Origin))
 		}
 
 		for _, routeMatcher := range routeMatchers {
-			r := routepb.Route{
-				Match: routeMatcher,
-				Action: &routepb.Route_Route{
-					Route: &routepb.RouteAction{
-						ClusterSpecifier: &routepb.RouteAction_Cluster{
-							Cluster: method.BackendInfo.ClusterName,
-						},
-						Timeout: ptypes.DurationProto(respTimeout),
-						RetryPolicy: &routepb.RetryPolicy{
-							RetryOn: method.BackendInfo.RetryOns,
-							NumRetries: &wrapperspb.UInt32Value{
-								Value: uint32(method.BackendInfo.RetryNum),
-							},
-						},
-					},
-				},
-				Decorator: &routepb.Decorator{
-					// Note we don't add ApiName to reduce the length of the span name.
-					Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
-				},
-			}
+			r := makeRoute(routeMatcher, method)
 
 			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
 			if err != nil {
-				return nil, fmt.Errorf("fail to make per-route filter config, %v", err)
+				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation (%v): %v", operation, err)
 			}
 
 			if method.BackendInfo.Hostname != "" {
@@ -306,13 +312,86 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, erro
 					},
 				}
 			}
-			backendRoutes = append(backendRoutes, &r)
+			backendRoutes = append(backendRoutes, r)
 
-			jsonStr, _ := util.ProtoToJson(&r)
+			jsonStr, err := util.ProtoToJson(r)
+			if err != nil {
+				return nil, nil, err
+			}
 			glog.Infof("adding route: %v", jsonStr)
 		}
 	}
-	return backendRoutes, nil
+
+	return backendRoutes, methodNotAllowedRoutes, nil
+}
+
+func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
+	return &routepb.Route{
+		Match: routeMatcher,
+		Action: &routepb.Route_Route{
+			Route: &routepb.RouteAction{
+				ClusterSpecifier: &routepb.RouteAction_Cluster{
+					Cluster: method.BackendInfo.ClusterName,
+				},
+				Timeout:     ptypes.DurationProto(method.BackendInfo.Deadline),
+				IdleTimeout: ptypes.DurationProto(method.BackendInfo.IdleTimeout),
+				RetryPolicy: &routepb.RetryPolicy{
+					RetryOn: method.BackendInfo.RetryOns,
+					NumRetries: &wrapperspb.UInt32Value{
+						Value: uint32(method.BackendInfo.RetryNum),
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			// TODO(taoxuy@): check if the generated span name length less than the limit.
+			// Note we don't add ApiName to reduce the length of the span name.
+			Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, method.ShortName),
+		},
+	}
+}
+
+func makeMethodNotAllowedRoute(methodNotAllowedRouteMatcher *routepb.RouteMatch, uriTemplateInSc string) *routepb.Route {
+	spanName := util.MaybeTruncateSpanName(fmt.Sprintf("%s UnknownHttpMethodForPath_%s", util.SpanNamePrefix, uriTemplateInSc))
+
+	return &routepb.Route{
+		Match: methodNotAllowedRouteMatcher,
+		Action: &routepb.Route_DirectResponse{
+			DirectResponse: &routepb.DirectResponseAction{
+				Status: http.StatusMethodNotAllowed,
+				Body: &corepb.DataSource{
+					Specifier: &corepb.DataSource_InlineString{
+						InlineString: fmt.Sprintf("The current request is matched to the defined url template \"%s\" but its http method is not allowed", uriTemplateInSc),
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: spanName,
+		},
+	}
+}
+func makeCatchAllNotFoundRoute() *routepb.Route {
+	return &routepb.Route{
+		Match: &routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Prefix{
+				Prefix: "/",
+			},
+		},
+		Action: &routepb.Route_DirectResponse{
+			DirectResponse: &routepb.DirectResponseAction{
+				Status: http.StatusNotFound,
+				Body: &corepb.DataSource{
+					Specifier: &corepb.DataSource_InlineString{
+						InlineString: `The current request is not defined by this API.`,
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: fmt.Sprintf("%s UnknownOperationName", util.SpanNamePrefix),
+		},
+	}
 }
 
 func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
@@ -323,23 +402,35 @@ func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 	}
 }
 
-func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch, error) {
+func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRoute map[string]bool) ([]*routepb.RouteMatch, []*routepb.RouteMatch, error) {
 	if httpRule == nil {
-		return nil, fmt.Errorf("httpRule is nil")
+		return nil, nil, fmt.Errorf("httpRule is nil")
 	}
-	var routeMatchers []*routepb.RouteMatch
 
+	type routeMatchWrapper struct {
+		*routepb.RouteMatch
+		UriTemplate string
+	}
+
+	var routeMatchWrappers []*routeMatchWrapper
 	if httpRule.UriTemplate.IsExactMatch() {
 		pathNoTrailingSlash := httpRule.UriTemplate.ExactMatchString(false)
 		pathWithTrailingSlash := httpRule.UriTemplate.ExactMatchString(true)
 
-		routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathNoTrailingSlash))
+		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+			RouteMatch:  makeHttpExactPathRouteMatcher(pathNoTrailingSlash),
+			UriTemplate: pathNoTrailingSlash,
+		})
+
 		if pathWithTrailingSlash != pathNoTrailingSlash {
-			routeMatchers = append(routeMatchers, makeHttpExactPathRouteMatcher(pathWithTrailingSlash))
+			routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+				RouteMatch:  makeHttpExactPathRouteMatcher(pathWithTrailingSlash),
+				UriTemplate: pathWithTrailingSlash,
+			})
 		}
 	} else {
-		routeMatchers = []*routepb.RouteMatch{
-			{
+		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
+			RouteMatch: &routepb.RouteMatch{
 				PathSpecifier: &routepb.RouteMatch_SafeRegex{
 					SafeRegex: &matcher.RegexMatcher{
 						EngineType: &matcher.RegexMatcher_GoogleRe2{
@@ -349,11 +440,24 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch
 					},
 				},
 			},
-		}
+			UriTemplate: httpRule.UriTemplate.Regex(),
+		})
+
 	}
 
-	if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
-		for _, routeMatcher := range routeMatchers {
+	var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
+	for _, routeMatch := range routeMatchWrappers {
+		routeMatcher := routeMatch.RouteMatch
+		routeMatchers = append(routeMatchers, routeMatcher)
+
+		if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
+			uriTemplate := routeMatch.UriTemplate
+			if ok, _ := seenUriTemplatesInRoute[uriTemplate]; !ok {
+				seenUriTemplatesInRoute[uriTemplate] = true
+				methodUndefinedRouterMatcherMsg := proto.Clone(routeMatcher)
+				methodNotAllowedRouteMatchers = append(methodNotAllowedRouteMatchers, methodUndefinedRouterMatcherMsg.(*routepb.RouteMatch))
+			}
+
 			routeMatcher.Headers = []*routepb.HeaderMatcher{
 				{
 					Name: ":method",
@@ -364,7 +468,8 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern) ([]*routepb.RouteMatch
 			}
 		}
 	}
-	return routeMatchers, nil
+
+	return routeMatchers, methodNotAllowedRouteMatchers, nil
 }
 
 func getSortMethodsByHttpPattern(serviceInfo *configinfo.ServiceInfo) (*httppattern.MethodSlice, error) {

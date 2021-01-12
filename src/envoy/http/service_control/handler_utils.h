@@ -78,6 +78,12 @@ void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
 ::espv2::api_proxy::service_control::protocol::Protocol getBackendProtocol(
     const ::espv2::api::envoy::v9::http::service_control::Service& service);
 
+// Fill in the HTTP and gRPC status into the report info.
+void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
+                const Envoy::Http::ResponseTrailerMap* response_trailers,
+                const Envoy::StreamInfo::StreamInfo& stream_info,
+                ::espv2::api_proxy::service_control::ReportRequestInfo& info);
+
 }  // namespace service_control
 }  // namespace http_filters
 }  // namespace envoy

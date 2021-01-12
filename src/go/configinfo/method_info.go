@@ -60,7 +60,8 @@ type backendInfo struct {
 	JwtAudience string
 
 	// Response timeout for the backend.
-	Deadline time.Duration
+	Deadline    time.Duration
+	IdleTimeout time.Duration
 
 	// Retry setting on the backend.
 	RetryOns string

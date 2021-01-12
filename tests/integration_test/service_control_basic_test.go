@@ -24,9 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
-	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestServiceControlBasic(t *testing.T) {
@@ -38,28 +35,6 @@ func TestServiceControlBasic(t *testing.T) {
 		"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 
 	s := env.NewTestEnv(platform.TestServiceControlBasic, platform.EchoSidecar)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/simpleget",
-			},
-		},
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/echo/nokey/OverrideAsGet",
-			},
-		},
-	})
-	s.AppendUsageRules(
-		[]*confpb.UsageRule{
-			{
-				Selector:               "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey_override_as_get",
-				AllowUnregisteredCalls: true,
-			},
-		})
-
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -100,6 +75,7 @@ func TestServiceControlBasic(t *testing.T) {
 					ApiKeyState:                  "VERIFIED",
 					ApiMethod:                    "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
 					ApiName:                      "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:                   "1.0.0",
 					ProducerProjectID:            "producer-project",
 					ConsumerProjectID:            "123456",
 					FrontendProtocol:             "http",
@@ -192,6 +168,7 @@ func TestServiceControlBasic(t *testing.T) {
 					URL:               "/echo/nokey",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:        "1.0.0",
 					ApiKeyState:       "NOT CHECKED",
 					ProducerProjectID: "producer-project",
 					HttpMethod:        "POST",
@@ -221,6 +198,7 @@ func TestServiceControlBasic(t *testing.T) {
 					// API Key is not verified by check, but still log it.
 					ApiKeyInLogEntryOnly: "api-key",
 					ApiKeyState:          "NOT CHECKED",
+					ApiVersion:           "1.0.0",
 					ProducerProjectID:    "producer-project",
 					HttpMethod:           "POST",
 					FrontendProtocol:     "http",
@@ -249,6 +227,7 @@ func TestServiceControlBasic(t *testing.T) {
 					URL:               "/echo/nokey",
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+					ApiVersion:        "1.0.0",
 					ApiKeyState:       "NOT CHECKED",
 					ProducerProjectID: "producer-project",
 					HttpMethod:        "POST",
@@ -277,6 +256,7 @@ func TestServiceControlBasic(t *testing.T) {
 					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog._post_anypath",
 					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
 					ApiKeyState:       "NOT CHECKED",
+					ApiVersion:        "1.0.0",
 					ProducerProjectID: "producer-project",
 					HttpMethod:        "POST",
 					FrontendProtocol:  "http",

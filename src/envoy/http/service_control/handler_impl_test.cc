@@ -252,6 +252,19 @@ class HandlerTest : public ::testing::Test {
     std::cerr << "\nwant: size=" << expect.name.size(); \
     return false;                                       \
   }
+#define MATCH_OPTIONAL(name)                                                 \
+  if (arg.name.has_value() != expect.name.has_value()) {                     \
+    std::cerr << "MATCH fails for " << #name << " has_value(): '"            \
+              << arg.name.has_value() << "' != '" << expect.name.has_value() \
+              << "'" << std::endl;                                           \
+    return false;                                                            \
+  }                                                                          \
+  if (arg.name.has_value() && arg.name.value() != expect.name.value()) {     \
+    std::cerr << "MATCH fails for " << #name << " value(): '"                \
+              << arg.name.value() << "' != '" << expect.name.value() << "'"  \
+              << std::endl;                                                  \
+    return false;                                                            \
+  }
 
 MATCHER_P(MatchesCheckInfo, expect, Envoy::EMPTY_STRING) {
   // These must match. If not provided in expect, arg should be empty too
@@ -287,6 +300,8 @@ MATCHER_P(MatchesQuotaInfo, expect, Envoy::EMPTY_STRING) {
   MATCH2(log_message, operation_name + " is called");          \
   MATCH(api_key);                                              \
   MATCH(status);                                               \
+  MATCH(http_response_code);                                   \
+  MATCH_OPTIONAL(grpc_response_code);                          \
   MATCH(request_headers);                                      \
   MATCH(response_headers);                                     \
   MATCH(url);                                                  \
@@ -333,8 +348,8 @@ MATCHER_P(MatchesDataReportInfo, expect, Envoy::EMPTY_STRING) {
 }
 
 TEST_F(HandlerTest, HandlerNoOperationFound) {
-  // Test: If no operation is found, check should 404 and report should be
-  // called.
+  // Test: If no operation is found, the request will be passed through without
+  // check and report should be called.
 
   // Note: The operation is set in mock_stream_info_.filter_state_. This test
   // should not set that value.
@@ -342,11 +357,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
 
-  EXPECT_CALL(
-      mock_check_done_callback_,
-      onCheckDone(Status(Code::NOT_FOUND,
-                         "Request `GET /echo` is not defined by this API."),
-                  "service_control_undefined_request"));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
@@ -360,14 +371,12 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
   handler.callReport(&headers, &resp_headers_, &resp_trailer_);
-
-  // Stats.
-  checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
 TEST_F(HandlerTest, HandlerMissingHeaders) {
-  // Test: If the request is missing :method and :path headers,
-  // report should still be created without crashes.
+  // Test: If the request is missing :method and :path headers,the request will
+  // be passed through without
+  // check and report should be called.
 
   // Note: This test builds off of `HandlerNoOperationFound` to keep mocks
   // simple
@@ -375,10 +384,7 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
-  EXPECT_CALL(mock_check_done_callback_,
-              onCheckDone(Status(Code::NOT_FOUND,
-                                 "Request ` ` is not defined by this API."),
-                          "service_control_undefined_request"));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(req_headers_, *mock_span_, mock_check_done_callback_);
 
@@ -397,17 +403,13 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 }
 
 TEST_F(HandlerTest, HandlerNoRequirementMatched) {
-  // Test: If no requirement is matched for the operation, check should 404
-  // and report should do nothing
+  // Test: If no requirement is matched for the operation, the request will be
+  // passed through without check and report should be called.
   setPerRouteOperation("bad-operation-name");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
                                     *cfg_parser_, test_time_, stats_);
-  EXPECT_CALL(
-      mock_check_done_callback_,
-      onCheckDone(Status(Code::NOT_FOUND,
-                         "Request `GET /echo` is not defined by this API."),
-                  "service_control_undefined_request"));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
 
@@ -1061,6 +1063,80 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
   handler.callReport(&headers, &response_headers, &resp_trailer_);
+}
+
+class HandlerReportStatusTest : public HandlerTest {
+ protected:
+  void runTest(unsigned int http_response_code,
+               TestResponseHeaderMapImpl response_headers,
+               TestResponseTrailerMapImpl response_trailers,
+               absl::optional<Code> expected_grpc_status) {
+    EXPECT_CALL(mock_stream_info_, responseCode())
+        .WillRepeatedly(Return(http_response_code));
+
+    setPerRouteOperation("get_header_key");
+    TestRequestHeaderMapImpl headers{
+        {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+    CheckDoneFunc stored_on_done;
+    CheckResponseInfo response_info;
+    ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                      *cfg_parser_, test_time_, stats_);
+
+    ReportRequestInfo expected_report_info;
+    initExpectedReportInfo(expected_report_info);
+    expected_report_info.api_key = "foobar";
+    expected_report_info.status = Status::OK;
+    expected_report_info.http_response_code = http_response_code;
+    expected_report_info.grpc_response_code = expected_grpc_status;
+    EXPECT_CALL(*mock_call_, callReport(MatchesReportInfo(
+                                 expected_report_info, headers,
+                                 response_headers, response_trailers)));
+    handler.callReport(&headers, &response_headers, &response_trailers);
+  }
+};
+
+TEST_F(HandlerReportStatusTest, GrpcStatusFromTrailers) {
+  // Test: When grpc status trailer is present, it's value will be used in
+  // addition to HTTP status.
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "7"}},
+          Code::PERMISSION_DENIED);
+}
+
+TEST_F(HandlerReportStatusTest, GrpcStatusFromHeaders) {
+  // Test: When grpc status header is present, it's value will be used in
+  // addition to HTTP status.
+  // Remember: grpc-status will show up in the headers during a trailers-only
+  // response.
+  runTest(200, {{"content-type", "application/grpc"}, {"grpc-status", "14"}},
+          {}, Code::UNAVAILABLE);
+}
+
+TEST_F(HandlerReportStatusTest, MissingGrpcStatus) {
+  // Test: When grpc status header/trailer is missing, we fallback to HTTP
+  // status.
+  runTest(200, {{"content-type", "application/grpc"}}, {}, absl::nullopt);
+}
+
+TEST_F(HandlerReportStatusTest, BadHttpStatusForGrpc) {
+  // Test: When HTTP status is non-200, we do not care about gRPC status.
+  runTest(500, {{"content-type", "application/grpc"}}, {{"grpc-status", "7"}},
+          absl::nullopt);
+}
+
+TEST_F(HandlerReportStatusTest, WellKnownStatuses) {
+  // Test all canonical RPC codes.
+  for (int i = 0; i <= 16; i++) {
+    runTest(200, {{"content-type", "application/grpc"}},
+            {{"grpc-status", absl::StrCat("", i)}}, static_cast<Code>(i));
+  }
+}
+
+TEST_F(HandlerReportStatusTest, BadGrpcStatus) {
+  // Test: When grpc status header is invalid, we should not crash on the cast.
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "-1"}},
+          absl::nullopt);
+  runTest(200, {{"content-type", "application/grpc"}}, {{"grpc-status", "17"}},
+          absl::nullopt);
 }
 
 }  // namespace

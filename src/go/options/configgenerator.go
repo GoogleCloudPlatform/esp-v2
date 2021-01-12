@@ -42,6 +42,7 @@ type ConfigGeneratorOptions struct {
 
 	// Envoy specific configurations.
 	ClusterConnectTimeout time.Duration
+	StreamIdleTimeout     time.Duration
 
 	// Full URI to the backend: scheme, address/hostname, port
 	BackendAddress string
@@ -124,6 +125,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		BackendDnsLookupFamily:           "auto",
 		BackendAddress:                   fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
 		ClusterConnectTimeout:            20 * time.Second,
+		StreamIdleTimeout:                util.DefaultIdleTimeout,
 		EnvoyXffNumTrustedHops:           2,
 		JwksCacheDurationInS:             300,
 		ListenerAddress:                  "0.0.0.0",

@@ -30,7 +30,6 @@ type TranscodingTestType struct {
 	clientProtocol     string
 	httpMethod         string
 	method             string
-	noBackend          bool
 	token              string
 	headers            map[string][]string
 	bodyBytes          []byte
@@ -39,14 +38,14 @@ type TranscodingTestType struct {
 	wantGRPCWebTrailer client.GRPCWebTrailer
 }
 
-func TestTranscodingServiceUnavailableError(t *testing.T) {
+func TestTranscodingBackendUnavailableError(t *testing.T) {
 	t.Parallel()
 
 	configID := "test-config-id"
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	s := env.NewTestEnv(platform.TestTranscodingServiceUnavailableError, platform.GrpcBookstoreSidecar)
+	s := env.NewTestEnv(platform.TestTranscodingBackendUnavailableError, platform.GrpcBookstoreSidecar)
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -60,8 +59,7 @@ func TestTranscodingServiceUnavailableError(t *testing.T) {
 		clientProtocol: "http",
 		httpMethod:     "GET",
 		method:         "/v1/shelves/200/books/2001?key=api-key",
-		noBackend:      true,
-		wantErr:        "503 Service Unavailable",
+		wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
 	}
 
 	addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
@@ -97,7 +95,6 @@ func TestTranscodingErrors(t *testing.T) {
 			httpMethod:     "GET",
 			method:         "/v1/shelves/200/books/2002?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
-			noBackend:      true,
 			wantErr:        "404 Not Found",
 		},
 		{
@@ -107,7 +104,6 @@ func TestTranscodingErrors(t *testing.T) {
 			method:         "/v1/shelves/0/books?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`NO_BRACES_JSON`),
-			noBackend:      true,
 			wantErr: `400 Bad Request, {"code":400,"message":"Unexpected token.
 NO_BRACES_JSON
 ^"}`,
@@ -119,7 +115,6 @@ NO_BRACES_JSON
 			method:         "/v1/shelves/0/books?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme" : "Children"`),
-			noBackend:      true,
 			wantErr: `400 Bad Request, {"code":400,"message":"Unexpected end of string. Expected , or } after key:value pair.
 
 ^"}`,
@@ -131,7 +126,6 @@ NO_BRACES_JSON
 			method:         "/v1/shelves/0/books?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme"  "Children"}`),
-			noBackend:      true,
 			wantErr: `400 Bad Request, {"code":400,"message":"Expected : between key:value pair.
 {"theme"  "Children"}
           ^"}`,
@@ -143,22 +137,31 @@ NO_BRACES_JSON
 			method:         "/v1/shelves/0/books?key=api-key",
 			token:          testdata.FakeCloudTokenMultiAudiences,
 			bodyBytes:      []byte(`{"theme" : "Children"}EXTRA`),
-			noBackend:      true,
 			wantErr: `{"code":400,"message":"Parsing terminated before end of input.
 theme" : "Children"}EXTRA
                     ^"}`,
 		},
+		{
+			// TODO(b/177252401): When invalid query param is passed, the error is the incorrect type.
+			desc:           "Failed due to bad query parameter. Error returned is the wrong type.",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves/100?key=api-key&badQueryParam=test",
+			wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
+		},
 	}
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
-		resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
+		t.Run(tc.desc, func(t *testing.T) {
+			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
 
-		if tc.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErr)) {
-			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantErr, err)
-		} else {
-			if !strings.Contains(resp, tc.wantResp) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			if tc.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErr)) {
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantErr, err)
+			} else {
+				if !strings.Contains(resp, tc.wantResp) {
+					t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+				}
 			}
-		}
+		})
 	}
 }

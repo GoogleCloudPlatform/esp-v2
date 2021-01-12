@@ -169,6 +169,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -197,6 +198,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -225,6 +227,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -253,6 +256,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-sidecar-backend.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -264,6 +268,48 @@
                                 "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_sidecar_backend_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
                               }
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/shelves"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/shelves\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/shelves"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/shelves\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownOperationName"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is not defined by this API."
+                              },
+                              "status": 404
+                            },
+                            "match": {
+                              "prefix": "/"
                             }
                           }
                         ]

@@ -99,7 +99,6 @@ build-grpc-echo:
 
 build-grpc-bookstore:
 	@echo "--> building bookstore-grpc"
-	@echo "Notice: please make sure to temporarily delete tests/endpoints/bookstore_grpc/BUILD in order to run this command"
 	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor
 	@cp -f bazel-bin/tests/endpoints/bookstore_grpc/proto/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
 	@bazel build @com_google_protobuf//:protoc
@@ -307,6 +306,14 @@ format.check: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
 	@goimports -l $(GOFILES) | sed -e "s/^/\?\t/" | tee >(test -z)
 	@make spelling.check
+
+test-ssl-files:
+	@openssl genrsa -out tests/env/testdata/server.key 2048
+	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/server.key -out tests/env/testdata/server.crt
+	@cp tests/env/testdata/server.crt tests/env/testdata/client.crt
+	@cp tests/env/testdata/server.key tests/env/testdata/client.key
+	# TODO(taoxuy@): also add cmd for proxy.crt and proxy.key
+
 
 
 

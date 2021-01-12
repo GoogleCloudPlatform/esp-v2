@@ -25,8 +25,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 func TestGRPCFallback(t *testing.T) {
@@ -41,13 +39,6 @@ func TestGRPCFallback(t *testing.T) {
 
 	// But then spin up the gRPC Echo backend.
 	s.OverrideBackendService(platform.GrpcEchoSidecar)
-
-	// And modify the gRPC Bookstore service config to add a fallback path.
-	s.AppendApiMethods([]*apipb.Method{
-		{
-			Name: "Unspecified",
-		},
-	})
 	s.AppendHttpRules([]*annotationspb.HttpRule{
 		{
 			Selector: "endpoints.examples.bookstore.Bookstore.Unspecified",
@@ -59,12 +50,7 @@ func TestGRPCFallback(t *testing.T) {
 			},
 		},
 	})
-	s.AppendUsageRules([]*confpb.UsageRule{
-		{
-			Selector:               "endpoints.examples.bookstore.Bookstore.Unspecified",
-			AllowUnregisteredCalls: true,
-		},
-	})
+
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -114,6 +100,8 @@ results {
 				LogMessage:        "endpoints.examples.bookstore.Bookstore.Unspecified is called",
 				StatusCode:        "0",
 				ResponseCode:      200,
+				HttpStatusCode:    200,
+				GrpcStatusCode:    "OK",
 				Platform:          util.GCE,
 				Location:          "test-zone",
 			},

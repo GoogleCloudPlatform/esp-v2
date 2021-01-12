@@ -14,7 +14,9 @@
 
 package util
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	// DefaultRootCAPaths is the default certs path.
@@ -75,6 +77,9 @@ const (
 	// Default response deadline used if user does not specify one in the BackendRule.
 	DefaultResponseDeadline = 15 * time.Second
 
+	// Default idle timeout applied globally if not specified via flag.
+	DefaultIdleTimeout = 5 * time.Minute
+
 	// A limit configured to restrict resource usage in Envoy's SafeRegex GoogleRE2 matcher.
 	// It will be validated on configmanager side though it may use different GoogleRE2 library.
 	// b/148606900: It is safe to set this to a fairly high value.
@@ -113,6 +118,9 @@ const (
 
 	// All traces created by ESPv2 should have this prefix.
 	SpanNamePrefix = "ingress"
+
+	// The maximum byte number of a span name. This restriction is from StackDriver.
+	SpanNameMaxByteNum = 128
 )
 
 type BackendProtocol int32
@@ -127,3 +135,11 @@ const (
 	HTTP2
 	GRPC
 )
+
+func MaybeTruncateSpanName(spanName string) string {
+	if len(spanName) <= SpanNameMaxByteNum {
+		return spanName
+	}
+	newSpanName := spanName[:SpanNameMaxByteNum-3] + "..."
+	return newSpanName
+}

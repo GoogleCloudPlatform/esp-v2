@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	bsClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
-	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -41,14 +40,6 @@ func TestServiceControlLogHeaders(t *testing.T) {
 		"--rollout_strategy=fixed", "--suppress_envoy_headers", "--log_request_headers=Fake-Header-Key0,Fake-Header-Key1,Fake-Header-Key2,Non-Existing-Header-Key", "--log_response_headers=Echo-Fake-Header-Key0,Echo-Fake-Header-Key1,Echo-Fake-Header-Key2,Non-Existing-Header-Key"}
 
 	s := env.NewTestEnv(platform.TestServiceControlLogHeaders, platform.EchoSidecar)
-	s.AppendHttpRules([]*annotationspb.HttpRule{
-		{
-			Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simpleget",
-			Pattern: &annotationspb.HttpRule_Get{
-				Get: "/simpleget",
-			},
-		},
-	})
 
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
@@ -89,8 +80,9 @@ func TestServiceControlLogHeaders(t *testing.T) {
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
 				&utils.ExpectedReport{
-					Version:     utils.ESPv2Version(),
-					ServiceName: "echo-api.endpoints.cloudesf-testing.cloud.goog", ServiceConfigID: "test-config-id",
+					Version:                      utils.ESPv2Version(),
+					ServiceName:                  "echo-api.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:              "test-config-id",
 					URL:                          "/echo?key=api-key-2",
 					ApiKeyInOperationAndLogEntry: "api-key-2",
 					ApiKeyState:                  "VERIFIED",

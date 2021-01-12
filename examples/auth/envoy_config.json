@@ -330,6 +330,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -362,6 +363,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -394,6 +396,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -426,6 +429,7 @@
                             },
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
+                              "idleTimeout": "300s",
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -441,6 +445,48 @@
                                 "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                                 "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
                               }
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/shelves"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/shelves\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownHttpMethodForPath_/shelves"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is matched to the defined url template \"/shelves\" but its http method is not allowed"
+                              },
+                              "status": 405
+                            },
+                            "match": {
+                              "path": "/shelves/"
+                            }
+                          },
+                          {
+                            "decorator": {
+                              "operation": "ingress UnknownOperationName"
+                            },
+                            "directResponse": {
+                              "body": {
+                                "inlineString": "The current request is not defined by this API."
+                              },
+                              "status": 404
+                            },
+                            "match": {
+                              "prefix": "/"
                             }
                           }
                         ]
