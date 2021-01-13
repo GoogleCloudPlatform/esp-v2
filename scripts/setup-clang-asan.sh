@@ -40,3 +40,6 @@ build:clang-asan --linkopt=-l:libclang_rt.ubsan_standalone-x86_64.a
 build:clang-asan --linkopt=-l:libclang_rt.ubsan_standalone_cxx-x86_64.a
 # End generated section.
 " >> "${BAZELRC_FILE}"
+
+echo "Setup clang asan with .bazelrc file:"
+cat "${BAZELRC_FILE}"
