@@ -1,3 +1,14 @@
+# Release 2.23.0 13-01-2021
+
+- Automatically configure stream idle timeouts (#457)
+- Cleanup usages of `getOrCreateMethod` (#454)
+- Add 405 directResponse in router (#451)
+- Ensure service-config related errors are actionable (#450)
+- Move the NOT_FOUND rejection logic to router (#446)
+- Remove warning with empty requestTypeName (#448)
+- Align behavior of `X-Forwarded-Authorization` and `X-Endpoint-API-UserInfo` headers (#447)
+- Revamp status codes in access log (#444)
+
 # Release 2.22.0 15-12-2020
 
 - Enable fallback to x-cloud-trace-context by default (#439)
