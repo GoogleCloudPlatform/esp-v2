@@ -68,6 +68,7 @@ build:asan --test_env=UBSAN_OPTIONS=halt_on_error=true:print_stacktrace=1
 build:asan --test_env=ASAN_SYMBOLIZER_PATH
 
 build:clang-asan --config=asan
+build:clang-asan --action_env=ENVOY_UBSAN_VPTR=1
 build:clang-asan --linkopt -fuse-ld=lld-10
 build:clang-asan --copt -fno-sanitize=vptr,function
 build:clang-asan --linkopt -fno-sanitize=vptr,function
