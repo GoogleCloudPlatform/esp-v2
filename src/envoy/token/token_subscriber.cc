@@ -127,9 +127,12 @@ void TokenSubscriber::refresh() {
           // https://cloud.google.com/compute/docs/storing-retrieving-metadata#x-forwarded-for_header
           .setSendXff(false);
 
-  active_request_ = context_.clusterManager()
-                        .httpAsyncClientForCluster(token_cluster_)
-                        .send(std::move(message), *this, options);
+  const auto thread_local_cluster =
+      context_.clusterManager().getThreadLocalCluster(token_cluster_);
+  if (thread_local_cluster) {
+    active_request_ = thread_local_cluster->httpAsyncClient().send(
+        std::move(message), *this, options);
+  }
 }
 
 void TokenSubscriber::processResponse(

@@ -31,6 +31,12 @@ cd "${ROOT}"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
+# FIXME(nareddyt): This is likely needed to enable ubsan builds.
+# See https://github.com/GoogleCloudPlatform/esp-v2/issues/462
+#
+#. ${ROOT}/scripts/setup-clang-asan.sh || { echo 'Cannot setup clang for ASan builds';
+#exit 1; }
+
 echo '======================================================='
 echo '===================== Setup Cache ====================='
 echo '======================================================='

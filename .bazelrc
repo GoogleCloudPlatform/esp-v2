@@ -4,10 +4,6 @@
 build --define=grpc_no_ares=true
 build --cxxopt='-std=c++17'
 
-# Required by envoy and grpc-echo
-build --incompatible_disable_deprecated_attr_params=false
-query --incompatible_disable_deprecated_attr_params=false
-
 # Compile a Position Independent Executable
 # Ref: github.com/envoyproxy/envoy#8792
 build --copt=-fPIC
@@ -61,8 +57,14 @@ build:asan --config=debug
 # ASAN install its signal handler, disable ours so the stacktrace will be printed by ASAN
 build:asan --define signal_trace=disabled
 build:asan --define ENVOY_CONFIG_ASAN=1
-build:asan --copt -fsanitize=address,undefined
-build:asan --linkopt -fsanitize=address,undefined
+
+# FIXME(nareddyt): Enable ubsan builds
+# See https://github.com/GoogleCloudPlatform/esp-v2/issues/462
+#
+# build:asan --copt -fsanitize=address,undefined
+# build:asan --linkopt -fsanitize=address,undefined
+build:asan --copt -fsanitize=address
+build:asan --linkopt -fsanitize=address
 
 
 build:asan --copt -DADDRESS_SANITIZER=1
@@ -72,6 +74,7 @@ build:asan --test_env=UBSAN_OPTIONS=halt_on_error=true:print_stacktrace=1
 build:asan --test_env=ASAN_SYMBOLIZER_PATH
 
 build:clang-asan --config=asan
+build:clang-asan --action_env=ENVOY_UBSAN_VPTR=1
 build:clang-asan --linkopt -fuse-ld=lld-10
 build:clang-asan --copt -fno-sanitize=vptr,function
 build:clang-asan --linkopt -fno-sanitize=vptr,function

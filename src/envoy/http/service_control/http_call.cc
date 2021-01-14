@@ -206,10 +206,15 @@ class HttpCallImpl : public HttpCall,
 
     Envoy::Http::RequestMessagePtr message = prepareHeaders(token);
     ENVOY_LOG(debug, "http call from [uri = {}]: start", uri_);
-    request_ = cm_.httpAsyncClientForCluster(http_uri_.cluster())
-                   .send(std::move(message), *this,
-                         Envoy::Http::AsyncClient::RequestOptions().setTimeout(
-                             std::chrono::milliseconds(timeout_ms_)));
+
+    const auto thread_local_cluster =
+        cm_.getThreadLocalCluster(http_uri_.cluster());
+    if (thread_local_cluster) {
+      request_ = thread_local_cluster->httpAsyncClient().send(
+          std::move(message), *this,
+          Envoy::Http::AsyncClient::RequestOptions().setTimeout(
+              std::chrono::milliseconds(timeout_ms_)));
+    }
   }
 
   void cancel() override {
