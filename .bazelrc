@@ -57,8 +57,14 @@ build:asan --config=debug
 # ASAN install its signal handler, disable ours so the stacktrace will be printed by ASAN
 build:asan --define signal_trace=disabled
 build:asan --define ENVOY_CONFIG_ASAN=1
-build:asan --copt -fsanitize=address,undefined
-build:asan --linkopt -fsanitize=address,undefined
+
+# FIXME(nareddyt): Enable ubsan builds
+# See https://github.com/GoogleCloudPlatform/esp-v2/issues/462
+#
+# build:asan --copt -fsanitize=address,undefined
+# build:asan --linkopt -fsanitize=address,undefined
+build:asan --copt -fsanitize=address
+build:asan --linkopt -fsanitize=address
 
 
 build:asan --copt -DADDRESS_SANITIZER=1
