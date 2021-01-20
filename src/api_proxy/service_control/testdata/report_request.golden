@@ -464,6 +464,7 @@ operations {
       }
       protocol: "http"
     }
+    trace: "projects/test_project_id/traces/test_trace_id"
   }
 }
 service_config_id: "2016-09-19r0"

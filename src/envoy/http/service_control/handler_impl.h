@@ -54,10 +54,10 @@ class ServiceControlHandlerImpl
                  Envoy::Tracing::Span& parent_span,
                  CheckDoneCallback& callback) override;
 
-  void callReport(
-      const Envoy::Http::RequestHeaderMap* request_headers,
-      const Envoy::Http::ResponseHeaderMap* response_headers,
-      const Envoy::Http::ResponseTrailerMap* response_trailers) override;
+  void callReport(const Envoy::Http::RequestHeaderMap* request_headers,
+                  const Envoy::Http::ResponseHeaderMap* response_headers,
+                  const Envoy::Http::ResponseTrailerMap* response_trailers,
+                  const Envoy::Tracing::Span& parent_span) override;
 
   void fillFilterState(::Envoy::StreamInfo::FilterState& filter_state) override;
 
