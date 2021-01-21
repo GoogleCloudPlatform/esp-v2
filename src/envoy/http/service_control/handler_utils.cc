@@ -148,6 +148,10 @@ void fillGCPInfo(
   if (!gcp_attributes.platform().empty()) {
     info.compute_platform = gcp_attributes.platform();
   }
+
+  if (!gcp_attributes.project_id().empty()) {
+    info.project_id = gcp_attributes.project_id();
+  }
 }
 
 void fillLoggedHeader(

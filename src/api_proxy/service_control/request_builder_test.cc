@@ -260,6 +260,8 @@ TEST_F(RequestBuilderTest, FillGoodReportRequestTest) {
   FillOperationInfo(&info);
   FillReportRequestInfo(&info);
   info.backend_protocol = protocol::GRPC;
+  info.project_id = "test_project_id";
+  info.trace_id = "test_trace_id";
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());

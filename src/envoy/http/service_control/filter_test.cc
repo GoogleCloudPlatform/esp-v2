@@ -225,7 +225,7 @@ TEST_F(ServiceControlFilterTest, LogWithoutHandlerOrHeaders) {
 
 TEST_F(ServiceControlFilterTest, LogWithoutHandler) {
   // Test: When a Filter has no Handler yet, another is created for log()
-  EXPECT_CALL(*mock_handler_, callReport(_, _, _));
+  EXPECT_CALL(*mock_handler_, callReport(_, _, _, _));
   filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);
 }
@@ -236,7 +236,7 @@ TEST_F(ServiceControlFilterTest, LogWithHandler) {
   filter_->decodeHeaders(req_headers_, true);
 
   EXPECT_CALL(mock_handler_factory_, createHandler(_, _, _)).Times(0);
-  EXPECT_CALL(*mock_handler_, callReport(_, _, _));
+  EXPECT_CALL(*mock_handler_, callReport(_, _, _, _));
   filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
                mock_decoder_callbacks_.stream_info_);
 }

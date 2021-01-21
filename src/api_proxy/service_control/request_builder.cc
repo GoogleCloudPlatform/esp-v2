@@ -814,6 +814,11 @@ void SetOperationCommonFields(const OperationInfo& info,
   *op->mutable_end_time() = current_time;
 }
 
+std::string TraceResourceName(absl::string_view trace_id,
+                              absl::string_view project_id) {
+  return absl::StrCat("projects/", project_id, "/traces/", trace_id);
+}
+
 void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
                   const std::string& config_id, const Timestamp& current_time,
                   LogEntry* log_entry) {
@@ -822,6 +827,11 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   auto severity = (get_status_code(info) >= 400) ? google::logging::type::ERROR
                                                  : google::logging::type::INFO;
   log_entry->set_severity(severity);
+
+  // Add trace if available.
+  if (!info.trace_id.empty() && !info.project_id.empty()) {
+    log_entry->set_trace(TraceResourceName(info.trace_id, info.project_id));
+  }
 
   // Fill in http request.
   auto* http_request = log_entry->mutable_http_request();

@@ -151,7 +151,9 @@ void ServiceControlFilter::log(
     handler_ = factory_.createHandler(*request_headers, stream_info, stats_);
   }
 
-  handler_->callReport(request_headers, response_headers, response_trailers);
+  Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
+  handler_->callReport(request_headers, response_headers, response_trailers,
+                       parent_span);
 }
 
 }  // namespace service_control

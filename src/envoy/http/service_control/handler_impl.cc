@@ -302,7 +302,8 @@ void ServiceControlHandlerImpl::onCheckResponse(
 void ServiceControlHandlerImpl::callReport(
     const Envoy::Http::RequestHeaderMap* request_headers,
     const Envoy::Http::ResponseHeaderMap* response_headers,
-    const Envoy::Http::ResponseTrailerMap* response_trailers) {
+    const Envoy::Http::ResponseTrailerMap* response_trailers,
+    const Envoy::Tracing::Span& parent_span) {
   if (!isReportRequired()) {
     return;
   }
@@ -355,6 +356,8 @@ void ServiceControlHandlerImpl::callReport(
   info.response_size = stream_info_.bytesSent() + response_header_size;
 
   info.response_code_detail = stream_info_.responseCodeDetails().value_or("");
+
+  info.trace_id = parent_span.getTraceIdAsHex();
 
   require_ctx_->service_ctx().call().callReport(info);
 }

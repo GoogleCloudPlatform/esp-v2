@@ -48,7 +48,8 @@ class ServiceControlHandler {
   virtual void callReport(
       const Envoy::Http::RequestHeaderMap* request_headers,
       const Envoy::Http::ResponseHeaderMap* response_headers,
-      const Envoy::Http::ResponseTrailerMap* response_trailers) PURE;
+      const Envoy::Http::ResponseTrailerMap* response_trailers,
+      const Envoy::Tracing::Span& parent_span) PURE;
 
   // Fill filter state with request information for access logging.
   virtual void fillFilterState(

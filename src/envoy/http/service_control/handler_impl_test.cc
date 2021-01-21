@@ -16,6 +16,7 @@
 #include "src/envoy/http/service_control/handler_impl.h"
 
 #include "common/common/empty_string.h"
+#include "common/tracing/http_tracer_impl.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
@@ -180,8 +181,6 @@ class HandlerTest : public ::testing::Test {
         .WillOnce(Return(ByMove(ServiceControlCallPtr(mock_call_))));
     cfg_parser_ =
         std::make_unique<FilterConfigParser>(proto_config_, mock_call_factory_);
-
-    mock_span_ = std::make_unique<Envoy::Tracing::MockSpan>();
   }
 
   void initExpectedReportInfo(ReportRequestInfo& expected_report_info) {
@@ -226,7 +225,7 @@ class HandlerTest : public ::testing::Test {
   std::unique_ptr<FilterConfigParser> cfg_parser_;
 
   // Tracing mocks
-  std::unique_ptr<Envoy::Tracing::MockSpan> mock_span_;
+  testing::NiceMock<Envoy::Tracing::MockSpan> mock_span_;
   TestRequestHeaderMapImpl req_headers_;
   TestRequestTrailerMapImpl req_trailer_;
   TestResponseHeaderMapImpl resp_headers_;
@@ -359,7 +358,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
 
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -370,7 +369,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
-  handler.callReport(&headers, &resp_headers_, &resp_trailer_);
+  handler.callReport(&headers, &resp_headers_, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerMissingHeaders) {
@@ -386,7 +385,7 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
-  handler.callCheck(req_headers_, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(req_headers_, mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -399,7 +398,7 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
-  handler.callReport(&req_headers_, &resp_headers_, &resp_trailer_);
+  handler.callReport(&req_headers_, &resp_headers_, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerNoRequirementMatched) {
@@ -411,7 +410,7 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
                                     *cfg_parser_, test_time_, stats_);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -421,7 +420,7 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   expected_report_info.operation_name = "<Unknown Operation Name>";
   EXPECT_CALL(*mock_call_,
               callReport(MatchesSimpleReportInfo(expected_report_info)));
-  handler.callReport(&headers, &resp_headers_, &resp_trailer_);
+  handler.callReport(&headers, &resp_headers_, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerCheckNotNeeded) {
@@ -436,7 +435,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   EXPECT_CALL(*mock_call_, callCheck(_, _, _)).Times(0);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
@@ -446,7 +445,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, RequestHeaderSizeWithModificationInUpstream) {
@@ -462,7 +461,7 @@ TEST_F(HandlerTest, RequestHeaderSizeWithModificationInUpstream) {
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
-  handler.callCheck(request_headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(request_headers, mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -474,7 +473,7 @@ TEST_F(HandlerTest, RequestHeaderSizeWithModificationInUpstream) {
                                expected_report_info, request_headers,
                                response_headers, resp_trailer_)));
   handler.callReport(&updated_request_headers, &response_headers,
-                     &resp_trailer_);
+                     &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
@@ -497,7 +496,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   EXPECT_CALL(
       mock_check_done_callback_,
       onCheckDone(bad_status, "service_control_bad_request{MISSING_API_KEY}"));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   // no api key is set on this info
   ReportRequestInfo expected_report_info;
@@ -506,7 +505,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 
   // Stats.
   checkAndReset(stats_.filter_.denied_consumer_error_, 1);
@@ -544,7 +543,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
         return nullptr;
       }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -553,7 +552,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
@@ -579,7 +578,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
         return nullptr;
       }));
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   ReportRequestInfo expected_report_info;
   initExpectedReportInfo(expected_report_info);
@@ -588,7 +587,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
@@ -623,10 +622,10 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
       }));
 
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
@@ -656,10 +655,10 @@ TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
       }));
 
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerFailCheckSync) {
@@ -693,7 +692,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
       }));
   EXPECT_CALL(mock_check_done_callback_,
               onCheckDone(bad_status, expected_rc_detail));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   mock_stream_info_.response_code_details_ = expected_rc_detail;
   ReportRequestInfo expected_report_info;
@@ -706,7 +705,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, FillFilterState) {
@@ -762,10 +761,10 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
       }));
 
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(bad_status, ""));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   EXPECT_CALL(*mock_call_, callReport(_));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
@@ -794,7 +793,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
         stored_on_done = on_done;
         return nullptr;
       }));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   // Async, later call the done callback
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
@@ -807,7 +806,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
@@ -841,7 +840,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
           [&stored_on_done](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
             stored_on_done = on_done;
           }));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   // Async, later call the done callback
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(Status::OK, ""));
@@ -857,7 +856,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerFailCheckAsync) {
@@ -888,7 +887,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
         stored_on_done = on_done;
         return nullptr;
       }));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
   EXPECT_CALL(*mock_call_, callQuota(_, _)).Times(0);
 
   // Async, later call the done callback
@@ -908,7 +907,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerFailQuotaAsync) {
@@ -942,7 +941,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
           [&stored_on_done](const QuotaRequestInfo&, QuotaDoneFunc on_done) {
             stored_on_done = on_done;
           }));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   std::string expect_rc_detail =
       "service_control_quota_error{RESOURCE_EXHAUSTED}";
@@ -964,7 +963,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
@@ -986,7 +985,7 @@ TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
         stored_on_done = on_done;
         return cancel_fn;
       }));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   stored_on_done(Status::OK, response_info);
 
@@ -1009,7 +1008,7 @@ TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
       .WillOnce(
           Invoke([cancel_fn](const CheckRequestInfo&, Envoy::Tracing::Span&,
                              CheckDoneFunc) { return cancel_fn; }));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   // onDestroy() will call cancel function if on_done is not called.
   EXPECT_CALL(mock_cancel, Call()).Times(1);
@@ -1034,7 +1033,7 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
             on_done(Status::OK, response_info);
             return cancel_fn;
           }));
-  handler.callCheck(headers, *mock_span_, mock_check_done_callback_);
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
 
   // onDestroy() will not call cancel function if on_done is called
   // synchronously.
@@ -1043,6 +1042,32 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 }
 
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
+  // Test: Test that report fills in the trace id.
+  EXPECT_CALL(mock_span_, getTraceIdAsHex()).WillOnce(Return("test-trace-id"));
+
+  setPerRouteOperation("get_header_key");
+  TestRequestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  TestResponseHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  CheckDoneFunc stored_on_done;
+  CheckResponseInfo response_info;
+  ServiceControlHandlerImpl handler(headers, mock_stream_info_, "test-uuid",
+                                    *cfg_parser_, test_time_, stats_);
+
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_key = "foobar";
+  // The default value of status if a check is not made is OK
+  expected_report_info.status = Status::OK;
+  expected_report_info.trace_id = "test-trace-id";
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesReportInfo(expected_report_info, headers,
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
+}
+
+TEST_F(HandlerTest, HandlerReportWithTrace) {
   // Test: Test that callReport works when callCheck is not called first.
   setPerRouteOperation("get_header_key");
   TestRequestHeaderMapImpl headers{
@@ -1062,7 +1087,7 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));
-  handler.callReport(&headers, &response_headers, &resp_trailer_);
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
 }
 
 class HandlerReportStatusTest : public HandlerTest {
@@ -1091,7 +1116,8 @@ class HandlerReportStatusTest : public HandlerTest {
     EXPECT_CALL(*mock_call_, callReport(MatchesReportInfo(
                                  expected_report_info, headers,
                                  response_headers, response_trailers)));
-    handler.callReport(&headers, &response_headers, &response_trailers);
+    handler.callReport(&headers, &response_headers, &response_trailers,
+                       mock_span_);
   }
 };
 

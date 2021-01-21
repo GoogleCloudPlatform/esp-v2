@@ -96,6 +96,7 @@ type ExpectedReport struct {
 	ResponseHeaders              string
 	ResponseCodeDetail           string
 	JwtPayloads                  string
+	Trace                        string
 }
 
 type distOptions struct {
@@ -379,7 +380,7 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	}
 	pl["http_status_code"] = makeNumberValue(er.HttpStatusCode)
 
-	return &scpb.LogEntry{
+	entry := &scpb.LogEntry{
 		Name:     "endpoints_log",
 		Severity: severity,
 		Payload: &scpb.LogEntry_StructPayload{
@@ -389,6 +390,12 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 		},
 		HttpRequest: httpRequest,
 	}
+
+	if er.Trace != "" {
+		entry.Trace = er.Trace
+	}
+
+	return entry
 }
 
 func createInt64MetricSet(name string, value int64) *scpb.MetricValueSet {
