@@ -90,6 +90,7 @@ const (
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
 	TestReportGCPAttributesPerPlatform
+	TestReportTraceId
 	TestRetryCallServiceManagement
 	TestServiceControlAccessTokenFromIam
 	TestServiceControlAccessTokenFromTokenAgent

@@ -45,7 +45,8 @@ type ConfigGeneratorOptions struct {
 	StreamIdleTimeout     time.Duration
 
 	// Full URI to the backend: scheme, address/hostname, port
-	BackendAddress string
+	BackendAddress               string
+	EnableBackendAddressOverride bool
 
 	// Network related configurations.
 	ListenerAddress                  string
@@ -124,6 +125,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		CommonOptions:                    DefaultCommonOptions(),
 		BackendDnsLookupFamily:           "auto",
 		BackendAddress:                   fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
+		EnableBackendAddressOverride:     false,
 		ClusterConnectTimeout:            20 * time.Second,
 		StreamIdleTimeout:                util.DefaultIdleTimeout,
 		EnvoyXffNumTrustedHops:           2,

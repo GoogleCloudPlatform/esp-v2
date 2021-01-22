@@ -629,9 +629,10 @@ func (s *ServiceInfo) determineBackendAuthJwtAud(r *confpb.BackendRule, scheme s
 	}
 }
 
-// For methods that are not associated with any backend rules, create one
-// to associate with the local backend cluster.
 func (s *ServiceInfo) processLocalBackendOperations() error {
+
+	// For methods that are not associated with any backend rules, create one
+	// to associate with the local backend cluster.
 	for _, method := range s.Methods {
 		if method.BackendInfo != nil {
 			// This method is already associated with a backend rule.
@@ -648,6 +649,13 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 			IdleTimeout: idleTimeout,
 			RetryOns:    s.Options.BackendRetryOns,
 			RetryNum:    s.Options.BackendRetryNum,
+		}
+	}
+
+	// Honor backend address override.
+	if s.Options.EnableBackendAddressOverride {
+		for _, method := range s.Methods {
+			method.BackendInfo.ClusterName = s.LocalBackendCluster.ClusterName
 		}
 	}
 

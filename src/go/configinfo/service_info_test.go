@@ -2622,6 +2622,84 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 	}
 }
 
+func TestBackendAddressOverride(t *testing.T) {
+	testData := []struct {
+		desc                         string
+		backendAddress               string
+		enableBackendAddressOverride bool
+		// Map of selector to the expected backend cluster.
+		wantedMethodBackendCluster map[string]string
+	}{
+		{
+			desc:                         "When disabled, backend.rule.address has priority",
+			backendAddress:               "http://127.0.0.1:9000",
+			enableBackendAddressOverride: false,
+			wantedMethodBackendCluster: map[string]string{
+				"abc.com.a": "backend-cluster-abc.com:80",
+				"abc.com.b": "backend-cluster-echo.endpoints_local",
+			},
+		},
+		{
+			desc:                         "When enabled, backend.rule.address losses priority",
+			backendAddress:               "http://127.0.0.1:9000",
+			enableBackendAddressOverride: true,
+			wantedMethodBackendCluster: map[string]string{
+				"abc.com.a": "backend-cluster-echo.endpoints_local",
+				"abc.com.b": "backend-cluster-echo.endpoints_local",
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+
+			fakeServiceConfig := &confpb.Service{
+				Name: "echo.endpoints",
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "a",
+							},
+							{
+								Name: "b",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/a/",
+							Selector: "abc.com.a",
+						},
+					},
+				},
+			}
+
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = tc.backendAddress
+			opts.EnableBackendAddressOverride = tc.enableBackendAddressOverride
+			s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+
+			if err != nil {
+				t.Errorf("error not expected, got: %v", err)
+				return
+			}
+
+			for operation, mi := range s.Methods {
+				gotBackendCluster := mi.BackendInfo.ClusterName
+				wantBackendCluster := tc.wantedMethodBackendCluster[operation]
+
+				if gotBackendCluster != wantBackendCluster {
+					t.Errorf("Backend cluster name not expected, got: %v, want: %v", gotBackendCluster, wantBackendCluster)
+				}
+			}
+		})
+	}
+}
+
 func TestProcessQuota(t *testing.T) {
 	testData := []struct {
 		desc              string
