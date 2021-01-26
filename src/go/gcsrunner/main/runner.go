@@ -49,6 +49,8 @@ var (
 	envoyBinaryPath = flag.String("envoy_bin_path", "bin/envoy", "Location of the Envoy binary.")
 	envoyLogLevel   = flag.String("envoy_log_level", "info",
 		"Envoy logging level. Default is `info`. Options are: [trace][debug][info][warning][error][critical][off]")
+	envoyLogPath    = flag.String("envoy_log_path", "",
+                "Envoy application logging path. Default is to write to stderr.")
 )
 
 func main() {
@@ -66,6 +68,11 @@ func main() {
 	logLevel := os.Getenv("ENVOY_LOG_LEVEL")
 	if logLevel == "" {
 		logLevel = *envoyLogLevel
+	}
+
+	logPath := os.Getenv("ENVOY_LOG_PATH")
+	if logPath == "" {
+		logPath = *envoyLogPath
 	}
 
 	envoyBin := os.Getenv("ENVOY_BIN_PATH")
@@ -90,6 +97,7 @@ func main() {
 		BinaryPath:       envoyBin,
 		ConfigPath:       envoyConfigPath,
 		LogLevel:         logLevel,
+		LogPath:          logPath,
 		TerminateTimeout: terminateEnvoyTimeout,
 	}); err != nil {
 		glog.Fatalf("Envoy erred: %v", err)
