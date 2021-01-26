@@ -71,7 +71,7 @@ func main() {
 	}
 
 	logPath := os.Getenv("ENVOY_LOG_PATH")
-	if logPath = "" {
+	if logPath == "" {
 		logPath = *envoyLogPath
 	}
 
