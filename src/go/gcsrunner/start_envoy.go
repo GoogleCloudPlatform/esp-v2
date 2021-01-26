@@ -30,6 +30,7 @@ type StartEnvoyOptions struct {
 	BinaryPath       string
 	ConfigPath       string
 	LogLevel         string
+	LogPath		 string
 	TerminateTimeout time.Duration
 }
 
@@ -47,6 +48,7 @@ func StartEnvoyAndWait(signalChan chan os.Signal, opts StartEnvoyOptions) error 
 		"--disable-hot-restart",
 		"--config-path", opts.ConfigPath,
 		"--log-level", opts.LogLevel,
+		"--log-path", opts.LogPath,
 		"--log-format", "%L%m%d %T.%e %t envoy] [%t][%n]%v",
 		"--log-format-escaped")
 	cmd.Env = append(cmd.Env, "TMPDIR=/tmp")
