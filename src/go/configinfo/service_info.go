@@ -496,7 +496,7 @@ func (s *ServiceInfo) processBackendRule() error {
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 
-		if r.Address == "" {
+		if r.Address == "" || s.Options.EnableBackendAddressOverride {
 			// Processing a backend rule associated with the local backend.
 			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName()); err != nil {
 				return fmt.Errorf("error processing local backend rule for operation (%v), %v", r.Selector, err)
@@ -649,13 +649,6 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 			IdleTimeout: idleTimeout,
 			RetryOns:    s.Options.BackendRetryOns,
 			RetryNum:    s.Options.BackendRetryNum,
-		}
-	}
-
-	// Honor backend address override.
-	if s.Options.EnableBackendAddressOverride {
-		for _, method := range s.Methods {
-			method.BackendInfo.ClusterName = s.LocalBackendCluster.ClusterName
 		}
 	}
 

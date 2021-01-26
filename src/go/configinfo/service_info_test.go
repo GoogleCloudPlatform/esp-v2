@@ -32,6 +32,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
@@ -633,12 +634,14 @@ func TestProcessTranscodingIgnoredQueryParams(t *testing.T) {
 
 func TestMethods(t *testing.T) {
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *confpb.Service
-		BackendAddress    string
-		healthz           string
-		wantMethods       map[string]*MethodInfo
-		wantError         string
+		desc                         string
+		fakeServiceConfig            *confpb.Service
+		BackendAddress               string
+		healthz                      string
+		enableBackendAddressOverride bool
+		isNonGcp                     bool
+		wantMethods                  map[string]*MethodInfo
+		wantError                    string
 	}{
 		{
 			desc: "Succeed for gRPC, no Http rule, with Healthz",
@@ -1639,6 +1642,57 @@ func TestMethods(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc:                         "Backend address override with non GCP results in local backend used instead of backend rule.",
+			enableBackendAddressOverride: true,
+			isNonGcp:                     true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "ListShelves",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "grpc://abc.com/a/",
+							Selector:        fmt.Sprintf("%s.%s", testApiName, "ListShelves"),
+							PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "grpc://abc.com/a/",
+							},
+						},
+					},
+				},
+			},
+			BackendAddress: "grpc://127.0.0.1:80",
+			wantMethods: map[string]*MethodInfo{
+				fmt.Sprintf("%s.%s", testApiName, "ListShelves"): &MethodInfo{
+					ShortName: "ListShelves",
+					ApiName:   testApiName,
+					HttpRule: []*httppattern.Pattern{
+						{
+							HttpMethod:  util.POST,
+							UriTemplate: parseUriTemplate(fmt.Sprintf("/%s/%s", testApiName, "ListShelves")),
+						},
+					},
+					BackendInfo: &backendInfo{
+						ClusterName: "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+						Deadline:    util.DefaultResponseDeadline,
+						RetryOns:    "reset,connect-failure,refused-stream",
+						RetryNum:    1,
+						// Even though translation type is specified, it won't matter: Path is empty.
+						TranslationType: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testData {
@@ -1646,6 +1700,8 @@ func TestMethods(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = tc.BackendAddress
 			opts.Healthz = tc.healthz
+			opts.EnableBackendAddressOverride = tc.enableBackendAddressOverride
+			opts.NonGCP = tc.isNonGcp
 			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if tc.wantError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
@@ -1668,8 +1724,8 @@ func TestMethods(t *testing.T) {
 
 				if !ok {
 					t.Errorf("cannot find key: %v\n got methods : %+v\nwant methods: %+v", key, serviceInfo.Methods, tc.wantMethods)
-				} else if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
-					t.Errorf("methods mismtatch \ngot : %+v, \nwant: %+v", gotMethod, wantMethod)
+				} else if diff := cmp.Diff(gotMethod, wantMethod, protocmp.Transform()); diff != "" {
+					t.Errorf("methods mismtatch: %v", diff)
 				}
 			}
 		})

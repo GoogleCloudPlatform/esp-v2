@@ -133,6 +133,10 @@ environment variable or by passing "-k" flag to this script.
 
         Default value is {backend}. Follow the same format when setting
         manually. Valid schemes are `http`, `https`, `grpc`, and `grpcs`.
+        
+        See the flag --enable_backend_address_override for details on how ESPv2
+        decides between using this flag vs using the backend addresses specified
+        in the service configuration.
         '''.format(backend=DEFAULT_BACKEND))
 
     parser.add_argument(
@@ -141,7 +145,11 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Backend addresses can be specified using either the --backend flag
         or the `backend.rule.address` field in the service configuration.
+        For OpenAPI users, note the `backend.rule.address` field is set
+        by the `address` field in the `x-google-backend` extension.
         
+        `backend.rule.address` is usually specified when routing to different
+        backends based on the route.
         By default, the `backend.rule.address` will take priority over 
         the --backend flag for each individual operation.
         
@@ -152,9 +160,7 @@ environment variable or by passing "-k" flag to this script.
         
         Note: Only the address will be overridden.
         All other components of `backend.rule` will still apply 
-        (deadlines, backend auth, etc).
-        Consider setting --non_gcp as well to override the 
-        backend auth configuration.
+        (deadlines, backend auth, path translation, etc).
         ''')
 
     parser.add_argument('--listener_port', default=None, type=int, help='''
