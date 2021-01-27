@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
+	anypb "github.com/golang/protobuf/ptypes/any"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -46,6 +47,11 @@ type MethodInfo struct {
 	// The auto-generated cors methods, used to replace snakeName with jsonName in their
 	// url templates in config time.
 	GeneratedCorsMethod *MethodInfo
+
+	// The PerRouteConfig generation functions.
+	// It should be added during making filters if the filter has the PerRouteConfig
+	// for the methods.
+	PerRouteConfigGens map[string]PerRouteConfigGenFunc
 }
 
 // backendInfo stores information from Backend rule for backend rerouting.
@@ -73,3 +79,13 @@ type SnakeToJsonSegments = map[string]string
 func (m *MethodInfo) Operation() string {
 	return m.ApiName + "." + m.ShortName
 }
+
+func (m *MethodInfo) AddPerRouteConfigGen(name string, prcg PerRouteConfigGenFunc) {
+	if m.PerRouteConfigGens == nil {
+		m.PerRouteConfigGens = make(map[string]PerRouteConfigGenFunc)
+	}
+
+	m.PerRouteConfigGens[name] = prcg
+}
+
+type PerRouteConfigGenFunc func(method *MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error)

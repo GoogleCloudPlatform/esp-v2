@@ -26,12 +26,9 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 
-	aupb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
 	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -207,51 +204,71 @@ func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *httppattern.
 func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, httpRule *httppattern.Pattern) (map[string]*anypb.Any, error) {
 	perFilterConfig := make(map[string]*anypb.Any)
 
-	// Always add ServiceControl PerRouteConfig
-	scPerRoute := &scpb.PerRouteFilterConfig{
-		OperationName: operation,
-	}
-	scpr, err := ptypes.MarshalAny(scPerRoute)
-	if err != nil {
-		return perFilterConfig, fmt.Errorf("error marshaling service_control per-route config to Any: %v", err)
+	//for name, perRouteFilterConfigGen := range method.PerRouteConfigGens {
+	//	perRouteFilterConfig, err := perRouteFilterConfigGen(method, httpRule)
+	//	if err != nil {
+	//		return perFilterConfig, err
+	//	}
+	//	perFilterConfig[name] = perRouteFilterConfig
+	//}
+
+	// This is to keep the generated order like before. No need to keep it.
+	for _, name := range []string{util.ServiceControl, util.BackendAuth, util.PathRewrite, util.JwtAuthn} {
+		if perRouteFilterConfigGen, ok := method.PerRouteConfigGens[name]; ok {
+			perRouteFilterConfig, err := perRouteFilterConfigGen(method, httpRule)
+			if err != nil {
+				return perFilterConfig, err
+			}
+			perFilterConfig[name] = perRouteFilterConfig
+		}
 	}
 
-	perFilterConfig[util.ServiceControl] = scpr
-
-	// add BackendAuth PerRouteConfig if needed
-	if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
-		auPerRoute := &aupb.PerRouteFilterConfig{
-			JwtAudience: method.BackendInfo.JwtAudience,
-		}
-		aupr, err := ptypes.MarshalAny(auPerRoute)
-		if err != nil {
-			return perFilterConfig, fmt.Errorf("error marshaling backend_auth per-route config to Any: %v", err)
-		}
-		perFilterConfig[util.BackendAuth] = aupr
-	}
-
-	// add PathRewrite PerRouteConfig if needed
-	if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
-		prAny, err := ptypes.MarshalAny(pr)
-		if err != nil {
-			return perFilterConfig, fmt.Errorf("error marshaling path_rewrite per-route config to Any: %v", err)
-		}
-		perFilterConfig[util.PathRewrite] = prAny
-	}
-
-	// add JwtAuthn PerRouteConfig
-	if method.RequireAuth {
-		jwtPerRoute := &jwtpb.PerRouteConfig{
-			RequirementSpecifier: &jwtpb.PerRouteConfig_RequirementName{
-				RequirementName: operation,
-			},
-		}
-		jwt, err := ptypes.MarshalAny(jwtPerRoute)
-		if err != nil {
-			return perFilterConfig, fmt.Errorf("error marshaling jwt_authn per-route config to Any: %v", err)
-		}
-		perFilterConfig[util.JwtAuthn] = jwt
-	}
+	//
+	//// Always add ServiceControl PerRouteConfig
+	//scPerRoute := &scpb.PerRouteFilterConfig{
+	//	OperationName: operation,
+	//}
+	//scpr, err := ptypes.MarshalAny(scPerRoute)
+	//if err != nil {
+	//	return perFilterConfig, fmt.Errorf("error marshaling service_control per-route config to Any: %v", err)
+	//}
+	//
+	//perFilterConfig[util.ServiceControl] = scpr
+	//
+	//// add BackendAuth PerRouteConfig if needed
+	//if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
+	//	auPerRoute := &aupb.PerRouteFilterConfig{
+	//		JwtAudience: method.BackendInfo.JwtAudience,
+	//	}
+	//	aupr, err := ptypes.MarshalAny(auPerRoute)
+	//	if err != nil {
+	//		return perFilterConfig, fmt.Errorf("error marshaling backend_auth per-route config to Any: %v", err)
+	//	}
+	//	perFilterConfig[util.BackendAuth] = aupr
+	//}
+	//
+	//// add PathRewrite PerRouteConfig if needed
+	//if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
+	//	prAny, err := ptypes.MarshalAny(pr)
+	//	if err != nil {
+	//		return perFilterConfig, fmt.Errorf("error marshaling path_rewrite per-route config to Any: %v", err)
+	//	}
+	//	perFilterConfig[util.PathRewrite] = prAny
+	//}
+	//
+	//// add JwtAuthn PerRouteConfig
+	//if method.RequireAuth {
+	//	jwtPerRoute := &jwtpb.PerRouteConfig{
+	//		RequirementSpecifier: &jwtpb.PerRouteConfig_RequirementName{
+	//			RequirementName: operation,
+	//		},
+	//	}
+	//	jwt, err := ptypes.MarshalAny(jwtPerRoute)
+	//	if err != nil {
+	//		return perFilterConfig, fmt.Errorf("error marshaling jwt_authn per-route config to Any: %v", err)
+	//	}
+	//	perFilterConfig[util.JwtAuthn] = jwt
+	//}
 
 	return perFilterConfig, nil
 }
