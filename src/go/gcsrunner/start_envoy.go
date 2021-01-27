@@ -30,7 +30,7 @@ type StartEnvoyOptions struct {
 	BinaryPath       string
 	ConfigPath       string
 	LogLevel         string
-	LogPath		 string
+	LogPath          string
 	TerminateTimeout time.Duration
 }
 

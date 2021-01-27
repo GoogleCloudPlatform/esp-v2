@@ -88,7 +88,7 @@ const (
 	TestMethodOverrideBackendMethod
 	TestMethodOverrideScReport
 	TestMultiGrpcServices
-	TestPreflightCorsWithBasicPreset
+	TestProxyHandlesCorsPreflightRequestsBasic
 	TestPreflightRequestWithAllowCors
 	TestReportGCPAttributes
 	TestReportGCPAttributesPerPlatform
@@ -132,8 +132,8 @@ const (
 	TestServiceControlTLSWithValidCert
 	TestServiceManagementWithInvalidCert
 	TestServiceManagementWithValidCert
-	TestSimpleCorsWithBasicPreset
-	TestSimpleCorsWithRegexPreset
+	TestProxyHandleCorsSimpleRequestsBasic
+	TestProxyHandleCorsSimpleRequestsRegex
 	TestStartupDuplicatedPathsWithAllowCors
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
