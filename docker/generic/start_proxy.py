@@ -133,7 +133,35 @@ environment variable or by passing "-k" flag to this script.
 
         Default value is {backend}. Follow the same format when setting
         manually. Valid schemes are `http`, `https`, `grpc`, and `grpcs`.
+        
+        See the flag --enable_backend_address_override for details on how ESPv2
+        decides between using this flag vs using the backend addresses specified
+        in the service configuration.
         '''.format(backend=DEFAULT_BACKEND))
+
+    parser.add_argument(
+        '--enable_backend_address_override',
+        action='store_true',
+        help='''
+        Backend addresses can be specified using either the --backend flag
+        or the `backend.rule.address` field in the service configuration.
+        For OpenAPI users, note the `backend.rule.address` field is set
+        by the `address` field in the `x-google-backend` extension.
+        
+        `backend.rule.address` is usually specified when routing to different
+        backends based on the route.
+        By default, the `backend.rule.address` will take priority over 
+        the --backend flag for each individual operation.
+        
+        Enable this flag if you want the --backend flag to take priority
+        instead. This is useful if you are developing on a local workstation.
+        Then you use a the same production service config but override the
+        backend address via the --backend flag for local testing.
+        
+        Note: Only the address will be overridden.
+        All other components of `backend.rule` will still apply 
+        (deadlines, backend auth, path translation, etc).
+        ''')
 
     parser.add_argument('--listener_port', default=None, type=int, help='''
         The port to accept downstream connections.
@@ -515,6 +543,9 @@ environment variable or by passing "-k" flag to this script.
         By default, the proxy tries to talk to GCP metadata server to get VM
         location in the first few requests. Setting this flag to true to skip
         this step.
+        
+        This will also disable the following features:
+        - Backend authentication
         ''')
     parser.add_argument(
         '--service_account_key',
@@ -1036,6 +1067,9 @@ def gen_proxy_config(args):
     if args.envoy_connection_buffer_limit_bytes:
         proxy_conf.extend(["--connection_buffer_limit_bytes",
                            args.envoy_connection_buffer_limit_bytes])
+
+    if args.enable_backend_address_override:
+        proxy_conf.append("--enable_backend_address_override")
 
     return proxy_conf
 

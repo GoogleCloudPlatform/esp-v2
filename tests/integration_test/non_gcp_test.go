@@ -16,6 +16,7 @@ package integration_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -24,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func verifyImdsRequests(t *testing.T, wantRequestsToMetaServer map[string]int, imds *components.MockMetadataServer) {
@@ -200,6 +202,122 @@ func TestMetadataRequestsWithBackendAuthPerPlatform(t *testing.T) {
 			}
 
 			verifyImdsRequests(t, tc.wantRequestsToMetaServer, s.MockMetadataServer)
+		})
+	}
+}
+
+func TestBackendAuthPerPlatform(t *testing.T) {
+	t.Parallel()
+
+	customSa, err := utils.NewServiceAccountForTest()
+	if err != nil {
+		t.Fatalf("Test failed: %v", err)
+	}
+	defer customSa.MockTokenServer.Close()
+
+	testData := []struct {
+		desc     string
+		confArgs []string
+		wantResp string
+	}{
+		{
+			desc:     "When running on GCP, backend auth is honored.",
+			confArgs: utils.CommonArgs(),
+			wantResp: `{"Authorization": "Bearer ya29.new", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+		{
+			desc: "When running on non-GCP, backend auth is automatically disabled.",
+			confArgs: append([]string{
+				"--non_gcp",
+				"--service_account_key=" + customSa.FileName,
+			}, utils.CommonArgs()...),
+			wantResp: `{"Authorization": "", "RequestURI": "/bearertoken/constant?foo=42"}`,
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestBackendAuthPerPlatform, platform.EchoRemote)
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bearertoken/constant/42")
+			resp, err := client.DoWithHeaders(url, "GET", "", nil)
+
+			if err != nil {
+				t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+			}
+
+			gotResp := string(resp)
+			if err := util.JsonEqual(tc.wantResp, gotResp); err != nil {
+				t.Errorf("Test Desc(%s) fails: \n %s", tc.desc, err)
+			}
+		})
+	}
+}
+
+func TestBackendAddressOverride(t *testing.T) {
+	t.Parallel()
+
+	customSa, err := utils.NewServiceAccountForTest()
+	if err != nil {
+		t.Fatalf("Test failed: %v", err)
+	}
+	defer customSa.MockTokenServer.Close()
+
+	testData := []struct {
+		desc      string
+		confArgs  []string
+		wantResp  string
+		wantError string
+	}{
+		{
+			desc:      "Without backend address override, ESPv2 fails to connect to the invalid backend.rule.address.",
+			confArgs:  utils.CommonArgs(),
+			wantError: `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
+		},
+		{
+			desc: "With backend address override, ESPv2 connects to the local backend flag.",
+			confArgs: append([]string{
+				"--enable_backend_address_override",
+			}, utils.CommonArgs()...),
+			wantResp: `simple get message`,
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestBackendAddressOverride, platform.EchoSidecar)
+
+			// Add a bad backend rule that will not resolve to a valid address.
+			s.AppendBackendRules([]*confpb.BackendRule{
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
+					Address:  fmt.Sprintf("https://%v:%v", platform.GetLoopbackAddress(), platform.InvalidBackendPort),
+				},
+			})
+
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simplegetcors?key=api-key")
+			resp, err := client.DoWithHeaders(url, "GET", "", nil)
+			if err != nil {
+				if tc.wantError == "" {
+					t.Errorf("Test(%v): got unexpected error: %s", tc.desc, err)
+				} else if !strings.Contains(err.Error(), tc.wantError) {
+					t.Errorf("Test(%v): got unexpected error, expect: %s, get: %s", tc.desc, tc.wantError, err.Error())
+				}
+				return
+			}
+
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test(%v): expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
 		})
 	}
 }

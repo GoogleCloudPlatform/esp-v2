@@ -680,7 +680,7 @@ func TestReportTraceId(t *testing.T) {
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 
-			s := env.NewTestEnv(platform.TestTraceContextPropagationHeaders, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestReportTraceId, platform.EchoSidecar)
 			s.SetupFakeTraceServer(tc.tracingSampleRate)
 			defer s.TearDown(t)
 			if err := s.Setup(utils.CommonArgs()); err != nil {

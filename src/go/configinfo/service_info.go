@@ -496,7 +496,7 @@ func (s *ServiceInfo) processBackendRule() error {
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
 
-		if r.Address == "" {
+		if r.Address == "" || s.Options.EnableBackendAddressOverride {
 			// Processing a backend rule associated with the local backend.
 			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName()); err != nil {
 				return fmt.Errorf("error processing local backend rule for operation (%v), %v", r.Selector, err)
@@ -629,9 +629,10 @@ func (s *ServiceInfo) determineBackendAuthJwtAud(r *confpb.BackendRule, scheme s
 	}
 }
 
-// For methods that are not associated with any backend rules, create one
-// to associate with the local backend cluster.
 func (s *ServiceInfo) processLocalBackendOperations() error {
+
+	// For methods that are not associated with any backend rules, create one
+	// to associate with the local backend cluster.
 	for _, method := range s.Methods {
 		if method.BackendInfo != nil {
 			// This method is already associated with a backend rule.

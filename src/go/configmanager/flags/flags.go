@@ -48,10 +48,11 @@ var (
 	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", 20*time.Second, "cluster connect timeout in seconds")
 
 	// Network related configurations.
-	BackendAddress       = flag.String("backend_address", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
-	ListenerAddress      = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
-	ServiceManagementURL = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
-	ServiceControlURL    = flag.String("service_control_url", "https://servicecontrol.googleapis.com", "url of service control server")
+	BackendAddress               = flag.String("backend_address", "http://127.0.0.1:8082", `The application server URI to which ESPv2 proxies requests.`)
+	ListenerAddress              = flag.String("listener_address", "0.0.0.0", "listener socket ip address")
+	ServiceManagementURL         = flag.String("service_management_url", "https://servicemanagement.googleapis.com", "url of service management server")
+	ServiceControlURL            = flag.String("service_control_url", "https://servicecontrol.googleapis.com", "url of service control server")
+	EnableBackendAddressOverride = flag.Bool("enable_backend_address_override", false, "Allow the --backend flag to override the backend.rule.address for all operations.")
 
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
@@ -155,6 +156,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 	opts := options.ConfigGeneratorOptions{
 		CommonOptions:                           commonflags.DefaultCommonOptionsFromFlags(),
 		BackendAddress:                          *BackendAddress,
+		EnableBackendAddressOverride:            *EnableBackendAddressOverride,
 		AccessLog:                               *AccessLog,
 		AccessLogFormat:                         *AccessLogFormat,
 		ComputePlatformOverride:                 *ComputePlatformOverride,
