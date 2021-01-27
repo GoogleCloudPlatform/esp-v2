@@ -64,16 +64,18 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	}
 	host.Routes = backendRoutes
 
-	cors, corsRoute, err := makeRouteCors(serviceInfo)
+	cors, corsRoutes, err := makeRouteCors(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
 
 	if cors != nil {
 		host.Cors = cors
-		host.Routes = append(host.Routes, corsRoute)
-		jsonStr, _ := util.ProtoToJson(corsRoute)
-		glog.Infof("adding cors route configuration: %v", jsonStr)
+		host.Routes = append(host.Routes, corsRoutes...)
+		for i, corsRoute := range corsRoutes {
+			jsonStr, _ := util.ProtoToJson(corsRoute)
+			glog.Infof("adding cors route configuration [%v]: %v", i, jsonStr)
+		}
 	}
 
 	host.Routes = append(host.Routes, methodNotAllowedRoutes...)
@@ -87,7 +89,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	}, nil
 }
 
-func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, *routepb.Route, error) {
+func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []*routepb.Route, error) {
 	var cors *routepb.CorsPolicy
 	switch serviceInfo.Options.CorsPreset {
 	case "basic":
@@ -143,19 +145,33 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, *r
 	cors.ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
 	cors.AllowCredentials = &wrapperspb.BoolValue{Value: serviceInfo.Options.CorsAllowCredentials}
 
-	// In order apply Envoy cors policy, need to have a route rule
-	// to route OPTIONS request to this host
-	corsRoute := &routepb.Route{
+	// In order apply Envoy cors policy, need to have a catch-all route to match
+	// preflight CORS requests.
+	preflightCorsRoute := &routepb.Route{
 		Match: &routepb.RouteMatch{
 			PathSpecifier: &routepb.RouteMatch_Prefix{
 				Prefix: "/",
 			},
-			Headers: []*routepb.HeaderMatcher{{
-				Name: ":method",
-				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-					ExactMatch: "OPTIONS",
+			Headers: []*routepb.HeaderMatcher{
+				{
+					Name: ":method",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+						ExactMatch: "OPTIONS",
+					},
 				},
-			}},
+				{
+					Name: "origin",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_PresentMatch{
+						PresentMatch: true,
+					},
+				},
+				{
+					Name: "access-control-request-method",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_PresentMatch{
+						PresentMatch: true,
+					},
+				},
+			},
 		},
 		// Envoy requires to have a Route action in order to create a route
 		// for cors filter to work.
@@ -170,7 +186,44 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, *r
 			Operation: util.SpanNamePrefix,
 		},
 	}
-	return cors, corsRoute, nil
+
+	// Try to catch malformed preflight CORS requests. They are still OPTIONS,
+	// but are missing the required CORS headers.
+	preflightCorsMissingHeadersRoute := &routepb.Route{
+		Match: &routepb.RouteMatch{
+			PathSpecifier: &routepb.RouteMatch_Prefix{
+				Prefix: "/",
+			},
+			Headers: []*routepb.HeaderMatcher{
+				{
+					Name: ":method",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
+						ExactMatch: "OPTIONS",
+					},
+				},
+			},
+		},
+		Action: &routepb.Route_DirectResponse{
+			DirectResponse: &routepb.DirectResponseAction{
+				Status: http.StatusBadRequest,
+				Body: &corepb.DataSource{
+					Specifier: &corepb.DataSource_InlineString{
+						InlineString: fmt.Sprintf("The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"),
+					},
+				},
+			},
+		},
+		Decorator: &routepb.Decorator{
+			Operation: util.SpanNamePrefix,
+		},
+	}
+
+	corsRoutes := []*routepb.Route{
+		// Order matters: most specific to least specific match.
+		preflightCorsRoute,
+		preflightCorsMissingHeadersRoute,
+	}
+	return cors, corsRoutes, nil
 }
 
 func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern) *prpb.PerRouteFilterConfig {

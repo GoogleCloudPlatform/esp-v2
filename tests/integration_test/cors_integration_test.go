@@ -16,6 +16,7 @@ package integration_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -30,8 +31,10 @@ const (
 	echoMsg = "hello"
 )
 
-// Simple CORS request with basic preset in config manager, response should have CORS headers
-func TestSimpleCorsWithBasicPreset(t *testing.T) {
+// ESPv2 handles CORS with the basic preset.
+// Tests only "simple requests". These do not trigger preflight OPTIONS in browsers.
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests
+func TestProxyHandleCorsSimpleRequestsBasic(t *testing.T) {
 	t.Parallel()
 
 	configId := "test-config-id"
@@ -43,7 +46,7 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(platform.TestSimpleCorsWithBasicPreset, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestProxyHandleCorsSimpleRequestsBasic, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
@@ -54,94 +57,65 @@ func TestSimpleCorsWithBasicPreset(t *testing.T) {
 		path              string
 		httpMethod        string
 		msg               string
-		corsAllowOrigin   string
-		corsExposeHeaders string
+		origin            string
+		wantAllowOrigin   string
+		wantExposeHeaders string
 	}{
 		{
-			desc:              "Succeed, response has CORS headers",
+			desc:              "CORS simple request origin matches, so there are CORS headers in response.",
 			path:              "/echo",
 			httpMethod:        "POST",
 			msg:               echoMsg,
-			corsAllowOrigin:   corsAllowOriginValue,
-			corsExposeHeaders: corsExposeHeadersValue,
+			origin:            corsAllowOriginValue,
+			wantAllowOrigin:   corsAllowOriginValue,
+			wantExposeHeaders: corsExposeHeadersValue,
 		},
 		{
-			// send to an endpoint that requires JWT, response still has CORS headers though the request does not pass through jwt filter
-			desc:              "Succeed, response has CORS headers",
+			desc:              "CORS simple request handled before frontend auth is checked for method.",
 			path:              "/auth/info/googlejwt",
 			httpMethod:        "GET",
 			msg:               "",
-			corsAllowOrigin:   corsAllowOriginValue,
-			corsExposeHeaders: corsExposeHeadersValue,
+			origin:            corsAllowOriginValue,
+			wantAllowOrigin:   corsAllowOriginValue,
+			wantExposeHeaders: corsExposeHeadersValue,
+		},
+		{
+			desc:              "CORS simple request origin does not match, so CORS headers are NOT in the response.",
+			path:              "/echo",
+			httpMethod:        "POST",
+			msg:               echoMsg,
+			origin:            "https://some.unknown.origin.com",
+			wantAllowOrigin:   "",
+			wantExposeHeaders: "",
 		},
 	}
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
-		respHeader, err := client.DoCorsSimpleRequest(url, tc.httpMethod, corsAllowOriginValue, tc.msg)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.Run(tc.desc, func(t *testing.T) {
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			respHeader, err := client.DoCorsSimpleRequest(url, tc.httpMethod, tc.origin, tc.msg)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if respHeader.Get("Access-Control-Allow-Origin") != tc.corsAllowOrigin {
-			t.Errorf("Access-Control-Allow-Origin expected: %s, got: %s", tc.corsAllowOrigin, respHeader.Get("Access-Control-Allow-Origin"))
-		}
-		if respHeader.Get("Access-Control-Expose-Headers") != tc.corsExposeHeaders {
-			t.Errorf("Access-Control-Expose-Headers expected: %s, got: %s", tc.corsExposeHeaders, respHeader.Get("Access-Control-Expose-Headers"))
-		}
+			if respHeader.Get("Access-Control-Allow-Origin") != tc.wantAllowOrigin {
+				t.Errorf("Access-Control-Allow-Origin expected: %s, got: %s", tc.wantAllowOrigin, respHeader.Get("Access-Control-Allow-Origin"))
+			}
+			if respHeader.Get("Access-Control-Expose-Headers") != tc.wantExposeHeaders {
+				t.Errorf("Access-Control-Expose-Headers expected: %s, got: %s", tc.wantExposeHeaders, respHeader.Get("Access-Control-Expose-Headers"))
+			}
+		})
 	}
 }
 
-// CORS request Origin is different from cors_allow_origin setting in config manager
-// since these two does not match, envoy CORS filter does not put CORS headers in response
-func TestDifferentOriginSimpleCors(t *testing.T) {
-	t.Parallel()
-
-	serviceName := "test-echo"
-	configId := "test-config-id"
-	corsAllowOriginValue := "http://cloud.google.com"
-	corsDifferentOriginValue := "http://www.google.com"
-	corsExposeHeadersValue := "Content-Length,Content-Range"
-
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--rollout_strategy=fixed", "--cors_preset=basic",
-		"--cors_allow_origin=" + corsAllowOriginValue,
-		"--cors_expose_headers=" + corsExposeHeadersValue}
-
-	s := env.NewTestEnv(platform.TestDifferentOriginSimpleCors, platform.EchoSidecar)
-	defer s.TearDown(t)
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-
-	testData := struct {
-		desc       string
-		corsOrigin string
-	}{
-		desc:       "Fail, response does not have CORS headers",
-		corsOrigin: corsDifferentOriginValue,
-	}
-	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
-	respHeader, err := client.DoCorsSimpleRequest(url, "POST", testData.corsOrigin, echoMsg)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if respHeader.Get("Access-Control-Allow-Origin") != "" {
-		t.Errorf("Access-Control-Allow-Origin expected to be empty string, got: %s", respHeader.Get("Access-Control-Allow-Origin"))
-	}
-	if respHeader.Get("Access-Control-Expose-Headers") != "" {
-		t.Errorf("Access-Control-Expose-Headers expected to be empty string, got: %s", respHeader.Get("Access-Control-Expose-Headers"))
-	}
-}
-
-// Simple CORS request with regex origin in config manager, response should have CORS headers
-func TestSimpleCorsWithRegexPreset(t *testing.T) {
+// ESPv2 handles CORS with the regex preset.
+// Tests only "simple requests". These do not trigger preflight OPTIONS in browsers.
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests
+func TestProxyHandleCorsSimpleRequestsRegex(t *testing.T) {
 	t.Parallel()
 
 	serviceName := "test-echo"
 	configId := "test-config-id"
 	corsAllowOriginRegex := "^https?://.+\\.google\\.com$"
-	corsAllowOriginValue := "http://gcpproxy.cloud.google.com"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
@@ -149,7 +123,7 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		"--cors_allow_origin_regex=" + corsAllowOriginRegex,
 		"--cors_expose_headers=" + corsExposeHeadersValue}
 
-	s := env.NewTestEnv(platform.TestSimpleCorsWithRegexPreset, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestProxyHandleCorsSimpleRequestsRegex, platform.EchoSidecar)
 	// UseWrongBackendCertForDR shouldn't impact simple Cors.
 	s.UseWrongBackendCertForDR(true)
 	defer s.TearDown(t)
@@ -157,31 +131,48 @@ func TestSimpleCorsWithRegexPreset(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	testData := struct {
+	testData := []struct {
 		desc              string
-		corsAllowOrigin   string
-		corsExposeHeaders string
+		origin            string
+		wantAllowOrigin   string
+		wantExposeHeaders string
 	}{
-		desc:              "Succeed, response has CORS headers",
-		corsAllowOrigin:   corsAllowOriginValue,
-		corsExposeHeaders: corsExposeHeadersValue,
-	}
-	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
-	respHeader, err := client.DoCorsSimpleRequest(url, "POST", corsAllowOriginValue, echoMsg)
-	if err != nil {
-		t.Fatal(err)
+		{
+			desc:              "CORS simple request origin matches, so there are CORS headers in response.",
+			origin:            "http://gcpproxy.cloud.google.com",
+			wantAllowOrigin:   "http://gcpproxy.cloud.google.com",
+			wantExposeHeaders: corsExposeHeadersValue,
+		},
+		{
+			desc:              "CORS simple request origin does not match, so CORS headers are NOT in the response.",
+			origin:            "http://some.unknown.origin.com",
+			wantAllowOrigin:   "",
+			wantExposeHeaders: "",
+		},
 	}
 
-	if respHeader.Get("Access-Control-Allow-Origin") != testData.corsAllowOrigin {
-		t.Errorf("Access-Control-Allow-Origin expected: %s, got: %s", testData.corsAllowOrigin, respHeader.Get("Access-Control-Allow-Origin"))
-	}
-	if respHeader.Get("Access-Control-Expose-Headers") != testData.corsExposeHeaders {
-		t.Errorf("Access-Control-Expose-Headers expected: %s, got: %s", testData.corsExposeHeaders, respHeader.Get("Access-Control-Expose-Headers"))
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
+			respHeader, err := client.DoCorsSimpleRequest(url, "POST", tc.origin, echoMsg)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if respHeader.Get("Access-Control-Allow-Origin") != tc.wantAllowOrigin {
+				t.Errorf("Access-Control-Allow-Origin expected: %s, got: %s", tc.wantAllowOrigin, respHeader.Get("Access-Control-Allow-Origin"))
+			}
+			if respHeader.Get("Access-Control-Expose-Headers") != tc.wantExposeHeaders {
+				t.Errorf("Access-Control-Expose-Headers expected: %s, got: %s", tc.wantExposeHeaders, respHeader.Get("Access-Control-Expose-Headers"))
+			}
+		})
 	}
 }
 
-// Preflight CORS request with basic preset in config manager, response should have CORS headers
-func TestPreflightCorsWithBasicPreset(t *testing.T) {
+// ESPv2 handles CORS with the basic preset.
+// Tests preflight requests. These are actual OPTIONS requests.
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#preflighted_requests
+func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 	t.Parallel()
 
 	serviceName := "test-echo"
@@ -200,90 +191,104 @@ func TestPreflightCorsWithBasicPreset(t *testing.T) {
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
 
-	s := env.NewTestEnv(platform.TestPreflightCorsWithBasicPreset, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestProxyHandlesCorsPreflightRequestsBasic, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	testData := struct {
-		desc          string
-		respHeaderMap map[string]string
+	testData := []struct {
+		desc            string
+		reqHeaders      map[string]string
+		wantError       string
+		wantRespHeaders map[string]string
 	}{
-		desc: "Succeed, response has CORS headers",
-		respHeaderMap: map[string]string{
-			"Access-Control-Allow-Origin":      corsAllowOriginValue,
-			"Access-Control-Allow-Methods":     corsAllowMethodsValue,
-			"Access-Control-Allow-Headers":     corsAllowHeadersValue,
-			"Access-Control-Expose-Headers":    corsExposeHeadersValue,
-			"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+		{
+			desc: "CORS preflight request is valid.",
+			reqHeaders: map[string]string{
+				"Origin":                         corsAllowOriginValue,
+				"Access-Control-Request-Method":  corsRequestMethod,
+				"Access-Control-Request-Headers": corsRequestHeader,
+			},
+			wantRespHeaders: map[string]string{
+				"Access-Control-Allow-Origin":      corsAllowOriginValue,
+				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+			},
+		},
+		{
+			desc: "CORS preflight request is invalid because the origin does not match.",
+			reqHeaders: map[string]string{
+				"Origin":                         "https://some.unknown.origin.com",
+				"Access-Control-Request-Method":  corsRequestMethod,
+				"Access-Control-Request-Headers": corsRequestHeader,
+			},
+			wantError: `405 Method Not Allowed`,
+			wantRespHeaders: map[string]string{
+				"Access-Control-Allow-Origin":      "",
+				"Access-Control-Allow-Methods":     "",
+				"Access-Control-Allow-Headers":     "",
+				"Access-Control-Expose-Headers":    "",
+				"Access-Control-Allow-Credentials": "",
+			},
+		},
+		{
+			desc: "CORS preflight request is invalid because the origin is missing.",
+			reqHeaders: map[string]string{
+				"Access-Control-Request-Method":  corsRequestMethod,
+				"Access-Control-Request-Headers": corsRequestHeader,
+			},
+			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"}`,
+			wantRespHeaders: map[string]string{
+				"Access-Control-Allow-Origin":      "",
+				"Access-Control-Allow-Methods":     "",
+				"Access-Control-Allow-Headers":     "",
+				"Access-Control-Expose-Headers":    "",
+				"Access-Control-Allow-Credentials": "",
+			},
+		},
+		{
+			desc: "CORS preflight request is invalid because the Access-Control-Request-Method is missing.",
+			reqHeaders: map[string]string{
+				"Origin":                         corsAllowOriginValue,
+				"Access-Control-Request-Headers": corsRequestHeader,
+			},
+			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"}`,
+			wantRespHeaders: map[string]string{
+				"Access-Control-Allow-Origin":      "",
+				"Access-Control-Allow-Methods":     "",
+				"Access-Control-Allow-Headers":     "",
+				"Access-Control-Expose-Headers":    "",
+				"Access-Control-Allow-Credentials": "",
+			},
 		},
 	}
 
-	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
-	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, corsRequestHeader, "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
+			respHeaders, _, err := utils.DoWithHeaders(url, "OPTIONS", "", tc.reqHeaders)
 
-	for key, value := range testData.respHeaderMap {
-		if respHeader.Get(key) != value {
-			t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
-		}
-	}
+			if err != nil && tc.wantError == "" {
+				t.Fatal(err)
+			} else if err == nil && tc.wantError != "" {
+				t.Fatalf("Want error, got no error")
+			} else if err != nil && !strings.Contains(err.Error(), tc.wantError) {
+				t.Errorf("\nwant error: %v, \ngot  error: %v", tc.wantError, err)
+			}
 
-}
+			if respHeaders == nil {
+				t.Fatalf("could not read response headers")
+			}
 
-// Preflight request Origin is different from cors_allow_origin setting in config manager
-// since these two does not match, envoy CORS filter does not put CORS headers in response
-func TestDifferentOriginPreflightCors(t *testing.T) {
-	t.Parallel()
-
-	serviceName := "test-echo"
-	configId := "test-config-id"
-	corsRequestMethod := "PATCH"
-	corsAllowOriginValue := "http://cloud.google.com"
-	corsOrigin := "https://cloud.google.com"
-	corsAllowMethodsValue := "GET, PATCH, DELETE, OPTIONS"
-	corsAllowHeadersValue := "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
-	corsExposeHeadersValue := "Content-Length,Content-Range"
-
-	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
-		"--rollout_strategy=fixed", "--cors_preset=basic",
-		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
-		"--cors_allow_headers=" + corsAllowHeadersValue,
-		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
-
-	s := env.NewTestEnv(platform.TestDifferentOriginPreflightCors, platform.EchoSidecar)
-	defer s.TearDown(t)
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-
-	testData := struct {
-		desc          string
-		respHeaderMap map[string]string
-	}{
-		desc: "Fail, response does not have CORS headers",
-		respHeaderMap: map[string]string{
-			"Access-Control-Allow-Origin":      "",
-			"Access-Control-Allow-Methods":     "",
-			"Access-Control-Allow-Headers":     "",
-			"Access-Control-Expose-Headers":    "",
-			"Access-Control-Allow-Credentials": "",
-		},
-	}
-
-	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
-	respHeader, err := client.DoCorsPreflightRequest(url, corsOrigin, corsRequestMethod, "", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for key, value := range testData.respHeaderMap {
-		if respHeader.Get(key) != value {
-			t.Errorf("%s expected: %s, got: %s", key, value, respHeader.Get(key))
-		}
+			for key, value := range tc.wantRespHeaders {
+				if respHeaders.Get(key) != value {
+					t.Errorf("%s expected: %s, got: %s", key, value, respHeaders.Get(key))
+				}
+			}
+		})
 	}
 }
 
