@@ -3372,12 +3372,40 @@ func TestMakeFallbackRoute(t *testing.T) {
               {
                 "exactMatch": "OPTIONS",
                 "name": ":method"
+              },
+              {
+                "name": "origin",
+                "presentMatch": true
+              },
+              {
+                "name": "access-control-request-method",
+                "presentMatch": true
               }
             ],
             "prefix": "/"
           },
           "route": {
             "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"
+            },
+            "status": 400
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "OPTIONS",
+                "name": ":method"
+              }
+            ],
+            "prefix": "/"
           }
         },
         {
