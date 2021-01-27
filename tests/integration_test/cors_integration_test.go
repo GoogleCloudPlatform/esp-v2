@@ -219,6 +219,9 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 			},
 		},
 		{
+			// TODO(nareddyt): The response code here is a minor bug.
+			// It's coming from the SC filter, as the CORS filters just continues
+			// the pipeline when the origin mismatches.
 			desc: "CORS preflight request is invalid because the origin does not match.",
 			reqHeaders: map[string]string{
 				"Origin":                         "https://some.unknown.origin.com",
