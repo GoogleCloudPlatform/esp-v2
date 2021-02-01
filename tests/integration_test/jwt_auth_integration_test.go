@@ -125,6 +125,15 @@ func TestAsymmetricKeys(t *testing.T) {
 			token:          testdata.FakeNonexistJwksProviderToken,
 			wantError:      `401 Unauthorized, {"code":401,"message":"Jwks remote fetch is failed"}`,
 		},
+		// TODO(b/179038530): should return `JwtUnknownIssuer`
+		{
+			desc:           "Failed, misleading error message(JWT is missing) on Jwt signed by an unknown issue",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeUnknownIssuerToken,
+			wantError:      `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
+		},
 		{
 			desc:           "Succeeded, using OpenID Connect Discovery",
 			clientProtocol: "http",

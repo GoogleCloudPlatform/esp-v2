@@ -383,6 +383,8 @@ const (
 		"2MKZxKsYn8NRVpdyy39Bp3IUv9AUbk4qEKB69pbfSt5H2Z6P_waYfv6m-GieQZWGlhO90Y" +
 		"ytoPuPekKhe8JVV2f5yCwLE89S9ZD8779_1G4UGOsyBfxGvOicoZ9nqtGbJYHnqMN3gjh-" +
 		"BWr3cm9Mswm8TCkP0Lv2cvQ"
+	// ./gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000 --iss="unknown_jwks_provider" --aud bookstore_test_client.cloud.goog
+	FakeUnknownIssuerToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJib29rc3RvcmVfdGVzdF9jbGllbnQuY2xvdWQuZ29vZyIsImV4cCI6NDc2NTgwMjQwMSwiaWF0IjoxNjEyMjAyNDAxLCJpc3MiOiJ1bmtub3duX2p3a3NfcHJvdmlkZXIiLCJzdWIiOiJ1bmtub3duX2p3a3NfcHJvdmlkZXIifQ.QyIM87k4eRfvnWQ3VVFo7Jp5shgW63NAW_vw-jQBT8LyNbGUkKti0C2FQuiNhuTuZjfPN6ABocCihF0zOm5IvsaZ09XyWPB8cdoW7Pb9aTupsVf6VrWdQ_9xuJPD5gDvN0K1XdW6JWQM3Xnte-IAiUkhPKlzoMCz4PE275Uz1U-uk_YED4qkT2-HL-SB24oXUfJcEspSjazCV9Xbw9GmZ8F5PVGoIkK7jrpVHpPCWauUmA2CQx4tmVJ2_P3Ou91VCQtalzbqQF45HLXyPgUMtxDo6oDBc9SLWOUCv1qeSUzrLrlFe1jTmyKELwl1k06N1749AG0sXW55tv5w1Q7ytw"
 
 	// ./gen-jwt.py key.pem -jwks=jwks.json --expire=3153600000 --iss=http://127.0.0.1:32025 --aud=ok_audience
 	FakeOpenIDToken = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRIRmJwb0lV" +
