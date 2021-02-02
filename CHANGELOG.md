@@ -1,3 +1,10 @@
+# Release 2.24.0 01-02-2021
+
+- Respond with HTTP 400 when required headers are omitted in CORS preflight request (#468)
+- Allow backend address override (#464)
+- Add an option to gcsrunner to set Envoy application log path. (#467)
+- Propagate trace ID to correlate access logs and traces (#463)
+
 # Release 2.23.0 13-01-2021
 
 - Automatically configure stream idle timeouts (#457)
