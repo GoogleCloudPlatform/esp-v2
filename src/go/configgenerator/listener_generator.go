@@ -58,7 +58,10 @@ func addPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *FilterGe
 		return fmt.Errorf("the PerRouteConfigGenFunc of filter %s is empty", filterGen.FilterName)
 	}
 	for _, method := range methods {
-		method.AddPerRouteConfigGen(filterGen.FilterName, filterGen.PerRouteConfigGenFunc)
+		method.PerRouteConfigGens = append(method.PerRouteConfigGens, &sc.PerRouteConfigGenerator{
+			FilterName:            filterGen.FilterName,
+			PerRouteConfigGenFunc: filterGen.PerRouteConfigGenFunc,
+		})
 	}
 	return nil
 

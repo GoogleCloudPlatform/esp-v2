@@ -48,10 +48,10 @@ type MethodInfo struct {
 	// url templates in config time.
 	GeneratedCorsMethod *MethodInfo
 
-	// The PerRouteConfig generation functions.
+	// The PerRouteConfig generator.
 	// It should be added during making filters if the filter has the PerRouteConfig
 	// for the methods.
-	PerRouteConfigGens map[string]PerRouteConfigGenFunc
+	PerRouteConfigGens []*PerRouteConfigGenerator
 }
 
 // backendInfo stores information from Backend rule for backend rerouting.
@@ -80,12 +80,9 @@ func (m *MethodInfo) Operation() string {
 	return m.ApiName + "." + m.ShortName
 }
 
-func (m *MethodInfo) AddPerRouteConfigGen(name string, prcg PerRouteConfigGenFunc) {
-	if m.PerRouteConfigGens == nil {
-		m.PerRouteConfigGens = make(map[string]PerRouteConfigGenFunc)
-	}
-
-	m.PerRouteConfigGens[name] = prcg
+type PerRouteConfigGenerator struct {
+	FilterName string
+	PerRouteConfigGenFunc
 }
 
 type PerRouteConfigGenFunc func(method *MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error)
