@@ -48,10 +48,21 @@ import (
 
 // A wrapper of filter generation logic.
 type FilterGenerator struct {
+	// The filter name.
 	FilterName string
-	FilterGenFun
+	// The function to generate filter config and the methods requiring per route configs.
+	FilterGenFunc
+	// The function to generate per route config.
+	// It should be set if the filter needs to set per route config.
+	sc.PerRouteConfigGenFunc
 }
-type FilterGenFun func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error)
+
+// The function type to generate filter config.
+// Return
+//  - the filter config
+//  - the methods needed to add per route config
+//  - the error
+type FilterGenFunc func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error)
 
 // MakeFilterGenerators provide of a slice of FilterGenerator in sequence.
 func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, error) {
@@ -60,11 +71,11 @@ func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, erro
 	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.CORS,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 				corsFilter := &hcmpb.HttpFilter{
 					Name: util.CORS,
 				}
-				return corsFilter, nil
+				return corsFilter, nil, nil
 			},
 		})
 	}
@@ -74,12 +85,12 @@ func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, erro
 	if serviceInfo.Options.Healthz != "" {
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.HealthCheck,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 				hcFilter, err := makeHealthCheckFilter(serviceInfo)
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
-				return hcFilter, nil
+				return hcFilter, nil, nil
 			},
 		})
 	}
@@ -89,13 +100,14 @@ func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, erro
 		// TODO(b/176432170): Handle errors here, prevent startup.
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.JwtAuthn,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
-				jwtAuthnFilter, _ := makeJwtAuthnFilter(serviceInfo)
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
+				jwtAuthnFilter, perRouteConfigRequiredMethods, _ := makeJwtAuthnFilter(serviceInfo)
 				if jwtAuthnFilter != nil {
-					return jwtAuthnFilter, nil
+					return jwtAuthnFilter, perRouteConfigRequiredMethods, nil
 				}
-				return nil, nil
+				return nil, nil, nil
 			},
+			PerRouteConfigGenFunc: jaPerRouteFilterConfigGen,
 		})
 	}
 
@@ -103,9 +115,10 @@ func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, erro
 	if !serviceInfo.Options.SkipServiceControlFilter {
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.ServiceControl,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 				return makeServiceControlFilter(serviceInfo)
 			},
+			PerRouteConfigGenFunc: scPerRouteFilterConfigGen,
 		})
 	}
 
@@ -118,43 +131,45 @@ func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, erro
 		// will fail.
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.GRPCWeb,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 				return &hcmpb.HttpFilter{
 					Name: util.GRPCWeb,
-				}, nil
+				}, nil, nil
 			},
 		})
 
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.GRPCJSONTranscoder,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
-				return makeTranscoderFilter(serviceInfo), nil
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
+				return makeTranscoderFilter(serviceInfo), nil, nil
 			},
 		})
 	}
 
 	// Add Backend Auth filter and Backend Routing if needed.
-	backendAuthFilter, err := makeBackendAuthFilter(serviceInfo)
+	backendAuthFilter, baPerRouteConfigRequiredMethods, err := makeBackendAuthFilter(serviceInfo)
 	if err != nil {
 		return nil, fmt.Errorf("could not add backend auth filter: %v", err)
 	}
 	if backendAuthFilter != nil {
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.BackendAuth,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
-				return makeBackendAuthFilter(serviceInfo)
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
+				return backendAuthFilter, baPerRouteConfigRequiredMethods, err
 			},
+			PerRouteConfigGenFunc: baPerRouteFilterConfigGen,
 		})
 	}
 
-	if needPathRewrite(serviceInfo) {
+	if perRouteConfigRequiredMethods, needed := needPathRewrite(serviceInfo); needed {
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.PathRewrite,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 				return &hcmpb.HttpFilter{
 					Name: util.PathRewrite,
-				}, nil
+				}, perRouteConfigRequiredMethods, nil
 			},
+			PerRouteConfigGenFunc: prPerRouteFilterConfigGen,
 		})
 	}
 
@@ -163,10 +178,10 @@ func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, erro
 
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.GrpcMetadataScrubber,
-			FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+			FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 				return &hcmpb.HttpFilter{
 					Name: util.GrpcMetadataScrubber,
-				}, nil
+				}, nil, nil
 			},
 		})
 	}
@@ -175,8 +190,8 @@ func MakeFilterGenerators(serviceInfo *sc.ServiceInfo) ([]*FilterGenerator, erro
 	// Router filter should be the last.
 	filterGenerators = append(filterGenerators, &FilterGenerator{
 		FilterName: util.Router,
-		FilterGenFun: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
-			return makeRouterFilter(serviceInfo.Options), nil
+		FilterGenFunc: func(sc *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
+			return makeRouterFilter(serviceInfo.Options), nil, nil
 		},
 	})
 	return filterGenerators, nil
@@ -195,17 +210,18 @@ var prPerRouteFilterConfigGen = func(method *sc.MethodInfo, httpRule *httppatter
 	return prAny, nil
 }
 
-func needPathRewrite(serviceInfo *sc.ServiceInfo) bool {
+func needPathRewrite(serviceInfo *sc.ServiceInfo) ([]*sc.MethodInfo, bool) {
 	needed := false
+	var perRouteConfigRequiredMethods []*sc.MethodInfo
 	for _, method := range serviceInfo.Methods {
 		for _, httpRule := range method.HttpRule {
 			if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
 				needed = true
-				method.AddPerRouteConfigGen(util.PathRewrite, prPerRouteFilterConfigGen)
+				perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
 			}
 		}
 	}
-	return needed
+	return perRouteConfigRequiredMethods, needed
 }
 
 func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string, error) {
@@ -261,21 +277,21 @@ var jaPerRouteFilterConfigGen = func(method *sc.MethodInfo, httpRule *httppatter
 	return jwt, nil
 }
 
-func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 	providers := make(map[string]*jwtpb.JwtProvider)
 	for _, provider := range auth.GetProviders() {
 		addr, err := util.ExtractAddressFromURI(provider.GetJwksUri())
 		if err != nil {
-			return nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
+			return nil, nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
 		}
 		clusterName := util.JwtProviderClusterName(addr)
 		fromHeaders, fromParams, err := processJwtLocations(provider)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		jp := &jwtpb.JwtProvider{
@@ -320,7 +336,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) 
 	}
 
 	if len(providers) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	requirements := make(map[string]*jwtpb.JwtRequirement)
@@ -330,9 +346,10 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) 
 		}
 	}
 
+	var perRouteConfigRequiredMethods []*sc.MethodInfo
 	for _, method := range serviceInfo.Methods {
 		if method.RequireAuth {
-			method.AddPerRouteConfigGen(util.JwtAuthn, jaPerRouteFilterConfigGen)
+			perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
 		}
 	}
 
@@ -346,7 +363,7 @@ func makeJwtAuthnFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) 
 		Name:       util.JwtAuthn,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{jas},
 	}
-	return jwtAuthnFilter, nil
+	return jwtAuthnFilter, perRouteConfigRequiredMethods, nil
 }
 
 func makeJwtRequirement(requirements []*confpb.AuthRequirement, allow_missing bool) *jwtpb.JwtRequirement {
@@ -436,9 +453,9 @@ func makeServiceControlCallingConfig(opts options.ConfigGeneratorOptions) *scpb.
 	return setting
 }
 
-func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	// TODO(b/148638212): Clean up this hacky way of specifying the protocol for Service Control report.
@@ -524,6 +541,7 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, e
 		filterConfig.GcpAttributes.Platform = serviceInfo.Options.ComputePlatformOverride
 	}
 
+	var perRouteConfigRequiredMethods []*sc.MethodInfo
 	for _, operation := range serviceInfo.Operations {
 		method := serviceInfo.Methods[operation]
 		requirement := &scpb.Requirement{
@@ -550,25 +568,25 @@ func makeServiceControlFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, e
 			requirement.ApiKey.Locations = method.ApiKeyLocations
 		}
 
-		method.AddPerRouteConfigGen(util.ServiceControl, scPerRouteFilterConfigGen)
+		perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
 		filterConfig.Requirements = append(filterConfig.Requirements, requirement)
 	}
 
 	depErrorBehaviorEnum, err := parseDepErrorBehavior(serviceInfo.Options.DependencyErrorBehavior)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	filterConfig.DepErrorBehavior = depErrorBehaviorEnum
 
 	scs, err := ptypes.MarshalAny(filterConfig)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	filter := &hcmpb.HttpFilter{
 		Name:       util.ServiceControl,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: scs},
 	}
-	return filter, nil
+	return filter, perRouteConfigRequiredMethods, nil
 }
 
 func copyServiceConfigForReportMetrics(src *confpb.Service) *confpb.Service {
@@ -643,18 +661,19 @@ var baPerRouteFilterConfigGen = func(method *sc.MethodInfo, httpRule *httppatter
 	return aupr, nil
 }
 
-func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, []*sc.MethodInfo, error) {
 	// Use map to collect list of unique jwt audiences.
+	var perRouteConfigRequiredMethods []*sc.MethodInfo
 	audMap := make(map[string]bool)
 	for _, method := range serviceInfo.Methods {
 		if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
 			audMap[method.BackendInfo.JwtAudience] = true
-			method.AddPerRouteConfigGen(util.BackendAuth, baPerRouteFilterConfigGen)
+			perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
 		}
 	}
 	// If audMap is empty, not need to add the filter.
 	if len(audMap) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	var audList []string
@@ -669,7 +688,7 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, erro
 
 	depErrorBehaviorEnum, err := parseDepErrorBehavior(serviceInfo.Options.DependencyErrorBehavior)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	backendAuthConfig.DepErrorBehavior = depErrorBehaviorEnum
 
@@ -698,14 +717,14 @@ func makeBackendAuthFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, erro
 	}
 	backendAuthConfigStruct, err := ptypes.MarshalAny(backendAuthConfig)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	backendAuthFilter := &hcmpb.HttpFilter{
 		Name:       util.BackendAuth,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: backendAuthConfigStruct},
 	}
-	return backendAuthFilter, nil
+	return backendAuthFilter, perRouteConfigRequiredMethods, nil
 }
 
 func makeHealthCheckFilter(serviceInfo *sc.ServiceInfo) (*hcmpb.HttpFilter, error) {

@@ -53,11 +53,22 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 	return []*listenerpb.Listener{listener}, nil
 }
 
+func addPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *FilterGenerator) error {
+	if filterGen.PerRouteConfigGenFunc == nil {
+		return fmt.Errorf("the PerRouteConfigGenFunc of filter %s is empty", filterGen.FilterName)
+	}
+	for _, method := range methods {
+		method.AddPerRouteConfigGen(filterGen.FilterName, filterGen.PerRouteConfigGenFunc)
+	}
+	return nil
+
+}
+
 // MakeListener provides a dynamic listener for Envoy
 func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*FilterGenerator) (*listenerpb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 	for _, filterGenerator := range filterGenerators {
-		filter, err := filterGenerator.FilterGenFun(serviceInfo)
+		filter, perRouteConfigRequiredMethods, err := filterGenerator.FilterGenFunc(serviceInfo)
 		if err != nil {
 			return nil, fmt.Errorf("fail to create config for the filter %s: %v", filterGenerator.FilterName, err)
 		}
@@ -65,6 +76,13 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*FilterGenerat
 			jsonStr, _ := util.ProtoToJson(filter)
 			glog.Infof("adding filter config of %s : %v", filterGenerator.FilterName, jsonStr)
 			httpFilters = append(httpFilters, filter)
+
+			if len(perRouteConfigRequiredMethods) > 0 {
+				if err := addPerRouteConfigGenToMethods(perRouteConfigRequiredMethods, filterGenerator); err != nil {
+					return nil, err
+				}
+			}
+
 		}
 	}
 

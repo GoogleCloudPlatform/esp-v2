@@ -462,7 +462,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 		}
 
 		marshaler := &jsonpb.Marshaler{}
-		gotProto, _ := makeJwtAuthnFilter(fakeServiceInfo)
+		gotProto, _, _ := makeJwtAuthnFilter(fakeServiceInfo)
 		gotFilter, err := marshaler.MarshalToString(gotProto)
 		if err != nil {
 			t.Fatal(err)
@@ -721,7 +721,7 @@ func TestBackendAuthFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			filterConfig, err := makeBackendAuthFilter(fakeServiceInfo)
+			filterConfig, _, err := makeBackendAuthFilter(fakeServiceInfo)
 			if err != nil {
 				if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
 					t.Fatalf("exepected err (%v), got err (%v)", tc.wantError, err)
@@ -824,7 +824,7 @@ func TestServiceControl(t *testing.T) {
 			}
 
 			marshaler := &jsonpb.Marshaler{}
-			filter, err := makeServiceControlFilter(fakeServiceInfo)
+			filter, _, err := makeServiceControlFilter(fakeServiceInfo)
 			if err != nil {
 				t.Fatal(err)
 			}
