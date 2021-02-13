@@ -29,6 +29,7 @@ import (
 // All integration tests should be listed here to get their test ids
 const (
 	TestAccessLog uint16 = iota
+	TestAddHeaders
 	TestAsymmetricKeys
 	TestAuthAllowMissing
 	TestAuthJwksCache

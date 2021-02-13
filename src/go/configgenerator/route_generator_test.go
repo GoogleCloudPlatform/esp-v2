@@ -25,6 +25,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
@@ -3850,6 +3851,150 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		gotCors := gotHost[0].GetCors()
 		if !proto.Equal(gotCors, tc.wantCorsPolicy) {
 			t.Errorf("Test (%v): makeRouteConfig failed, got Cors: %v, want: %v", tc.desc, gotCors, tc.wantCorsPolicy)
+		}
+	}
+}
+
+func TestHeadersToAdd(t *testing.T) {
+	testData := []struct {
+		desc                  string
+		addRequestHeaders     string
+		appendRequestHeaders  string
+		addResponseHeaders    string
+		appendResponseHeaders string
+		wantedError           string
+		wantedRequestHeaders  []*corepb.HeaderValueOption
+		wantedResponseHeaders []*corepb.HeaderValueOption
+	}{
+		{
+			desc:              "error case: wrong format",
+			addRequestHeaders: "k1",
+			wantedError:       "invalid header: k1. should be in key=value format",
+		},
+		{
+			desc:              "error case: empty key",
+			addRequestHeaders: "=value",
+			wantedError:       "header key should not be empty for: =value",
+		},
+		{
+			desc:              "OK case, empty value",
+			addRequestHeaders: "k1=",
+			wantedRequestHeaders: []*corepb.HeaderValueOption{
+				&corepb.HeaderValueOption{
+					Header: &corepb.HeaderValue{
+						Key: "k1",
+					},
+					Append: &wrapperspb.BoolValue{
+						Value: false,
+					},
+				},
+			},
+		},
+		{
+			desc:                  "basic case: 3 headers for request and response",
+			addRequestHeaders:     "k1=v1;k2=v2",
+			appendRequestHeaders:  "k3=v3",
+			addResponseHeaders:    "kk1=vv1",
+			appendResponseHeaders: "kk3=vv3;kk4=vv4",
+			wantedRequestHeaders: []*corepb.HeaderValueOption{
+				&corepb.HeaderValueOption{
+					Header: &corepb.HeaderValue{
+						Key:   "k1",
+						Value: "v1",
+					},
+					Append: &wrapperspb.BoolValue{
+						Value: false,
+					},
+				},
+				&corepb.HeaderValueOption{
+					Header: &corepb.HeaderValue{
+						Key:   "k2",
+						Value: "v2",
+					},
+					Append: &wrapperspb.BoolValue{
+						Value: false,
+					},
+				},
+				&corepb.HeaderValueOption{
+					Header: &corepb.HeaderValue{
+						Key:   "k3",
+						Value: "v3",
+					},
+					Append: &wrapperspb.BoolValue{
+						Value: true,
+					},
+				},
+			},
+			wantedResponseHeaders: []*corepb.HeaderValueOption{
+				&corepb.HeaderValueOption{
+					Header: &corepb.HeaderValue{
+						Key:   "kk1",
+						Value: "vv1",
+					},
+					Append: &wrapperspb.BoolValue{
+						Value: false,
+					},
+				},
+				&corepb.HeaderValueOption{
+					Header: &corepb.HeaderValue{
+						Key:   "kk3",
+						Value: "vv3",
+					},
+					Append: &wrapperspb.BoolValue{
+						Value: true,
+					},
+				},
+				&corepb.HeaderValueOption{
+					Header: &corepb.HeaderValue{
+						Key:   "kk4",
+						Value: "vv4",
+					},
+					Append: &wrapperspb.BoolValue{
+						Value: true,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		opts := options.DefaultConfigGeneratorOptions()
+		opts.AddRequestHeaders = tc.addRequestHeaders
+		opts.AppendRequestHeaders = tc.appendRequestHeaders
+		opts.AddResponseHeaders = tc.addResponseHeaders
+		opts.AppendResponseHeaders = tc.appendResponseHeaders
+
+		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
+			Name:    "test-api",
+			Options: opts,
+		})
+		if tc.wantedError != "" {
+			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
+				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatalf("Test (%s): MakeRouteConfig got error: %v", tc.desc, err)
+		}
+
+		if len(tc.wantedRequestHeaders) != len(gotRoute.RequestHeadersToAdd) {
+			t.Errorf("Test (%v): makeRouteConfig failed, RequestHeadersAdd diff len: %v, want: %v", tc.desc, len(gotRoute.RequestHeadersToAdd), len(tc.wantedRequestHeaders))
+		} else {
+			for idx, want := range tc.wantedRequestHeaders {
+				if !proto.Equal(gotRoute.RequestHeadersToAdd[idx], want) {
+					t.Errorf("Test (%v): makeRouteConfig failed, RequestHeadersAdd(%v): %v, want: %v", tc.desc, idx, gotRoute.RequestHeadersToAdd[idx], want)
+				}
+			}
+		}
+		if len(tc.wantedResponseHeaders) != len(gotRoute.ResponseHeadersToAdd) {
+			t.Errorf("Test (%v): makeRouteConfig failed, ResponseHeadersAdd diff len: %v, want: %v", tc.desc, len(gotRoute.ResponseHeadersToAdd), len(tc.wantedResponseHeaders))
+		} else {
+			for idx, want := range tc.wantedResponseHeaders {
+				if !proto.Equal(gotRoute.ResponseHeadersToAdd[idx], want) {
+					t.Errorf("Test (%v): makeRouteConfig failed, ResponeHeadersToAdd(%v): %v, want: %v", tc.desc, idx, gotRoute.ResponseHeadersToAdd[idx], want)
+				}
+			}
 		}
 	}
 }

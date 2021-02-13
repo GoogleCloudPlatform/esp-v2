@@ -227,6 +227,34 @@ environment variable or by passing "-k" flag to this script.
         don't use any paths conflicting with your normal requests.
         Default: not used.''')
 
+    parser.add_argument('--add_request_header', default=None, action='append', help='''
+        Add a HTTP header to the request before sent to the upstream backend.
+        If the header is already in the request, its value will be replaced with the new one.
+        It supports envoy variable defined at https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#custom-request-response-headers.
+        This argument can be repeated multiple times to specify multiple headers.
+        For example: --add_request_header=key1=value1 --add_request_header=key2=value2.''')
+
+    parser.add_argument('--append_request_header', default=None, action='append', help='''
+        Append a HTTP header to the request before sent to the upstream backend.
+        If the header is already in the request, the new value will be appended.
+        It supports envoy variable defined at https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#custom-request-response-headers.
+        This argument can be repeated multiple times to specify multiple headers.
+        For example: --append_request_header=key1=value1 --append_request_header=key2=value2.''')
+
+    parser.add_argument('--add_response_header', default=None, action='append', help='''
+        Add a HTTP header to the response before sent to the downstream client.
+        If the header is already in the response, it will be replaced with the new one.
+        It supports envoy variable defined at https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#custom-request-response-headers.
+        This argument can be repeated multiple times to specify multiple headers.
+        For example: --add_response_header=key1=value1 --add_response_header=key2=value2.''')
+
+    parser.add_argument('--append_response_header', default=None, action='append', help='''
+        Append a HTTP header to the response before sent to the downstream client.
+        If the header is already in the response, the new one will be appended.
+        It supports envoy variable defined at https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#custom-request-response-headers.
+        This argument can be repeated multiple times to specify multiple headers.
+        For example: --append_response_header=key1=value1 --append_response_header=key2=value2.''')
+
     parser.add_argument(
         '-R',
         '--rollout_strategy',
@@ -892,6 +920,15 @@ def gen_proxy_config(args):
         args.ssl_protocols.sort()
         proxy_conf.extend(["--ssl_minimum_protocol", args.ssl_protocols[0]])
         proxy_conf.extend(["--ssl_maximum_protocol", args.ssl_protocols[-1]])
+
+    if args.add_request_header:
+        proxy_conf.extend(["--add_request_headers", ";".join(args.add_request_header)])
+    if args.append_request_header:
+        proxy_conf.extend(["--append_request_headers", ";".join(args.append_request_header)])
+    if args.add_response_header:
+        proxy_conf.extend(["--add_response_headers", ";".join(args.add_response_header)])
+    if args.append_response_header:
+        proxy_conf.extend(["--append_response_headers", ";".join(args.append_response_header)])
 
     # Generate self-signed cert if needed
     if args.generate_self_signed_cert:

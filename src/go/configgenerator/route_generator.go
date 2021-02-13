@@ -17,6 +17,7 @@ package configgenerator
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -83,10 +84,77 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	host.Routes = append(host.Routes, makeCatchAllNotFoundRoute())
 
 	virtualHosts = append(virtualHosts, &host)
+
+	requestHeaders, err := makeRequestHeadersToAdd(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
+	responseHeaders, err := makeResponseHeadersToAdd(serviceInfo)
+	if err != nil {
+		return nil, err
+	}
 	return &routepb.RouteConfiguration{
-		Name:         routeName,
-		VirtualHosts: virtualHosts,
+		Name:                 routeName,
+		VirtualHosts:         virtualHosts,
+		RequestHeadersToAdd:  requestHeaders,
+		ResponseHeadersToAdd: responseHeaders,
 	}, nil
+}
+
+func makeHeaders(headers string, a bool) ([]*corepb.HeaderValueOption, error) {
+	var l []*corepb.HeaderValueOption
+	for _, h := range strings.Split(headers, ";") {
+		if h == "" {
+			continue
+		}
+		key_value := strings.Split(h, "=")
+		if len(key_value) != 2 {
+			return l, fmt.Errorf("invalid header: %v. should be in key=value format.", h)
+		}
+		if key_value[0] == "" {
+			return l, fmt.Errorf("header key should not be empty for: %v.", h)
+		}
+		l = append(l, &corepb.HeaderValueOption{
+			Header: &corepb.HeaderValue{
+				Key:   key_value[0],
+				Value: key_value[1],
+			},
+			Append: &wrapperspb.BoolValue{
+				Value: a,
+			},
+		})
+	}
+	return l, nil
+}
+
+func makeRequestHeadersToAdd(serviceInfo *configinfo.ServiceInfo) ([]*corepb.HeaderValueOption, error) {
+	l, err := makeHeaders(serviceInfo.Options.AddRequestHeaders, false)
+	if err != nil {
+		return l, err
+	}
+
+	m, err := makeHeaders(serviceInfo.Options.AppendRequestHeaders, true)
+	if err != nil {
+		return l, err
+	}
+
+	l = append(l, m...)
+	return l, nil
+}
+
+func makeResponseHeadersToAdd(serviceInfo *configinfo.ServiceInfo) ([]*corepb.HeaderValueOption, error) {
+	l, err := makeHeaders(serviceInfo.Options.AddResponseHeaders, false)
+	if err != nil {
+		return l, err
+	}
+
+	m, err := makeHeaders(serviceInfo.Options.AppendResponseHeaders, true)
+	if err != nil {
+		return l, err
+	}
+
+	l = append(l, m...)
+	return l, nil
 }
 
 func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []*routepb.Route, error) {
