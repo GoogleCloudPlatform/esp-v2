@@ -104,7 +104,7 @@ func TestAddHeaders(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			args := append(utils.CommonArgs(), tc.headerFlags...)
 
 			s := env.NewTestEnv(platform.TestAddHeaders, platform.EchoSidecar)
@@ -126,7 +126,6 @@ func TestAddHeaders(t *testing.T) {
 					t.Errorf("Test (%s): get headers %v, not find expected header %s:%s,  ", tc.desc, headers, wantHeaderName, wantHeaderVal)
 				}
 			}
-		}()
-
+		})
 	}
 }
