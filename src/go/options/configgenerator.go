@@ -65,6 +65,12 @@ type ConfigGeneratorOptions struct {
 	SslBackendClientCipherSuites     string
 	DnsResolverAddresses             string
 
+	// Headers manipulation:
+	AddRequestHeaders     string
+	AppendRequestHeaders  string
+	AddResponseHeaders    string
+	AppendResponseHeaders string
+
 	// Flags for non_gcp deployment.
 	ServiceAccountKey string
 	TokenAgentPort    uint

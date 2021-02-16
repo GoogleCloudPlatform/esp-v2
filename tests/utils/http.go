@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -114,7 +115,7 @@ type HeaderValueChecker func(gotHeaderVal string) bool
 func CheckHeaderExist(headers http.Header, wantHeaderName string, valueChecker HeaderValueChecker) bool {
 	for headerName, headerVals := range headers {
 		if headerName == wantHeaderName {
-			if len(headerVals) > 0 && valueChecker(headerVals[0]) {
+			if valueChecker(strings.Join(headerVals, ";")) {
 				return true
 			}
 		}

@@ -68,6 +68,15 @@ var (
 	EnableHSTS                       = flag.Bool("enable_strict_transport_security", false, "Enable HSTS (HTTP Strict Transport Security).")
 	DnsResolverAddresses             = flag.String("dns_resolver_addresses", "", `The addresses of dns resolvers. Each address should be in format of either IP_ADDR or IP_ADDR:PORT and they are separated by ';'.`)
 
+	AddRequestHeaders = flag.String("add_request_headers", "", `Add HTTP headers to the request before sent to the upstream backend. Multiple headers are separated by ';'.
+         For example --add_request_headers=key1=value1;key2=value2. If a header is already in the request, its value will be replaced with the new one.`)
+	AppendRequestHeaders = flag.String("append_request_headers", "", `Append HTTP headers to the request before sent to the upstream backend. Multiple headers are separated by ';'.
+         For example --append_request_headers=key1=value1;key2=value2. If a header is already in the request, the new value will be append.`)
+	AddResponseHeaders = flag.String("add_response_headers", "", `Add HTTP headers to the response before sent to the upstream backend. Multiple headers are separated by ';'.
+         For example --add_response_headers=key1=value1;key2=value2. If a header is already in the response, its value will be replaced with the new one.`)
+	AppendResponseHeaders = flag.String("append_response_headers", "", `Append HTTP headers to the response before sent to the upstream backend. Multiple headers are separated by ';'.
+         For example --append_response_headers=key1=value1;key2=value2. If a header is already in the response, the new value will be append.`)
+
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", "", `Use the service account key JSON file to access the service control and the
 	service management.  You can also set {creds_key} environment variable to the location of the service account credentials JSON file. If the option is
@@ -185,6 +194,10 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		SslMaximumProtocol:                      *SslMaximumProtocol,
 		EnableHSTS:                              *EnableHSTS,
 		DnsResolverAddresses:                    *DnsResolverAddresses,
+		AddRequestHeaders:                       *AddRequestHeaders,
+		AppendRequestHeaders:                    *AppendRequestHeaders,
+		AddResponseHeaders:                      *AddResponseHeaders,
+		AppendResponseHeaders:                   *AppendResponseHeaders,
 		ServiceAccountKey:                       *ServiceAccountKey,
 		TokenAgentPort:                          *TokenAgentPort,
 		DisableOidcDiscovery:                    *DisableOidcDiscovery,
