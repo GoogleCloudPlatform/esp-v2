@@ -17,6 +17,7 @@ package configgenerator
 import (
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filterconfig"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/tracing"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -35,13 +36,9 @@ import (
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
-const (
-	statPrefix = "ingress_http"
-)
-
 // MakeListeners provides dynamic listeners for Envoy
 func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) {
-	filterGenerators, err := MakeFilterGenerators(serviceInfo)
+	filterGenerators, err := filterconfig.MakeFilterGenerators(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +50,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 	return []*listenerpb.Listener{listener}, nil
 }
 
-func addPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *FilterGenerator) error {
+func addPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *filterconfig.FilterGenerator) error {
 	if filterGen.PerRouteConfigGenFunc == nil {
 		return fmt.Errorf("the PerRouteConfigGenFunc of filter %s is empty", filterGen.FilterName)
 	}
@@ -68,7 +65,7 @@ func addPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *FilterGe
 }
 
 // MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*FilterGenerator) (*listenerpb.Listener, error) {
+func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.FilterGenerator) (*listenerpb.Listener, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 	for _, filterGenerator := range filterGenerators {
 		filter, perRouteConfigRequiredMethods, err := filterGenerator.FilterGenFunc(serviceInfo)
@@ -163,7 +160,7 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 			},
 		},
 		CodecType:  hcmpb.HttpConnectionManager_AUTO,
-		StatPrefix: statPrefix,
+		StatPrefix: util.StatPrefix,
 		RouteSpecifier: &hcmpb.HttpConnectionManager_RouteConfig{
 			RouteConfig: route,
 		},

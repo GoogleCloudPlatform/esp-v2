@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package configgenerator
+package filterconfig
 
 import (
 	"fmt"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/protobuf/ptypes"
 	anypb "github.com/golang/protobuf/ptypes/any"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 var prPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	pr := MakePathRewriteConfig(method, httpRule)
+	pr := makePathRewriteConfig(method, httpRule)
 	if pr == nil {
 		return nil, nil
 	}
@@ -53,11 +55,42 @@ func needPathRewrite(serviceInfo *ci.ServiceInfo) ([]*ci.MethodInfo, bool) {
 	var perRouteConfigRequiredMethods []*ci.MethodInfo
 	for _, method := range serviceInfo.Methods {
 		for _, httpRule := range method.HttpRule {
-			if pr := MakePathRewriteConfig(method, httpRule); pr != nil {
+			if pr := makePathRewriteConfig(method, httpRule); pr != nil {
 				needed = true
 				perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
 			}
 		}
 	}
 	return perRouteConfigRequiredMethods, needed
+}
+
+func makePathRewriteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) *prpb.PerRouteFilterConfig {
+	if method.BackendInfo == nil {
+		return nil
+	}
+
+	if method.BackendInfo.TranslationType == confpb.BackendRule_APPEND_PATH_TO_ADDRESS {
+		if method.BackendInfo.Path != "" {
+			return &prpb.PerRouteFilterConfig{
+				PathTranslationSpecifier: &prpb.PerRouteFilterConfig_PathPrefix{
+					PathPrefix: method.BackendInfo.Path,
+				},
+			}
+		}
+	}
+	if method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS {
+		constPath := &prpb.ConstantPath{
+			Path: method.BackendInfo.Path,
+		}
+
+		if uriTemplate := httpRule.UriTemplate; uriTemplate != nil && len(uriTemplate.Variables) > 0 {
+			constPath.UrlTemplate = uriTemplate.ExactMatchString(false)
+		}
+		return &prpb.PerRouteFilterConfig{
+			PathTranslationSpecifier: &prpb.PerRouteFilterConfig_ConstantPath{
+				ConstantPath: constPath,
+			},
+		}
+	}
+	return nil
 }

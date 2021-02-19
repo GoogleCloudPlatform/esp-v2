@@ -24,9 +24,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 
-	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/path_rewrite"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
@@ -168,37 +166,6 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, *r
 		},
 	}
 	return cors, corsRoute, nil
-}
-
-func MakePathRewriteConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern) *prpb.PerRouteFilterConfig {
-	if method.BackendInfo == nil {
-		return nil
-	}
-
-	if method.BackendInfo.TranslationType == confpb.BackendRule_APPEND_PATH_TO_ADDRESS {
-		if method.BackendInfo.Path != "" {
-			return &prpb.PerRouteFilterConfig{
-				PathTranslationSpecifier: &prpb.PerRouteFilterConfig_PathPrefix{
-					PathPrefix: method.BackendInfo.Path,
-				},
-			}
-		}
-	}
-	if method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS {
-		constPath := &prpb.ConstantPath{
-			Path: method.BackendInfo.Path,
-		}
-
-		if uriTemplate := httpRule.UriTemplate; uriTemplate != nil && len(uriTemplate.Variables) > 0 {
-			constPath.UrlTemplate = uriTemplate.ExactMatchString(false)
-		}
-		return &prpb.PerRouteFilterConfig{
-			PathTranslationSpecifier: &prpb.PerRouteFilterConfig_ConstantPath{
-				ConstantPath: constPath,
-			},
-		}
-	}
-	return nil
 }
 
 func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, httpRule *httppattern.Pattern) (map[string]*anypb.Any, error) {
