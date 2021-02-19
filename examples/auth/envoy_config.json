@@ -338,10 +338,6 @@
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
-                              "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
-                              },
                               "envoy.filters.http.jwt_authn": {
                                 "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                                 "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
@@ -371,10 +367,6 @@
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
-                              "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
-                              },
                               "envoy.filters.http.jwt_authn": {
                                 "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                                 "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves"
@@ -404,10 +396,6 @@
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
-                              "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
-                              },
                               "envoy.filters.http.jwt_authn": {
                                 "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                                 "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
@@ -437,10 +425,6 @@
                               "timeout": "15s"
                             },
                             "typedPerFilterConfig": {
-                              "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                                "operationName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
-                              },
                               "envoy.filters.http.jwt_authn": {
                                 "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                                 "requirementName": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf"

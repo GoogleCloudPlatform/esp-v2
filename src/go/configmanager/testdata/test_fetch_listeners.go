@@ -152,12 +152,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
-                        }
                       }
                     },
                     {
@@ -181,12 +175,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
-                        }
                       }
                     },
                     {
@@ -406,10 +394,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
@@ -439,10 +423,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
@@ -684,10 +664,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
@@ -717,10 +693,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
@@ -750,10 +722,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.ListShelves"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.ListShelves"
@@ -783,10 +751,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.ListShelves"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.ListShelves"
@@ -816,10 +780,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.ListShelves"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.ListShelves"
@@ -849,10 +809,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.ListShelves"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.ListShelves"
@@ -885,10 +841,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.CreateShelf"
@@ -1239,12 +1191,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.DeleteBook"
-                        }
                       }
                     },
                     {
@@ -1268,12 +1214,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.DeleteBook"
-                        }
                       }
                     },
                     {
@@ -1299,10 +1239,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.GetBook"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.GetBook"
@@ -1332,10 +1268,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.GetBook"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.GetBook"
@@ -1366,12 +1298,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.DeleteBook"
-                        }
                       }
                     },
                     {
@@ -1400,10 +1326,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "endpoints.examples.bookstore.Bookstore.GetBook"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "endpoints.examples.bookstore.Bookstore.GetBook"
@@ -2203,10 +2125,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
@@ -2236,10 +2154,6 @@ var (
                         "timeout": "15s"
                       },
                       "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
-                        },
                         "envoy.filters.http.jwt_authn": {
                           "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig",
                           "requirementName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt"
@@ -2267,12 +2181,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
-                        }
                       }
                     },
                     {
@@ -2296,12 +2204,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
-                        }
                       }
                     },
                     {

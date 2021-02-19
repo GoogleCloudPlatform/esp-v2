@@ -121,6 +121,9 @@ const (
 
 	// The maximum byte number of a span name. This restriction is from StackDriver.
 	SpanNameMaxByteNum = 128
+
+	// The stat prefix.
+	StatPrefix = "ingress_http"
 )
 
 type BackendProtocol int32

@@ -317,12 +317,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
-                        }
                       }
                     },
                     {
@@ -346,12 +340,6 @@ var (
                           "retryOn": "reset,connect-failure,refused-stream"
                         },
                         "timeout": "15s"
-                      },
-                      "typedPerFilterConfig": {
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo"
-                        }
                       }
                     },
                     {
@@ -385,10 +373,6 @@ var (
                         "com.google.espv2.filters.http.path_rewrite": {
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/hello"
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
                         }
                       }
                     },
@@ -423,10 +407,6 @@ var (
                         "com.google.espv2.filters.http.path_rewrite": {
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/hello"
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello"
                         }
                       }
                     },
@@ -461,10 +441,6 @@ var (
                         "com.google.espv2.filters.http.path_rewrite": {
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
                         }
                       }
                     },
@@ -499,10 +475,6 @@ var (
                         "com.google.espv2.filters.http.path_rewrite": {
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet"
                         }
                       }
                     },
@@ -540,10 +512,6 @@ var (
                         "com.google.espv2.filters.http.path_rewrite": {
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById"
                         }
                       }
                     },
@@ -578,10 +546,6 @@ var (
                         "com.google.espv2.filters.http.path_rewrite": {
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
                         }
                       }
                     },
@@ -616,10 +580,6 @@ var (
                         "com.google.espv2.filters.http.path_rewrite": {
                           "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets"
                         }
                       }
                     },
@@ -656,10 +616,6 @@ var (
                           "constantPath": {
                             "path": "/search"
                           }
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
                         }
                       }
                     },
@@ -696,10 +652,6 @@ var (
                           "constantPath": {
                             "path": "/search"
                           }
-                        },
-                        "com.google.espv2.filters.http.service_control": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig",
-                          "operationName": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search"
                         }
                       }
                     },
