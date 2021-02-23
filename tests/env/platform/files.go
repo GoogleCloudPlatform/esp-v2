@@ -47,6 +47,7 @@ const (
 	AccessLog
 	ServiceAccountFile
 	TestRootCaCerts
+	TestDataFolder
 
 	// Configurations from examples directory
 	AuthServiceConfig
@@ -95,6 +96,7 @@ var fileMap = map[RuntimeFile]string{
 	ProxyKey:                    "../../env/testdata/proxy.key",
 	LogMetrics:                  "../../env/testdata/logs_metrics.pb.txt",
 	AccessLog:                   "../../env/testdata/access_log.txt",
+	TestDataFolder:              "../../env/testdata/",
 
 	// Used by static bootstrap unit tests.
 	AuthServiceConfig:     "../../../../examples/auth/service_config_generated.json",

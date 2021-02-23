@@ -169,7 +169,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 func TestHttpsClients(t *testing.T) {
 	t.Parallel()
 	args := utils.CommonArgs()
-	args = append(args, "--ssl_server_cert_path=../env/testdata/")
+	args = append(args, fmt.Sprintf("--ssl_server_cert_path=%v", platform.GetFilePath(platform.TestDataFolder)))
 
 	s := env.NewTestEnv(platform.TestHttpsClients, platform.EchoSidecar)
 	defer s.TearDown(t)
@@ -234,7 +234,7 @@ func TestHttpsClients(t *testing.T) {
 func TestHSTS(t *testing.T) {
 	t.Parallel()
 	args := utils.CommonArgs()
-	args = append(args, "--ssl_server_cert_path=../env/testdata/")
+	args = append(args, fmt.Sprintf("--ssl_server_cert_path=%v", platform.GetFilePath(platform.TestDataFolder)))
 	args = append(args, "--enable_strict_transport_security")
 
 	s := env.NewTestEnv(platform.TestHSTS, platform.EchoSidecar)
