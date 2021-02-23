@@ -1,3 +1,7 @@
+# Release 2.25.0 23-02-2021
+
+- Add flags to add extra headers (#480)
+
 # Release 2.24.0 01-02-2021
 
 - Respond with HTTP 400 when required headers are omitted in CORS preflight request (#468)
