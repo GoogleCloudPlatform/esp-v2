@@ -47,6 +47,7 @@ const (
 	AccessLog
 	ServiceAccountFile
 	TestRootCaCerts
+	TestDataFolder
 
 	// Configurations from examples directory
 	AuthServiceConfig
@@ -73,28 +74,29 @@ const (
 var fileMap = map[RuntimeFile]string{
 
 	// Used by integration test library.
-	Version: "../../VERSION",
+	Version: "../../../VERSION",
 
 	// Used by integration tests.
-	Bootstrapper:                "../../bin/bootstrap",
-	ConfigManager:               "../../bin/configmanager",
-	Echo:                        "../../bin/echo/server",
-	Envoy:                       "../../bin/envoy",
-	GrpcEchoClient:              "../../bin/grpc_echo_client",
-	GrpcEchoServer:              "../../bin/grpc_echo_server",
-	GrpcInteropClient:           "../../bin/interop_client",
-	GrpcInteropServer:           "../../bin/interop_server",
-	GrpcInteropStressClient:     "../../bin/stress_test",
-	GrpcBookstore:               "../endpoints/bookstore_grpc/grpc_server.js",
-	FakeGrpcEchoDescriptor:      "../endpoints/grpc_echo/proto/api_descriptor.pb",
-	FakeGrpcInteropDescriptor:   "../endpoints/grpc_interop/proto/api_descriptor.pb",
-	FakeGrpcBookstoreDescriptor: "../endpoints/bookstore_grpc/proto/api_descriptor.pb",
-	ServerCert:                  "../env/testdata/server.crt",
-	ServerKey:                   "../env/testdata/server.key",
-	ProxyCert:                   "../env/testdata/proxy.crt",
-	ProxyKey:                    "../env/testdata/proxy.key",
-	LogMetrics:                  "../env/testdata/logs_metrics.pb.txt",
-	AccessLog:                   "../env/testdata/access_log.txt",
+	Bootstrapper:                "../../../bin/bootstrap",
+	ConfigManager:               "../../../bin/configmanager",
+	Echo:                        "../../../bin/echo/server",
+	Envoy:                       "../../../bin/envoy",
+	GrpcEchoClient:              "../../../bin/grpc_echo_client",
+	GrpcEchoServer:              "../../../bin/grpc_echo_server",
+	GrpcInteropClient:           "../../../bin/interop_client",
+	GrpcInteropServer:           "../../../bin/interop_server",
+	GrpcInteropStressClient:     "../../../bin/stress_test",
+	GrpcBookstore:               "../../endpoints/bookstore_grpc/grpc_server.js",
+	FakeGrpcEchoDescriptor:      "../../endpoints/grpc_echo/proto/api_descriptor.pb",
+	FakeGrpcInteropDescriptor:   "../../endpoints/grpc_interop/proto/api_descriptor.pb",
+	FakeGrpcBookstoreDescriptor: "../../endpoints/bookstore_grpc/proto/api_descriptor.pb",
+	ServerCert:                  "../../env/testdata/server.crt",
+	ServerKey:                   "../../env/testdata/server.key",
+	ProxyCert:                   "../../env/testdata/proxy.crt",
+	ProxyKey:                    "../../env/testdata/proxy.key",
+	LogMetrics:                  "../../env/testdata/logs_metrics.pb.txt",
+	AccessLog:                   "../../env/testdata/access_log.txt",
+	TestDataFolder:              "../../env/testdata/",
 
 	// Used by static bootstrap unit tests.
 	AuthServiceConfig:     "../../../../examples/auth/service_config_generated.json",

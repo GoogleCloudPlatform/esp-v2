@@ -176,7 +176,7 @@ integration-test-run-sequential:
 	@go test -timeout 20m ./tests/endpoints/...
 	@go test -timeout 20m ./tests/env/... --logtostderr
 	@go test -timeout 20m ./tests/utils/... --logtostderr
-	@go test -v -timeout 80m -parallel 1 ./tests/integration_test --logtostderr
+	@go test -v -timeout 80m -parallel 1 ./tests/integration_test/... --logtostderr
 
 integration-test-run-parallel:
 	@echo "--> running integration tests"
@@ -185,7 +185,7 @@ integration-test-run-parallel:
 	@go test -timeout 20m ./tests/endpoints/...
 	@go test -timeout 20m ./tests/env/... --logtostderr
 	@go test -timeout 20m ./tests/utils/... --logtostderr
-	@go test -v -timeout 20m ./tests/integration_test --logtostderr
+	@go test -v -timeout 20m ./tests/integration_test/... --logtostderr
 
 integration-test: build  build-envoy build-grpc-interop build-grpc-echo integration-test-run-sequential
 
