@@ -62,7 +62,7 @@ func TestIamImdsDataPath(t *testing.T) {
 			confArgs: append([]string{
 				"--dependency_error_behavior=ALWAYS_INIT",
 			}, utils.CommonArgs()...),
-			wantErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLocalhost()),
+			wantErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLoopbackAddress()),
 		},
 		{
 			desc:     "Backend auth with IAM works when everything is up",
@@ -84,7 +84,7 @@ func TestIamImdsDataPath(t *testing.T) {
 			confArgs: append([]string{
 				"--dependency_error_behavior=ALWAYS_INIT",
 			}, utils.CommonArgs()...),
-			wantErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLocalhost()),
+			wantErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLoopbackAddress()),
 		},
 		{
 			desc:         "Backend auth with IAM fails (envoy doesn't start) when IMDS is down",
@@ -100,7 +100,7 @@ func TestIamImdsDataPath(t *testing.T) {
 			confArgs: append([]string{
 				"--dependency_error_behavior=ALWAYS_INIT",
 			}, utils.CommonArgs()...),
-			wantErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLocalhost()),
+			wantErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLoopbackAddress()),
 		},
 	}
 

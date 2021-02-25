@@ -951,5 +951,5 @@ var (
       }
     ]
   }
-}`, platform.GetLocalhost(), platform.GetLocalhost(), platform.GetLocalhost(), platform.GetLocalhost())
+}`, platform.GetLoopbackAddress(), platform.GetLoopbackAddress(), platform.GetLoopbackAddress(), platform.GetLoopbackAddress())
 )

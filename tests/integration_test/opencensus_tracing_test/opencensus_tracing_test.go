@@ -404,7 +404,7 @@ func TestTracesDynamicRouting(t *testing.T) {
 			url:    fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/pet/1/num/2", ""),
 			method: util.GET,
 			wantSpanNames: []string{
-				fmt.Sprintf("router backend-cluster-localhost:%s egress", strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort))),
+				fmt.Sprintf("router backend-cluster-%v:%s egress", platform.GetLoopbackAddress(), strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort))),
 				"ingress dynamic_routing_GetPetById",
 			},
 		},

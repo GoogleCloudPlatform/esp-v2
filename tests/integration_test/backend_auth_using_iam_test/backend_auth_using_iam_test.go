@@ -37,8 +37,8 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
 	s.SetIamResps(
 		map[string]string{
-			fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
-			fmt.Sprintf("%s?audience=https://%v/bearertoken/append", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()):   `{"token":  "id-token-for-append"}`,
+			fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLoopbackAddress()): `{"token":  "id-token-for-constant"}`,
+			fmt.Sprintf("%s?audience=https://%v/bearertoken/append", util.IamIdentityTokenPath(serviceAccount), platform.GetLoopbackAddress()):   `{"token":  "id-token-for-append"}`,
 		}, 0, 0)
 
 	defer s.TearDown(t)
@@ -115,7 +115,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 		func() {
 			s.SetIamResps(
 				map[string]string{
-					fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
+					fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLoopbackAddress()): `{"token":  "id-token-for-constant"}`,
 				}, tc.wantNumFails, 0)
 
 			defer s.TearDown(t)
@@ -203,7 +203,7 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 			// Setup IAM with the iam response time.
 			s.SetIamResps(
 				map[string]string{
-					fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
+					fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLoopbackAddress()): `{"token":  "id-token-for-constant"}`,
 				}, 0, tc.iamResponseTime)
 
 			// Setup ESPv2 with the http request timeout (used for making calls to IAM).
@@ -252,7 +252,7 @@ func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 
 	s.SetIamResps(
 		map[string]string{
-			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://%v/bearertoken/constant", serviceAccount, platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
+			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://%v/bearertoken/constant", serviceAccount, platform.GetLoopbackAddress()): `{"token":  "id-token-for-constant"}`,
 		}, 0, 0)
 
 	defer s.TearDown(t)

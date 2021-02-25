@@ -180,8 +180,8 @@ func TestBackendRetry(t *testing.T) {
 			backendTypeUsed:            remoteBackend,
 			wantError:                  "503 Service Unavailable",
 			wantSpanNames: []string{
-				"router backend-cluster-localhost:BACKEND_PORT egress",
-				"router backend-cluster-localhost:BACKEND_PORT egress",
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
 				"ingress Echo",
 			},
 		},
@@ -194,7 +194,7 @@ func TestBackendRetry(t *testing.T) {
 			backendTypeUsed:            remoteBackend,
 			wantError:                  "503 Service Unavailable",
 			wantSpanNames: []string{
-				"router backend-cluster-localhost:BACKEND_PORT egress",
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
 				"ingress Echo",
 			},
 		},
@@ -207,7 +207,7 @@ func TestBackendRetry(t *testing.T) {
 			backendTypeUsed:            remoteBackend,
 			wantError:                  "403 Forbidden",
 			wantSpanNames: []string{
-				"router backend-cluster-localhost:BACKEND_PORT egress",
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
 				"ingress Echo",
 			},
 		},
@@ -220,9 +220,9 @@ func TestBackendRetry(t *testing.T) {
 			backendTypeUsed:            remoteBackend,
 			wantResp:                   `{"message":""}`,
 			wantSpanNames: []string{
-				"router backend-cluster-localhost:BACKEND_PORT egress",
-				"router backend-cluster-localhost:BACKEND_PORT egress",
-				"router backend-cluster-localhost:BACKEND_PORT egress",
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
 				"ingress Echo",
 			},
 		},

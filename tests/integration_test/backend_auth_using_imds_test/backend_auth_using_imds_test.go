@@ -33,8 +33,8 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdToken, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
-			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLocalhost()): "ya29.constant",
-			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/append", util.IdentityTokenPath, platform.GetLocalhost()):   "ya29.append",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.constant",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/append", util.IdentityTokenPath, platform.GetLoopbackAddress()):   "ya29.append",
 		}, 0)
 
 	defer s.TearDown(t)
@@ -114,7 +114,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 				"--dependency_error_behavior=ALWAYS_INIT",
 			}, utils.CommonArgs()...),
 			wantNumFails:   5,
-			wantInitialErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLocalhost()),
+			wantInitialErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLoopbackAddress()),
 			wantFinalResp:  `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 	}
@@ -126,7 +126,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 			s.SkipHealthChecks()
 			s.OverrideMockMetadata(
 				map[string]string{
-					fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLocalhost()): "ya29.constant",
+					fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.constant",
 				}, tc.wantNumFails)
 
 			defer s.TearDown(t)
@@ -175,8 +175,8 @@ func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdTokenWhileAllowCors, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
-			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLocalhost()): "ya29.constant",
-			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/append", util.IdentityTokenPath, platform.GetLocalhost()):   "ya29.append",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.constant",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/append", util.IdentityTokenPath, platform.GetLoopbackAddress()):   "ya29.append",
 		}, 0)
 	s.SetAllowCors()
 

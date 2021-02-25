@@ -382,7 +382,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 	})
 	s.OverrideMockMetadata(
 		map[string]string{
-			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLocalhost()): "ya29.BackendAuthToken",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.BackendAuthToken",
 		}, 0)
 
 	defer s.TearDown(t)

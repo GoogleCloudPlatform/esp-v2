@@ -465,213 +465,213 @@ var (
 			Rules: []*confpb.BackendRule{
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					Address:         fmt.Sprintf("https://%v:%s/echo", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/echo", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					// No authentication on this rule, essentially the same as `disable_auth`
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader",
-					Address:         fmt.Sprintf("https://%v:%s/echoHeader", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/echoHeader", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoAppendPath",
-					Address:         fmt.Sprintf("https://%v:%s/prefix", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/prefix", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/getpetbyid", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/getpetbyid", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/getpetbyid", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/getpetbyid", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPet",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/searchpet", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/searchpet", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/searchpet", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/searchpet", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchDogsWithSlash",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/searchdogs/", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/searchdogs/", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/searchpet", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/searchpet", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AppendToRoot",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/searchroot", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/searchroot", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AppendToRootWithSlash",
-					Address:         fmt.Sprintf("https://%v:%s/", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/searchrootwithslash", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/searchrootwithslash", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/listpet", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/listpet", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/listpet", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/listpet", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListShelves",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/shelves", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/shelves", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/shelves", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/shelves", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_EmptyPath",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/emptypath", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/emptypath", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetBookInfoWithSnakeCase",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/bookinfo", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/bookinfo", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/bookinfo", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/bookinfo", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetBookIdWithSnakeCase",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/bookid", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/bookid", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/bookid", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting/bookid", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SearchPetWithServiceControlVerification",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetByIdWithServiceControlVerification",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/dynamicrouting", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenConstantAddress",
-					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/bearertoken/constant", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/bearertoken/constant", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenAppendAddress",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/bearertoken/append", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/bearertoken/append", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AuthenticationNotSet",
-					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
-					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication:  &confpb.BackendRule_DisableAuth{DisableAuth: true},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToFalse",
-					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/bearertoken/constant", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Authentication:  &confpb.BackendRule_DisableAuth{DisableAuth: false},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Simplegetcors",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/simplegetcors", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/simplegetcors", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Auth_info_firebase",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/auth/info/firebase", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/auth/info/firebase", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationDefault",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/sleepDefault", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/sleepDefault", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_SleepDurationShort",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/sleepShort", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/sleepShort", platform.GetLoopbackAddress()),
 					},
 					Deadline: 5.0,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Re2ProgramSize",
-					Address:         fmt.Sprintf("https://%v:%s", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_APPEND_PATH_TO_ADDRESS,
 					Authentication: &confpb.BackendRule_JwtAudience{
-						JwtAudience: fmt.Sprintf("https://%v/non-existant-url", platform.GetLocalhost()),
+						JwtAudience: fmt.Sprintf("https://%v/non-existant-url", platform.GetLoopbackAddress()),
 					},
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Wildcards",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_FieldPath",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_exact_match",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_single_wildcard_match",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.route_match_order_double_wildcard_match",
-					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLocalhost(), platform.WorkingBackendPort),
+					Address:         fmt.Sprintf("https://%v:%s/dynamicrouting/const_wildcard", platform.GetLoopbackAddress(), platform.WorkingBackendPort),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 				},
 			},
