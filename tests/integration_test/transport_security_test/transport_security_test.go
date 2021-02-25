@@ -95,7 +95,7 @@ func TestServiceManagementWithTLS(t *testing.T) {
 					t.Errorf("Test (%s): failed, want error: %v, got error: %v", tc.desc, tc.wantSetupErr, err)
 				}
 			} else {
-				url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo?key=api-key")
+				url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo?key=api-key")
 				resp, err := client.DoPost(url, "hello")
 				if err != nil {
 					t.Fatal(err)
@@ -155,7 +155,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 			}
 
 			s.ServiceControlServer.ResetRequestCount()
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := bsclient.MakeCall("http", addr, "GET", "/v1/shelves?key=api-key", tc.token, nil)
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
@@ -216,7 +216,7 @@ func TestHttpsClients(t *testing.T) {
 		var resp []byte
 		var err error
 
-		url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
+		url := fmt.Sprintf("https://%v:%v/simpleget?key=api-key", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		_, resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
 		if tc.wantError == nil {
 			if err != nil {
@@ -267,7 +267,7 @@ func TestHSTS(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("https://localhost:%v/simpleget?key=api-key", s.Ports().ListenerPort)
+		url := fmt.Sprintf("https://%v:%v/simpleget?key=api-key", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		respHeader, respBody, err := client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
 
 		if err != nil {

@@ -82,7 +82,7 @@ func TestAuthJwksCache(t *testing.T) {
 
 			var resp []byte
 			for i := 0; i < 5; i++ {
-				resp, _ = client.DoJWT(fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort), tc.method, tc.path, tc.apiKey, "", tc.token)
+				resp, _ = client.DoJWT(fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort), tc.method, tc.path, tc.apiKey, "", tc.token)
 				// Sleep as long as the customized cache duration to make caches expires
 				if tc.jwksCacheDurationInS != 0 {
 					time.Sleep(time.Duration(tc.jwksCacheDurationInS) * time.Second)

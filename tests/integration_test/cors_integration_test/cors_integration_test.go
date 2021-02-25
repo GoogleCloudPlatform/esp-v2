@@ -91,7 +91,7 @@ func TestProxyHandleCorsSimpleRequestsBasic(t *testing.T) {
 	}
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 			respHeader, err := client.DoCorsSimpleRequest(url, tc.httpMethod, tc.origin, tc.msg)
 			if err != nil {
 				t.Fatal(err)
@@ -153,7 +153,7 @@ func TestProxyHandleCorsSimpleRequestsRegex(t *testing.T) {
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo")
 			respHeader, err := client.DoCorsSimpleRequest(url, "POST", tc.origin, echoMsg)
 			if err != nil {
 				t.Fatal(err)
@@ -271,7 +271,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo")
 			respHeaders, _, err := utils.DoWithHeaders(url, "OPTIONS", "", tc.reqHeaders)
 
 			if err != nil && tc.wantError == "" {
@@ -324,7 +324,7 @@ func TestGrpcBackendSimpleCors(t *testing.T) {
 		corsAllowOrigin:   corsAllowOriginValue,
 		corsExposeHeaders: corsExposeHeadersValue,
 	}
-	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/200")
+	url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/200")
 	respHeader, err := client.DoCorsSimpleRequest(url, "GET", corsAllowOriginValue, "")
 	if err != nil {
 		t.Fatal(err)
@@ -377,7 +377,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 		},
 	}
 
-	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/200")
+	url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/200")
 	respHeader, err := client.DoCorsPreflightRequest(url, corsAllowOriginValue, corsRequestMethod, "", "")
 	if err != nil {
 		t.Fatal(err)
@@ -423,7 +423,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 		{
 			// when allowCors, apiproxy passes preflight CORS request to backend
 			desc: "Succeed, response has CORS headers",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simplegetcors"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simplegetcors"),
 			respHeaderMap: map[string]string{
 				"Access-Control-Allow-Origin":      corsAllowOriginValue,
 				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
@@ -436,7 +436,7 @@ func TestPreflightRequestWithAllowCors(t *testing.T) {
 			// when allowCors, apiproxy passes preflight CORS request without valid jwt token to backend,
 			// even the origin method requires authentication
 			desc: "Succeed without jwt token, response has CORS headers",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/auth/info/firebase"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/auth/info/firebase"),
 			respHeaderMap: map[string]string{
 				"Access-Control-Allow-Origin":      corsAllowOriginValue,
 				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
@@ -494,7 +494,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 	}{
 		{
 			desc: "Succeed, response has CORS headers, service control sends check and report request",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves?key=api-key"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/bookstore/shelves?key=api-key"),
 			respHeaderMap: map[string]string{
 				"Access-Control-Allow-Origin":      corsAllowOriginValue,
 				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
@@ -538,7 +538,7 @@ func TestServiceControlRequestWithAllowCors(t *testing.T) {
 		},
 		{
 			desc: "Succeed, request without API key, response has CORS headers, service control sends report request only",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves/1"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/bookstore/shelves/1"),
 			respHeaderMap: map[string]string{
 				"Access-Control-Allow-Origin":      corsAllowOriginValue,
 				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
@@ -645,7 +645,7 @@ func TestServiceControlRequestWithoutAllowCors(t *testing.T) {
 	}{
 		{
 			desc: "Succeed, request has API key, response has CORS headers, service control sends check and report request",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bookstore/shelves?key=api-key"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/bookstore/shelves?key=api-key"),
 			respHeaderMap: map[string]string{
 				"Access-Control-Allow-Origin":      corsAllowOriginValue,
 				"Access-Control-Allow-Methods":     corsAllowMethodsValue,

@@ -91,7 +91,7 @@ func TestManagedServiceConfig(t *testing.T) {
 			time.Sleep(time.Second * 3)
 		}
 
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
@@ -144,7 +144,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	url := fmt.Sprintf("http://localhost:%v/echo", s.Ports().ListenerPort)
+	url := fmt.Sprintf("http://%v:%v/echo", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 
 	resp, err := echoClient.DoPost(fmt.Sprintf("%s?key=api-key", url), "hello")
 	if err != nil {

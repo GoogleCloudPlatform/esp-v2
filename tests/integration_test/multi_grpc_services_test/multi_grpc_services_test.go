@@ -244,7 +244,7 @@ func TestMultiGrpcServices(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		var resp string
 		var err error
 		if tc.service == "BookstoreV2" && tc.clientProtocol == "grpc" {

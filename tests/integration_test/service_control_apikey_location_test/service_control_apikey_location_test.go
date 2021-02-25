@@ -53,28 +53,28 @@ func TestServiceControlAPIKeyDefaultLocation(t *testing.T) {
 	}{
 		{
 			desc:       "succeed, use the default apiKey location(key in query)",
-			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/v1/shelves/100", "?key=api-key"),
+			url:        fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100", "?key=api-key"),
 			method:     "GET",
 			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "api-key",
 		},
 		{
 			desc:       "succeed, use the default apiKey location(api_key in query)",
-			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/v1/shelves/100", "?api_key=api-key-1"),
+			url:        fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100", "?api_key=api-key-1"),
 			method:     "GET",
 			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "api-key-1",
 		},
 		{
 			desc:       "succeed, use two apiKey locations in the same time(api_key and key in query)",
-			url:        fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/v1/shelves/100", "?api_key=api-key-2&key=key-2"),
+			url:        fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100", "?api_key=api-key-2&key=key-2"),
 			method:     "GET",
 			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-2",
 		},
 		{
 			desc:     "succeed, use the default apiKey location(X-API-KEY in header)",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			url:      fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100"),
 			method:   "GET",
 			wantResp: `{"id":"100","theme":"Kids"}`,
 			requestHeader: map[string]string{
@@ -144,7 +144,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 	}{
 		{
 			desc:       "Succeed, single apikey passed by url query",
-			url:        fmt.Sprintf("http://localhost:%v%v?query_name_1=key-1", s.Ports().ListenerPort, "/v1/shelves/100"),
+			url:        fmt.Sprintf("http://%v:%v%v?query_name_1=key-1", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100"),
 			method:     "GET",
 			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-1",
@@ -153,14 +153,14 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 		// In the SystemParameters, query_name_1 is defined before query_name_2 so query_name_1=key-31 is applied first.
 		{
 			desc:       "succeed, two apikeys are passed by url query",
-			url:        fmt.Sprintf("http://localhost:%v%v?query_name_1=key-31&query_name_2=key-32", s.Ports().ListenerPort, "/v1/shelves/100"),
+			url:        fmt.Sprintf("http://%v:%v%v?query_name_1=key-31&query_name_2=key-32", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100"),
 			method:     "GET",
 			wantResp:   `{"id":"100","theme":"Kids"}`,
 			wantApiKey: "key-31",
 		},
 		{
 			desc:   "succeed, single apikey passed by headers",
-			url:    fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			url:    fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100"),
 			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-1": "key-4",
@@ -170,7 +170,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 		},
 		{
 			desc:   "succeed, single apikey passed by headers",
-			url:    fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			url:    fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100"),
 			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-2": "key-5",
@@ -181,7 +181,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 		// In the SystemParameters, HEADER-NAME-1 is defined before HEADER-NAME-2 so HEADER-NAME-1=key-61 is applied first.
 		{
 			desc:   "succeed, two apikeys are passed by headers",
-			url:    fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100"),
+			url:    fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100"),
 			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-1": "key-61",
@@ -194,7 +194,7 @@ func TestServiceControlAPIKeyCustomLocation(t *testing.T) {
 		// The query_name_1 is the first location for the url query so it will be applied.
 		{
 			desc:   "succeed, four apikeys are passed by both url query and headers",
-			url:    fmt.Sprintf("http://localhost:%v%v?query_name_2=api-key-72&query_name_1=key-71", s.Ports().ListenerPort, "/v1/shelves/100"),
+			url:    fmt.Sprintf("http://%v:%v%v?query_name_2=api-key-72&query_name_1=key-71", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100"),
 			method: "GET",
 			requestHeader: map[string]string{
 				"HEADER-NAME-1": "key-73",

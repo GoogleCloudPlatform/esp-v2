@@ -37,8 +37,8 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
 	s.SetIamResps(
 		map[string]string{
-			fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount)): `{"token":  "id-token-for-constant"}`,
-			fmt.Sprintf("%s?audience=https://localhost/bearertoken/append", util.IamIdentityTokenPath(serviceAccount)):   `{"token":  "id-token-for-append"}`,
+			fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
+			fmt.Sprintf("%s?audience=https://%v/bearertoken/append", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()):   `{"token":  "id-token-for-append"}`,
 		}, 0, 0)
 
 	defer s.TearDown(t)
@@ -68,7 +68,7 @@ func TestBackendAuthWithIamIdToken(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		resp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 
 		if err != nil {
@@ -115,7 +115,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 		func() {
 			s.SetIamResps(
 				map[string]string{
-					fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount)): `{"token":  "id-token-for-constant"}`,
+					fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
 				}, tc.wantNumFails, 0)
 
 			defer s.TearDown(t)
@@ -123,7 +123,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 
 			// The first call should fail since IAM is responding with failures.
 			_, err := client.DoWithHeaders(url, tc.method, "", nil)
@@ -203,7 +203,7 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 			// Setup IAM with the iam response time.
 			s.SetIamResps(
 				map[string]string{
-					fmt.Sprintf("%s?audience=https://localhost/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount)): `{"token":  "id-token-for-constant"}`,
+					fmt.Sprintf("%s?audience=https://%v/bearertoken/constant", util.IamIdentityTokenPath(serviceAccount), platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
 				}, 0, tc.iamResponseTime)
 
 			// Setup ESPv2 with the http request timeout (used for making calls to IAM).
@@ -223,7 +223,7 @@ func TestBackendAuthWithIamIdTokenTimeouts(t *testing.T) {
 			time.Sleep(sleepTime)
 
 			// Make the request.
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 			resp, err := client.DoWithHeaders(url, tc.method, "", nil)
 			if err != nil {
 				if tc.wantError == "" {
@@ -252,7 +252,7 @@ func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 
 	s.SetIamResps(
 		map[string]string{
-			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://localhost/bearertoken/constant", serviceAccount): `{"token":  "id-token-for-constant"}`,
+			fmt.Sprintf("/v1/projects/-/serviceAccounts/%s:generateIdToken?audience=https://%v/bearertoken/constant", serviceAccount, platform.GetLocalhost()): `{"token":  "id-token-for-constant"}`,
 		}, 0, 0)
 
 	defer s.TearDown(t)
@@ -280,7 +280,7 @@ func TestBackendAuthUsingIamIdTokenWithDelegates(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		_, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 		if err != nil {
 			t.Fatalf("Test Desc(%s): %v", tc.desc, err)

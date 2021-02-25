@@ -135,7 +135,7 @@ func TestGRPC(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
@@ -192,7 +192,7 @@ func TestGrpcConnectionBufferLimit(t *testing.T) {
 				t.Fatalf("Fail to setup test env, %v", err)
 			}
 
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 				t.Errorf("Failed, expected: %s, got: %v", tc.wantError, err)
@@ -275,7 +275,7 @@ func TestGRPCWeb(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, trailer, err := client.MakeGRPCWebCall(addr, tc.method, tc.token, tc.header)
 
 		if err != nil {
@@ -527,7 +527,7 @@ func TestGRPCJwt(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.header)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

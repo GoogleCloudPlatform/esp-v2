@@ -62,7 +62,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			clientProtocol:    "http",
 			httpMethod:        "GET",
 			method:            "/v1/shelves/100?key=api-key-2",
-			serviceControlURL: "http://localhost:28753",
+			serviceControlURL: fmt.Sprintf("http://%v:28753", platform.GetLoopbackAddress()),
 			allocatedPort:     platform.TestServiceControlCheckWrongServerName,
 			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
 		},
@@ -81,7 +81,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			}
 
 			s.ServiceControlServer.ResetRequestCount()
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
 
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
@@ -126,7 +126,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 	}
 
 	s.ServiceControlServer.ResetRequestCount()
-	addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+	addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 	resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
 
 	if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
@@ -252,7 +252,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			}
 
 			s.ServiceControlServer.ResetRequestCount()
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
@@ -353,7 +353,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

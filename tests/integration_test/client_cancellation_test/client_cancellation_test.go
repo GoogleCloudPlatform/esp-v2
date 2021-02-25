@@ -84,7 +84,7 @@ func TestCancellationReport(t *testing.T) {
 			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
 			path := fmt.Sprintf("/sleepDefault?duration=%v", tc.backendSleepDuration.String())
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, path)
 
 			_, err := client.DoWithHeadersAndTimeout(url, "GET", "", nil, tc.clientTimeout)
 

@@ -85,7 +85,7 @@ func TestServiceControlProtocolWithGRPCBackend(t *testing.T) {
 
 	for _, tc := range tests {
 		wantResp := `{"id":"100","theme":"Kids"}`
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 
 		var resp string
 		var err error
@@ -165,7 +165,7 @@ func TestServiceControlProtocolWithHTTPBackend(t *testing.T) {
 	protocol := "http"
 	message := "hello"
 	wantResp := `{"message":"hello"}`
-	url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey")
+	url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey")
 
 	resp, err := echoclient.DoPost(url, message)
 	if err != nil {

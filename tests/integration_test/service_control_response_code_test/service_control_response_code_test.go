@@ -52,7 +52,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 	}{
 		{
 			desc:          "succeed which has 304 response, no Jwt required, service control sends report request only with status code 304.",
-			url:           fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simpleget/304"),
+			url:           fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simpleget/304"),
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 304 Not Modified"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
@@ -77,7 +77,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 		},
 		{
 			desc:          "fail which has 403 response, no Jwt required, service control sends report request only with status code 403.",
-			url:           fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simpleget/403"),
+			url:           fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simpleget/403"),
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 403 Forbidden"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
@@ -102,7 +102,7 @@ func TestServiceControlReportResponseCode(t *testing.T) {
 		},
 		{
 			desc:          "succeed, service control still sends report when the request is rejected by the backend with 401 so the status code is 16",
-			url:           fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simpleget/401"),
+			url:           fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simpleget/401"),
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized"),
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{

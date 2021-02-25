@@ -364,7 +364,7 @@ func TestDynamicRouting(t *testing.T) {
 	}
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 			gotResp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 
 			if tc.httpCallError == nil {
@@ -420,13 +420,13 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 		{
 			// when allowCors, passes preflight CORS request to backend.
 			desc: "TestDynamicRoutingWithAllowCors Succeed, response has CORS headers",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simplegetcors"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simplegetcors"),
 		},
 		{
 			// when allowCors, passes preflight CORS request without valid jwt token to backend,
 			// even the origin method requires authentication.
 			desc: "TestDynamicRoutingWithAllowCors Succeed without jwt token, response has CORS headers",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/auth/info/firebase"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/auth/info/firebase"),
 		},
 		{
 			// when allowCors, passes preflight CORS request to backend.
@@ -435,7 +435,7 @@ func TestDynamicRoutingWithAllowCors(t *testing.T) {
 			//   1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetBookInfoWithSnakeCase
 			//   Get: "/shelves/{s_h_e_l_f}/books/info/{b_o_o_k}",
 			desc:           "TestDynamicRoutingWithAllowCors Succeed with path extraction, response has CORS headers",
-			url:            fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/shelves/8/books/info/24"),
+			url:            fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/shelves/8/books/info/24"),
 			wantRequestUrl: "/dynamicrouting/bookinfo?SHELF=8&BOOK=24",
 		},
 	}
@@ -499,13 +499,13 @@ func TestDynamicRoutingCorsByEnvoy(t *testing.T) {
 		{
 			// preflight CORS request handled by envoy CORS filter
 			desc: "Succeed, response has CORS headers",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simplegetcors"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simplegetcors"),
 		},
 		{
 			// preflight CORS request handled by envoy CORS filter
 			// it is before jwt_authn filter even the origin method requires authentication.
 			desc: "Succeed without jwt token, response has CORS headers",
-			url:  fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/auth/info/firebase"),
+			url:  fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/auth/info/firebase"),
 		},
 	}
 
@@ -650,7 +650,7 @@ func TestServiceControlRequestForDynamicRouting(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		var gotResp []byte
 		var err error
 		gotResp, err = client.DoPost(url, tc.message)
@@ -773,7 +773,7 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 			var err error
 			_, err = client.DoPost(url, tc.message)
 
@@ -898,7 +898,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 			var err error
 			_, err = client.DoPost(url, tc.message)
 
@@ -997,7 +997,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := bsclient.MakeCall(tc.clientProtocol, addr, "GET", tc.methodOrUrl, "", tc.header)
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)

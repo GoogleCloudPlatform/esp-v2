@@ -106,7 +106,7 @@ func TestGRPCInteropMiniStress(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	serverAddrFlag := fmt.Sprintf("--server_addresses=localhost:%v", s.Ports().ListenerPort)
+	serverAddrFlag := fmt.Sprintf("--server_addresses=%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 	testcasesFlag := "--test_cases=empty_unary:10,large_unary:10,empty_stream:10,client_streaming:10,ping_pong:20,server_streaming:10,status_code_and_message:10,custom_metadata:10"
 	cmd := exec.Command(clientPath, serverAddrFlag, testcasesFlag, "--test_duration_secs=10", "--num_channels_per_server=200", "--num_stubs_per_channel=1")
 	cmd.Stderr = os.Stderr

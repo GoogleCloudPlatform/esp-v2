@@ -59,7 +59,7 @@ func TestServiceControlAccessTokenFromIam(t *testing.T) {
 	}{
 		{
 			desc:                     "succeed, fetching access token from IAM using access token got from IMDS",
-			url:                      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:                      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			method:                   "POST",
 			message:                  "this-is-messgae",
 			wantIamReqToken:          "Bearer ya29.new",
@@ -127,7 +127,7 @@ func TestServiceControlAccessTokenFromTokenAgent(t *testing.T) {
 	}{
 		{
 			desc:                     "succeed, fetching access token from local server",
-			url:                      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:                      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			method:                   "POST",
 			wantScRequestAccessToken: "Bearer this-is-sa_gen_token",
 		},

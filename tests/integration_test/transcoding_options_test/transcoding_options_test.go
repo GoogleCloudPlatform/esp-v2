@@ -105,7 +105,7 @@ func TestTranscodingPrintOptions(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, "", tc.bodyBytes)
 			if err != nil {
 				t.Errorf("Test (%s): failed with  err %v", tc.desc, err)
@@ -192,7 +192,7 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, "", tc.bodyBytes)
 			if err == nil {
 				if !strings.Contains(resp, tc.wantResp) {

@@ -87,7 +87,7 @@ func TestGeneratedHeaders(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoHeader", "?key=api-key-2")
+			url := fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoHeader", "?key=api-key-2")
 			headers, _, err := utils.DoWithHeaders(url, "GET", "", tc.requestHeader)
 			if err != nil {
 				t.Errorf("fail to make request: %v", err)

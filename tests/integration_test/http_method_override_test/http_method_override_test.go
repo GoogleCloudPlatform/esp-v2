@@ -73,7 +73,7 @@ func TestMethodOverrideBackendMethod(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		gotResp, err := client.DoWithHeaders(url, tc.method, "test-body", tc.headers)
 
 		if tc.httpCallError == nil {
@@ -143,7 +143,7 @@ func TestMethodOverrideBackendBody(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		gotResp, err := client.DoWithHeaders(url, tc.method, tc.body, tc.headers)
 
 		if tc.httpCallError == nil {
@@ -184,7 +184,7 @@ func TestMethodOverrideScReport(t *testing.T) {
 	}{
 		{
 			desc:    "Overridden POST is displayed as GET in SC Report, success case",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo?key=api-key"),
+			url:     fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo?key=api-key"),
 			message: "hello",
 			method:  "POST",
 			requestHeader: map[string]string{

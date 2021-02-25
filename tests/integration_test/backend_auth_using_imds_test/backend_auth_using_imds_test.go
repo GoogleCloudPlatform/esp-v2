@@ -33,8 +33,8 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdToken, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
-			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLocalhost()): "ya29.constant",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/append", util.IdentityTokenPath, platform.GetLocalhost()):   "ya29.append",
 		}, 0)
 
 	defer s.TearDown(t)
@@ -71,7 +71,7 @@ func TestBackendAuthWithImdsIdToken(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		resp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
 
 		if err != nil {
@@ -114,7 +114,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 				"--dependency_error_behavior=ALWAYS_INIT",
 			}, utils.CommonArgs()...),
 			wantNumFails:   5,
-			wantInitialErr: `{"code":500,"message":"Token not found for audience: https://localhost/bearertoken/constant"}`,
+			wantInitialErr: fmt.Sprintf(`{"code":500,"message":"Token not found for audience: https://%v/bearertoken/constant"}`, platform.GetLocalhost()),
 			wantFinalResp:  `{"Authorization": "Bearer ya29.constant", "RequestURI": "/bearertoken/constant?foo=42"}`,
 		},
 	}
@@ -126,7 +126,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 			s.SkipHealthChecks()
 			s.OverrideMockMetadata(
 				map[string]string{
-					util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
+					fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLocalhost()): "ya29.constant",
 				}, tc.wantNumFails)
 
 			defer s.TearDown(t)
@@ -137,7 +137,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 			// Sleep some time to allow Envoy to startup.
 			time.Sleep(2 * time.Second)
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 
 			// The first call should fail since IMDS is responding with failures.
 			_, err := client.DoWithHeaders(url, tc.method, "", nil)
@@ -175,8 +175,8 @@ func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 	s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdTokenWhileAllowCors, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.constant",
-			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/append":   "ya29.append",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLocalhost()): "ya29.constant",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/append", util.IdentityTokenPath, platform.GetLocalhost()):   "ya29.append",
 		}, 0)
 	s.SetAllowCors()
 
@@ -204,7 +204,7 @@ func TestBackendAuthWithImdsIdTokenWhileAllowCors(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		respHeader, err := client.DoCorsPreflightRequest(url, corsOrigin, corsRequestMethod, corsRequestHeader, "")
 		if err != nil {
 			t.Fatalf("Test Desc(%s): %v", tc.desc, err)

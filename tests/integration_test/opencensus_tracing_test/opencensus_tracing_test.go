@@ -129,7 +129,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 		handler.SleepTimes = tc.sleepTimes
 		handler.SleepLengthMs = tc.sleepLengthMs
 
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
 		if err := checkSpanNames(s, tc.wantSpanNames); err != nil {
@@ -173,7 +173,7 @@ func TestTracesServiceControlSkipUsage(t *testing.T) {
 	}{
 		{
 			desc:   "succeed, just show the service control works for normal request",
-			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/simplegetcors", "?key=api-key"),
+			url:    fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simplegetcors", "?key=api-key"),
 			method: "GET",
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
@@ -183,7 +183,7 @@ func TestTracesServiceControlSkipUsage(t *testing.T) {
 		},
 		{
 			desc:    "succeed, the api with SkipServiceControl set true will skip service control",
-			url:     fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:     fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			method:  "POST",
 			message: "hello",
 			wantSpanNames: []string{
@@ -267,7 +267,7 @@ func TestTracesFetchingJwks(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		if tc.queryInToken {
 			_, _ = bsclient.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
 		} else {
@@ -356,7 +356,7 @@ func TestTracingSampleRate(t *testing.T) {
 			path := "/v9/non-existent-path"
 
 			for i := 0; i < tc.numRequests; i++ {
-				addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+				addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 				_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, path, "", nil)
 			}
 
@@ -401,7 +401,7 @@ func TestTracesDynamicRouting(t *testing.T) {
 	}{
 		{
 			desc:   "method name is present in span for remote backend routes",
-			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/pet/1/num/2", ""),
+			url:    fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/pet/1/num/2", ""),
 			method: util.GET,
 			wantSpanNames: []string{
 				fmt.Sprintf("router backend-cluster-localhost:%s egress", strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort))),
@@ -410,7 +410,7 @@ func TestTracesDynamicRouting(t *testing.T) {
 		},
 		{
 			desc:   "unknown operation has no method name",
-			url:    fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/random/path", ""),
+			url:    fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/random/path", ""),
 			method: util.GET,
 			wantSpanNames: []string{
 				"ingress UnknownOperationName",
@@ -583,7 +583,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoHeader", "")
+			url := fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoHeader", "")
 			headers, _, err := utils.DoWithHeaders(url, util.GET, "", tc.requestHeader)
 			if err != nil {
 				t.Fatalf("fail to make call to backend: %v", err)
@@ -687,7 +687,7 @@ func TestReportTraceId(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo/nokey", "")
+			url := fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey", "")
 			_, err := client.DoWithHeaders(url, "POST", `{"message":"hello"}`, incomingTraceContexts)
 			if err != nil {
 				t.Fatalf("fail to make call to backend: %v", err)

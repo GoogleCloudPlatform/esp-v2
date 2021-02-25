@@ -104,9 +104,9 @@ func TestWebsocket(t *testing.T) {
 		var resp []byte
 		var err error
 		if tc.schema == "ws" {
-			resp, err = client.DoWS(fmt.Sprintf("localhost:%v", s.Ports().ListenerPort), tc.path, tc.query, tc.header, "hello", tc.messageCount)
+			resp, err = client.DoWS(fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort), tc.path, tc.query, tc.header, "hello", tc.messageCount)
 		} else {
-			resp, err = client.DoPost(fmt.Sprintf("http://localhost:%v%v?%s", s.Ports().ListenerPort, tc.path, tc.query), "hello")
+			resp, err = client.DoPost(fmt.Sprintf("http://%v:%v%v?%s", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path, tc.query), "hello")
 		}
 		if err != nil {
 			t.Fatal(err)

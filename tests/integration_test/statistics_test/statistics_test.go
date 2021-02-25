@@ -70,7 +70,7 @@ func TestStatistics(t *testing.T) {
 
 	for _, tc := range testData {
 		path := fmt.Sprintf("/sleepDefault?duration=%v", tc.reqDuration.String())
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, path)
 
 		for i := 0; i < tc.reqCnt; i += 1 {
 			if _, err := client.DoWithHeaders(url, "GET", "", nil); err != nil {
@@ -173,7 +173,7 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			if tc.reqCnt != 0 {
 				for i := 0; i < tc.reqCnt; i += 1 {
 					_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)

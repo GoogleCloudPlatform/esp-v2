@@ -266,7 +266,7 @@ func TestBackendRetry(t *testing.T) {
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
-			resp, err := client.DoWithHeaders(fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo"), util.POST, tc.message, tc.requestHeader)
+			resp, err := client.DoWithHeaders(fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo"), util.POST, tc.message, tc.requestHeader)
 			respStr := string(resp)
 			if !strings.Contains(respStr, tc.wantResp) {
 				t.Errorf("Test (%s) failed, want resp %s, get resp %s", tc.desc, tc.wantResp, respStr)
