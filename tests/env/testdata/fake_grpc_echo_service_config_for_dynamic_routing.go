@@ -14,8 +14,14 @@
 
 package testdata
 
+import (
+	"fmt"
+
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+)
+
 var (
-	grpcEchoForDynamicRoutingServiceConfigJsonStr = `{
+	grpcEchoForDynamicRoutingServiceConfigJsonStr = fmt.Sprintf(`{
   "producer_project_id": "producer-project",
   "name": "grpc-echo.endpoints.cloudesf-testing.cloud.goog",
   "id": "test-config-id",
@@ -924,26 +930,26 @@ var (
     "rules": [
       {
         "selector": "test.grpc.Test.Echo",
-        "address": "grpc://localhost:-1/",
+        "address": "grpc://%v:-1/",
         "jwtAudience": "jwt-aud",
         "deadline": 10.0
       },
       {
         "selector": "test.grpc.Test.EchoStream",
-        "address": "grpc://localhost:-1/",
+        "address": "grpc://%v:-1/",
         "jwtAudience": "jwt-aud"
       },
       {
         "selector": "test.grpc.Test.Cork",
-        "address": "grpc://localhost:-1/",
+        "address": "grpc://%v:-1/",
         "jwtAudience": "jwt-aud"
       },
       {
         "selector": "test.grpc.Test.EchoReport",
-        "address": "grpc://localhost:-1/",
+        "address": "grpc://%v:-1/",
         "jwtAudience": "jwt-aud"
       }
     ]
   }
-}`
+}`, platform.GetLocalhost(), platform.GetLocalhost(), platform.GetLocalhost(), platform.GetLocalhost())
 )
