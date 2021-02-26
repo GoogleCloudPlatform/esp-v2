@@ -366,7 +366,7 @@ plans {
 		// Place in closure to allow efficient measuring of elapsed time.
 		// Elapsed time is not checked in the test, it's just for debugging.
 		t.Run(tc.desc, func(t *testing.T) {
-			s := env.NewTestEnv(platform.TestDeadlinesForGrpcCatchAllBackend, platform.GrpcEchoSidecar)
+			s := env.NewTestEnv(platform.TestIdleTimeoutsForGrpcStreaming, platform.GrpcEchoSidecar)
 
 			if tc.methodDeadline != 0 {
 				s.AppendBackendRules([]*confpb.BackendRule{

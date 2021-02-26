@@ -81,6 +81,7 @@ const (
 	TestHttpsClients
 	TestIamImdsDataPath
 	TestIdleTimeoutsForUnaryRPCs
+	TestIdleTimeoutsForGrpcStreaming
 	TestInvalidOpenIDConnectDiscovery
 	TestJwtLocations
 	TestManagedServiceConfig
