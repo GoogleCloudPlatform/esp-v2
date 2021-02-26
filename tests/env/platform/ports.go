@@ -80,6 +80,7 @@ const (
 	TestHttpHeaders
 	TestHttpsClients
 	TestIamImdsDataPath
+	TestIdleTimeoutsForUnaryRPCs
 	TestInvalidOpenIDConnectDiscovery
 	TestJwtLocations
 	TestManagedServiceConfig
