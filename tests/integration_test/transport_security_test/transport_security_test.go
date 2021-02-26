@@ -216,7 +216,8 @@ func TestHttpsClients(t *testing.T) {
 		var resp []byte
 		var err error
 
-		url := fmt.Sprintf("https://%v:%v/simpleget?key=api-key", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+		// FIXME: Use of localhost. Difficult to generate certs with ip addresses.
+		url := fmt.Sprintf("https://%v:%v/simpleget?key=api-key", platform.GetLocalhost(), s.Ports().ListenerPort)
 		_, resp, err = client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
 		if tc.wantError == nil {
 			if err != nil {
@@ -267,7 +268,8 @@ func TestHSTS(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("https://%v:%v/simpleget?key=api-key", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+		// FIXME: Use of localhost. Difficult to generate certs with ip addresses.
+		url := fmt.Sprintf("https://%v:%v/simpleget?key=api-key", platform.GetLocalhost(), s.Ports().ListenerPort)
 		respHeader, respBody, err := client.DoHttpsGet(url, tc.httpsVersion, tc.certPath)
 
 		if err != nil {
