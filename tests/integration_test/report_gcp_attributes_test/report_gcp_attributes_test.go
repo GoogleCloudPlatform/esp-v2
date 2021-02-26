@@ -163,7 +163,7 @@ func TestReportGCPAttributes(t *testing.T) {
 				t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey")
 			_, err := client.DoPost(url, "hello")
 			if err != nil {
 				t.Fatal(err)
@@ -227,7 +227,7 @@ func TestReportGCPAttributesPerPlatform(t *testing.T) {
 				t.Fatalf("Test(%s): fail to setup test env, %v", tc.desc, err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey")
 			_, err := client.DoPost(url, "hello")
 			if err != nil {
 				t.Fatal(err)

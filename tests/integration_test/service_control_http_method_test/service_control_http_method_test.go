@@ -76,7 +76,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 	}{
 		{
 			desc:     "Succeed, test httpMethod GET",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
 			method:   "GET",
 			wantResp: `{"RequestMethod": "GET"}`,
 			wantScRequests: []interface{}{
@@ -112,7 +112,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 		},
 		{
 			desc:     "Succeed, test httpMethod POST",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
 			method:   "POST",
 			message:  "",
 			wantResp: `{"RequestMethod": "POST"}`,
@@ -149,7 +149,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 		},
 		{
 			desc:     "Succeed, test httpMethod PUT",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
 			method:   "PUT",
 			message:  "",
 			wantResp: `{"RequestMethod": "PUT"}`,
@@ -186,7 +186,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 		},
 		{
 			desc:     "Succeed, test httpMethod PATCH",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
 			method:   "PATCH",
 			message:  "",
 			wantResp: `{"RequestMethod": "PATCH"}`,
@@ -223,7 +223,7 @@ func TestServiceControlAllHTTPMethods(t *testing.T) {
 		},
 		{
 			desc:     "Succeed, test httpMethod DELETE",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoMethod", "?key=api-key"),
 			method:   "DELETE",
 			wantResp: `{"RequestMethod": "DELETE"}`,
 			wantScRequests: []interface{}{

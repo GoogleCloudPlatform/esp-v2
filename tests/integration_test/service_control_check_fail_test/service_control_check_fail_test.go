@@ -66,7 +66,7 @@ func TestServiceControlCheckError(t *testing.T) {
 	}{
 		{
 			desc:    "Failed, the check return SERVICE_NOT_ACTIVATED and no consumer project id",
-			url:     fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key-1"),
+			url:     fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key-1"),
 			method:  "POST",
 			message: "",
 			mockedCheckResponse: &scpb.CheckResponse{
@@ -112,7 +112,7 @@ func TestServiceControlCheckError(t *testing.T) {
 		},
 		{
 			desc:    "Failed, the check return API_KEY_INVALID and no consumer project id",
-			url:     fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key-2"),
+			url:     fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key-2"),
 			method:  "POST",
 			message: "",
 			mockedCheckResponse: &scpb.CheckResponse{
@@ -219,7 +219,7 @@ func TestServiceControlCheckError(t *testing.T) {
 		var resp []byte
 		var err error
 		if tc.token != "" {
-			resp, err = client.DoJWT(fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort), tc.method, tc.path, tc.apiKey, "", tc.token)
+			resp, err = client.DoJWT(fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort), tc.method, tc.path, tc.apiKey, "", tc.token)
 		} else {
 			resp, err = client.DoWithHeaders(tc.url, tc.method, tc.message, nil)
 		}

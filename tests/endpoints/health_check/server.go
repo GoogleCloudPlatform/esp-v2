@@ -21,6 +21,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -48,7 +49,7 @@ func NewServer() (*Server, error) {
 	grpcServer := grpc.NewServer()
 
 	// Create a new listener, allowing it to choose the port
-	lis, err := net.Listen("tcp", "127.0.0.1:")
+	lis, err := net.Listen(platform.GetNetworkProtocol(), fmt.Sprintf("%v:", platform.GetLoopbackAddress()))
 	if err != nil {
 		return nil, fmt.Errorf("server failed to listen: %v", err)
 	}

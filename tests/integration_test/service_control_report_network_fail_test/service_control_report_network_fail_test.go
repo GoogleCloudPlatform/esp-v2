@@ -75,7 +75,7 @@ func TestServiceControlReportNetworkFail(t *testing.T) {
 			s.ServiceControlServer.SetReportResponseStatus(http.StatusInternalServerError)
 		}
 		s.ServiceControlServer.ResetRequestCount()
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

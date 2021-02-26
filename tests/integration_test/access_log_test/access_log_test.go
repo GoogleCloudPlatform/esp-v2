@@ -35,7 +35,7 @@ func tryRemoveFile(path string) error {
 }
 
 func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantError string) {
-	url := fmt.Sprintf("http://localhost:%v%s?key=test-api-key", s.Ports().ListenerPort, path)
+	url := fmt.Sprintf("http://%v:%v%s?key=test-api-key", platform.GetLoopbackAddress(), s.Ports().ListenerPort, path)
 	_, err := client.DoGet(url)
 
 	if err != nil {

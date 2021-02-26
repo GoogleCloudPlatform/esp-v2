@@ -59,7 +59,7 @@ func TestServiceControlLogHeaders(t *testing.T) {
 	}{
 		{
 			desc:     "succeed, log required request headers and response headers",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key-2"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key-2"),
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
@@ -223,7 +223,7 @@ func TestServiceControlLogJwtPayloads(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
 		if tc.httpCallError == nil {

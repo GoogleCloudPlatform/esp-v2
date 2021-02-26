@@ -55,7 +55,7 @@ func TestServiceControlAllHTTPPath(t *testing.T) {
 	}{
 		{
 			desc:     "Succeed, test HTTPPath /",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/"),
+			url:      fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/"),
 			method:   "GET",
 			wantResp: `{"RequestURI": "/"}`,
 			wantScRequests: []interface{}{

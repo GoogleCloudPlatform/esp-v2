@@ -76,7 +76,7 @@ func TestHttp1Basic(t *testing.T) {
 	}
 	for _, tc := range testData {
 		s.ServiceControlServer.ResetRequestCount()
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		var resp []byte
 		var err error
 		if tc.method == "GET" {
@@ -168,7 +168,7 @@ func TestHttp1JWT(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		host := fmt.Sprintf("http://localhost:%v", s.Ports().ListenerPort)
+		host := fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
 
 		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
@@ -218,7 +218,7 @@ func TestHttpHeaders(t *testing.T) {
 				args = append(args, "--underscores_in_headers")
 			}
 			err := s.Setup(args)
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/v1/shelves/100")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/v1/shelves/100")
 			resp, err := client.DoWithHeaders(url, "GET", "", tc.requestHeader)
 			if tc.wantError == "" {
 				if err != nil {

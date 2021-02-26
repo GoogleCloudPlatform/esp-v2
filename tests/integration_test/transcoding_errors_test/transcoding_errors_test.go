@@ -62,7 +62,7 @@ func TestTranscodingBackendUnavailableError(t *testing.T) {
 		wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
 	}
 
-	addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+	addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 	resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 
 	if tc.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErr)) {
@@ -152,7 +152,7 @@ theme" : "Children"}EXTRA
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
 
 			if tc.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErr)) {

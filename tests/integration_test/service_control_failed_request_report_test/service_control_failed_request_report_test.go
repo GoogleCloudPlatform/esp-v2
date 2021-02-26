@@ -57,7 +57,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 	}{
 		{
 			desc:           "Request with API Key does not match any operation. SC does report with untrusted API Key.",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation?key=api-key",
@@ -87,7 +87,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "Request matches uri template(exact path) but not method.",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "http",
 			// "DELETE" is not defined for "/v1/shelves".
 			httpMethod:    "DELETE",
@@ -118,7 +118,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "Request matches uri template with trailing slash(exact path) but not method.",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "http",
 			// "DELETE" is not defined for "/v1/shelves".
 			httpMethod:    "DELETE",
@@ -149,7 +149,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "Request matches uri template(regex) but not method.",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "http",
 			// "POST" is not defined for "/v1/shelves/{shelf_id}".
 			httpMethod:    "POST",
@@ -180,7 +180,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "Request matches uri template with trailing slash(regex) but not method.",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "http",
 			// "POST" is not defined for "/v1/shelves/{shelf_id}".
 			httpMethod:    "POST",
@@ -211,7 +211,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "Request withOUT API Key does not match any operation. SC does report withOUT API Key.",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/noexistoperation",
@@ -240,7 +240,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "For the request failed in Jwt Authn filter, return \"Unauthorized\" status and send report",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
@@ -272,7 +272,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "For the request without api key but required to have, return \"Unauthorized\" status and send report",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			token:          testdata.Es256Token,
 			clientProtocol: "http",
 			httpMethod:     "GET",
@@ -304,7 +304,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "gRPC backend returns canonical rpc status code",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "grpc",
 			headers:        http.Header{"x-api-key": []string{"api-key"}},
 			method:         "GetShelfInvalid",
@@ -345,7 +345,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 		},
 		{
 			desc:           "gRPC backend returns NON-canonical rpc status code",
-			url:            fmt.Sprintf("localhost:%v", s.Ports().ListenerPort),
+			url:            fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort),
 			clientProtocol: "grpc",
 			headers:        http.Header{"x-api-key": []string{"api-key"}},
 			method:         "ReturnBadStatus",

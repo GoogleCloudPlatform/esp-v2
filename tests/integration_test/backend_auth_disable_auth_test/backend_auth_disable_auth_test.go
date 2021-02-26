@@ -31,8 +31,8 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 	s := env.NewTestEnv(platform.TestBackendAuthDisableAuth, platform.EchoRemote)
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.JwtAudienceSet",
-			util.IdentityTokenPath + "?format=standard&audience=https://localhost":                      "ya29.DefaultAuth",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.JwtAudienceSet",
+			fmt.Sprintf("%v?format=standard&audience=https://%v", util.IdentityTokenPath, platform.GetLoopbackAddress()):                      "ya29.DefaultAuth",
 		}, 0)
 
 	defer s.TearDown(t)
@@ -96,7 +96,7 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		resp, err := client.DoWithHeaders(url, tc.method, tc.message, tc.headers)
 
 		if err != nil {

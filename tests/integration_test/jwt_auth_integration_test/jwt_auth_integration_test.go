@@ -165,7 +165,7 @@ func TestAsymmetricKeys(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		var resp string
 		var err error
 		if tc.queryInToken {
@@ -265,7 +265,7 @@ func TestAuthAllowMissing(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		var resp string
 		var err error
 		if tc.queryInToken {
@@ -382,7 +382,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 	})
 	s.OverrideMockMetadata(
 		map[string]string{
-			util.IdentityTokenPath + "?format=standard&audience=https://localhost/bearertoken/constant": "ya29.BackendAuthToken",
+			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.BackendAuthToken",
 		}, 0)
 
 	defer s.TearDown(t)
@@ -441,7 +441,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, tc.path)
+		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 		resp, err := echo_client.DoWithHeaders(url, tc.method, "", tc.headers)
 
 		if err != nil {

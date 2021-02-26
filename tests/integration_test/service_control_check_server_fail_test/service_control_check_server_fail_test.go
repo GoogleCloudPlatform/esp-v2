@@ -116,7 +116,7 @@ func TestServiceControlCheckServerFailFlag(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := bsclient.MakeCall("http", addr, "GET", tc.method, "", nil)
 
 			if tc.wantRetry != handler.retryCount {

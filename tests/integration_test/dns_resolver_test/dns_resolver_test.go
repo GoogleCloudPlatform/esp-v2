@@ -109,7 +109,7 @@ func TestDnsResolver(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v/echo?key=api-key", s.Ports().ListenerPort)
+			url := fmt.Sprintf("http://%v:%v/echo?key=api-key", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.DoPost(url, "hello")
 			if err != nil {
 				if tc.wantError == "" {

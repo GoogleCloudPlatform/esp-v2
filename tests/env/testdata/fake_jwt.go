@@ -15,6 +15,9 @@
 package testdata
 
 import (
+	"fmt"
+
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -70,7 +73,7 @@ var (
 			Id:               NonexistentProvider,
 			Issuer:           NonexistentIssuer,
 			IsNonexistent:    true,
-			HardcodedJwksUri: "http://localhost:55550/pkey",
+			HardcodedJwksUri: fmt.Sprintf("http://%v:55550/pkey", platform.GetLoopbackAddress()),
 		},
 		{
 			Id:     ServiceControlProvider,

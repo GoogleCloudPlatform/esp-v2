@@ -75,7 +75,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 			s.AppendBackendRules([]*confpb.BackendRule{
 				{
 					Selector:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
-					Address:         "https://localhost:-1/echo",
+					Address:         fmt.Sprintf("https://%v:-1/echo", platform.GetLoopbackAddress()),
 					PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
 					Protocol:        httpProtocol,
 				},
@@ -93,7 +93,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 			}
 
 			// Do test.
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo?key=api-key")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo?key=api-key")
 			gotResp, err := client.DoWithHeaders(url, "POST", "hello", nil)
 
 			// Assertions.

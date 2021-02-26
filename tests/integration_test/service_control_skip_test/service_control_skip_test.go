@@ -59,14 +59,14 @@ func TestServiceControlSkipUsage(t *testing.T) {
 	}{
 		{
 			desc:               "succeed, just show the service control works for normal request",
-			url:                fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/simplegetcors", "?key=api-key"),
+			url:                fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simplegetcors", "?key=api-key"),
 			method:             "GET",
 			wantResp:           `simple get message`,
 			wantScRequestCount: 2,
 		},
 		{
 			desc:               "succeed, the api with SkipServiceControl set true will skip service control",
-			url:                fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:                fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			method:             "POST",
 			message:            "hello",
 			wantResp:           `{"message":"hello"}`,

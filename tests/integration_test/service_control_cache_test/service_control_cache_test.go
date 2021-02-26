@@ -40,7 +40,7 @@ func TestServiceControlCache(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	url := fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key")
+	url := fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key")
 	message := "hello"
 	num := 10
 	wantResp := `{"message":"hello"}`

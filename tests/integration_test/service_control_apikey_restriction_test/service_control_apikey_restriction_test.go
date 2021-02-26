@@ -54,7 +54,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 	testData := []testDataStruct{
 		{
 			desc:     "success, for referrer, ios, android restrictions.",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
@@ -73,7 +73,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 		},
 		{
 			desc:        "success, for IP restrictions, the third from right side is the caller ip",
-			url:         fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:         fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			message:     "hello",
 			forwardedIp: "192.16.31.84, 172.17.131.252, 172.17.131.251",
 			wantResp:    `{"message":"hello"}`,
@@ -89,7 +89,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 		},
 		{
 			desc:        "success, for IP restrictions, the third from right side is the caller ip",
-			url:         fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:         fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			message:     "hello",
 			forwardedIp: "172.17.131.252, 192.16.31.84, 172.17.131.251",
 			wantResp:    `{"message":"hello"}`,
@@ -105,7 +105,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 		},
 		{
 			desc:        "success, for IP restrictions, the XFF contains fewer than 3 address, falls back to use immediate downstream source address",
-			url:         fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:         fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			message:     "hello",
 			forwardedIp: "192.16.31.84",
 			wantResp:    `{"message":"hello"}`,
@@ -150,7 +150,7 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 	testData := []testDataStruct{
 		{
 			desc:        "success, for IP restrictions, override envoy_use_remote_address and envoy_xff_num_trusted_hops.",
-			url:         fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:         fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			message:     "hello",
 			forwardedIp: "192.16.31.84",
 			wantResp:    `{"message":"hello"}`,

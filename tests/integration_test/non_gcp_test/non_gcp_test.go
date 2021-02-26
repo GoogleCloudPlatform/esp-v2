@@ -122,7 +122,7 @@ func TestMetadataRequestsPerPlatform(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v?key=%v", s.Ports().ListenerPort, tc.path, tc.key)
+			url := fmt.Sprintf("http://%v:%v%v?key=%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path, tc.key)
 			_, err := client.DoWithHeaders(url, tc.method, "message", nil)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
@@ -195,7 +195,7 @@ func TestMetadataRequestsWithBackendAuthPerPlatform(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v?key=%v", s.Ports().ListenerPort, tc.path, tc.key)
+			url := fmt.Sprintf("http://%v:%v%v?key=%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path, tc.key)
 			_, err := client.DoWithHeaders(url, tc.method, "message", nil)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
@@ -243,7 +243,7 @@ func TestBackendAuthPerPlatform(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/bearertoken/constant/42")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/bearertoken/constant/42")
 			resp, err := client.DoWithHeaders(url, "GET", "", nil)
 
 			if err != nil {
@@ -304,7 +304,7 @@ func TestBackendAddressOverride(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/simplegetcors?key=api-key")
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simplegetcors?key=api-key")
 			resp, err := client.DoWithHeaders(url, "GET", "", nil)
 			if err != nil {
 				if tc.wantError == "" {

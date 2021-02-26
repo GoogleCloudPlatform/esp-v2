@@ -178,7 +178,7 @@ func TestServiceControlQuota(t *testing.T) {
 			s.ServiceControlServer.SetCheckResponse(tc.mockedCheckResponse)
 		}
 
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
@@ -262,7 +262,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 	}
 
 	for i := 0; i < 3; i++ {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
 		if err != nil {
@@ -429,7 +429,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
 		if tc.httpCallError == "" {

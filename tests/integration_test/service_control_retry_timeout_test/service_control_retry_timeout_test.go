@@ -95,7 +95,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 		handler.SleepTimes = tc.sleepTimes
 		handler.SleepLengthMs = tc.sleepLengthMs
 
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
@@ -179,7 +179,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 		handler.SleepTimes = tc.sleepTimes
 		handler.SleepLengthMs = tc.sleepLengthMs
 
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, nil)
 
 		// Quota is unblocked and wait it to be flushed once after 1s.
@@ -248,7 +248,7 @@ func TestServiceControlReportRetry(t *testing.T) {
 		handler.SleepTimes = tc.sleepTimes
 		handler.SleepLengthMs = tc.sleepLengthMs
 
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", nil)
 
 		// Report is unblocked and wait it to be flushed for 1 second after call to handler are made.

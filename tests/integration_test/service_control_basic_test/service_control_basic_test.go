@@ -53,7 +53,7 @@ func TestServiceControlBasic(t *testing.T) {
 	}{
 		{
 			desc:     "SC does check and report for a basic GET request.",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/simpleget", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/simpleget", "?key=api-key"),
 			method:   "GET",
 			message:  "",
 			wantResp: "simple get message",
@@ -90,7 +90,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:     "SC does check and report for a basic POST request.",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,
@@ -127,7 +127,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:          "SC does NOT check (but does report) when API Key is missing in the request. Operation does NOT allow unregistered callers.",
-			url:           fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo"),
+			url:           fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo"),
 			method:        "POST",
 			message:       "hello",
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 401 Unauthorized"),
@@ -156,7 +156,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:     "SC does NOT check (but does report) when API Key is missing in the request. Operation does allow unregistered callers.",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey"),
+			url:      fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey"),
 			message:  "hello",
 			method:   "POST",
 			wantResp: `{"message":"hello"}`,
@@ -183,7 +183,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:     "SC does NOT check (but does report) when API Key is in the request, but operation does allow unregistered callers.",
-			url:      fmt.Sprintf("http://localhost:%v%v%v", s.Ports().ListenerPort, "/echo/nokey", "?key=api-key"),
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey", "?key=api-key"),
 			message:  "hello",
 			method:   "POST",
 			wantResp: `{"message":"hello"}`,
@@ -212,7 +212,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:    "Report with referrer header for an operation that does allow unregistered callers.",
-			url:     fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/echo/nokey"),
+			url:     fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey"),
 			message: "hi",
 			method:  "POST",
 			requestHeader: map[string]string{
@@ -243,7 +243,7 @@ func TestServiceControlBasic(t *testing.T) {
 		},
 		{
 			desc:     "succeed for unconfigured requests with any path (/**) and POST method, no JWT required, service control sends report request only",
-			url:      fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, "/anypath/x/y/z"),
+			url:      fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/anypath/x/y/z"),
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"message":"hello"}`,

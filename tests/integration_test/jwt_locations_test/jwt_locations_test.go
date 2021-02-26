@@ -162,7 +162,7 @@ func TestJwtLocations(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, "", tc.headers)
 
 		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

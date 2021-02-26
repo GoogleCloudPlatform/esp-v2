@@ -99,7 +99,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 
 			basePath := configuredDeadlineToPath(tc.deadlineToTest)
 			path := fmt.Sprintf("%v?duration=%v", basePath, tc.reqDuration.String())
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, path)
 
 			_, err := client.DoWithHeaders(url, "GET", "", nil)
 
@@ -168,7 +168,7 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			defer utils.Elapsed(fmt.Sprintf("Test (%s):", tc.desc))()
 
-			url := fmt.Sprintf("http://localhost:%v%v?duration=%v", s.Ports().ListenerPort, tc.path, tc.reqDuration.String())
+			url := fmt.Sprintf("http://%v:%v%v?duration=%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path, tc.reqDuration.String())
 			_, err := client.DoWithHeaders(url, "GET", "", nil)
 
 			if tc.wantErr == "" && err != nil {
@@ -260,7 +260,7 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 		// Place in closure to allow efficient measuring of elapsed time.
 		// Elapsed time is not checked in the test, it's just for debugging.
 		t.Run(tc.desc, func(t *testing.T) {
-			s := env.NewTestEnv(platform.TestDeadlinesForDynamicRouting, platform.EchoRemote)
+			s := env.NewTestEnv(platform.TestIdleTimeoutsForUnaryRPCs, platform.EchoRemote)
 
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {
@@ -271,7 +271,7 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 
 			basePath := configuredDeadlineToPath(tc.deadlineToTest)
 			path := fmt.Sprintf("%v?duration=%v", basePath, tc.reqDuration.String())
-			url := fmt.Sprintf("http://localhost:%v%v", s.Ports().ListenerPort, path)
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, path)
 
 			_, err := client.DoWithHeaders(url, "GET", "", nil)
 

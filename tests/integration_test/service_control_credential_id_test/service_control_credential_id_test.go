@@ -115,7 +115,7 @@ func TestServiceControlCredentialId(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		addr := fmt.Sprintf("localhost:%v", s.Ports().ListenerPort)
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
 		if tc.httpCallError == nil {

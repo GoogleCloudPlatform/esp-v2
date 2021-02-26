@@ -38,3 +38,13 @@ func GetDnsFamily() string {
 func GetIpProtocol() string {
 	return "ipv4"
 }
+
+// Returns the network protocol, accepted by `net.Listen`.
+func GetNetworkProtocol() string {
+	return "tcp4"
+}
+
+// Returns localhost. Encouraged not to use this, as it doesn't provide guarantees on ipv4 vs ipv6 addresses.
+func GetLocalhost() string {
+	return "localhost"
+}
