@@ -15,6 +15,9 @@
 package testdata
 
 import (
+	"fmt"
+
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
@@ -70,7 +73,7 @@ var (
 			Rules: []*confpb.BackendRule{
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetShelf",
-					Address:  "grpcs://localhost:-1/",
+					Address:  fmt.Sprintf("grpcs://%v:-1/", platform.GetLoopbackAddress()),
 					// No authentication on this rule, essentially the same as `disable_auth`
 				},
 			},
