@@ -51,6 +51,7 @@ var (
 		"Envoy logging level. Default is `info`. Options are: [trace][debug][info][warning][error][critical][off]")
 	envoyLogPath = flag.String("envoy_log_path", "",
 		"Envoy application logging path. Default is to write to stderr.")
+	envoyComponentLogLevel = flag.String("envoy_component_log_level", "", "Mapping for Envoy log level by component.")
 )
 
 func main() {
@@ -68,6 +69,11 @@ func main() {
 	logLevel := os.Getenv("ENVOY_LOG_LEVEL")
 	if logLevel == "" {
 		logLevel = *envoyLogLevel
+	}
+
+	componentLogLevel := os.Getenv("ENVOY_COMPONENT_LOG_LEVEL")
+	if componentLogLevel == "" {
+		componentLogLevel = *envoyComponentLogLevel
 	}
 
 	logPath := os.Getenv("ENVOY_LOG_PATH")
@@ -94,11 +100,12 @@ func main() {
 	}
 
 	if err := gcsrunner.StartEnvoyAndWait(signalChan, gcsrunner.StartEnvoyOptions{
-		BinaryPath:       envoyBin,
-		ConfigPath:       envoyConfigPath,
-		LogLevel:         logLevel,
-		LogPath:          logPath,
-		TerminateTimeout: terminateEnvoyTimeout,
+		BinaryPath:        envoyBin,
+		ComponentLogLevel: componentLogLevel,
+		ConfigPath:        envoyConfigPath,
+		LogLevel:          logLevel,
+		LogPath:           logPath,
+		TerminateTimeout:  terminateEnvoyTimeout,
 	}); err != nil {
 		glog.Fatalf("Envoy erred: %v", err)
 	}
