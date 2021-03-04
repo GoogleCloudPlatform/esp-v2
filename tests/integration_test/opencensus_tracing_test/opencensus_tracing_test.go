@@ -622,6 +622,16 @@ func TestTraceContextPropagationHeadersForScCheck(t *testing.T) {
 			createTraceparentContext(traceId, spanId),
 		},
 	}
+	expectedTraceContexts := map[string][]string{
+		// Only the trace id is checked. Span id should be changed.
+		// By default, both trace contexts are generated.
+		"Traceparent": {
+			createTraceparentContextPrefix(traceId),
+		},
+		"X-Cloud-Trace-Context": {
+			createCloudTraceContextPrefix(traceId),
+		},
+	}
 
 	tests := []struct {
 		desc                 string
@@ -629,37 +639,14 @@ func TestTraceContextPropagationHeadersForScCheck(t *testing.T) {
 		expectedScReqHeaders map[string][]string
 	}{
 		{
-			desc:              "SC Check receives trace context propagation header.",
-			tracingSampleRate: 1,
-			expectedScReqHeaders: map[string][]string{
-				// Only the trace id is checked. Span id should be changed.
-				"Traceparent": {
-					createTraceparentContextPrefix(traceId),
-				},
-			},
+			desc:                 "SC Check receives trace context propagation header.",
+			tracingSampleRate:    1,
+			expectedScReqHeaders: expectedTraceContexts,
 		},
 		{
-			desc:              "Trace context is propagated even when sampling rate is 0.",
-			tracingSampleRate: 0,
-			expectedScReqHeaders: map[string][]string{
-				// Only the trace id is checked. Span id should be changed.
-				"Traceparent": {
-					createTraceparentContextPrefix(traceId),
-				},
-			},
-		},
-		{
-			desc:              "By default, both traceparent and cloud trace headers are propagated.",
-			tracingSampleRate: 1,
-			expectedScReqHeaders: map[string][]string{
-				// Only the trace id is checked. Span id should be changed.
-				"Traceparent": {
-					createTraceparentContextPrefix(traceId),
-				},
-				"X-Cloud-Trace-Context": {
-					createCloudTraceContextPrefix(traceId),
-				},
-			},
+			desc:                 "Trace context is propagated even when sampling rate is 0.",
+			tracingSampleRate:    0,
+			expectedScReqHeaders: expectedTraceContexts,
 		},
 	}
 
