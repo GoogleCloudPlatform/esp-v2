@@ -27,11 +27,12 @@ var execCommand = exec.Command
 
 // StartEnvoyOptions provides a set of configurations when starting Envoy.
 type StartEnvoyOptions struct {
-	BinaryPath       string
-	ConfigPath       string
-	LogLevel         string
-	LogPath          string
-	TerminateTimeout time.Duration
+	BinaryPath        string
+	ComponentLogLevel string
+	ConfigPath        string
+	LogLevel          string
+	LogPath           string
+	TerminateTimeout  time.Duration
 }
 
 // StartEnvoyAndWait starts Envoy and waits.
@@ -41,8 +42,7 @@ type StartEnvoyOptions struct {
 // Any signal sent to signalChan is expected to be an exit signal. A failure to
 // signal Envoy results in an error.
 func StartEnvoyAndWait(signalChan chan os.Signal, opts StartEnvoyOptions) error {
-	cmd := execCommand(
-		opts.BinaryPath,
+	startupFlags := []string{
 		"--service-cluster", "front-envoy",
 		"--service-node", "front-envoy",
 		"--disable-hot-restart",
@@ -50,7 +50,12 @@ func StartEnvoyAndWait(signalChan chan os.Signal, opts StartEnvoyOptions) error 
 		"--log-level", opts.LogLevel,
 		"--log-path", opts.LogPath,
 		"--log-format", "%L%m%d %T.%e %t envoy] [%t][%n]%v",
-		"--log-format-escaped")
+		"--log-format-escaped",
+	}
+	if opts.ComponentLogLevel != "" {
+		startupFlags = append(startupFlags, "--component-log-level", opts.ComponentLogLevel)
+	}
+	cmd := execCommand(opts.BinaryPath, startupFlags...)
 	cmd.Env = append(cmd.Env, "TMPDIR=/tmp")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

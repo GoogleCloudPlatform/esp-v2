@@ -30,7 +30,7 @@ This script will release stable ESPv2 docker image with format of:
   $(get_serverless_image_release_name):\${MINOR_BASE_VERSION}
   $(get_serverless_image_release_name):\${MAJOR_BASE_VERSION}
   $(get_gcsrunner_image_release_name):\${MINOR_BASE_VERSION}
-  $(get_gcsrruner_image_release_name):\${MAJOR_BASE_VERSION}
+  $(get_gcsrunner_image_release_name):\${MAJOR_BASE_VERSION}
 where:
   MINOR_BASE_VERSION=major.minor
   MAJOR_BASE_VERSION=major
