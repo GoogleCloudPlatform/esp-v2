@@ -16,7 +16,11 @@ package utils
 
 import (
 	"net/http"
+	"strings"
+	"testing"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 type RetryServiceHandler struct {
@@ -29,6 +33,29 @@ func (h *RetryServiceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	h.RequestCount += 1
 	if h.RequestCount <= h.SleepTimes {
 		time.Sleep(time.Millisecond * time.Duration(h.SleepLengthMs))
+	}
+
+	w.Write([]byte(""))
+}
+
+type ExpectHeaderHandler struct {
+	RequestCount    int32
+	ExpectedHeaders http.Header
+	T               *testing.T
+}
+
+func (h *ExpectHeaderHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.RequestCount += 1
+	glog.Infof("Fake ExpectHeaderHandler got headers: %v", r.Header)
+
+	for key, vals := range h.ExpectedHeaders {
+		headerMatch := CheckHeaderExist(r.Header, key, func(gotHeaderVal string) bool {
+			return strings.Contains(gotHeaderVal, strings.Join(vals, ";"))
+		})
+
+		if !headerMatch {
+			h.T.Errorf("expected headers %v, got headers %v", h.ExpectedHeaders, r.Header)
+		}
 	}
 
 	w.Write([]byte(""))
