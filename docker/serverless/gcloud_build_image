@@ -22,6 +22,7 @@ set -eo pipefail
 # Default to the latest released ESPv2 version.
 BASE_IMAGE_NAME="gcr.io/endpoints-release/endpoints-runtime-serverless"
 ESP_TAG="2"
+ZONE=""
 
 function error_exit() {
   # ${BASH_SOURCE[1]} is the file name of the caller.
@@ -29,12 +30,13 @@ function error_exit() {
   exit ${2:-1}
 }
 
-while getopts :c:s:p:v:i: arg; do
+while getopts :c:s:p:v:z:i: arg; do
   case ${arg} in
     c) CONFIG_ID="${OPTARG}";;
     s) SERVICE="${OPTARG}";;
     p) PROJECT="${OPTARG}";;
     v) ESP_TAG="${OPTARG}";;
+    z) ZONE="${OPTARG}";;
     i)
       BASE_IMAGE="${OPTARG}"
       ESP_FULL_VERSION="custom"
@@ -99,6 +101,9 @@ ENTRYPOINT ["/env_start_proxy.py"]
 EOF
 
 NEW_IMAGE="gcr.io/${PROJECT}/endpoints-runtime-serverless:${ESP_FULL_VERSION}-${SERVICE}-${CONFIG_ID}"
+if [ -n "${ZONE}" ]; then
+  NEW_IMAGE="${ZONE}.${NEW_IMAGE}"
+fi
 gcloud builds submit --tag "${NEW_IMAGE}" . --project="${PROJECT}"
 )
 
