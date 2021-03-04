@@ -205,6 +205,7 @@ class HttpCallImpl : public HttpCall,
     request_span_->setTag(Envoy::Tracing::Tags::get().HttpMethod, "POST");
 
     Envoy::Http::RequestMessagePtr message = prepareHeaders(token);
+    request_span_->injectContext(message->headers());
     ENVOY_LOG(debug, "http call from [uri = {}]: start", uri_);
 
     const auto thread_local_cluster =

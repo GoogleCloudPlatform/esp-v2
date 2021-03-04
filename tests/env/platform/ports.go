@@ -141,6 +141,7 @@ const (
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
 	TestTraceContextPropagationHeaders
+	TestTraceContextPropagationHeadersForScCheck
 	TestTracesDynamicRouting
 	TestTracesFetchingJwks
 	TestTracesServiceControlCheckWithRetry

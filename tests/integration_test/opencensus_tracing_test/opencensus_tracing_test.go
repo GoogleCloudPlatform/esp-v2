@@ -612,6 +612,79 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 	}
 }
 
+func TestTraceContextPropagationHeadersForScCheck(t *testing.T) {
+	t.Parallel()
+
+	traceId := "0af7651916cd43dd8448eb211c80319c"
+	spanId := "b7ad6b7169203331"
+	incomingTraceContexts := map[string][]string{
+		"traceparent": {
+			createTraceparentContext(traceId, spanId),
+		},
+	}
+	expectedTraceContexts := map[string][]string{
+		// Only the trace id is checked. Span id should be changed.
+		// By default, both trace contexts are generated.
+		"Traceparent": {
+			createTraceparentContextPrefix(traceId),
+		},
+		"X-Cloud-Trace-Context": {
+			createCloudTraceContextPrefix(traceId),
+		},
+	}
+
+	tests := []struct {
+		desc                 string
+		tracingSampleRate    float32
+		expectedScReqHeaders map[string][]string
+	}{
+		{
+			desc:                 "SC Check receives trace context propagation header.",
+			tracingSampleRate:    1,
+			expectedScReqHeaders: expectedTraceContexts,
+		},
+		{
+			desc:                 "Trace context is propagated even when sampling rate is 0.",
+			tracingSampleRate:    0,
+			expectedScReqHeaders: expectedTraceContexts,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestTraceContextPropagationHeadersForScCheck, platform.GrpcBookstoreSidecar)
+			s.SetupFakeTraceServer(tc.tracingSampleRate)
+
+			handler := utils.ExpectHeaderHandler{
+				T:               t,
+				ExpectedHeaders: tc.expectedScReqHeaders,
+			}
+			s.ServiceControlServer.OverrideCheckHandler(&handler)
+
+			defer s.TearDown(t)
+			if err := s.Setup(utils.CommonArgs()); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+			_, err := bsclient.MakeCall("http", addr, "GET", "/v1/shelves?key=api-key-2", testdata.FakeCloudTokenMultiAudiences, incomingTraceContexts)
+			if err != nil {
+				t.Errorf("expected no err, got err: %v", err)
+				return
+			}
+
+			if handler.RequestCount != 1 {
+				t.Errorf("SC Check was expected to be called once, but it was called %v times.", handler.RequestCount)
+				return
+			}
+
+			// Ignore the spans in this test, we do not check the names.
+			time.Sleep(5 * time.Second)
+			_, _ = s.FakeStackdriverServer.RetrieveSpanNames()
+		})
+	}
+}
+
 func TestReportTraceId(t *testing.T) {
 	t.Parallel()
 
