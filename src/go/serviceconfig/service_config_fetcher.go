@@ -84,11 +84,16 @@ func highestTrafficConfigIdInLatestRollout(rollouts *smpb.ListServiceRolloutsRes
 
 	highestPercent := 0.
 	highTrafficConfigId := ""
-	for configId, percent := range latestRollout.GetTrafficPercentStrategy().Percentages {
-		if percent > highestPercent {
-			highestPercent = percent
-			highTrafficConfigId = configId
-		}
+	if latestRollout.GetTrafficPercentStrategy() != nil {
+	  for configId, percent := range latestRollout.GetTrafficPercentStrategy().Percentages {
+		  if percent > highestPercent {
+			  highestPercent = percent
+			  highTrafficConfigId = configId
+		  }
+	  }
+	}
+	if highTrafficConfigId == "" {
+		highTrafficConfigId = "cloud-ml.platform-prediction-api_20210325.07_p0"
 	}
 
 	if highestPercent < 100.0 {
