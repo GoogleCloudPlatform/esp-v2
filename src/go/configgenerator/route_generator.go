@@ -22,14 +22,14 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	anypb "github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/duration"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
@@ -374,6 +374,15 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 }
 
 func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
+	var maxStreamDuration *routepb.RouteAction_MaxStreamDuration
+	if method.IsStreaming {
+		maxStreamDuration = &routepb.RouteAction_MaxStreamDuration{
+			MaxStreamDuration: &duration.Duration{
+				Seconds: 3600,
+			},
+		}
+	}
+
 	return &routepb.Route{
 		Match: routeMatcher,
 		Action: &routepb.Route_Route{
@@ -389,6 +398,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) 
 						Value: uint32(method.BackendInfo.RetryNum),
 					},
 				},
+				MaxStreamDuration: maxStreamDuration,
 			},
 		},
 		Decorator: &routepb.Decorator{
