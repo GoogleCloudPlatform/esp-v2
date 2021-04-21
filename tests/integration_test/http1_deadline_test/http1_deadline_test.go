@@ -203,14 +203,14 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 //		// This can slow down our CI system if we sleep for too long.
 //		{
 //			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 25s, request = 20s
-//			// This 408 is caused by response timeout set from route deadline, not by the global stream idle timeout.
+//			// This 504 is caused by response timeout set from route deadline, not by the global stream idle timeout.
 //			desc: "When deadline is NOT specified, default deadline (15s) kicks in and the request fails with 504.",
 //			confArgs: append([]string{
 //				"--stream_idle_timeout_test_only=25s",
 //			}, utils.CommonArgs()...),
 //			reqDuration:    time.Second * 20,
 //			deadlineToTest: Default,
-//			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
+//			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 //		},
 //		{
 //			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 5s, request = 10s
