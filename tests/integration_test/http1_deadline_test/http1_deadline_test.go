@@ -75,7 +75,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 			desc:           "Fail before 20s due to ESPv2 default response timeout being 15s",
 			reqDuration:    time.Second * 20,
 			deadlineToTest: Default,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 		{
 			desc:           "Success after 2s due to user-configured deadline being 5s",
@@ -86,7 +86,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 			desc:           "Fail before 8s due to user-configured deadline being 5s",
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 	}
 
@@ -145,7 +145,7 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 		{
 			desc:        "Fail before 20s due to ESPv2 default response timeout being 15s",
 			reqDuration: time.Second * 20,
-			wantErr:     `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:     `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 			path:        "/sleep",
 		},
 		{
@@ -157,7 +157,7 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 			desc:        "Fail before 8s due to user-configured deadline being 5s, even for a local backend.",
 			reqDuration: time.Second * 8,
 			path:        "/sleep/with/backend/rule",
-			wantErr:     `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:     `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 	}
 
@@ -202,14 +202,14 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 		// This can slow down our CI system if we sleep for too long.
 		{
 			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 25s, request = 20s
-			// This 504 is caused by response timeout set from route deadline, not by the global stream idle timeout.
+			// This 408 is caused by response timeout set from route deadline, not by the global stream idle timeout.
 			desc: "When deadline is NOT specified, default deadline (15s) kicks in and the request fails with 504.",
 			confArgs: append([]string{
 				"--stream_idle_timeout_test_only=25s",
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 20,
 			deadlineToTest: Default,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 		{
 			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 5s, request = 10s

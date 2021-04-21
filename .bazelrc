@@ -17,7 +17,7 @@ build:debug -c dbg
 
 build --experimental_local_memory_estimate
 build --experimental_strict_action_env=true
-build --host_force_python=PY2
+build --host_force_python=PY3
 build --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a
 build --action_env=BAZEL_LINKOPTS=-lm
 
