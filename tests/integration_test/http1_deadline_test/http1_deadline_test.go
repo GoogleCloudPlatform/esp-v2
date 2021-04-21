@@ -73,7 +73,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 		},
 		{
 			desc:           "Fail before 20s due to ESPv2 default response timeout being 15s",
-			reqDuration:    time.Second * 20,
+			reqDuration:    time.Second * 25,
 			deadlineToTest: Default,
 			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
@@ -238,7 +238,7 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 			confArgs: append([]string{
 				"--stream_idle_timeout_test_only=15s",
 			}, utils.CommonArgs()...),
-			reqDuration:    time.Second * 10,
+			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
 			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},
@@ -249,7 +249,7 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 			confArgs: append([]string{
 				"--stream_idle_timeout_test_only=2s",
 			}, utils.CommonArgs()...),
-			reqDuration:    time.Second * 10,
+			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
 			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 		},

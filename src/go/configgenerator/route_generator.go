@@ -375,12 +375,10 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 
 func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
 	var maxStreamDuration *routepb.RouteAction_MaxStreamDuration
-	if method.IsStreaming {
-		maxStreamDuration = &routepb.RouteAction_MaxStreamDuration{
-			MaxStreamDuration: &duration.Duration{
-				Seconds: 3600,
-			},
-		}
+	maxStreamDuration = &routepb.RouteAction_MaxStreamDuration{
+		MaxStreamDuration: &duration.Duration{
+			Seconds: 3600,
+		},
 	}
 
 	return &routepb.Route{
