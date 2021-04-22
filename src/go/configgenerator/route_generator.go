@@ -375,13 +375,15 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 
 func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
 	var maxStreamDuration *routepb.RouteAction_MaxStreamDuration
+	// If `route.MaxStreamDuration` unset, it will pick up `route.Timeout`.
+	// Consider we don't have timeout setting for streaming case before, statically
+	// set a 1-hr stream timeout to workaround.
 	if method.IsStreaming {
 		maxStreamDuration = &routepb.RouteAction_MaxStreamDuration{
 			MaxStreamDuration: &duration.Duration{
 				Seconds: 3600,
 			},
 		}
-
 	}
 
 	return &routepb.Route{

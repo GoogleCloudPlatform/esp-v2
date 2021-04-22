@@ -142,15 +142,15 @@ upload-e2e-client-binaries: build-grpc-echo build-grpc-interop
 .PHONY: test test-debug test-envoy
 test: format
 	@echo "--> running unit tests"
-#	@go test ./src/go/...
+	@go test ./src/go/...
 #	# The unit tests under src/go/serviceconfig reads/writes the global variable
 #	# util.CallGoogleapis(no mutex proctection) plus the function code reads it,
 #	# so it is easy to get into race condition when multiple test runs
 #	# and skip them for race detection.
-#	@go test -race $(shell go list ./src/go/... | grep -v serviceconfig) -count=1
-#	@go test -msan ./src/go/...
-#	@python3 -m unittest tests/start_proxy/start_proxy_test.py
-#	@python3 -m unittest tests/start_proxy/env_start_proxy_test.py
+	@go test -race $(shell go list ./src/go/... | grep -v serviceconfig) -count=1
+	@go test -msan ./src/go/...
+	@python3 -m unittest tests/start_proxy/start_proxy_test.py
+	@python3 -m unittest tests/start_proxy/env_start_proxy_test.py
 
 test-debug: format
 	@echo "--> running unit tests"
