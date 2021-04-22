@@ -209,7 +209,7 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 20,
 			deadlineToTest: Default,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 		{
 			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 5s, request = 10s
