@@ -62,8 +62,9 @@ plans {
 }`,
 		},
 		{
-			desc:    "Fail before 15s due to user-configured response deadline being 10s",
-			wantErr: "upstream request timeout",
+			desc: "Fail before 15s due to user-configured response deadline being 10s",
+			// TODO(b/185919750):deflake the timeout integration tests on 408 downstream timeout  and 504 upstream timeout.
+			wantErr: "timeout",
 			testPlan: `
 plans {
   echo {
@@ -155,8 +156,9 @@ plans {
 }`,
 		},
 		{
-			desc:    "Fail before 20s due to ESPv2 default response timeout being 15s",
-			wantErr: "upstream request timeout",
+			desc: "Fail before 20s due to ESPv2 default response timeout being 15s",
+			// TODO(b/185919750):deflake the timeout integration tests on 408 downstream timeout  and 504 upstream timeout.
+			wantErr: "timeout",
 			testPlan: `
 plans {
   echo {

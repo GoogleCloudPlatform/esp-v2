@@ -73,9 +73,9 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 		},
 		{
 			desc:           "Fail before 20s due to ESPv2 default response timeout being 15s",
-			reqDuration:    time.Second * 20,
+			reqDuration:    time.Second * 25,
 			deadlineToTest: Default,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 		{
 			desc:           "Success after 2s due to user-configured deadline being 5s",
@@ -86,7 +86,7 @@ func TestDeadlinesForDynamicRouting(t *testing.T) {
 			desc:           "Fail before 8s due to user-configured deadline being 5s",
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:        `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 	}
 
@@ -145,7 +145,7 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 		{
 			desc:        "Fail before 20s due to ESPv2 default response timeout being 15s",
 			reqDuration: time.Second * 20,
-			wantErr:     `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:     `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 			path:        "/sleep",
 		},
 		{
@@ -157,7 +157,7 @@ func TestDeadlinesForLocalBackend(t *testing.T) {
 			desc:        "Fail before 8s due to user-configured deadline being 5s, even for a local backend.",
 			reqDuration: time.Second * 8,
 			path:        "/sleep/with/backend/rule",
-			wantErr:     `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantErr:     `408 Request Timeout, {"code":408,"message":"downstream duration timeout"}`,
 		},
 	}
 
@@ -209,7 +209,8 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 20,
 			deadlineToTest: Default,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			// TODO(b/185919750):deflake the timeout integration tests on 408 downstream timeout  and 504 upstream timeout.
+			wantErr: `timeout`,
 		},
 		{
 			// route deadline = 15s (default, not explicitly specified), global stream idle timeout = 5s, request = 10s
@@ -240,7 +241,8 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			// TODO(b/185919750):deflake the timeout integration tests on 408 downstream timeout  and 504 upstream timeout.
+			wantErr: `timeout`,
 		},
 		{
 			// route deadline = 5s, global stream idle timeout = 2s, request = 8s
@@ -251,7 +253,8 @@ func TestIdleTimeoutsForUnaryRPCs(t *testing.T) {
 			}, utils.CommonArgs()...),
 			reqDuration:    time.Second * 8,
 			deadlineToTest: Short,
-			wantErr:        `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			// TODO(b/185919750):deflake the timeout integration tests on 408 downstream timeout  and 504 upstream timeout.
+			wantErr: `timeout`,
 		},
 	}
 

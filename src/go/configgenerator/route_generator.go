@@ -25,6 +25,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/duration"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -374,6 +375,18 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 }
 
 func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
+	var maxStreamDuration *routepb.RouteAction_MaxStreamDuration
+	// If `route.MaxStreamDuration` unset, it will pick up `route.Timeout`.
+	// Consider we don't have timeout setting for streaming case before, statically
+	// set a 1-hr stream timeout to workaround.
+	if method.IsStreaming {
+		maxStreamDuration = &routepb.RouteAction_MaxStreamDuration{
+			MaxStreamDuration: &duration.Duration{
+				Seconds: 3600,
+			},
+		}
+	}
+
 	return &routepb.Route{
 		Match: routeMatcher,
 		Action: &routepb.Route_Route{
@@ -389,6 +402,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) 
 						Value: uint32(method.BackendInfo.RetryNum),
 					},
 				},
+				MaxStreamDuration: maxStreamDuration,
 			},
 		},
 		Decorator: &routepb.Decorator{

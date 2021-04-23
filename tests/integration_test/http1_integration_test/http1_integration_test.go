@@ -171,7 +171,7 @@ func TestHttp1JWT(t *testing.T) {
 		host := fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
 
-		if tc.wantedError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantedError)) {
+		if tc.wantedError == "" && err != nil || tc.wantedError != "" && err == nil || err != nil && !strings.Contains(err.Error(), tc.wantedError) {
 			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
 		} else {
 			if !strings.Contains(string(resp), tc.wantResp) {
