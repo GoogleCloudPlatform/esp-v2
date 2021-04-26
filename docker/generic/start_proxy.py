@@ -341,6 +341,17 @@ environment variable or by passing "-k" flag to this script.
         Access-Control-Allow-Credentials. By default, this header is disabled.
         ''')
     parser.add_argument(
+        '--cors_max_age',
+        default='480h',
+        help='''
+        Only works when --cors_preset is in use. Configures the CORS header
+        Access-Control-Max-Age. Defaults to 20 days (1728000 seconds).
+
+        The acceptable format is a sequence of decimal numbers, each with
+        optional fraction and a unit suffix, such as "300m", "1.5h" or "2h45m".
+        Valid time units are "m" for minutes, "h" for hours.
+        ''')
+    parser.add_argument(
         '--check_metadata',
         action='store_true',
         help='''Enable fetching service name, service config ID and rollout
@@ -1085,6 +1096,8 @@ def gen_proxy_config(args):
             args.cors_allow_headers,
             "--cors_expose_headers",
             args.cors_expose_headers,
+            "--cors_max_age",
+            args.cors_max_age,
         ])
         if args.cors_allow_credentials:
             proxy_conf.append("--cors_allow_credentials")

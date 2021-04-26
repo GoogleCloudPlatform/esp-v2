@@ -35,6 +35,7 @@ type ConfigGeneratorOptions struct {
 	CorsAllowOrigin      string
 	CorsAllowOriginRegex string
 	CorsExposeHeaders    string
+	CorsMaxAge           time.Duration
 	CorsPreset           string
 
 	// Backend routing configurations.
@@ -154,5 +155,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ScCheckRetries:                   -1,
 		ScQuotaRetries:                   -1,
 		ScReportRetries:                  -1,
+		CorsMaxAge:                       480 * time.Hour,
 	}
 }

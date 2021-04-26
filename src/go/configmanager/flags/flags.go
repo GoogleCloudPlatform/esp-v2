@@ -39,6 +39,7 @@ var (
 	CorsAllowOrigin      = flag.String("cors_allow_origin", "", "set Access-Control-Allow-Origin to a specific origin")
 	CorsAllowOriginRegex = flag.String("cors_allow_origin_regex", "", "set Access-Control-Allow-Origin to a regular expression")
 	CorsExposeHeaders    = flag.String("cors_expose_headers", "", "set Access-Control-Expose-Headers to the specified headers")
+	CorsMaxAge           = flag.Duration("cors_max_age", 480 * time.Hour, "set Access-Control-Max-Age response header for CORS preflight request.")
 	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)
 
 	// Backend routing configurations.
@@ -175,6 +176,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		CorsAllowOrigin:                         *CorsAllowOrigin,
 		CorsAllowOriginRegex:                    *CorsAllowOriginRegex,
 		CorsExposeHeaders:                       *CorsExposeHeaders,
+		CorsMaxAge:                              *CorsMaxAge,
 		CorsPreset:                              *CorsPreset,
 		BackendDnsLookupFamily:                  *BackendDnsLookupFamily,
 		ClusterConnectTimeout:                   *ClusterConnectTimeout,

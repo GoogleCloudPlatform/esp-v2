@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"time"
 	"strings"
 	"testing"
 
@@ -2745,7 +2746,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 				},
 				},
 			},
-			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
+			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", "", "2m"},
 			wantRouteConfig: `
 {
   "name": "local_route",
@@ -2758,7 +2759,8 @@ func TestMakeFallbackRoute(t *testing.T) {
           {
             "exact": "http://example.com"
           }
-        ]
+        ],
+			  "maxAge":"120"
       },
       "domains": [
         "*"
@@ -3172,6 +3174,11 @@ func TestMakeFallbackRoute(t *testing.T) {
 				opts.CorsAllowMethods = tc.params[3]
 				opts.CorsAllowHeaders = tc.params[4]
 				opts.CorsExposeHeaders = tc.params[5]
+				var err error
+				opts.CorsMaxAge, err = time.ParseDuration(tc.params[6])
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
@@ -3213,27 +3220,27 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		},
 		{
 			desc:        "Incorrect configured basic Cors",
-			params:      []string{"basic", "", `^https?://.+\\.example\\.com\/?$`, "", "", ""},
+			params:      []string{"basic", "", `^https?://.+\\.example\\.com\/?$`, "", "", "", "2m"},
 			wantedError: "cors_allow_origin cannot be empty when cors_preset=basic",
 		},
 		{
 			desc:        "Incorrect configured  Cors",
-			params:      []string{"", "", "", "GET", "", ""},
+			params:      []string{"", "", "", "GET", "", "", "2m"},
 			wantedError: "cors_preset must be set in order to enable CORS support",
 		},
 		{
 			desc:        "Incorrect configured regex Cors",
-			params:      []string{"cors_with_regexs", "", `^https?://.+\\.example\\.com\/?$`, "", "", ""},
+			params:      []string{"cors_with_regexs", "", `^https?://.+\\.example\\.com\/?$`, "", "", "", "2m"},
 			wantedError: `cors_preset must be either "basic" or "cors_with_regex"`,
 		},
 		{
 			desc:        "Oversize cors origin regex",
-			params:      []string{"cors_with_regex", "", getOverSizeRegexForTest(), "", "Origin,Content-Type,Accept", ""},
+			params:      []string{"cors_with_regex", "", getOverSizeRegexForTest(), "", "Origin,Content-Type,Accept", "", "2m"},
 			wantedError: `invalid cors origin regex: regex program size(1001) is larger than the max expected(1000)`,
 		},
 		{
 			desc:   "Correct configured basic Cors, with allow methods",
-			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", ""},
+			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", "", "2m"},
 			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
@@ -3244,11 +3251,12 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				},
 				AllowMethods:     "GET,POST,PUT,OPTIONS",
 				AllowCredentials: &wrapperspb.BoolValue{Value: false},
+				MaxAge: "120",
 			},
 		},
 		{
 			desc:   "Correct configured regex Cors, with allow headers",
-			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "Origin,Content-Type,Accept", ""},
+			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "Origin,Content-Type,Accept", "", "2m"},
 			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
@@ -3264,11 +3272,12 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				},
 				AllowHeaders:     "Origin,Content-Type,Accept",
 				AllowCredentials: &wrapperspb.BoolValue{Value: false},
+				MaxAge: "120",
 			},
 		},
 		{
 			desc:             "Correct configured regex Cors, with expose headers",
-			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "", "Content-Length"},
+			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "", "Content-Length", "2m"},
 			allowCredentials: true,
 			wantCorsPolicy: &routepb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
@@ -3285,6 +3294,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				},
 				ExposeHeaders:    "Content-Length",
 				AllowCredentials: &wrapperspb.BoolValue{Value: true},
+				MaxAge: "120",
 			},
 		},
 	}
@@ -3298,6 +3308,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			opts.CorsAllowMethods = tc.params[3]
 			opts.CorsAllowHeaders = tc.params[4]
 			opts.CorsExposeHeaders = tc.params[5]
+			var err error
+			opts.CorsMaxAge, err = time.ParseDuration(tc.params[6])
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 		opts.CorsAllowCredentials = tc.allowCredentials
 

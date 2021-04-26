@@ -17,6 +17,7 @@ package configgenerator
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
@@ -204,6 +205,7 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 	if cors == nil {
 		return nil, nil, nil
 	}
+	cors.MaxAge = strconv.Itoa(int(serviceInfo.Options.CorsMaxAge.Seconds()))
 	cors.AllowMethods = serviceInfo.Options.CorsAllowMethods
 	cors.AllowHeaders = serviceInfo.Options.CorsAllowHeaders
 	cors.ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
