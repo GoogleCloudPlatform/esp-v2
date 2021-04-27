@@ -177,25 +177,35 @@ void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
   if (stream_info.requestComplete()) {
     latency.request_time_ms =
         convertNsToMs(stream_info.requestComplete().value());
-    filter_stats.filter_.request_time_.recordValue(latency.request_time_ms);
   }
 
   auto start = stream_info.firstUpstreamTxByteSent();
   auto end = stream_info.lastUpstreamRxByteReceived();
-  if (start && end && end.value() >= start.value()) {
+  if (start && end) {
+    ENVOY_BUG(end.value() >= start.value(), "End time < start time");
     latency.backend_time_ms = convertNsToMs(end.value() - start.value());
-    filter_stats.filter_.backend_time_.recordValue(latency.backend_time_ms);
-  } else {
-    // for cases like request is rejected at service control filter (does not
-    // reach backend)
+  } else if (!start) {
+    // The request is rejected at a filter (does not
+    // reach backend).
     latency.backend_time_ms = 0;
   }
 
-  if (latency.request_time_ms >= latency.backend_time_ms) {
-    latency.overhead_time_ms =
-        latency.request_time_ms - latency.backend_time_ms;
-    filter_stats.filter_.overhead_time_.recordValue(latency.overhead_time_ms);
+  if (latency.request_time_ms >= 0) {
+    if (latency.backend_time_ms >= 0) {
+      // Calculation based on backend response timing.
+      latency.overhead_time_ms =
+          latency.request_time_ms - latency.backend_time_ms;
+    } else if (start) {
+      // Less accurate calculation based on overhead timing.
+      latency.overhead_time_ms = convertNsToMs(start.value());
+      latency.backend_time_ms =
+          latency.request_time_ms - latency.overhead_time_ms;
+    }
   }
+
+  filter_stats.filter_.request_time_.recordValue(latency.request_time_ms);
+  filter_stats.filter_.backend_time_.recordValue(latency.backend_time_ms);
+  filter_stats.filter_.overhead_time_.recordValue(latency.overhead_time_ms);
 }
 
 Protocol getFrontendProtocol(

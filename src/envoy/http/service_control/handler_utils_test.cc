@@ -297,7 +297,7 @@ TEST(ServiceControlUtils, FillLatency) {
   ServiceControlFilterStats stats(
       ServiceControlFilterStats::create(Envoy::EMPTY_STRING, mock_stats_scope));
 
-  const TestCase test_cases[] = {
+  const std::vector<TestCase> test_cases = {
       // Test: If the stream has not ended, all stay their defaults.
       {zero, zero, zero, -1, 0, -1},
 
@@ -308,16 +308,6 @@ TEST(ServiceControlUtils, FillLatency) {
           1,                                  // request_time_ms set by end time
           0,                                  // default if start/end not set
           1,                                  // overhead time=request_time_ms
-      },
-
-      // Test: first and last bytes are provided but first > last
-      {
-          zero,                               // end is not set
-          std::chrono::nanoseconds(2000000),  // first
-          std::chrono::nanoseconds(1000000),  // last
-          -1,                                 // default if end_time is not set
-          0,                                  // backend not set if first>last
-          -1,                                 // default if request_time not set
       },
 
       // Test: First and last bytes are provided, so backend_time is set
@@ -359,9 +349,43 @@ TEST(ServiceControlUtils, FillLatency) {
           -1,                                 // default if request<backend
       },
 
+      // Test: Realistic example of successful request.
+      {
+          std::chrono::nanoseconds(8000000),
+          std::chrono::nanoseconds(2000000),
+          std::chrono::nanoseconds(7000000),
+          8,
+          5,
+          3,
+      },
+
+      // Test: Request times out on backend.
+      // Note the overhead time is a little less, since we don't account
+      // for the time to reject the request after backend timeout. Should
+      // be minimal.
+      {
+          std::chrono::nanoseconds(8000000),
+          std::chrono::nanoseconds(2000000),
+          zero,
+          8,
+          6,
+          2,
+      },
+
+      // Test: Filter rejects the request.
+      {
+          std::chrono::nanoseconds(8000000),
+          zero,
+          zero,
+          8,
+          0,
+          8,
+      },
+
   };
 
-  for (const auto& test : test_cases) {
+  for (unsigned long i = 0; i < test_cases.size(); i++) {
+    const auto& test = test_cases[i];
     testing::NiceMock<Envoy::StreamInfo::MockStreamInfo> mock_stream_info;
     if (test.end_time > zero) {
       mock_stream_info.end_time_ = test.end_time;
@@ -377,9 +401,12 @@ TEST(ServiceControlUtils, FillLatency) {
 
     LatencyInfo info;
     fillLatency(mock_stream_info, info, stats);
-    EXPECT_EQ(test.expect_request_time_ms, info.request_time_ms);
-    EXPECT_EQ(test.expect_backend_time_ms, info.backend_time_ms);
-    EXPECT_EQ(test.expect_overhead_time_ms, info.overhead_time_ms);
+    EXPECT_EQ(test.expect_request_time_ms, info.request_time_ms)
+        << "Test case " << i;
+    EXPECT_EQ(test.expect_backend_time_ms, info.backend_time_ms)
+        << "Test case " << i;
+    EXPECT_EQ(test.expect_overhead_time_ms, info.overhead_time_ms)
+        << "Test case " << i;
   }
 }
 
