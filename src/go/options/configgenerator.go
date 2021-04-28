@@ -156,7 +156,5 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ScCheckRetries:                   -1,
 		ScQuotaRetries:                   -1,
 		ScReportRetries:                  -1,
-		NormalizePath:                    true,
-		MergeSlashesInPath:               true,
 	}
 }

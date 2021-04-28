@@ -58,6 +58,7 @@ const (
 	TestDynamicGrpcBackendTLS
 	TestDynamicRouting
 	TestDynamicRoutingCorsByEnvoy
+	TestDynamicRoutingPathPreprocessing
 	TestDynamicRoutingWithAllowCors
 	TestFrontendAndBackendAuthHeaders
 	TestGeneratedHeaders
