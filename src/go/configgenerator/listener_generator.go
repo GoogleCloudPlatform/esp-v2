@@ -189,9 +189,14 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 				},
 			},
 		},
-		// Security options for `path` header.
-		NormalizePath: &wrapperspb.BoolValue{Value: opts.NormalizePath},
-		MergeSlashes:  opts.MergeSlashesInPath,
+	}
+
+	// Security options for `path` header.
+	if opts.NormalizePath {
+		httpConMgr.NormalizePath = &wrapperspb.BoolValue{Value: opts.NormalizePath}
+	}
+	if opts.MergeSlashesInPath {
+		httpConMgr.MergeSlashes = opts.MergeSlashesInPath
 	}
 
 	if opts.AccessLog != "" {
