@@ -114,6 +114,8 @@ var (
 	SuppressEnvoyHeaders = flag.Bool("suppress_envoy_headers", true, `Do not add any additional x-envoy- headers to requests or responses. This only affects the router filter
 	generated *x-envoy-* headers, other Envoy filters and the HTTP connection manager may continue to set x-envoy- headers.`)
 	UnderscoresInHeaders = flag.Bool("underscores_in_headers", false, `When true, ESPv2 allows HTTP headers name has underscore and pass it through. Otherwise, rejects the request.`)
+	NormalizePath        = flag.Bool("normalize_path", false, `Normalizes the path according to RFC 3986 before processing requests.`)
+	MergeSlashesInPath   = flag.Bool("merge_slashes_in_path", false, `Determines if adjacent slashes in the path are merged into one before processing requests.`)
 
 	ServiceControlNetworkFailOpen = flag.Bool("service_control_network_fail_open", true, ` In case of network failures when connecting to Google service control,
         the requests will be allowed if this flag is on. The default is on.`)
@@ -212,6 +214,8 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		MinStreamReportIntervalMs:               *MinStreamReportIntervalMs,
 		SuppressEnvoyHeaders:                    *SuppressEnvoyHeaders,
 		UnderscoresInHeaders:                    *UnderscoresInHeaders,
+		NormalizePath:                           *NormalizePath,
+		MergeSlashesInPath:                      *MergeSlashesInPath,
 		ServiceControlNetworkFailOpen:           *ServiceControlNetworkFailOpen,
 		EnableGrpcForHttp1:                      *EnableGrpcForHttp1,
 		ConnectionBufferLimitBytes:              *ConnectionBufferLimitBytes,

@@ -191,6 +191,14 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 		},
 	}
 
+	// Security options for `path` header.
+	if opts.NormalizePath {
+		httpConMgr.NormalizePath = &wrapperspb.BoolValue{Value: opts.NormalizePath}
+	}
+	if opts.MergeSlashesInPath {
+		httpConMgr.MergeSlashes = opts.MergeSlashesInPath
+	}
+
 	if opts.AccessLog != "" {
 		fileAccessLog := &facpb.FileAccessLog{
 			Path: opts.AccessLog,

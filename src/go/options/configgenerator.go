@@ -97,6 +97,8 @@ type ConfigGeneratorOptions struct {
 
 	SuppressEnvoyHeaders          bool
 	UnderscoresInHeaders          bool
+	NormalizePath                 bool
+	MergeSlashesInPath            bool
 	ServiceControlNetworkFailOpen bool
 	EnableGrpcForHttp1            bool
 	ConnectionBufferLimitBytes    int

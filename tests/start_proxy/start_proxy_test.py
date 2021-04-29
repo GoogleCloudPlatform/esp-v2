@@ -595,6 +595,18 @@ class TestStartProxy(unittest.TestCase):
               '--append_response_headers', 'k1=v1;k2=v2',
               '--service_json_path', '/tmp/service_config.json',
               ]),
+            # Path security options.
+            (['--rollout_strategy=fixed',
+              '--service_json_path=/tmp/service_config.json',
+              '--normalize_path',
+              '--merge_slashes_in_path',
+              ],
+             ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--service_json_path', '/tmp/service_config.json',
+              '--normalize_path',
+              '--merge_slashes_in_path',
+              ]),
         ]
 
         i = 0
