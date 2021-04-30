@@ -96,12 +96,9 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
   }
 
   if (!delegates_.empty() || !scopes_.empty() || include_email_) {
-    auto json_or_error =
+    std::string bodyStr =
         Envoy::MessageUtil::getJsonStringFromMessage(body, false, false);
-    if (json_or_error.ok()) {
-      message->body().add(json_or_error.value().data(),
-                          json_or_error.value().size());
-    }
+    message->body().add(bodyStr.data(), bodyStr.size());
   }
   return message;
 }
