@@ -1045,9 +1045,6 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "idleTimeout": "400s",
-                              "maxStreamDuration": {
-                                "maxStreamDuration": "3600s"
-                              },
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -1086,9 +1083,6 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "idleTimeout": "400s",
-                              "maxStreamDuration": {
-                                "maxStreamDuration": "3600s"
-                              },
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -1127,9 +1121,6 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "idleTimeout": "400s",
-                              "maxStreamDuration": {
-                                "maxStreamDuration": "3600s"
-                              },
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -1164,9 +1155,6 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "idleTimeout": "400s",
-                              "maxStreamDuration": {
-                                "maxStreamDuration": "3600s"
-                              },
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -1337,9 +1325,6 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "idleTimeout": "400s",
-                              "maxStreamDuration": {
-                                "maxStreamDuration": "3600s"
-                              },
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
@@ -1378,9 +1363,6 @@
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
                               "idleTimeout": "400s",
-                              "maxStreamDuration": {
-                                "maxStreamDuration": "3600s"
-                              },
                               "retryPolicy": {
                                 "numRetries": 1,
                                 "retryOn": "reset,connect-failure,refused-stream"
