@@ -523,10 +523,11 @@ environment variable or by passing "-k" flag to this script.
         '--backend_per_try_timeout_sec',
         default=None,
         help='''
-        The backend timeout per retry attempt in second. If unspecified, ESPv2 
-        will use the `deadline` in the `x-google-backend` extension. Consequently,
-        a request that times out will not be retried as the total timeout budget
-        would have been exhausted.
+        The backend timeout per retry attempt in second. Please note the `deadline`
+        in the `x-google-backend` extension is for the total timeout of request. 
+        If the flag is unspecified, ESPv2 will use the `deadline` in the 
+        `x-google-backend` extension. Consequently, a request that times out will
+        not be retried as the total timeout budget would have been exhausted.
         ''')
     parser.add_argument(
         '--access_log',

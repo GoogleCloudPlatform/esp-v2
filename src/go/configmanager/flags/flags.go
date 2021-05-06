@@ -162,10 +162,11 @@ var (
 		`The allowed number of retries. Must be >= 0 and defaults to 1. This retry
 setting will be applied to all the backends if you have multiple ones.`)
 	BackendPerTryTimeoutSec = flag.Uint("backend_per_try_timeout_sec", 0,
-		`The backend timeout per retry attempt in second. A default value 0
-means it is unspecified and ESPv2 will use the "deadline" in the "x-google-backend"
-extension. Consequently, a request that times out will not be retried as the total
-timeout budget would have been exhausted.`)
+		`The backend timeout per retry attempt in second.  Please note the "deadline"
+in the "x-google-backend" extension is for the total timeout of request. By default,
+backend_per_try_timeout_sec=0 means it is unspecified and ESPv2 will use the
+"deadline" in the "x-google-backend" extension. Consequently, a request that
+times out will not be retried as the total timeout budget would have been exhausted.`)
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
