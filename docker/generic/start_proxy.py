@@ -520,15 +520,17 @@ environment variable or by passing "-k" flag to this script.
         The allowed number of retries. Must be >= 0 and defaults to 1. 
         ''')
     parser.add_argument(
-        '--backend_per_try_timeout_sec',
+        '--backend_per_try_timeout',
         default=None,
         help='''
-        The backend timeout per retry attempt in second. Please note the
-        `deadline` in the `x-google-backend` extension is the total time wait
-        for a full response from one request, including all retries. If the flag
-        is unspecified, ESPv2 will use the  `deadline` in the `x-google-backend`
-        extension. Consequently, a request that times out will not be retried as
-        the total timeout budget would have been exhausted.
+        The backend timeout per retry attempt. Valid time units are "ns", "us",
+        "ms", "s", "m", "h".
+        
+        Please note the `deadline` in the `x-google-backend` extension is the
+        total time wait for a full response from one request, including all
+        retries. If the flag is unspecified, ESPv2 will use the  `deadline` in
+        the `x-google-backend` extension. Consequently, a request that times out
+         will not be retried as the total timeout budget would have been exhausted.
         ''')
     parser.add_argument(
         '--access_log',
@@ -1058,8 +1060,8 @@ def gen_proxy_config(args):
     if args.backend_retry_num:
         proxy_conf.extend(["--backend_retry_num", args.backend_retry_num])
 
-    if args.backend_per_try_timeout_sec:
-        proxy_conf.extend(["--backend_per_try_timeout_sec", args.backend_per_try_timeout_sec])
+    if args.backend_per_try_timeout:
+        proxy_conf.extend(["--backend_per_try_timeout", args.backend_per_try_timeout])
 
     if args.access_log:
         proxy_conf.extend(["--access_log",

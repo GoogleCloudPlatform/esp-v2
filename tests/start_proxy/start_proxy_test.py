@@ -466,12 +466,12 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing'
               ]),
             (['-R=managed',
-              '--http2_port=8079', '--backend_per_try_timeout_sec=10',
+              '--http2_port=8079', '--backend_per_try_timeout=10s',
               '--disable_tracing'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
-              '--backend_per_try_timeout_sec', '10',
+              '--backend_per_try_timeout', '10s',
               '--disable_tracing'
               ]),
             # Service account key does not assume non-gcp

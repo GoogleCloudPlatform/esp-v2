@@ -298,20 +298,20 @@ func TestBackendPerTryTimeout(t *testing.T) {
 	t.Parallel()
 
 	testData := []struct {
-		desc                    string
-		backendRetryNumFlag     int
-		backendPerTryTimeoutSec int
-		skipSleepAfter          int
-		sleepLength             string
-		wantResp                string
-		wantError               string
-		wantSpanNames           []string
+		desc                 string
+		backendRetryNumFlag  int
+		backendPerTryTimeout string
+		skipSleepAfter       int
+		sleepLength          string
+		wantResp             string
+		wantError            string
+		wantSpanNames        []string
 	}{
 		{
 			// backend sleep duration: 7s
 			// route deadline: 5s
-			// perRouteRetryTimeout: unset
-			desc:                "Failed request, `perRouteRetryTimeout` is unset and `deadline` is exhausted so no retry is executed",
+			// perRetryTimeout: unset
+			desc:                "Failed request, `perRetryTimeout` is unset and `deadline` is exhausted so no retry is executed",
 			backendRetryNumFlag: 2,
 			sleepLength:         "7s",
 			skipSleepAfter:      2,
@@ -326,13 +326,13 @@ func TestBackendPerTryTimeout(t *testing.T) {
 			// backend skip sleep after: 2
 			// route deadline: 5s
 			// retryNum: 1
-			// perRouteRetryTimeout: 2s
-			desc:                    "Failed request, `perRouteRetryTimeout` is set but `retryNum` is not large enough",
-			backendRetryNumFlag:     1,
-			backendPerTryTimeoutSec: 2,
-			sleepLength:             "7s",
-			skipSleepAfter:          2,
-			wantError:               `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			// perRetryTimeout: 2s
+			desc:                 "Failed request, `perRetryTimeout` is set but `retryNum` is not large enough",
+			backendRetryNumFlag:  1,
+			backendPerTryTimeout: "2s",
+			sleepLength:          "7s",
+			skipSleepAfter:       2,
+			wantError:            `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 			wantSpanNames: []string{
 				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
 				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
@@ -344,13 +344,13 @@ func TestBackendPerTryTimeout(t *testing.T) {
 			// backend skip sleep after: 2
 			// route deadline: 5s
 			// retryNum: 2
-			// perRouteRetryTimeout: 4s
-			desc:                    "Successful request, `perRouteRetryTimeout` is set but too large",
-			backendRetryNumFlag:     2,
-			backendPerTryTimeoutSec: 4,
-			sleepLength:             "7s",
-			skipSleepAfter:          2,
-			wantError:               `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			// perRetryTimeout: 4s
+			desc:                 "Successful request, `perRetryTimeout` is set but too large",
+			backendRetryNumFlag:  2,
+			backendPerTryTimeout: "4s",
+			sleepLength:          "7s",
+			skipSleepAfter:       2,
+			wantError:            `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
 			wantSpanNames: []string{
 				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
 				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
@@ -362,13 +362,13 @@ func TestBackendPerTryTimeout(t *testing.T) {
 			// backend skip sleep after: 2
 			// route deadline: 5s
 			// retryNum: 2
-			// perRouteRetryTimeout: 1s
-			desc:                    "Successful request, `perRouteRetryTimeout` and `retryNum` are set appropriately",
-			backendRetryNumFlag:     2,
-			backendPerTryTimeoutSec: 1,
-			sleepLength:             "7s",
-			skipSleepAfter:          2,
-			wantResp:                "Sleep done",
+			// perRetryTimeout: 1s
+			desc:                 "Successful request, `perRetryTimeout` and `retryNum` are set appropriately",
+			backendRetryNumFlag:  2,
+			backendPerTryTimeout: "1s",
+			sleepLength:          "7s",
+			skipSleepAfter:       2,
+			wantResp:             "Sleep done",
 			wantSpanNames: []string{
 				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
 				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
@@ -386,7 +386,9 @@ func TestBackendPerTryTimeout(t *testing.T) {
 				"--suppress_envoy_headers",
 				"--backend_retry_ons=" + defaultBackendRetryOns,
 				"--backend_retry_num=" + strconv.Itoa(tc.backendRetryNumFlag),
-				"--backend_per_try_timeout_sec=" + strconv.Itoa(tc.backendPerTryTimeoutSec),
+			}
+			if tc.backendPerTryTimeout != "" {
+				args = append(args, "--backend_per_try_timeout="+tc.backendPerTryTimeout)
 			}
 
 			s := env.NewTestEnv(platform.TestBackendPerTryTimeout, platform.EchoRemote)
@@ -395,7 +397,7 @@ func TestBackendPerTryTimeout(t *testing.T) {
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
-			resp, err := client.DoWithHeaders(fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/sleepShort?duration="+tc.sleepLength, fmt.Sprintf("&skipafter=%v", tc.skipSleepAfter)), util.GET, "", nil)
+			resp, err := client.DoWithHeaders(fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/sleepShort?duration="+tc.sleepLength, "&skipafter="+strconv.Itoa(tc.skipSleepAfter)), util.GET, "", nil)
 			respStr := string(resp)
 			if !strings.Contains(respStr, tc.wantResp) {
 				t.Errorf("Test (%s) failed, want resp %s, get resp %s", tc.desc, tc.wantResp, respStr)

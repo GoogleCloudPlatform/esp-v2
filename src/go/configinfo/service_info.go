@@ -588,15 +588,15 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 	}
 
 	method.BackendInfo = &backendInfo{
-		ClusterName:      backendClusterName,
-		Path:             path,
-		Hostname:         hostname,
-		TranslationType:  r.PathTranslation,
-		Deadline:         deadline,
-		IdleTimeout:      idleTimeout,
-		RetryOns:         s.Options.BackendRetryOns,
-		RetryNum:         s.Options.BackendRetryNum,
-		PerTryTimeoutSec: s.Options.BackendPerTryTimeoutSec,
+		ClusterName:     backendClusterName,
+		Path:            path,
+		Hostname:        hostname,
+		TranslationType: r.PathTranslation,
+		Deadline:        deadline,
+		IdleTimeout:     idleTimeout,
+		RetryOns:        s.Options.BackendRetryOns,
+		RetryNum:        s.Options.BackendRetryNum,
+		PerTryTimeout:   s.Options.BackendPerTryTimeout,
 	}
 
 	jwtAud := s.determineBackendAuthJwtAud(r, scheme, hostname)
@@ -645,12 +645,12 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{
-			ClusterName:      s.LocalBackendCluster.ClusterName,
-			Deadline:         util.DefaultResponseDeadline,
-			IdleTimeout:      idleTimeout,
-			RetryOns:         s.Options.BackendRetryOns,
-			RetryNum:         s.Options.BackendRetryNum,
-			PerTryTimeoutSec: s.Options.BackendPerTryTimeoutSec,
+			ClusterName:   s.LocalBackendCluster.ClusterName,
+			Deadline:      util.DefaultResponseDeadline,
+			IdleTimeout:   idleTimeout,
+			RetryOns:      s.Options.BackendRetryOns,
+			RetryNum:      s.Options.BackendRetryNum,
+			PerTryTimeout: s.Options.BackendPerTryTimeout,
 		}
 	}
 

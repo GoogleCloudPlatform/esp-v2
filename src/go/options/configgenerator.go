@@ -109,12 +109,12 @@ type ConfigGeneratorOptions struct {
 	ScQuotaTimeoutMs  int
 	ScReportTimeoutMs int
 
-	BackendRetryOns         string
-	BackendRetryNum         uint
-	BackendPerTryTimeoutSec uint
-	ScCheckRetries          int
-	ScQuotaRetries          int
-	ScReportRetries         int
+	BackendRetryOns      string
+	BackendRetryNum      uint
+	BackendPerTryTimeout time.Duration
+	ScCheckRetries       int
+	ScQuotaRetries       int
+	ScReportRetries      int
 
 	ComputePlatformOverride string
 
