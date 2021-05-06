@@ -23,11 +23,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
-
-	"net"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
@@ -179,6 +179,8 @@ func RejectMiddleWare(h http.Handler) http.Handler {
 	})
 }
 
+var skipSleepAfter = -1
+
 // sleepHandler sleeps for the given duration, then responds with 200 OK
 // Add the duration to sleep as a query param: ?duration=10s
 func sleepHandler(w http.ResponseWriter, r *http.Request) {
@@ -188,6 +190,23 @@ func sleepHandler(w http.ResponseWriter, r *http.Request) {
 	sleepDuration, err := time.ParseDuration(sleepDurationStr)
 	if err != nil {
 		errorf(w, http.StatusBadRequest, "Invalid duration: %v", err)
+		return
+	}
+
+	// Use `skipafter` query parameter to simulate the case where the backend
+	// intermittently has long processing time.
+	// Only the first request carrying `skipafter=cnt` will be effective and the backend
+	// won't sleep after cnt requests.
+	skipSleepAfterStr := queryParams.Get("skipafter")
+	skipSleepAfterInt, err := strconv.Atoi(skipSleepAfterStr)
+	if err == nil && skipSleepAfterInt > 0 && skipSleepAfter == -1 {
+		skipSleepAfter = skipSleepAfterInt
+	}
+
+	if skipSleepAfter > 0 {
+		skipSleepAfter -= 1
+	} else if skipSleepAfter == 0 {
+		w.Write([]byte(fmt.Sprintf("Sleep done: %v", sleepDurationStr)))
 		return
 	}
 

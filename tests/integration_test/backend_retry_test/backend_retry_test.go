@@ -294,6 +294,135 @@ func TestBackendRetry(t *testing.T) {
 	}
 }
 
+func TestBackendPerTryTimeout(t *testing.T) {
+	t.Parallel()
+
+	testData := []struct {
+		desc                 string
+		backendRetryNumFlag  int
+		backendPerTryTimeout string
+		skipSleepAfter       int
+		sleepLength          string
+		wantResp             string
+		wantError            string
+		wantSpanNames        []string
+	}{
+		{
+			// backend sleep duration: 7s
+			// route deadline: 5s
+			// perRetryTimeout: unset
+			desc:                "Failed request, `perRetryTimeout` is unset and `deadline` is exhausted so no retry is executed",
+			backendRetryNumFlag: 2,
+			sleepLength:         "7s",
+			skipSleepAfter:      2,
+			wantError:           `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantSpanNames: []string{
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				"ingress dynamic_routing_SleepDurationShort",
+			},
+		},
+		{
+			// backend sleep duration: 7s
+			// backend skip sleep after: 2
+			// route deadline: 5s
+			// retryNum: 1
+			// perRetryTimeout: 2s
+			desc:                 "Failed request, `perRetryTimeout` is set but `retryNum` is not large enough",
+			backendRetryNumFlag:  1,
+			backendPerTryTimeout: "2s",
+			sleepLength:          "7s",
+			skipSleepAfter:       2,
+			wantError:            `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantSpanNames: []string{
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				"ingress dynamic_routing_SleepDurationShort",
+			},
+		},
+		{
+			// backend sleep duration: 7s
+			// backend skip sleep after: 2
+			// route deadline: 5s
+			// retryNum: 2
+			// perRetryTimeout: 4s
+			desc:                 "Successful request, `perRetryTimeout` is set but too large",
+			backendRetryNumFlag:  2,
+			backendPerTryTimeout: "4s",
+			sleepLength:          "7s",
+			skipSleepAfter:       2,
+			wantError:            `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantSpanNames: []string{
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				"ingress dynamic_routing_SleepDurationShort",
+			},
+		},
+		{
+			// backend sleep duration: 7s
+			// backend skip sleep after: 2
+			// route deadline: 5s
+			// retryNum: 2
+			// perRetryTimeout: 1s
+			desc:                 "Successful request, `perRetryTimeout` and `retryNum` are set appropriately",
+			backendRetryNumFlag:  2,
+			backendPerTryTimeout: "1s",
+			sleepLength:          "7s",
+			skipSleepAfter:       2,
+			wantResp:             "Sleep done",
+			wantSpanNames: []string{
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				"ingress dynamic_routing_SleepDurationShort",
+			},
+		},
+	}
+	for _, tc := range testData {
+		func() {
+			configId := "test-config-id"
+			args := []string{
+				"--service_config_id=" + configId,
+				"--rollout_strategy=fixed",
+				"--suppress_envoy_headers",
+				"--backend_retry_ons=" + defaultBackendRetryOns,
+				"--backend_retry_num=" + strconv.Itoa(tc.backendRetryNumFlag),
+			}
+			if tc.backendPerTryTimeout != "" {
+				args = append(args, "--backend_per_try_timeout="+tc.backendPerTryTimeout)
+			}
+
+			s := env.NewTestEnv(platform.TestBackendPerTryTimeout, platform.EchoRemote)
+			s.SetupFakeTraceServer(1)
+			defer s.TearDown(t)
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+			resp, err := client.DoWithHeaders(fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/sleepShort?duration="+tc.sleepLength, "&skipafter="+strconv.Itoa(tc.skipSleepAfter)), util.GET, "", nil)
+			respStr := string(resp)
+			if !strings.Contains(respStr, tc.wantResp) {
+				t.Errorf("Test (%s) failed, want resp %s, get resp %s", tc.desc, tc.wantResp, respStr)
+			}
+
+			if tc.wantError != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
+					t.Errorf("Test (%s) failed, want error %s, get error %v", tc.desc, tc.wantError, err)
+					t.Errorf(respStr)
+				}
+			} else if err != nil {
+				t.Errorf("Test (%s) failed, get unexpected error %v", tc.desc, err)
+			}
+
+			time.Sleep(time.Second * 5)
+			gotSpanNames, _ := s.FakeStackdriverServer.RetrieveSpanNames()
+			realWantSpanNames := replaceBackendPort(tc.wantSpanNames, strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort)))
+			if !reflect.DeepEqual(gotSpanNames, realWantSpanNames) {
+				t.Errorf("Test (%s) failed, got span names: %+q, want span names: %+q", tc.desc, gotSpanNames, realWantSpanNames)
+			}
+
+		}()
+	}
+}
+
 func replaceBackendPort(spanNames []string, port string) []string {
 	var replacedSpanNames []string
 	for _, spanName := range spanNames {

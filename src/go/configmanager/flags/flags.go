@@ -160,7 +160,14 @@ var (
         x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).`)
 	BackendRetryNum = flag.Uint("backend_retry_num", 1,
 		`The allowed number of retries. Must be >= 0 and defaults to 1. This retry
-	setting will be applied to all the backends if you have multiple ones.`)
+        setting will be applied to all the backends if you have multiple ones.`)
+	BackendPerTryTimeout = flag.Duration("backend_per_try_timeout", 0,
+		`The backend timeout per retry attempt in second. Please note the 
+        "deadline"" in the "x-google-backend"" extension is the total time wait
+        for a full response from one request, including all retries. By default,
+        backend_per_try_timeout=0 means ESPv2 will use the  "deadline"" in
+        the "x-google-backend" extension. Consequently, a request that times out
+        will not be retried as the total timeout budget would have been exhausted.`)
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -222,6 +229,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		JwksCacheDurationInS:                    *JwksCacheDurationInS,
 		BackendRetryOns:                         *BackendRetryOns,
 		BackendRetryNum:                         *BackendRetryNum,
+		BackendPerTryTimeout:                    *BackendPerTryTimeout,
 		ScCheckTimeoutMs:                        *ScCheckTimeoutMs,
 		ScQuotaTimeoutMs:                        *ScQuotaTimeoutMs,
 		ScReportTimeoutMs:                       *ScReportTimeoutMs,

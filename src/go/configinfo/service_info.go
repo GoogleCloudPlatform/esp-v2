@@ -596,6 +596,7 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		IdleTimeout:     idleTimeout,
 		RetryOns:        s.Options.BackendRetryOns,
 		RetryNum:        s.Options.BackendRetryNum,
+		PerTryTimeout:   s.Options.BackendPerTryTimeout,
 	}
 
 	jwtAud := s.determineBackendAuthJwtAud(r, scheme, hostname)
@@ -644,11 +645,12 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{
-			ClusterName: s.LocalBackendCluster.ClusterName,
-			Deadline:    util.DefaultResponseDeadline,
-			IdleTimeout: idleTimeout,
-			RetryOns:    s.Options.BackendRetryOns,
-			RetryNum:    s.Options.BackendRetryNum,
+			ClusterName:   s.LocalBackendCluster.ClusterName,
+			Deadline:      util.DefaultResponseDeadline,
+			IdleTimeout:   idleTimeout,
+			RetryOns:      s.Options.BackendRetryOns,
+			RetryNum:      s.Options.BackendRetryNum,
+			PerTryTimeout: s.Options.BackendPerTryTimeout,
 		}
 	}
 
