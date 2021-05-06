@@ -161,7 +161,7 @@ var (
 	BackendRetryNum = flag.Uint("backend_retry_num", 1,
 		`The allowed number of retries. Must be >= 0 and defaults to 1. This retry
 	setting will be applied to all the backends if you have multiple ones.`)
-	BackendPerTryTimeoutSec = flag.Uint("backend_per_try_timeout_sec", 0, "The upstream timeout per retry attempt in second. If unspecified, a request that times out won't be retried.")
+	BackendPerTryTimeoutSec = flag.Uint("backend_per_try_timeout_sec", 0, "The upstream timeout per retry attempt in second. By default it is set with 0 and a request that times out won't be retried.")
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
