@@ -366,10 +366,10 @@ func TestBackendPerTryTimeout(t *testing.T) {
 				"--service_config_id=" + configId,
 				"--rollout_strategy=fixed",
 				"--suppress_envoy_headers",
+				"--backend_retry_ons=" +  defaultBackendRetryOns,
+				"--backend_retry_num=" + strconv.Itoa(tc.backendRetryNumFlag),
+				"--backend_per_try_timeout_sec=" + strconv.Itoa(tc.backendPerTryTimeoutSec),
 			}
-			args = append(args, fmt.Sprintf("--backend_retry_ons=%v", defaultBackendRetryOns))
-			args = append(args, fmt.Sprintf("--backend_retry_num=%v", tc.backendRetryNumFlag))
-			args = append(args, fmt.Sprintf("--backend_per_try_timeout_sec=%v", tc.backendPerTryTimeoutSec))
 
 			s := env.NewTestEnv(platform.TestBackendPerTryTimeout, platform.EchoRemote)
 			s.SetupFakeTraceServer(1)
