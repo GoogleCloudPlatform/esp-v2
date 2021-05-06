@@ -344,8 +344,26 @@ func TestBackendPerTryTimeout(t *testing.T) {
 			// backend skip sleep after: 2
 			// route deadline: 5s
 			// retryNum: 2
-			// perRouteRetryTimeout: 2s
-			desc:                    "Successful request, `perRouteRetryTimeout` is set and `retryNum` is large enough",
+			// perRouteRetryTimeout: 4s
+			desc:                    "Successful request, `perRouteRetryTimeout` is set but too large",
+			backendRetryNumFlag:     2,
+			backendPerTryTimeoutSec: 4,
+			sleepLength:             "7s",
+			skipSleepAfter:          2,
+			wantError:               `504 Gateway Timeout, {"code":504,"message":"upstream request timeout"}`,
+			wantSpanNames: []string{
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				"ingress dynamic_routing_SleepDurationShort",
+			},
+		},
+		{
+			// backend sleep duration: 7s
+			// backend skip sleep after: 2
+			// route deadline: 5s
+			// retryNum: 2
+			// perRouteRetryTimeout: 1s
+			desc:                    "Successful request, `perRouteRetryTimeout` and `retryNum` are set appropriately",
 			backendRetryNumFlag:     2,
 			backendPerTryTimeoutSec: 1,
 			sleepLength:             "7s",
@@ -366,7 +384,7 @@ func TestBackendPerTryTimeout(t *testing.T) {
 				"--service_config_id=" + configId,
 				"--rollout_strategy=fixed",
 				"--suppress_envoy_headers",
-				"--backend_retry_ons=" +  defaultBackendRetryOns,
+				"--backend_retry_ons=" + defaultBackendRetryOns,
 				"--backend_retry_num=" + strconv.Itoa(tc.backendRetryNumFlag),
 				"--backend_per_try_timeout_sec=" + strconv.Itoa(tc.backendPerTryTimeoutSec),
 			}
