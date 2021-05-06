@@ -160,7 +160,7 @@ var (
         x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).`)
 	BackendRetryNum = flag.Uint("backend_retry_num", 1,
 		`The allowed number of retries. Must be >= 0 and defaults to 1. This retry
-setting will be applied to all the backends if you have multiple ones.`)
+        setting will be applied to all the backends if you have multiple ones.`)
 	BackendPerTryTimeoutSec = flag.Uint("backend_per_try_timeout_sec", 0,
 		`The backend timeout per retry attempt in second. Please note the 
         "deadline"" in the "x-google-backend"" extension is the total time wait
