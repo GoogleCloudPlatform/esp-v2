@@ -70,8 +70,9 @@ type backendInfo struct {
 	IdleTimeout time.Duration
 
 	// Retry setting on the backend.
-	RetryOns string
-	RetryNum uint
+	RetryOns         string
+	RetryNum         uint
+	PerTryTimeoutSec uint
 }
 
 type SnakeToJsonSegments = map[string]string

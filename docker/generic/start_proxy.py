@@ -520,6 +520,12 @@ environment variable or by passing "-k" flag to this script.
         The allowed number of retries. Must be >= 0 and defaults to 1. 
         ''')
     parser.add_argument(
+        '--backend_per_try_timeout_sec',
+        default=None,
+        help='''
+        The upstream timeout per retry attempt in second. If unspecified, a request that times out won't be retried.
+        ''')
+    parser.add_argument(
         '--access_log',
         help='''
         Path to a local file to which the access log entries will be written.
@@ -1046,6 +1052,9 @@ def gen_proxy_config(args):
 
     if args.backend_retry_num:
         proxy_conf.extend(["--backend_retry_num", args.backend_retry_num])
+
+    if args.backend_per_try_timeout_sec:
+        proxy_conf.extend(["--backend_per_try_timeout_sec", args.backend_per_try_timeout_sec])
 
     if args.access_log:
         proxy_conf.extend(["--access_log",
