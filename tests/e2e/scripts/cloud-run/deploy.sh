@@ -149,7 +149,7 @@ function deployProxy() {
 
   case ${PROXY_PLATFORM} in
     "cloud-run")
-      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed --enable_debug"
+      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed"
       ;;
     "anthos-cloud-run")
       args+=" --platform=gke"
@@ -327,7 +327,7 @@ function setup() {
 
   # Redeploy ESPv2 to update the service config. Set flags as follows:
   # - Tracing: Support trace context propagation to the backend and from AppHosting.
-  proxy_args="^++^--tracing_sample_rate=0.05"
+  proxy_args="^++^--tracing_sample_rate=0.05++--enable_debug"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then
