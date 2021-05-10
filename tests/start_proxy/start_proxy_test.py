@@ -276,6 +276,7 @@ class TestStartProxy(unittest.TestCase):
               '--cors_allow_methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
               '--cors_allow_headers', 'X-Requested-With',
               '--cors_expose_headers', 'Content-Length,Content-Range',
+              '--cors_max_age', "480h",
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
             # backend routing (with deprecated flag)
