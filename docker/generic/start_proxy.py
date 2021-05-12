@@ -361,7 +361,7 @@ environment variable or by passing "-k" flag to this script.
         help='''Allow headers contain underscores to pass through. By default
         ESPv2 rejects requests that have headers with underscores.''')
 
-    parser.add_argument('--no_normalize_path', action='store_true',
+    parser.add_argument('--disable_normalize_path', action='store_true',
         help='''Disable normalization of the `path` HTTP header according to
         RFC 3986. It is recommended to keep this option enabled if your backend
         performs path normalization by default.
@@ -383,7 +383,7 @@ environment variable or by passing "-k" flag to this script.
         For more details, see:
         https://cloud.google.com/api-gateway/docs/path-templating''')
 
-    parser.add_argument('--no_merge_slashes_in_path', action='store_true',
+    parser.add_argument('--disable_merge_slashes_in_path', action='store_true',
         help='''Disable merging of adjacent slashes in the `path` HTTP header.
         It is recommended to keep this option enabled if your backend
         performs merging by default.
@@ -406,15 +406,15 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('--escape_slashes_in_path', action='store_true',
         help='''Enables escaping of the following characters in the `path`
-        HTTP header:
-        - %%2F or %%2f -> /
-        - %%5C or %%5c -> \
+        HTTP header before the request is sent to the backend:
+        - %%2F or %%2f is converted to /
+        - %%5C or %%5c is converted to \
         
         When enabled, the behavior depends on the protocol:
-        - For OpenAPI backends, request paths with escaped slashes will be
-          automatically unescaped via a redirect.
-        - For gRPC backends, request paths with escaped slashes will be
-          rejected.
+        - For OpenAPI backends, request paths with unescaped percent-encoded
+          slashes will be automatically escaped via a redirect.
+        - For gRPC backends, request paths with unescaped percent-encoded 
+          slashes will be rejected.
           
         This option is **not** RFC 3986 compliant,
         so it is turned off by default.
@@ -1091,9 +1091,9 @@ def gen_proxy_config(args):
 
     if args.underscores_in_headers:
         proxy_conf.append("--underscores_in_headers")
-    if args.no_normalize_path:
+    if args.disable_normalize_path:
         proxy_conf.append("--normalize_path=false")
-    if args.no_merge_slashes_in_path:
+    if args.disable_merge_slashes_in_path:
         proxy_conf.append("--merge_slashes_in_path=false")
     if args.escape_slashes_in_path:
         proxy_conf.append("--escape_slashes_in_path")

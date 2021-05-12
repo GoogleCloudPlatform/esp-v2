@@ -608,8 +608,8 @@ class TestStartProxy(unittest.TestCase):
             # Path security options.
             (['--rollout_strategy=fixed',
               '--service_json_path=/tmp/service_config.json',
-              '--no_normalize_path',
-              '--no_merge_slashes_in_path',
+              '--disable_normalize_path',
+              '--disable_merge_slashes_in_path',
               ],
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
