@@ -380,6 +380,13 @@ environment variable or by passing "-k" flag to this script.
         By default, ESPv2 will normalize paths.
         Disable the feature only if your traffic is affected by the behavior.
         
+        Note: Following RFC 3986, this option does not unescape percent-encoded
+        slash characters. See flag `--disallow_escaped_slashes_in_path` to
+        enable this non-compliant behavior.
+        
+        Note: Case normalization from RFC 3986 is not supported, even if this
+        option is enabled.
+        
         For more details, see:
         https://cloud.google.com/api-gateway/docs/path-templating''')
 
@@ -404,17 +411,18 @@ environment variable or by passing "-k" flag to this script.
         For more details, see:
         https://cloud.google.com/api-gateway/docs/path-templating''')
 
-    parser.add_argument('--escape_slashes_in_path', action='store_true',
-        help='''Enables escaping of the following characters in the `path`
-        HTTP header before the request is sent to the backend:
-        - %%2F or %%2f is converted to /
-        - %%5C or %%5c is converted to \
+    parser.add_argument('--disallow_escaped_slashes_in_path',
+        action='store_true',
+        help='''
+        Disallows requests with escaped percent-encoded slash characters:
+        - %%2F or %%2f is treated as a /
+        - %%5C or %%5c is treated as a  \
         
         When enabled, the behavior depends on the protocol:
         - For OpenAPI backends, request paths with unescaped percent-encoded
           slashes will be automatically escaped via a redirect.
         - For gRPC backends, request paths with unescaped percent-encoded 
-          slashes will be rejected.
+          slashes will be rejected (gRPC does not support redirects).
           
         This option is **not** RFC 3986 compliant,
         so it is turned off by default.
@@ -425,6 +433,8 @@ environment variable or by passing "-k" flag to this script.
         
         For more details, see:
         https://cloud.google.com/api-gateway/docs/path-templating
+        and
+        https://github.com/envoyproxy/envoy/security/advisories/GHSA-4987-27fx-x6cf
         ''')
 
     parser.add_argument(
@@ -1095,8 +1105,8 @@ def gen_proxy_config(args):
         proxy_conf.append("--normalize_path=false")
     if args.disable_merge_slashes_in_path:
         proxy_conf.append("--merge_slashes_in_path=false")
-    if args.escape_slashes_in_path:
-        proxy_conf.append("--escape_slashes_in_path")
+    if args.disallow_escaped_slashes_in_path:
+        proxy_conf.append("--disallow_escaped_slashes_in_path")
 
     if args.backend_retry_ons:
         proxy_conf.extend(["--backend_retry_ons", args.backend_retry_ons])

@@ -619,12 +619,12 @@ class TestStartProxy(unittest.TestCase):
               ]),
             (['--rollout_strategy=fixed',
               '--service_json_path=/tmp/service_config.json',
-              '--escape_slashes_in_path'
+              '--disallow_escaped_slashes_in_path'
               ],
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--service_json_path', '/tmp/service_config.json',
-              '--escape_slashes_in_path',
+              '--disallow_escaped_slashes_in_path',
               ]),
         ]
 

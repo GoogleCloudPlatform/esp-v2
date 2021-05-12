@@ -195,7 +195,7 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 	}
 
 	// https://github.com/envoyproxy/envoy/security/advisories/GHSA-4987-27fx-x6cf
-	if opts.EscapeSlashesInPath {
+	if opts.DisallowEscapedSlashesInPath {
 		httpConMgr.PathWithEscapedSlashesAction = hcmpb.HttpConnectionManager_UNESCAPE_AND_REDIRECT
 	} else {
 		httpConMgr.PathWithEscapedSlashesAction = hcmpb.HttpConnectionManager_KEEP_UNCHANGED

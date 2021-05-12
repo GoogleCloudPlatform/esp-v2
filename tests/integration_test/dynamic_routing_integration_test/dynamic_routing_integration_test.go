@@ -40,7 +40,7 @@ func TestDynamicRouting(t *testing.T) {
 	args := append(utils.CommonArgs(),
 		"--normalize_path=false",
 		"--merge_slashes_in_path=false",
-		"--escape_slashes_in_path=false",
+		"--disallow_escaped_slashes_in_path=false",
 	)
 
 	s := NewDynamicRoutingTestEnv(platform.TestDynamicRouting)
@@ -426,7 +426,7 @@ func TestDynamicRoutingPathPreprocessing(t *testing.T) {
 	args := append(utils.CommonArgs(),
 		"--normalize_path=true",
 		"--merge_slashes_in_path=true",
-		"--escape_slashes_in_path=false",
+		"--disallow_escaped_slashes_in_path=false",
 	)
 
 	s := NewDynamicRoutingTestEnv(platform.TestDynamicRoutingPathPreprocessing)
@@ -531,7 +531,7 @@ func TestDynamicRoutingEscapeSlashes(t *testing.T) {
 	args := append(utils.CommonArgs(),
 		"--normalize_path=true",
 		"--merge_slashes_in_path=true",
-		"--escape_slashes_in_path=true",
+		"--disallow_escaped_slashes_in_path=true",
 	)
 
 	s := NewDynamicRoutingTestEnv(platform.TestDynamicRoutingEscapeSlashes)
