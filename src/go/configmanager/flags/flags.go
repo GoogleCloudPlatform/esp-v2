@@ -39,7 +39,7 @@ var (
 	CorsAllowOrigin      = flag.String("cors_allow_origin", "", "set Access-Control-Allow-Origin to a specific origin")
 	CorsAllowOriginRegex = flag.String("cors_allow_origin_regex", "", "set Access-Control-Allow-Origin to a regular expression")
 	CorsExposeHeaders    = flag.String("cors_expose_headers", "", "set Access-Control-Expose-Headers to the specified headers")
-	CorsMaxAge           = flag.Duration("cors_max_age", 480 * time.Hour, "set Access-Control-Max-Age response header for CORS preflight request.")
+	CorsMaxAge           = flag.Duration("cors_max_age", 480*time.Hour, "set Access-Control-Max-Age response header for CORS preflight request.")
 	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)
 
 	// Backend routing configurations.
@@ -115,8 +115,9 @@ var (
 	SuppressEnvoyHeaders = flag.Bool("suppress_envoy_headers", true, `Do not add any additional x-envoy- headers to requests or responses. This only affects the router filter
 	generated *x-envoy-* headers, other Envoy filters and the HTTP connection manager may continue to set x-envoy- headers.`)
 	UnderscoresInHeaders = flag.Bool("underscores_in_headers", false, `When true, ESPv2 allows HTTP headers name has underscore and pass it through. Otherwise, rejects the request.`)
-	NormalizePath        = flag.Bool("normalize_path", false, `Normalizes the path according to RFC 3986 before processing requests.`)
-	MergeSlashesInPath   = flag.Bool("merge_slashes_in_path", false, `Determines if adjacent slashes in the path are merged into one before processing requests.`)
+	NormalizePath        = flag.Bool("normalize_path", true, `Normalizes the path according to RFC 3986 before processing requests.`)
+	MergeSlashesInPath   = flag.Bool("merge_slashes_in_path", true, `Determines if adjacent slashes in the path are merged into one before processing requests.`)
+	EscapeSlashesInPath  = flag.Bool("escape_slashes_in_path", false, `Determines if [%2F, %2f, %2C, %2c] characters in the path are escaped.`)
 
 	ServiceControlNetworkFailOpen = flag.Bool("service_control_network_fail_open", true, ` In case of network failures when connecting to Google service control,
         the requests will be allowed if this flag is on. The default is on.`)
@@ -225,6 +226,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		UnderscoresInHeaders:                    *UnderscoresInHeaders,
 		NormalizePath:                           *NormalizePath,
 		MergeSlashesInPath:                      *MergeSlashesInPath,
+		EscapeSlashesInPath:                     *EscapeSlashesInPath,
 		ServiceControlNetworkFailOpen:           *ServiceControlNetworkFailOpen,
 		EnableGrpcForHttp1:                      *EnableGrpcForHttp1,
 		ConnectionBufferLimitBytes:              *ConnectionBufferLimitBytes,

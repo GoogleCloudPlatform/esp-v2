@@ -100,6 +100,7 @@ type ConfigGeneratorOptions struct {
 	UnderscoresInHeaders          bool
 	NormalizePath                 bool
 	MergeSlashesInPath            bool
+	EscapeSlashesInPath           bool
 	ServiceControlNetworkFailOpen bool
 	EnableGrpcForHttp1            bool
 	ConnectionBufferLimitBytes    int
@@ -148,6 +149,9 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		SslSidestreamClientRootCertsPath: util.DefaultRootCAPaths,
 		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:             true,
+		NormalizePath:                    true,
+		MergeSlashesInPath:               true,
+		EscapeSlashesInPath:              false,
 		ServiceControlNetworkFailOpen:    true,
 		EnableGrpcForHttp1:               true,
 		ConnectionBufferLimitBytes:       -1,

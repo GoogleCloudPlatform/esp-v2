@@ -361,9 +361,9 @@ environment variable or by passing "-k" flag to this script.
         help='''Allow headers contain underscores to pass through. By default
         ESPv2 rejects requests that have headers with underscores.''')
 
-    parser.add_argument('--normalize_path', action='store_true',
-        help='''Enable normalization of the `path` HTTP header according to
-        RFC 3986. It is recommended to turn on this option if your backend
+    parser.add_argument('--no_normalize_path', action='store_true',
+        help='''Disable normalization of the `path` HTTP header according to
+        RFC 3986. It is recommended to keep this option enabled if your backend
         performs path normalization by default.
         
         The following table provides examples of the request `path` the backend
@@ -377,11 +377,15 @@ environment variable or by passing "-k" flag to this script.
         | /%%4a            | /%%4a                 | /J                 |
         -----------------------------------------------------------------
         
-        By default, ESPv2 will not normalize paths.''')
+        By default, ESPv2 will normalize paths.
+        Disable the feature only if your traffic is affected by the behavior.
+        
+        For more details, see:
+        https://cloud.google.com/api-gateway/docs/path-templating''')
 
-    parser.add_argument('--merge_slashes_in_path', action='store_true',
-        help='''Enable merging of adjacent slashes in the `path` HTTP header.
-        It is recommended to turn on this option if your backend
+    parser.add_argument('--no_merge_slashes_in_path', action='store_true',
+        help='''Disable merging of adjacent slashes in the `path` HTTP header.
+        It is recommended to keep this option enabled if your backend
         performs merging by default.
         
         The following table provides examples of the request `path` the backend
@@ -394,7 +398,34 @@ environment variable or by passing "-k" flag to this script.
         | /hello///        | Rejected              | /hello             |
         -----------------------------------------------------------------
         
-        By default, ESPv2 will not merge slashes.''')
+        By default, ESPv2 will merge slashes.
+        Disable the feature only if your traffic is affected by the behavior.
+        
+        For more details, see:
+        https://cloud.google.com/api-gateway/docs/path-templating''')
+
+    parser.add_argument('--escape_slashes_in_path', action='store_true',
+        help='''Enables escaping of the following characters in the `path`
+        HTTP header:
+        - %%2F or %%2f -> /
+        - %%5C or %%5c -> \
+        
+        When enabled, the behavior depends on the protocol:
+        - For OpenAPI backends, request paths with escaped slashes will be
+          automatically unescaped via a redirect.
+        - For gRPC backends, request paths with escaped slashes will be
+          rejected.
+          
+        This option is **not** RFC 3986 compliant,
+        so it is turned off by default.
+        If your backend is **not** RFC 3986 compliant and escapes slashes,
+        you **must** enable this option in ESPv2.
+        This will prevent against path confusion attacks that result in security
+        requirements not being enforced.
+        
+        For more details, see:
+        https://cloud.google.com/api-gateway/docs/path-templating
+        ''')
 
     parser.add_argument(
         '--envoy_use_remote_address',
@@ -1060,10 +1091,12 @@ def gen_proxy_config(args):
 
     if args.underscores_in_headers:
         proxy_conf.append("--underscores_in_headers")
-    if args.normalize_path:
-        proxy_conf.append("--normalize_path")
-    if args.merge_slashes_in_path:
-        proxy_conf.append("--merge_slashes_in_path")
+    if args.no_normalize_path:
+        proxy_conf.append("--normalize_path=false")
+    if args.no_merge_slashes_in_path:
+        proxy_conf.append("--merge_slashes_in_path=false")
+    if args.escape_slashes_in_path:
+        proxy_conf.append("--escape_slashes_in_path")
 
     if args.backend_retry_ons:
         proxy_conf.extend(["--backend_retry_ons", args.backend_retry_ons])

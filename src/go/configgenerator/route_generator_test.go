@@ -16,9 +16,9 @@ package configgenerator
 
 import (
 	"fmt"
-	"time"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -3251,7 +3251,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				},
 				AllowMethods:     "GET,POST,PUT,OPTIONS",
 				AllowCredentials: &wrapperspb.BoolValue{Value: false},
-				MaxAge: "120",
+				MaxAge:           "120",
 			},
 		},
 		{
@@ -3272,7 +3272,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				},
 				AllowHeaders:     "Origin,Content-Type,Accept",
 				AllowCredentials: &wrapperspb.BoolValue{Value: false},
-				MaxAge: "120",
+				MaxAge:           "120",
 			},
 		},
 		{
@@ -3294,7 +3294,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				},
 				ExposeHeaders:    "Content-Length",
 				AllowCredentials: &wrapperspb.BoolValue{Value: true},
-				MaxAge: "120",
+				MaxAge:           "120",
 			},
 		},
 	}
