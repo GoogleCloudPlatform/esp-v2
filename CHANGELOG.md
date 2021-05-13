@@ -5,7 +5,7 @@
 - Add flag `--cors_max_age` to support set Access-Control-Max-Age response header (#502)
 - Add perTryTimeout for doing retry when the upstream times out (#509)
 - Support for "eu" zone via -z in gcloud_build_image (#490)
-- Propagate trace context headers to SC Check (#487)
+- Propagate trace context headers to Service Control Check (#487)
 
 # Release 2.25.0 23-02-2021
 
