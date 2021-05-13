@@ -87,6 +87,9 @@ func TestMakeListeners(t *testing.T) {
                 }
               }
             },
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "routeConfig": {
               "name": "local_route",
               "virtualHosts": [
@@ -217,6 +220,8 @@ func TestMakeHttpConMgr(t *testing.T) {
 						}
 					}
 				},
+				"normalizePath": false,
+				"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
 				"routeConfig": {},
 				"statPrefix": "ingress_http",
 				"upgradeConfigs": [
@@ -259,6 +264,8 @@ func TestMakeHttpConMgr(t *testing.T) {
 							}
 						}
 					},
+					"normalizePath": false,
+					"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
 					"routeConfig": {},
 					"statPrefix": "ingress_http",
 					"upgradeConfigs": [
@@ -292,6 +299,8 @@ func TestMakeHttpConMgr(t *testing.T) {
 							}
 						}
 					},
+					"normalizePath": false,
+					"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
 					"routeConfig": {},
 					"statPrefix": "ingress_http",
 					"tracing":{
@@ -339,6 +348,8 @@ func TestMakeHttpConMgr(t *testing.T) {
 							}
 						}
 					},
+					"normalizePath": false,
+					"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
 					"routeConfig": {},
 					"statPrefix": "ingress_http",
 					"upgradeConfigs": [
@@ -370,6 +381,8 @@ func TestMakeHttpConMgr(t *testing.T) {
 							}
 						}
 					},
+					"normalizePath": false,
+					"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
 					"routeConfig": {},
 					"statPrefix": "ingress_http",
 					"upgradeConfigs": [

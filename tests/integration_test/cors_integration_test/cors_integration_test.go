@@ -193,7 +193,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
 		"--cors_allow_headers=" + corsAllowHeadersValue,
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials",
-	        "--cors_max_age=2h"}
+		"--cors_max_age=2h"}
 
 	s := env.NewTestEnv(platform.TestProxyHandlesCorsPreflightRequestsBasic, platform.EchoSidecar)
 	defer s.TearDown(t)

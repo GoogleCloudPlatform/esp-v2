@@ -231,6 +231,9 @@ var (
             ],
             "useRemoteAddress": false,
             %s,
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "xffNumTrustedHops": 2
           }
         }
@@ -489,6 +492,9 @@ var (
             },
             "useRemoteAddress": false,
             %s,
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "xffNumTrustedHops": 2
           }
         }
@@ -980,6 +986,9 @@ var (
             "statPrefix": "ingress_http",
             "useRemoteAddress": false,
             %s,
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "xffNumTrustedHops": 2
           }
         }
@@ -1437,6 +1446,9 @@ var (
             "statPrefix": "ingress_http",
             "useRemoteAddress": false,
             %s,
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "xffNumTrustedHops": 2
           }
         }
@@ -1953,6 +1965,9 @@ var (
             },
             "useRemoteAddress": false,
             %s,
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "xffNumTrustedHops": 2
           }
         }
@@ -2294,6 +2309,9 @@ var (
             },
             "useRemoteAddress": false,
             %s,
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "xffNumTrustedHops": 2
           }
         }
@@ -2628,6 +2646,9 @@ var (
             },
             "useRemoteAddress": false,
             %s,
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "xffNumTrustedHops": 2
           }
         }

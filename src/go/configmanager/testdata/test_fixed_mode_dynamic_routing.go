@@ -287,6 +287,9 @@ var (
                 }
               }
             },
+            "mergeSlashes": true,
+            "normalizePath": true,
+            "pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
             "routeConfig": {
               "name": "local_route",
               "virtualHosts": [
