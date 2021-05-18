@@ -51,6 +51,7 @@ func StartEnvoyAndWait(signalChan chan os.Signal, opts StartEnvoyOptions) error 
 		"--log-path", opts.LogPath,
 		"--log-format", "%L%m%d %T.%e %t envoy] [%t][%n]%v",
 		"--log-format-escaped",
+		"--allow-unknown-static-fields",
 	}
 	if opts.ComponentLogLevel != "" {
 		startupFlags = append(startupFlags, "--component-log-level", opts.ComponentLogLevel)
