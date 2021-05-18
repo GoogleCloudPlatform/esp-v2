@@ -110,15 +110,15 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 	var reader io.Reader
 	var retryErr error
 	op := func() error {
-		r, err := client.readObject(ctx, getObjectRequest{
-			Bucket: opts.BucketName,
-			Object: opts.ConfigFileName,
-		})
-		if err == context.DeadlineExceeded {
+		if err := ctx.Err(); err != nil {
 			retryErr = err
 			// return nil to end the backoff
 			return nil
 		}
+		r, err := client.readObject(ctx, getObjectRequest{
+			Bucket: opts.BucketName,
+			Object: opts.ConfigFileName,
+		})
 		if err != nil {
 			glog.Errorf("error getting reader for object (retrying): %v", err)
 			return err
