@@ -41,10 +41,11 @@ EOF
 BUILD_REF=''
 TAG_REF=''
 
-while getopts :b:t: arg; do
+while getopts :b:t:n: arg; do
   case ${arg} in
     b) BUILD_REF="${OPTARG}";;
     t) TAG_REF="${OPTARG}";;
+    n) VERSION="${OPTARG}";;
     *) usage "Invalid option: -${OPTARG}";;
   esac
 done
@@ -59,8 +60,10 @@ BUILD_SHA=$(git rev-parse --verify "${BUILD_REF}") \
 TAG_SHA=$(git rev-parse --verify "${TAG_REF}") \
   || usage "Invalid Git reference \"${TAG_REF}\"."
 
-VERSION="$(command cat ${ROOT}/VERSION)" \
-  || usage "Cannot determine release version (${ROOT}/VERSION)."
+if [ "${VERSION}" = ""]; then
+  VERSION="$(command cat ${ROOT}/VERSION)" \
+    || usage "Cannot determine release version (${ROOT}/VERSION)."
+fi
 # Prefix 'v' for the tag name
 VERSION_TAG="v${VERSION}"
 

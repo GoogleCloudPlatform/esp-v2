@@ -22,7 +22,7 @@ function usage() {
   [[ -n "${1}" ]] && echo "${1}"
   cat << END_USAGE
 
-Usage: ${BASH_SOURCE[0]} -r <DIRECT_REPO>
+Usage: ${BASH_SOURCE[0]} [-n <CURRENT_VERSION>]
 
 This script will release stable ESPv2 docker image with format of:
   $(get_proxy_image_release_name):\${MINOR_BASE_VERSION}
@@ -38,9 +38,21 @@ where:
 END_USAGE
   exit 1
 }
+
+
+while getopts :n: arg; do
+  case ${arg} in
+    n) VERSION="${OPTARG}";;
+    *) usage "Invalid option: -${OPTARG}";;
+  esac
+done
 set -x
 
-VERSION="$(command cat ${ROOT}/VERSION)"
+if [ "${VERSION}" = ""]; then
+  VERSION="$(command cat ${ROOT}/VERSION)" \
+    || usage "Cannot determine release version (${ROOT}/VERSION)."
+fi
+
 # Minor base is 1.33  if version is 1.33.0
 MINOR_BASE_VERSION=${VERSION%.*}
 # Major base is 1  if version is 1.33.0

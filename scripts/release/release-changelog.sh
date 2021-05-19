@@ -48,11 +48,12 @@ SHA=""
 LAST_COMMIT=""
 DIRECTORY="."
 
-while getopts :s:l:d: arg; do
+while getopts :s:l:d:n: arg; do
   case ${arg} in
     s) SHA="${OPTARG}";;
     l) LAST_COMMIT="${OPTARG}";;
     d) DIRECTORY="${OPTARG}";;
+    n) VERSION="${OPTARG}";;
     *) usage "Invalid option: -${OPTARG}";;
   esac
 done
@@ -65,7 +66,10 @@ if [ "${DIRECTORY}" != "." ]; then
   push_tool ${DIRECTORY}
 fi
 
-VERSION=$(command cat ${ROOT}/VERSION)
+if [ "${VERSION}" = ""]; then
+  VERSION="$(command cat ${ROOT}/VERSION)" \
+    || usage "Cannot determine release version (${ROOT}/VERSION)."
+fi
 
 echo $(pwd)
 

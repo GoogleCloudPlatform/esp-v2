@@ -34,6 +34,7 @@ usage: ${BASH_SOURCE[0]} -s <commit sha> [options]"
 options are:
   -g <path_to_gcloud>
   -u <path_to_gsutil>
+  -n <CURRENT_VERSION> # for patch release only
 EOF
   exit 1
 }
@@ -42,11 +43,12 @@ GSUTIL="$(which gsutil)" || GSUTIL=~/google-cloud-sdk/bin/gsutil
 GCLOUD="$(which gcloud)" || GCLOUD=~/google-cloud-sdk/bin/gcloud
 SHA=""
 
-while getopts :g:u:s: arg; do
+while getopts :g:u:s:n: arg; do
   case ${arg} in
     g) GCLOUD="${OPTARG}";;
     u) GSUTIL="${OPTARG}";;
     s) SHA="${OPTARG}";;
+    n) VERSION="${OPTARG}";;
     *) usage "Invalid option: -${OPTARG}";;
   esac
 done
@@ -63,8 +65,11 @@ done
 
 set -x
 
-VERSION="$(command cat ${ROOT}/VERSION)" \
-  || error_exit "Cannot find release version (${ROOT}/VERSION)"
+if [ "${VERSION}" = ""]; then
+  VERSION="$(command cat ${ROOT}/VERSION)" \
+    || error_exit "Cannot find release version (${ROOT}/VERSION)"
+fi
+
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 if RELEASE_BRANCH_SHA="$(git rev-parse upstream/${CURRENT_BRANCH})"; then
   if [[ "${SHA}" != "${RELEASE_BRANCH_SHA}" ]]; then
@@ -93,17 +98,17 @@ function push_docker_image() {
 }
 
 push_docker_image \
-  "$(get_proxy_image_name_with_sha)" \
+  "$(get_proxy_image_name):${SHA}" \
   "$(get_proxy_image_release_name):${VERSION}" \
   || error_exit "Docker image push failed."
 
 push_docker_image \
-  "$(get_serverless_image_name_with_sha)" \
+  "$(get_serverless_image_name):${SHA}" \
   "$(get_serverless_image_release_name):${VERSION}" \
   || error_exit "Docker image push failed."
 
 push_docker_image \
-  "$(get_gcsrunner_image_name_with_sha)" \
+  "$(get_gcsrunner_image_name):${SHA}" \
   "$(get_gcsrunner_image_release_name):${VERSION}" \
   || error_exit "Docker image push failed."
 
