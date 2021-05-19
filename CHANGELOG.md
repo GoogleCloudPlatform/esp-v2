@@ -1,6 +1,5 @@
 # Release 2.26.1 19-05-2021
 
-- Changes inapplicable to Cloud Endpoints (#515)
 
 # Release 2.26.0 13-05-2021
 
