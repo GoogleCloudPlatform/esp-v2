@@ -48,8 +48,8 @@ done
 
 [[ -n "${NEXT_VERSION}" ]] \
   || usage "Please provide the next release version."
-# The version format is: 1.2.0
-[[ "${NEXT_VERSION}" =~ [0-9]+\.[0-9]+\.0 ]] \
+# The version format is: 1.2.3
+[[ "${NEXT_VERSION}" =~ [0-9]+\.[0-9]+\.[0-9] ]] \
   || usage "Invalid version number: ${NEXT_VERSION}."
 [[ -n "${SHA}" ]] \
   || usage "Please provide the release SHA."
@@ -60,8 +60,8 @@ VERSION="$(command cat ${ROOT}/VERSION)"
 RELEASE_BRANCH=v${VERSION%.0}.x
 echo "Current branch: ${CURRENT_BRANCH}."
 echo "New release branch: ${RELEASE_BRANCH}."
-[[ -z $(git diff --name-only) ]] \
-  || error_exit "Current branch is not clean."
+# [[ -z $(git diff --name-only) ]] \
+#   || error_exit "Current branch is not clean."
 
 git fetch upstream \
   || error_exit "Could not fetch upstream."
@@ -73,15 +73,16 @@ git push upstream ${SHA}:refs/heads/${RELEASE_BRANCH} \
 MASTER_BRANCH="${VERSION}-master"
 git checkout -b "${MASTER_BRANCH}" upstream/master
 
-# Update the version number and push for review.
-# This is the minor release case.
+# When NEXT_VERSION is not equal to the current one,
+# assum doing a minor release 2.x.y -> 2.{x+1}.0, so
+# update the version number and push for review.
+# Otherwise, it is a patch release, no need to update the `VERSION` file.
 if ["${NEXT_VERSION}" != "${VERSION}"]; then
   echo "${NEXT_VERSION}" > ${ROOT}/VERSION
   git add ${ROOT}/VERSION
   git commit -m "Update version number to ${NEXT_VERSION}."
   git push --set-upstream origin "${MASTER_BRANCH}"
 fi
-
 git checkout ${RELEASE_BRANCH}
 
 printf '\e[31m
