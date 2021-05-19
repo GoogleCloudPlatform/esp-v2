@@ -77,7 +77,7 @@ git checkout -b "${MASTER_BRANCH}" upstream/master
 # assum doing a minor release 2.x.y -> 2.{x+1}.0, so
 # update the version number and push for review.
 # Otherwise, it is a patch release, no need to update the `VERSION` file.
-if ["${NEXT_VERSION}" != "${VERSION}"]; then
+if [ "${NEXT_VERSION}" != "${VERSION}" ]; then
   echo "${NEXT_VERSION}" > ${ROOT}/VERSION
   git add ${ROOT}/VERSION
   git commit -m "Update version number to ${NEXT_VERSION}."
