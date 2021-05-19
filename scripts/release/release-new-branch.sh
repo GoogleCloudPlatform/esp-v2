@@ -60,8 +60,8 @@ VERSION="$(command cat ${ROOT}/VERSION)"
 RELEASE_BRANCH=v${VERSION%.0}.x
 echo "Current branch: ${CURRENT_BRANCH}."
 echo "New release branch: ${RELEASE_BRANCH}."
-# [[ -z $(git diff --name-only) ]] \
-#   || error_exit "Current branch is not clean."
+[[ -z $(git diff --name-only) ]] \
+  || error_exit "Current branch is not clean."
 
 git fetch upstream \
   || error_exit "Could not fetch upstream."
@@ -70,14 +70,15 @@ git branch ${RELEASE_BRANCH} ${SHA} \
 git push upstream ${SHA}:refs/heads/${RELEASE_BRANCH} \
   || error_exit "Failed to create a remote release branch."
 
-MASTER_BRANCH="${VERSION}-master"
-git checkout -b "${MASTER_BRANCH}" upstream/master
+
 
 # When NEXT_VERSION is not equal to the current one,
 # assum doing a minor release 2.x.y -> 2.{x+1}.0, so
 # update the version number and push for review.
 # Otherwise, it is a patch release, no need to update the `VERSION` file.
 if [ "${NEXT_VERSION}" != "${VERSION}" ]; then
+  MASTER_BRANCH="${VERSION}-master"
+  git checkout -b "${MASTER_BRANCH}" upstream/master
   echo "${NEXT_VERSION}" > ${ROOT}/VERSION
   git add ${ROOT}/VERSION
   git commit -m "Update version number to ${NEXT_VERSION}."
