@@ -66,7 +66,7 @@ if [ "${DIRECTORY}" != "." ]; then
   push_tool ${DIRECTORY}
 fi
 
-if [ "${VERSION}" = ""]; then
+if [ "${VERSION}" = "" ]; then
   VERSION="$(command cat ${ROOT}/VERSION)" \
     || usage "Cannot determine release version (${ROOT}/VERSION)."
 fi
