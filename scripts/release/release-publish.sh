@@ -29,7 +29,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 function usage() {
   [[ -n "${1}" ]] && echo "${1}"
   cat <<EOF
-usage: ${BASH_SOURCE[0]} -s <commit sha> [options]"
+usage: ${BASH_SOURCE[0]} -s <commit sha> [options]  [-n <current version number>]"
 
 options are:
   -g <path_to_gcloud>

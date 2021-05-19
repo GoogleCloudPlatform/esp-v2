@@ -22,7 +22,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 function usage() {
   [[ -n "${1}" ]] && echo "${1}"
   cat <<EOF
-usage: ${BASH_SOURCE[0]} -t <tag git ref> -b <build git ref>"
+usage: ${BASH_SOURCE[0]} -t <tag git ref> -b <build git ref>  [-n <current version number>]"
 
 tag git ref: commit which to tag with the release
     (typically release branch HEAD)

@@ -27,7 +27,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 function usage() {
   [[ -n "${1}" ]] && echo "${1}"
   cat <<EOF
-usage: ${BASH_SOURCE[0]} -s <commit sha> -l <last release sha or tag> -d <directory>
+usage: ${BASH_SOURCE[0]} -s <commit sha> -l <last release sha or tag> -d <directory> [-n <current version number>]
 
 Generates changelog for changes between last release and current release.
 EOF

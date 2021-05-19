@@ -22,7 +22,7 @@ function usage() {
   [[ -n "${1}" ]] && echo "${1}"
   cat << END_USAGE
 
-Usage: ${BASH_SOURCE[0]} [-n <CURRENT_VERSION>]
+Usage: ${BASH_SOURCE[0]}  [-n <current version number>]
 
 This script will release stable ESPv2 docker image with format of:
   $(get_proxy_image_release_name):\${MINOR_BASE_VERSION}
