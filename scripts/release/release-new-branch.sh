@@ -67,7 +67,7 @@ git fetch upstream \
   || error_exit "Could not fetch upstream."
 git branch ${RELEASE_BRANCH} ${SHA} \
   || error_exit "Could not create a local release branch."
-git push upstream ${SHA}:refs/heads/${RELEASE_BRANCH} \
+git push upstream -f ${SHA}:refs/heads/${RELEASE_BRANCH} \
   || error_exit "Failed to create a remote release branch."
 
 
