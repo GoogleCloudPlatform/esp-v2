@@ -73,7 +73,7 @@ git push upstream ${SHA}:refs/heads/${RELEASE_BRANCH} \
 
 
 # When NEXT_VERSION is not equal to the current one,
-# assum doing a minor release 2.x.y -> 2.{x+1}.0, so
+# assume doing a minor release 2.x.y -> 2.{x+1}.0, so
 # update the version number and push for review.
 # Otherwise, it is a patch release, no need to update the `VERSION` file.
 if [ "${NEXT_VERSION}" != "${VERSION}" ]; then
