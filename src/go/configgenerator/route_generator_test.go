@@ -3482,11 +3482,11 @@ func TestHeadersToAdd(t *testing.T) {
 	}
 }
 
-// Used to generate a oversize cors origin regex or a oversize wildcard uri template.
+// Used to generate a oversize cors origin regex or a oversize uri template.
 func getOverSizeRegexForTest() string {
 	overSizeRegex := ""
 	for i := 0; i < 333; i += 1 {
-		// Use "/**" as it is a replacement token for wildcard uri template.
+		// Form regex in a way that it cannot be simplified.
 		overSizeRegex += "/**/a"
 	}
 	return overSizeRegex
