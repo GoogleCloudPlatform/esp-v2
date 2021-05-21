@@ -3487,7 +3487,7 @@ func getOverSizeRegexForTest() string {
 	overSizeRegex := ""
 	for i := 0; i < 333; i += 1 {
 		// Form regex in a way that it cannot be simplified.
-		overSizeRegex += "/**/a"
+		overSizeRegex += "[abc]+123"
 	}
 	return overSizeRegex
 }
