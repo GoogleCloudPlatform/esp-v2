@@ -3236,7 +3236,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		{
 			desc:        "Oversize cors origin regex",
 			params:      []string{"cors_with_regex", "", getOverSizeRegexForTest(), "", "Origin,Content-Type,Accept", "", "2m"},
-			wantedError: `invalid cors origin regex: regex program size(1001) is larger than the max expected(1000)`,
+			wantedError: `invalid cors origin regex: regex program size`,
 		},
 		{
 			desc:   "Correct configured basic Cors, with allow methods",
@@ -3487,7 +3487,7 @@ func getOverSizeRegexForTest() string {
 	overSizeRegex := ""
 	for i := 0; i < 333; i += 1 {
 		// Use "/**" as it is a replacement token for wildcard uri template.
-		overSizeRegex += "/**"
+		overSizeRegex += "/**/a"
 	}
 	return overSizeRegex
 }
