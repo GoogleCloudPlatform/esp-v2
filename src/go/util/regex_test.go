@@ -16,6 +16,7 @@ package util
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -30,7 +31,7 @@ func TestValidateRegexProgramSize(t *testing.T) {
 			desc:        "oversize regex",
 			regex:       "/**",
 			programSize: 1,
-			wantError:   fmt.Errorf("regex program size(5) is larger than the max expected(1): /**"),
+			wantError:   fmt.Errorf("regex program size"),
 		},
 		{
 			desc:        "invalid regex",
@@ -43,7 +44,7 @@ func TestValidateRegexProgramSize(t *testing.T) {
 	for _, tc := range testData {
 		err := ValidateRegexProgramSize(tc.regex, tc.programSize)
 		if err != nil {
-			if tc.wantError == nil || err.Error() != tc.wantError.Error() {
+			if tc.wantError == nil || !strings.Contains(err.Error(), tc.wantError.Error()) {
 				t.Errorf("Test (%v): \n got %v \nwant %v", tc.desc, err, tc.wantError)
 			}
 		} else if tc.wantError != nil {
