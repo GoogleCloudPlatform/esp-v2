@@ -107,13 +107,10 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 	}
 	ebo := backoff.NewExponentialBackOff()
 	ebo.InitialInterval = opts.FetchGCSObjectInitialInterval
-	var reader io.Reader
-	var retryErr error
+	var out []byte
 	op := func() error {
 		if err := ctx.Err(); err != nil {
-			retryErr = err
-			// return nil to end the backoff
-			return nil
+			return backoff.Permanent(err)
 		}
 		r, err := client.readObject(ctx, getObjectRequest{
 			Bucket: opts.BucketName,
@@ -123,19 +120,17 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 			glog.Errorf("error getting reader for object (retrying): %v", err)
 			return err
 		}
-		reader = r
+		if out, err = ioutil.ReadAll(r); err != nil {
+			glog.Errorf("error reading object bytes (retrying): %v", err)
+			return err
+		}
 		return nil
 	}
 
 	if err := backoff.Retry(op, ebo); err != nil {
 		return nil, err
 	}
-
-	if retryErr != nil {
-		return nil, retryErr
-	}
-
-	return ioutil.ReadAll(reader)
+	return out, nil
 }
 
 func writeFile(b []byte, opts FetchConfigOptions) error {

@@ -40,8 +40,8 @@ import (
 
 const (
 	envoyConfigPath               = "envoy.json"
-	fetchGCSObjectInitialInterval = 10 * time.Second
-	fetchGCSObjectTimeout         = 5 * time.Minute
+	fetchGCSObjectInitialInterval = 100 * time.Millisecond
+	fetchGCSObjectTimeout         = 3 * time.Minute
 	terminateEnvoyTimeout         = time.Minute
 )
 
