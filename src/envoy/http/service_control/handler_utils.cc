@@ -203,6 +203,19 @@ void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
     }
   }
 
+  // FIXME(https://github.com/envoyproxy/envoy/issues/16684): When stats are
+  // reported correctly, remove this hack. It results in under-reporting
+  // overhead latency and over-reporting backend latency.
+  if (!start && stream_info.responseCodeDetails() &&
+      (stream_info.responseCodeDetails().value() ==
+           Envoy::StreamInfo::ResponseCodeDetails::get().UpstreamTimeout ||
+       stream_info.responseCodeDetails().value() ==
+           Envoy::StreamInfo::ResponseCodeDetails::get()
+               .UpstreamPerTryTimeout)) {
+    latency.backend_time_ms = latency.overhead_time_ms;
+    latency.overhead_time_ms = 0;
+  }
+
   filter_stats.filter_.request_time_.recordValue(latency.request_time_ms);
   filter_stats.filter_.backend_time_.recordValue(latency.backend_time_ms);
   filter_stats.filter_.overhead_time_.recordValue(latency.overhead_time_ms);
