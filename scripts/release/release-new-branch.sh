@@ -48,8 +48,8 @@ done
 
 [[ -n "${NEXT_VERSION}" ]] \
   || usage "Please provide the next release version."
-# The version format is: 1.2.0
-[[ "${NEXT_VERSION}" =~ [0-9]+\.[0-9]+\.0 ]] \
+# The version format is: 1.2.3
+[[ "${NEXT_VERSION}" =~ [0-9]+\.[0-9]+\.[0-9] ]] \
   || usage "Invalid version number: ${NEXT_VERSION}."
 [[ -n "${SHA}" ]] \
   || usage "Please provide the release SHA."
@@ -70,15 +70,20 @@ git branch ${RELEASE_BRANCH} ${SHA} \
 git push upstream ${SHA}:refs/heads/${RELEASE_BRANCH} \
   || error_exit "Failed to create a remote release branch."
 
-# Update the version number and push for review.
-MASTER_BRANCH="${VERSION}-master"
-git checkout -b "${MASTER_BRANCH}" upstream/master
-echo "${NEXT_VERSION}" > ${ROOT}/VERSION
 
-git add ${ROOT}/VERSION
-git commit -m "Update version number to ${NEXT_VERSION}."
-git push --set-upstream origin "${MASTER_BRANCH}"
 
+# When NEXT_VERSION is not equal to the current one,
+# assume doing a minor release 2.x.y -> 2.{x+1}.0, so
+# update the version number and push for review.
+# Otherwise, it is a patch release, no need to update the `VERSION` file.
+if [ "${NEXT_VERSION}" != "${VERSION}" ]; then
+  MASTER_BRANCH="${VERSION}-master"
+  git checkout -b "${MASTER_BRANCH}" upstream/master
+  echo "${NEXT_VERSION}" > ${ROOT}/VERSION
+  git add ${ROOT}/VERSION
+  git commit -m "Update version number to ${NEXT_VERSION}."
+  git push --set-upstream origin "${MASTER_BRANCH}"
+fi
 git checkout ${RELEASE_BRANCH}
 
 printf '\e[31m

@@ -44,20 +44,21 @@ const (
 	TestBackendAuthWithImdsIdTokenRetries
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
 	TestBackendHttpProtocol
+	TestBackendPerTryTimeout
 	TestBackendRetry
 	TestCancellationReport
 	TestDeadlinesForDynamicRouting
 	TestDeadlinesForGrpcCatchAllBackend
 	TestDeadlinesForGrpcDynamicRouting
 	TestDeadlinesForLocalBackend
-	TestDifferentOriginPreflightCors
-	TestDifferentOriginSimpleCors
 	TestDnsResolver
 	TestDynamicBackendRoutingMutualTLS
 	TestDynamicBackendRoutingTLS
 	TestDynamicGrpcBackendTLS
 	TestDynamicRouting
 	TestDynamicRoutingCorsByEnvoy
+	TestDynamicRoutingEscapeSlashes
+	TestDynamicRoutingPathPreprocessing
 	TestDynamicRoutingWithAllowCors
 	TestFrontendAndBackendAuthHeaders
 	TestGeneratedHeaders

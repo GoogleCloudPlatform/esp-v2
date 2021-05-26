@@ -35,6 +35,7 @@ type ConfigGeneratorOptions struct {
 	CorsAllowOrigin      string
 	CorsAllowOriginRegex string
 	CorsExposeHeaders    string
+	CorsMaxAge           time.Duration
 	CorsPreset           string
 
 	// Backend routing configurations.
@@ -97,6 +98,9 @@ type ConfigGeneratorOptions struct {
 
 	SuppressEnvoyHeaders          bool
 	UnderscoresInHeaders          bool
+	NormalizePath                 bool
+	MergeSlashesInPath            bool
+	DisallowEscapedSlashesInPath  bool
 	ServiceControlNetworkFailOpen bool
 	EnableGrpcForHttp1            bool
 	ConnectionBufferLimitBytes    int
@@ -107,11 +111,12 @@ type ConfigGeneratorOptions struct {
 	ScQuotaTimeoutMs  int
 	ScReportTimeoutMs int
 
-	BackendRetryOns string
-	BackendRetryNum uint
-	ScCheckRetries  int
-	ScQuotaRetries  int
-	ScReportRetries int
+	BackendRetryOns      string
+	BackendRetryNum      uint
+	BackendPerTryTimeout time.Duration
+	ScCheckRetries       int
+	ScQuotaRetries       int
+	ScReportRetries      int
 
 	ComputePlatformOverride string
 
@@ -144,6 +149,9 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		SslSidestreamClientRootCertsPath: util.DefaultRootCAPaths,
 		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
 		SuppressEnvoyHeaders:             true,
+		NormalizePath:                    true,
+		MergeSlashesInPath:               true,
+		DisallowEscapedSlashesInPath:     false,
 		ServiceControlNetworkFailOpen:    true,
 		EnableGrpcForHttp1:               true,
 		ConnectionBufferLimitBytes:       -1,
@@ -154,5 +162,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ScCheckRetries:                   -1,
 		ScQuotaRetries:                   -1,
 		ScReportRetries:                  -1,
+		CorsMaxAge:                       480 * time.Hour,
 	}
 }

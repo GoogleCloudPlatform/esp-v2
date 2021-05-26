@@ -36,10 +36,17 @@ func NewDynamicRoutingTestEnv(port uint16) *env.TestEnv {
 
 func TestDynamicRouting(t *testing.T) {
 	t.Parallel()
+
+	args := append(utils.CommonArgs(),
+		"--normalize_path=false",
+		"--merge_slashes_in_path=false",
+		"--disallow_escaped_slashes_in_path=false",
+	)
+
 	s := NewDynamicRoutingTestEnv(platform.TestDynamicRouting)
 	defer s.TearDown(t)
 
-	if err := s.Setup(utils.CommonArgs()); err != nil {
+	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
@@ -89,7 +96,7 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/"}`,
 		},
 		{
-			desc:          "Succeed, CONSTANT_ADDRESS path translation with empty path and multiple trailing slash",
+			desc:          "Fail, CONSTANT_ADDRESS path translation with empty path and multiple trailing slash",
 			path:          "/empty_path//",
 			method:        "POST",
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
@@ -119,7 +126,7 @@ func TestDynamicRouting(t *testing.T) {
 			wantResp: `{"RequestURI":"/dynamicrouting/bookinfo?SHELF=123&BOOK=987"}`,
 		},
 		{
-			desc:          "Succeed, CONSTANT_ADDRESS path translation with multiple trailing slashes fails",
+			desc:          "Fail, CONSTANT_ADDRESS path translation with multiple trailing slashes",
 			path:          "/shelves/123/books/info/987//",
 			method:        "GET",
 			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
@@ -360,6 +367,197 @@ func TestDynamicRouting(t *testing.T) {
 			method:   "POST",
 			message:  "hello",
 			wantResp: `{"RequestURI":"/dynamicrouting/const_wildcard?double_wildcard=should-match/double-wildcard"}`,
+		},
+		{
+			desc:          "APPEND_PATH_TO_ADDRESS fails without path segment normalization",
+			path:          "/echo/123/../123/path/",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS does not perform syntax-based normalization",
+			path:     "/echo/%4A/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/%4A/path/"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS does not perform case normalization on percent-encoded characters",
+			path:     "/echo/%4a/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/%4a/path/"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS does not escape slashes",
+			path:     "/echo/12%2F3/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/12%2F3/path/"}`,
+		},
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
+			gotResp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
+
+			if tc.httpCallError == nil {
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("got no error, expected err: %v", tc.httpCallError)
+				}
+
+				if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+					t.Fatalf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+				}
+				return
+			}
+			gotRespStr := string(gotResp)
+			if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
+				t.Errorf("fail: \n %s", err)
+			}
+		})
+	}
+}
+
+func TestDynamicRoutingPathPreprocessing(t *testing.T) {
+	t.Parallel()
+
+	args := append(utils.CommonArgs(),
+		"--normalize_path=true",
+		"--merge_slashes_in_path=true",
+		"--disallow_escaped_slashes_in_path=false",
+	)
+
+	s := NewDynamicRoutingTestEnv(platform.TestDynamicRoutingPathPreprocessing)
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	testData := []struct {
+		desc          string
+		path          string
+		method        string
+		message       string
+		wantResp      string
+		httpCallError error
+	}{
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation with empty path and multiple trailing slash",
+			path:     "/empty_path//",
+			method:   "POST",
+			wantResp: `{"RequestURI":"/"}`,
+		},
+		{
+			desc:     "Succeed, CONSTANT_ADDRESS path translation with multiple trailing slashes",
+			path:     "/shelves/123/books/info/987//",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/dynamicrouting/bookinfo?SHELF=123&BOOK=987"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS succeeds with multiple trailing slashes",
+			path:     "/echo/123/path//",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/123/path/"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS succeeds path segment normalization",
+			path:     "/echo/123/../123/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/123/path/"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS succeeds syntax-based normalization",
+			path:     "/echo/%4A/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/J/path/"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS succeeds case normalization on percent-encoded characters",
+			path:     "/echo/%4a/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/J/path/"}`,
+		},
+		{
+			// General case normalization is not supported by Envoy.
+			desc:          "APPEND_PATH_TO_ADDRESS fails case normalization",
+			path:          "/echo/123/PATH/",
+			method:        "GET",
+			httpCallError: fmt.Errorf("http response status is not 200 OK: 404 Not Found"),
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS does not escape slashes",
+			path:     "/echo/12%2F3/path/",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/12%2F3/path/"}`,
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS does not normalize query params",
+			path:     "/echo/123/path/?param1=%4A/../test",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/123/path/?param1=%4A/../test"}`,
+		},
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
+			gotResp, err := client.DoWithHeaders(url, tc.method, tc.message, nil)
+
+			if tc.httpCallError == nil {
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("got no error, expected err: %v", tc.httpCallError)
+				}
+
+				if !strings.Contains(err.Error(), tc.httpCallError.Error()) {
+					t.Fatalf("expected Http call error: %v, got: %v", tc.httpCallError, err)
+				}
+				return
+			}
+			gotRespStr := string(gotResp)
+			if err := util.JsonEqual(tc.wantResp, gotRespStr); err != nil {
+				t.Errorf("fail: \n %s", err)
+			}
+		})
+	}
+}
+
+func TestDynamicRoutingEscapeSlashes(t *testing.T) {
+	t.Parallel()
+
+	args := append(utils.CommonArgs(),
+		"--normalize_path=true",
+		"--merge_slashes_in_path=true",
+		"--disallow_escaped_slashes_in_path=true",
+	)
+
+	s := NewDynamicRoutingTestEnv(platform.TestDynamicRoutingEscapeSlashes)
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+	testData := []struct {
+		desc          string
+		path          string
+		method        string
+		message       string
+		wantResp      string
+		httpCallError error
+	}{
+		{
+			desc:          "APPEND_PATH_TO_ADDRESS does escape slashes",
+			path:          "/echo/123%2Fpath/",
+			method:        "GET",
+			httpCallError: fmt.Errorf(`http response status is not 200 OK: 307 Temporary Redirect, {"code":307,"message":""}`),
+		},
+		{
+			desc:     "APPEND_PATH_TO_ADDRESS does not normalize query params",
+			path:     "/echo/123/path/?param1=%4A/../test",
+			method:   "GET",
+			wantResp: `{"RequestURI":"/prefix/echo/123/path/?param1=%4A/../test"}`,
 		},
 	}
 	for _, tc := range testData {

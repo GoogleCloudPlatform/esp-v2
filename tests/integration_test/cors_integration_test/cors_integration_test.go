@@ -60,6 +60,7 @@ func TestProxyHandleCorsSimpleRequestsBasic(t *testing.T) {
 		origin            string
 		wantAllowOrigin   string
 		wantExposeHeaders string
+		wantMaxAge        string
 	}{
 		{
 			desc:              "CORS simple request origin matches, so there are CORS headers in response.",
@@ -136,6 +137,7 @@ func TestProxyHandleCorsSimpleRequestsRegex(t *testing.T) {
 		origin            string
 		wantAllowOrigin   string
 		wantExposeHeaders string
+		wantMaxAge        string
 	}{
 		{
 			desc:              "CORS simple request origin matches, so there are CORS headers in response.",
@@ -184,12 +186,14 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 	corsAllowHeadersValue := "DNT,User-Agent,Cache-Control,Content-Type,Authorization, X-PINGOTHER"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 	corsAllowCredentialsValue := "true"
+	corsMaxAgeValue := "7200"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
 		"--rollout_strategy=fixed", "--cors_preset=basic",
 		"--cors_allow_origin=" + corsAllowOriginValue, "--cors_allow_methods=" + corsAllowMethodsValue,
 		"--cors_allow_headers=" + corsAllowHeadersValue,
-		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials"}
+		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials",
+		"--cors_max_age=2h"}
 
 	s := env.NewTestEnv(platform.TestProxyHandlesCorsPreflightRequestsBasic, platform.EchoSidecar)
 	defer s.TearDown(t)
@@ -216,6 +220,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
 				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
 				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+				"Access-Control-Max-Age":           corsMaxAgeValue,
 			},
 		},
 		{
@@ -235,6 +240,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Access-Control-Allow-Headers":     "",
 				"Access-Control-Expose-Headers":    "",
 				"Access-Control-Allow-Credentials": "",
+				"Access-Control-Max-Age":           "",
 			},
 		},
 		{
@@ -250,6 +256,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Access-Control-Allow-Headers":     "",
 				"Access-Control-Expose-Headers":    "",
 				"Access-Control-Allow-Credentials": "",
+				"Access-Control-Max-Age":           "",
 			},
 		},
 		{
@@ -265,6 +272,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Access-Control-Allow-Headers":     "",
 				"Access-Control-Expose-Headers":    "",
 				"Access-Control-Allow-Credentials": "",
+				"Access-Control-Max-Age":           "",
 			},
 		},
 	}
@@ -374,6 +382,7 @@ func TestGrpcBackendPreflightCors(t *testing.T) {
 			"Access-Control-Allow-Headers":     corsAllowHeadersValue,
 			"Access-Control-Expose-Headers":    corsExposeHeadersValue,
 			"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+			"Access-Control-Max-Age":           "1728000",
 		},
 	}
 

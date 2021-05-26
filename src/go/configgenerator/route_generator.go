@@ -17,19 +17,18 @@ package configgenerator
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/duration"
-
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -204,6 +203,7 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 	if cors == nil {
 		return nil, nil, nil
 	}
+	cors.MaxAge = strconv.Itoa(int(serviceInfo.Options.CorsMaxAge.Seconds()))
 	cors.AllowMethods = serviceInfo.Options.CorsAllowMethods
 	cors.AllowHeaders = serviceInfo.Options.CorsAllowHeaders
 	cors.ExposeHeaders = serviceInfo.Options.CorsExposeHeaders
@@ -375,16 +375,15 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 }
 
 func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
-	var maxStreamDuration *routepb.RouteAction_MaxStreamDuration
-	// If `route.MaxStreamDuration` unset, it will pick up `route.Timeout`.
-	// Consider we don't have timeout setting for streaming case before, statically
-	// set a 1-hr stream timeout to workaround.
-	if method.IsStreaming {
-		maxStreamDuration = &routepb.RouteAction_MaxStreamDuration{
-			MaxStreamDuration: &duration.Duration{
-				Seconds: 3600,
-			},
-		}
+	retryPolicy := &routepb.RetryPolicy{
+		RetryOn: method.BackendInfo.RetryOns,
+		NumRetries: &wrapperspb.UInt32Value{
+			Value: uint32(method.BackendInfo.RetryNum),
+		},
+	}
+
+	if method.BackendInfo.PerTryTimeout.Nanoseconds() > 0 {
+		retryPolicy.PerTryTimeout = ptypes.DurationProto(method.BackendInfo.PerTryTimeout)
 	}
 
 	return &routepb.Route{
@@ -396,13 +395,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) 
 				},
 				Timeout:     ptypes.DurationProto(method.BackendInfo.Deadline),
 				IdleTimeout: ptypes.DurationProto(method.BackendInfo.IdleTimeout),
-				RetryPolicy: &routepb.RetryPolicy{
-					RetryOn: method.BackendInfo.RetryOns,
-					NumRetries: &wrapperspb.UInt32Value{
-						Value: uint32(method.BackendInfo.RetryNum),
-					},
-				},
-				MaxStreamDuration: maxStreamDuration,
+				RetryPolicy: retryPolicy,
 			},
 		},
 		Decorator: &routepb.Decorator{

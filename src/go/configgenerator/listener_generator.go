@@ -189,6 +189,16 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 				},
 			},
 		},
+		// Security options for `path` header.
+		NormalizePath: &wrapperspb.BoolValue{Value: opts.NormalizePath},
+		MergeSlashes:  opts.MergeSlashesInPath,
+	}
+
+	// https://github.com/envoyproxy/envoy/security/advisories/GHSA-4987-27fx-x6cf
+	if opts.DisallowEscapedSlashesInPath {
+		httpConMgr.PathWithEscapedSlashesAction = hcmpb.HttpConnectionManager_UNESCAPE_AND_REDIRECT
+	} else {
+		httpConMgr.PathWithEscapedSlashesAction = hcmpb.HttpConnectionManager_KEEP_UNCHANGED
 	}
 
 	if opts.AccessLog != "" {

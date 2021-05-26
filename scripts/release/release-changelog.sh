@@ -27,7 +27,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 function usage() {
   [[ -n "${1}" ]] && echo "${1}"
   cat <<EOF
-usage: ${BASH_SOURCE[0]} -s <commit sha> -l <last release sha or tag> -d <directory>
+usage: ${BASH_SOURCE[0]} -s <commit sha> -l <last release sha or tag> -d <directory> [-n <current version number>]
 
 Generates changelog for changes between last release and current release.
 EOF
@@ -48,11 +48,12 @@ SHA=""
 LAST_COMMIT=""
 DIRECTORY="."
 
-while getopts :s:l:d: arg; do
+while getopts :s:l:d:n: arg; do
   case ${arg} in
     s) SHA="${OPTARG}";;
     l) LAST_COMMIT="${OPTARG}";;
     d) DIRECTORY="${OPTARG}";;
+    n) VERSION="${OPTARG}";;
     *) usage "Invalid option: -${OPTARG}";;
   esac
 done
@@ -65,7 +66,10 @@ if [ "${DIRECTORY}" != "." ]; then
   push_tool ${DIRECTORY}
 fi
 
-VERSION=$(command cat ${ROOT}/VERSION)
+if [ "${VERSION}" = "" ]; then
+  VERSION="$(command cat ${ROOT}/VERSION)" \
+    || usage "Cannot determine release version (${ROOT}/VERSION)."
+fi
 
 echo $(pwd)
 

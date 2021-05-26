@@ -276,6 +276,7 @@ class TestStartProxy(unittest.TestCase):
               '--cors_allow_methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
               '--cors_allow_headers', 'X-Requested-With',
               '--cors_expose_headers', 'Content-Length,Content-Range',
+              '--cors_max_age', "480h",
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
             # backend routing (with deprecated flag)
@@ -465,6 +466,15 @@ class TestStartProxy(unittest.TestCase):
               '--backend_retry_num', '10',
               '--disable_tracing'
               ]),
+            (['-R=managed',
+              '--http2_port=8079', '--backend_per_try_timeout=10s',
+              '--disable_tracing'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8079',
+              '--backend_per_try_timeout', '10s',
+              '--disable_tracing'
+              ]),
             # Service account key does not assume non-gcp
             # and does not disable tracing.
             (['--service=test_bookstore.gloud.run',
@@ -594,6 +604,27 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_response_headers', 'k1=v1;k2=v2',
               '--service_json_path', '/tmp/service_config.json',
+              ]),
+            # Path security options.
+            (['--rollout_strategy=fixed',
+              '--service_json_path=/tmp/service_config.json',
+              '--disable_normalize_path',
+              '--disable_merge_slashes_in_path',
+              ],
+             ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--service_json_path', '/tmp/service_config.json',
+              '--normalize_path=false',
+              '--merge_slashes_in_path=false',
+              ]),
+            (['--rollout_strategy=fixed',
+              '--service_json_path=/tmp/service_config.json',
+              '--disallow_escaped_slashes_in_path'
+              ],
+             ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--service_json_path', '/tmp/service_config.json',
+              '--disallow_escaped_slashes_in_path',
               ]),
         ]
 

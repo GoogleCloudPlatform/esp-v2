@@ -39,6 +39,7 @@ var (
 	CorsAllowOrigin      = flag.String("cors_allow_origin", "", "set Access-Control-Allow-Origin to a specific origin")
 	CorsAllowOriginRegex = flag.String("cors_allow_origin_regex", "", "set Access-Control-Allow-Origin to a regular expression")
 	CorsExposeHeaders    = flag.String("cors_expose_headers", "", "set Access-Control-Expose-Headers to the specified headers")
+	CorsMaxAge           = flag.Duration("cors_max_age", 480*time.Hour, "set Access-Control-Max-Age response header for CORS preflight request.")
 	CorsPreset           = flag.String("cors_preset", "", `enable CORS support, must be either "basic" or "cors_with_regex"`)
 
 	// Backend routing configurations.
@@ -113,7 +114,10 @@ var (
 
 	SuppressEnvoyHeaders = flag.Bool("suppress_envoy_headers", true, `Do not add any additional x-envoy- headers to requests or responses. This only affects the router filter
 	generated *x-envoy-* headers, other Envoy filters and the HTTP connection manager may continue to set x-envoy- headers.`)
-	UnderscoresInHeaders = flag.Bool("underscores_in_headers", false, `When true, ESPv2 allows HTTP headers name has underscore and pass it through. Otherwise, rejects the request.`)
+	UnderscoresInHeaders         = flag.Bool("underscores_in_headers", false, `When true, ESPv2 allows HTTP headers name has underscore and pass it through. Otherwise, rejects the request.`)
+	NormalizePath                = flag.Bool("normalize_path", true, `Normalizes the path according to RFC 3986 before processing requests.`)
+	MergeSlashesInPath           = flag.Bool("merge_slashes_in_path", true, `Determines if adjacent slashes in the path are merged into one before processing requests.`)
+	DisallowEscapedSlashesInPath = flag.Bool("disallow_escaped_slashes_in_path", false, `Determines if [%2F, %2f, %2C, %2c] characters in the path are disallowed.`)
 
 	ServiceControlNetworkFailOpen = flag.Bool("service_control_network_fail_open", true, ` In case of network failures when connecting to Google service control,
         the requests will be allowed if this flag is on. The default is on.`)
@@ -158,7 +162,14 @@ var (
         x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).`)
 	BackendRetryNum = flag.Uint("backend_retry_num", 1,
 		`The allowed number of retries. Must be >= 0 and defaults to 1. This retry
-	setting will be applied to all the backends if you have multiple ones.`)
+        setting will be applied to all the backends if you have multiple ones.`)
+	BackendPerTryTimeout = flag.Duration("backend_per_try_timeout", 0,
+		`The backend timeout per retry attempt in second. Please note the 
+        "deadline"" in the "x-google-backend"" extension is the total time wait
+        for a full response from one request, including all retries. By default,
+        backend_per_try_timeout=0 means ESPv2 will use the  "deadline"" in
+        the "x-google-backend" extension. Consequently, a request that times out
+        will not be retried as the total timeout budget would have been exhausted.`)
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -175,6 +186,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		CorsAllowOrigin:                         *CorsAllowOrigin,
 		CorsAllowOriginRegex:                    *CorsAllowOriginRegex,
 		CorsExposeHeaders:                       *CorsExposeHeaders,
+		CorsMaxAge:                              *CorsMaxAge,
 		CorsPreset:                              *CorsPreset,
 		BackendDnsLookupFamily:                  *BackendDnsLookupFamily,
 		ClusterConnectTimeout:                   *ClusterConnectTimeout,
@@ -212,12 +224,16 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		MinStreamReportIntervalMs:               *MinStreamReportIntervalMs,
 		SuppressEnvoyHeaders:                    *SuppressEnvoyHeaders,
 		UnderscoresInHeaders:                    *UnderscoresInHeaders,
+		NormalizePath:                           *NormalizePath,
+		MergeSlashesInPath:                      *MergeSlashesInPath,
+		DisallowEscapedSlashesInPath:            *DisallowEscapedSlashesInPath,
 		ServiceControlNetworkFailOpen:           *ServiceControlNetworkFailOpen,
 		EnableGrpcForHttp1:                      *EnableGrpcForHttp1,
 		ConnectionBufferLimitBytes:              *ConnectionBufferLimitBytes,
 		JwksCacheDurationInS:                    *JwksCacheDurationInS,
 		BackendRetryOns:                         *BackendRetryOns,
 		BackendRetryNum:                         *BackendRetryNum,
+		BackendPerTryTimeout:                    *BackendPerTryTimeout,
 		ScCheckTimeoutMs:                        *ScCheckTimeoutMs,
 		ScQuotaTimeoutMs:                        *ScQuotaTimeoutMs,
 		ScReportTimeoutMs:                       *ScReportTimeoutMs,

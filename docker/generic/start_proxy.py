@@ -341,6 +341,17 @@ environment variable or by passing "-k" flag to this script.
         Access-Control-Allow-Credentials. By default, this header is disabled.
         ''')
     parser.add_argument(
+        '--cors_max_age',
+        default='480h',
+        help='''
+        Only works when --cors_preset is in use. Configures the CORS header
+        Access-Control-Max-Age. Defaults to 20 days (1728000 seconds).
+
+        The acceptable format is a sequence of decimal numbers, each with
+        optional fraction and a unit suffix, such as "300m", "1.5h" or "2h45m".
+        Valid time units are "m" for minutes, "h" for hours.
+        ''')
+    parser.add_argument(
         '--check_metadata',
         action='store_true',
         help='''Enable fetching service name, service config ID and rollout
@@ -349,6 +360,82 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument('--underscores_in_headers', action='store_true',
         help='''Allow headers contain underscores to pass through. By default
         ESPv2 rejects requests that have headers with underscores.''')
+
+    parser.add_argument('--disable_normalize_path', action='store_true',
+        help='''Disable normalization of the `path` HTTP header according to
+        RFC 3986. It is recommended to keep this option enabled if your backend
+        performs path normalization by default.
+        
+        The following table provides examples of the request `path` the backend
+        will receive from ESPv2 based on the configuration of this flag.
+        
+        -----------------------------------------------------------------
+        | Request Path     | Without Normalization | With Normalization |
+        -----------------------------------------------------------------
+        | /hello/../world  | Rejected              | /world             |
+        | /%%4A            | /%%4A                 | /J                 |
+        | /%%4a            | /%%4a                 | /J                 |
+        -----------------------------------------------------------------
+        
+        By default, ESPv2 will normalize paths.
+        Disable the feature only if your traffic is affected by the behavior.
+        
+        Note: Following RFC 3986, this option does not unescape percent-encoded
+        slash characters. See flag `--disallow_escaped_slashes_in_path` to
+        enable this non-compliant behavior.
+        
+        Note: Case normalization from RFC 3986 is not supported, even if this
+        option is enabled.
+        
+        For more details, see:
+        https://cloud.google.com/api-gateway/docs/path-templating''')
+
+    parser.add_argument('--disable_merge_slashes_in_path', action='store_true',
+        help='''Disable merging of adjacent slashes in the `path` HTTP header.
+        It is recommended to keep this option enabled if your backend
+        performs merging by default.
+        
+        The following table provides examples of the request `path` the backend
+        will receive from ESPv2 based on the configuration of this flag.
+        
+        -----------------------------------------------------------------
+        | Request Path     | Without Normalization | With Normalization |
+        -----------------------------------------------------------------
+        | /hello//world    | Rejected              | /hello/world       |
+        | /hello///        | Rejected              | /hello             |
+        -----------------------------------------------------------------
+        
+        By default, ESPv2 will merge slashes.
+        Disable the feature only if your traffic is affected by the behavior.
+        
+        For more details, see:
+        https://cloud.google.com/api-gateway/docs/path-templating''')
+
+    parser.add_argument('--disallow_escaped_slashes_in_path',
+        action='store_true',
+        help='''
+        Disallows requests with escaped percent-encoded slash characters:
+        - %%2F or %%2f is treated as a /
+        - %%5C or %%5c is treated as a  \
+        
+        When enabled, the behavior depends on the protocol:
+        - For OpenAPI backends, request paths with unescaped percent-encoded
+          slashes will be automatically escaped via a redirect.
+        - For gRPC backends, request paths with unescaped percent-encoded 
+          slashes will be rejected (gRPC does not support redirects).
+          
+        This option is **not** RFC 3986 compliant,
+        so it is turned off by default.
+        If your backend is **not** RFC 3986 compliant and escapes slashes,
+        you **must** enable this option in ESPv2.
+        This will prevent against path confusion attacks that result in security
+        requirements not being enforced.
+        
+        For more details, see:
+        https://cloud.google.com/api-gateway/docs/path-templating
+        and
+        https://github.com/envoyproxy/envoy/security/advisories/GHSA-4987-27fx-x6cf
+        ''')
 
     parser.add_argument(
         '--envoy_use_remote_address',
@@ -483,6 +570,19 @@ environment variable or by passing "-k" flag to this script.
         default=None,
         help='''
         The allowed number of retries. Must be >= 0 and defaults to 1. 
+        ''')
+    parser.add_argument(
+        '--backend_per_try_timeout',
+        default=None,
+        help='''
+        The backend timeout per retry attempt. Valid time units are "ns", "us",
+        "ms", "s", "m", "h".
+        
+        Please note the `deadline` in the `x-google-backend` extension is the
+        total time wait for a full response from one request, including all
+        retries. If the flag is unspecified, ESPv2 will use the  `deadline` in
+        the `x-google-backend` extension. Consequently, a request that times out
+         will not be retried as the total timeout budget would have been exhausted.
         ''')
     parser.add_argument(
         '--access_log',
@@ -1001,12 +1101,21 @@ def gen_proxy_config(args):
 
     if args.underscores_in_headers:
         proxy_conf.append("--underscores_in_headers")
+    if args.disable_normalize_path:
+        proxy_conf.append("--normalize_path=false")
+    if args.disable_merge_slashes_in_path:
+        proxy_conf.append("--merge_slashes_in_path=false")
+    if args.disallow_escaped_slashes_in_path:
+        proxy_conf.append("--disallow_escaped_slashes_in_path")
 
     if args.backend_retry_ons:
         proxy_conf.extend(["--backend_retry_ons", args.backend_retry_ons])
 
     if args.backend_retry_num:
         proxy_conf.extend(["--backend_retry_num", args.backend_retry_num])
+
+    if args.backend_per_try_timeout:
+        proxy_conf.extend(["--backend_per_try_timeout", args.backend_per_try_timeout])
 
     if args.access_log:
         proxy_conf.extend(["--access_log",
@@ -1085,6 +1194,8 @@ def gen_proxy_config(args):
             args.cors_allow_headers,
             "--cors_expose_headers",
             args.cors_expose_headers,
+            "--cors_max_age",
+            args.cors_max_age,
         ])
         if args.cors_allow_credentials:
             proxy_conf.append("--cors_allow_credentials")

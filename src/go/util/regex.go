@@ -25,7 +25,8 @@ func ValidateRegexProgramSize(regex string, maxProgramSize int) error {
 		return err
 	}
 
-	prog, err := syntax.Compile(regParse)
+	regSimple := regParse.Simplify()
+	prog, err := syntax.Compile(regSimple)
 	if err != nil {
 		return err
 	}
