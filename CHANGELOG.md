@@ -1,3 +1,9 @@
+# Release 2.27.0 02-06-2021
+
+- Fix overhead latency calculation for backend timeout (#505)
+- Reduce backoff initial latency. (#520)
+- Update googleapis/googleapis for golang code (#516)
+
 # Release 2.26.1 19-05-2021
 
 No changes involve Cloud Endpoints users.
