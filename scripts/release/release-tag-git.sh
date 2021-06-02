@@ -60,7 +60,7 @@ BUILD_SHA=$(git rev-parse --verify "${BUILD_REF}") \
 TAG_SHA=$(git rev-parse --verify "${TAG_REF}") \
   || usage "Invalid Git reference \"${TAG_REF}\"."
 
-if [ "${VERSION}" = ""]; then
+if [ "${VERSION}" = "" ]; then
   VERSION="$(command cat ${ROOT}/VERSION)" \
     || usage "Cannot determine release version (${ROOT}/VERSION)."
 fi
