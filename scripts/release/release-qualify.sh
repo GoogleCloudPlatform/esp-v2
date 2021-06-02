@@ -53,7 +53,7 @@ function check_result() {
   local FILE=${1}
   local COMMIT=${2}
 
-  python - << EOF ${FILE} ${COMMIT}
+  python2 - << EOF ${FILE} ${COMMIT}
 import sys
 import json
 
@@ -117,7 +117,7 @@ echo "Downloading prow logs to '${LOGS}' directory."
 ${GSUTIL} -m -q cp -r "gs://apiproxy-continuous-long-run/${SHA}/logs/*" "${LOGS}/${SHA}/" 2>&1  \
  || error_exit "Failed to download logs from gs://apiproxy-continuous-long-run/${SHA}/logs/*"
 
-python "${ROOT}/scripts/release/validate_release.py"  \
+python2 "${ROOT}/scripts/release/validate_release.py"  \
  --commit_sha "${SHA}"  \
  --path "${LOGS}/${SHA}"  \
  || error_exit "Release is not qualified."
