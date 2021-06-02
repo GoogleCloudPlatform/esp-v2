@@ -48,7 +48,7 @@ while getopts :n: arg; do
 done
 set -x
 
-if [ "${VERSION}" = ""]; then
+if [ "${VERSION}" = "" ]; then
   VERSION="$(command cat ${ROOT}/VERSION)" \
     || usage "Cannot determine release version (${ROOT}/VERSION)."
 fi
