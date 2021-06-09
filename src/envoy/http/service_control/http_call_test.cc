@@ -17,9 +17,9 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "common/http/headers.h"
-#include "common/http/message_impl.h"
-#include "common/tracing/http_tracer_impl.h"
+#include "source/common/http/headers.h"
+#include "source/common/http/message_impl.h"
+#include "source/common/tracing/http_tracer_impl.h"
 #include "envoy/http/async_client.h"
 #include "gmock/gmock.h"
 #include "google/api/servicecontrol/v1/service_controller.pb.h"

@@ -15,9 +15,9 @@
 #include "src/envoy/token/imds_token_info.h"
 
 #include "absl/strings/str_cat.h"
-#include "common/http/headers.h"
-#include "common/http/message_impl.h"
-#include "common/http/utility.h"
+#include "source/common/http/headers.h"
+#include "source/common/http/message_impl.h"
+#include "source/common/http/utility.h"
 #include "src/envoy/utils/json_struct.h"
 
 namespace espv2 {

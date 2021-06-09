@@ -14,8 +14,8 @@
 
 #include "src/envoy/utils/filter_state_utils.h"
 
-#include "common/common/empty_string.h"
-#include "common/stream_info/filter_state_impl.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/stream_info/filter_state_impl.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "test/test_common/utility.h"

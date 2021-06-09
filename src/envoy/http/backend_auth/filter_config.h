@@ -15,7 +15,7 @@
 #pragma once
 
 #include "api/envoy/v9/http/backend_auth/config.pb.h"
-#include "common/common/logger.h"
+#include "source/common/common/logger.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
 
 namespace espv2 {

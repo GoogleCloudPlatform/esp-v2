@@ -16,7 +16,7 @@
 #include "src/envoy/http/service_control/handler_utils.h"
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/empty_string.h"
+#include "source/common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"

@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "src/envoy/http/backend_auth/filter.h"
 
-#include "common/common/empty_string.h"
+#include "source/common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"

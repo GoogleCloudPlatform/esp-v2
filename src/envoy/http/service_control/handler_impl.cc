@@ -17,9 +17,9 @@
 #include <chrono>
 
 #include "absl/strings/match.h"
-#include "common/common/empty_string.h"
-#include "common/http/headers.h"
-#include "common/http/utility.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/http/headers.h"
+#include "source/common/http/utility.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"

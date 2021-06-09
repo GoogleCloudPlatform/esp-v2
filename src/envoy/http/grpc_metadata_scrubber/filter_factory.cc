@@ -15,7 +15,7 @@
 #include "api/envoy/v9/http/grpc_metadata_scrubber/config.pb.h"
 #include "api/envoy/v9/http/grpc_metadata_scrubber/config.pb.validate.h"
 #include "envoy/registry/registry.h"
-#include "extensions/filters/http/common/factory_base.h"
+#include "source/extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/grpc_metadata_scrubber/filter.h"
 
 namespace espv2 {

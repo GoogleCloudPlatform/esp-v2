@@ -15,7 +15,7 @@
 #pragma once
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/logger.h"
+#include "source/common/common/logger.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/tracing/http_tracer.h"
 #include "envoy/upstream/cluster_manager.h"

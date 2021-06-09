@@ -14,7 +14,7 @@
 
 #include "src/envoy/http/service_control/filter.h"
 
-#include "common/common/empty_string.h"
+#include "source/common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"

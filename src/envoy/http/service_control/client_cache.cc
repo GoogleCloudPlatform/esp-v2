@@ -14,7 +14,7 @@
 
 #include "src/envoy/http/service_control/client_cache.h"
 
-#include "common/tracing/http_tracer_impl.h"
+#include "source/common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/check_response_convert_utils.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/http_call.h"

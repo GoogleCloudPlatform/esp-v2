@@ -3,8 +3,8 @@
 #include <string>
 
 #include "api/envoy/v9/http/service_control/config.pb.validate.h"
-#include "common/http/message_impl.h"
-#include "common/tracing/http_tracer_impl.h"
+#include "source/common/http/message_impl.h"
+#include "source/common/tracing/http_tracer_impl.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"

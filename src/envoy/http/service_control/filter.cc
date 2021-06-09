@@ -16,7 +16,7 @@
 
 #include <chrono>
 
-#include "common/grpc/status.h"
+#include "source/common/grpc/status.h"
 #include "envoy/http/header_map.h"
 #include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/utils/http_header_utils.h"

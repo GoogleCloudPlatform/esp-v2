@@ -17,9 +17,9 @@
 #include <chrono>
 #include <string>
 
-#include "common/common/logger.h"
-#include "common/grpc/codec.h"
-#include "common/grpc/common.h"
+#include "source/common/common/logger.h"
+#include "source/common/grpc/codec.h"
+#include "source/common/grpc/common.h"
 #include "envoy/buffer/buffer.h"
 #include "envoy/common/random_generator.h"
 #include "envoy/common/time.h"

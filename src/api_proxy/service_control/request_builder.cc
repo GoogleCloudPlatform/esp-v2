@@ -19,9 +19,9 @@
 #include <functional>
 
 #include "absl/strings/str_cat.h"
-#include "common/common/assert.h"
-#include "common/common/base64.h"
-#include "common/grpc/status.h"
+#include "source/common/common/assert.h"
+#include "source/common/common/base64.h"
+#include "source/common/grpc/status.h"
 #include "google/api/metric.pb.h"
 #include "google/protobuf/timestamp.pb.h"
 #include "google/protobuf/util/time_util.h"

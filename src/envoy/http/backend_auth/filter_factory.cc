@@ -15,7 +15,7 @@
 #include "api/envoy/v9/http/backend_auth/config.pb.h"
 #include "api/envoy/v9/http/backend_auth/config.pb.validate.h"
 #include "envoy/registry/registry.h"
-#include "extensions/filters/http/common/factory_base.h"
+#include "source/extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/backend_auth/config_parser_impl.h"
 #include "src/envoy/http/backend_auth/filter.h"
 #include "src/envoy/http/backend_auth/filter_config_impl.h"

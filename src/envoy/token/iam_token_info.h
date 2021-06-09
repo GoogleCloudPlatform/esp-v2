@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "common/http/utility.h"
+#include "source/common/http/utility.h"
 #include "google/protobuf/repeated_field.h"
 #include "src/envoy/token/token_info.h"
 

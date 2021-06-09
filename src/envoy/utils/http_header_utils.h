@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "common/http/utility.h"
+#include "source/common/http/utility.h"
 #include "envoy/http/header_map.h"
 
 namespace espv2 {

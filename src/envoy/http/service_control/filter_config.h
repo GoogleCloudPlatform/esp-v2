@@ -15,7 +15,7 @@
 #pragma once
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/logger.h"
+#include "source/common/common/logger.h"
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
 #include "src/envoy/http/service_control/config_parser.h"

@@ -15,8 +15,8 @@
 #pragma once
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/empty_string.h"
-#include "common/common/logger.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/common/logger.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
 #include "envoy/upstream/cluster_manager.h"

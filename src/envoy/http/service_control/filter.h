@@ -16,11 +16,11 @@
 
 #include <string>
 
-#include "common/common/logger.h"
+#include "source/common/common/logger.h"
 #include "envoy/access_log/access_log.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
-#include "extensions/filters/http/common/pass_through_filter.h"
+#include "source/extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/http/service_control/handler.h"
 
