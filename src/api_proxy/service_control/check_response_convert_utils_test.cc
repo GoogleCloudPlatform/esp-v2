@@ -33,7 +33,7 @@ using ::google::protobuf::util::StatusCode;
 
 class CheckResponseConverterTest : public ::testing::Test {
  protected:
-  void runTest(CheckError_Code got_check_error_code, Code want_code,
+  void runTest(CheckError_Code got_check_error_code, StatusCode want_code,
                ScResponseErrorType want_error_type) {
     CheckResponseInfo info;
     CheckResponse response;

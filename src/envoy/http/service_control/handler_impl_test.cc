@@ -261,8 +261,8 @@ class HandlerTest : public ::testing::Test {
   }                                                                          \
   if (arg.name.has_value() && arg.name.value() != expect.name.value()) {     \
     std::cerr << "MATCH fails for " << #name << " value(): '"                \
-              << arg.name.value() << "' != '" << expect.name.value() << "'"  \
-              << std::endl;                                                  \
+              << static_cast<int>(arg.name.value()) << "' != '"              \
+              << static_cast<int>(expect.name.value()) << "'" << std::endl;  \
     return false;                                                            \
   }
 
@@ -1096,7 +1096,7 @@ class HandlerReportStatusTest : public HandlerTest {
   void runTest(unsigned int http_response_code,
                TestResponseHeaderMapImpl response_headers,
                TestResponseTrailerMapImpl response_trailers,
-               absl::optional<Code> expected_grpc_status) {
+               absl::optional<StatusCode> expected_grpc_status) {
     EXPECT_CALL(mock_stream_info_, responseCode())
         .WillRepeatedly(Return(http_response_code));
 
@@ -1154,7 +1154,7 @@ TEST_F(HandlerReportStatusTest, WellKnownStatuses) {
   // Test all canonical RPC codes.
   for (int i = 0; i <= 16; i++) {
     runTest(200, {{"content-type", "application/grpc"}},
-            {{"grpc-status", absl::StrCat("", i)}}, static_cast<Code>(i));
+            {{"grpc-status", absl::StrCat("", i)}}, static_cast<StatusCode>(i));
   }
 }
 

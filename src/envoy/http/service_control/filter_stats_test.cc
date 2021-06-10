@@ -29,7 +29,7 @@ namespace http_filters {
 namespace service_control {
 namespace {
 struct CodeToCounter {
-  Code code;
+  StatusCode code;
   Envoy::Stats::Counter& counter;
 };
 
@@ -44,7 +44,7 @@ class FilterStatsTest : public ::testing::Test {
 
   void runTest(
       const std::vector<CodeToCounter>& mappings,
-      const std::function<void(CallStatusStats&, Code&)>& collectStatus) {
+      const std::function<void(CallStatusStats&, StatusCode&)>& collectStatus) {
     for (auto i : mappings) {
       // All counters are 0.
       for (auto j : mappings) {

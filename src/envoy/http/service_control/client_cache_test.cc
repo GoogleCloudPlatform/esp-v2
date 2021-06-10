@@ -111,8 +111,8 @@ class ClientCacheTestBase : public ::testing::Test {
 
 class ClientCacheCheckResponseTest : public ClientCacheTestBase {
  protected:
-  void runTest(Code got_http_code, CheckResponse* got_response,
-               Code want_client_code, ApiKeyState want_api_key_state,
+  void runTest(StatusCode got_http_code, CheckResponse* got_response,
+               StatusCode want_client_code, ApiKeyState want_api_key_state,
                std::string want_error_name) {
     CheckDoneFunc on_done = [&](const Status& status,
                                 const CheckResponseInfo& info) {
@@ -250,8 +250,8 @@ TEST_F(ClientCacheCheckResponseErrorTypeTest, ServiceNotActivated) {
 
 class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
  protected:
-  void runTest(Code got_http_code, AllocateQuotaResponse* got_response,
-               Code want_client_code, std::string want_error_name) {
+  void runTest(StatusCode got_http_code, AllocateQuotaResponse* got_response,
+               StatusCode want_client_code, std::string want_error_name) {
     QuotaDoneFunc on_done =
         [&](const Status& status,
             const ::espv2::api_proxy::service_control::QuotaResponseInfo&
