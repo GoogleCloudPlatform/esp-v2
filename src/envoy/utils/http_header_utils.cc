@@ -14,9 +14,9 @@
 
 #include "src/envoy/utils/http_header_utils.h"
 
-#include "common/common/empty_string.h"
-#include "common/http/header_utility.h"
-#include "common/http/headers.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/http/header_utility.h"
+#include "source/common/http/headers.h"
 
 namespace espv2 {
 namespace envoy {

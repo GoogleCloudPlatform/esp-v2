@@ -205,7 +205,7 @@ struct ReportRequestInfo : public OperationInfo {
 
   // The gRPC response code, in the canonical RPC code range.
   // Only valid when frontend protocol is gRPC.
-  absl::optional<::google::protobuf::util::error::Code> grpc_response_code;
+  absl::optional<::google::protobuf::util::StatusCode> grpc_response_code;
 
   // The response status.
   ::google::protobuf::util::Status status;

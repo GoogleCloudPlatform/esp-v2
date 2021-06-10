@@ -19,12 +19,12 @@
 #include <functional>
 
 #include "absl/strings/str_cat.h"
-#include "common/common/assert.h"
-#include "common/common/base64.h"
-#include "common/grpc/status.h"
 #include "google/api/metric.pb.h"
 #include "google/protobuf/timestamp.pb.h"
 #include "google/protobuf/util/time_util.h"
+#include "source/common/common/assert.h"
+#include "source/common/common/base64.h"
+#include "source/common/grpc/status.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/api_proxy/utils/version.h"
 #include "utils/distribution_helper.h"
@@ -43,8 +43,9 @@ using ::google::api::servicecontrol::v1::QuotaError;
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::protobuf::Map;
 using ::google::protobuf::Timestamp;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 using ::google::service_control_client::DistributionHelper;
 
 namespace espv2 {
@@ -119,7 +120,7 @@ Status AddDistributionMetric(const DistributionHelperOptions& options,
   status = DistributionHelper::AddSample(value, &distribution);
   if (!status.ok()) return status;
   *metric_value->mutable_distribution_value() = distribution;
-  return Status::OK;
+  return OkStatus();
 }
 
 // Metrics supported by ESPv2.
@@ -128,7 +129,7 @@ Status set_int64_metric_to_constant_1(const SupportedMetric& m,
                                       const ReportRequestInfo&,
                                       Operation* operation) {
   AddInt64Metric(m.name, 1l, operation);
-  return Status::OK;
+  return OkStatus();
 }
 
 Status set_distribution_metric_to_request_size(const SupportedMetric& m,
@@ -138,7 +139,7 @@ Status set_distribution_metric_to_request_size(const SupportedMetric& m,
     return AddDistributionMetric(size_distribution, m.name, info.request_size,
                                  operation);
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 Status set_distribution_metric_to_response_size(const SupportedMetric& m,
@@ -148,7 +149,7 @@ Status set_distribution_metric_to_response_size(const SupportedMetric& m,
     return AddDistributionMetric(size_distribution, m.name, info.response_size,
                                  operation);
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // TODO: Consider refactoring following 3 functions to avoid duplicate code
@@ -160,7 +161,7 @@ Status set_distribution_metric_to_request_time(const SupportedMetric& m,
     return AddDistributionMetric(time_distribution, m.name, request_time_secs,
                                  operation);
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 Status set_distribution_metric_to_backend_time(const SupportedMetric& m,
@@ -171,7 +172,7 @@ Status set_distribution_metric_to_backend_time(const SupportedMetric& m,
     return AddDistributionMetric(time_distribution, m.name, backend_time_secs,
                                  operation);
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 Status set_distribution_metric_to_overhead_time(const SupportedMetric& m,
@@ -182,7 +183,7 @@ Status set_distribution_metric_to_overhead_time(const SupportedMetric& m,
     return AddDistributionMetric(time_distribution, m.name, overhead_time_secs,
                                  operation);
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // Currently unsupported metrics:
@@ -364,7 +365,8 @@ const std::string get_service_agent() {
 unsigned int get_status_code(const ReportRequestInfo& info) {
   if (info.grpc_response_code.has_value()) {
     return Envoy::Grpc::Utility::grpcToHttpStatus(
-        info.grpc_response_code.value());
+        static_cast<Envoy::Grpc::Status::GrpcStatus>(
+            info.grpc_response_code.value()));
   }
   return info.http_response_code;
 }
@@ -395,7 +397,7 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
     }
     (*labels)[l.name] = credential_id;
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 constexpr const char* error_types[10] = {"0xx", "1xx", "2xx", "3xx", "4xx",
@@ -411,14 +413,14 @@ Status set_error_type(const SupportedLabel& l, const ReportRequestInfo& info,
       (*labels)[l.name] = error_types[code];
     }
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // /protocol
 Status set_protocol(const SupportedLabel& l, const ReportRequestInfo& info,
                     Map<std::string, std::string>* labels) {
   (*labels)[l.name] = protocol::ToString(info.frontend_protocol);
-  return Status::OK;
+  return OkStatus();
 }
 
 // /servicecontrol.googleapis.com/backend_protocol
@@ -430,7 +432,7 @@ Status set_backend_protocol(const SupportedLabel& l,
       info.frontend_protocol != info.backend_protocol) {
     (*labels)[l.name] = protocol::ToString(info.backend_protocol);
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // /servicecontrol.googleapis.com/consumer_project
@@ -438,7 +440,7 @@ Status set_consumer_project(const SupportedLabel& l,
                             const ReportRequestInfo& info,
                             Map<std::string, std::string>* labels) {
   (*labels)[l.name] = info.check_response_info.consumer_project_number;
-  return Status::OK;
+  return OkStatus();
 }
 
 // /referer
@@ -447,7 +449,7 @@ Status set_referer(const SupportedLabel& l, const ReportRequestInfo& info,
   if (!info.referer.empty()) {
     (*labels)[l.name] = info.referer;
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // /response_code
@@ -457,7 +459,7 @@ Status set_response_code(const SupportedLabel& l, const ReportRequestInfo& info,
   snprintf(response_code_buf, sizeof(response_code_buf), "%d",
            get_status_code(info));
   (*labels)[l.name] = response_code_buf;
-  return Status::OK;
+  return OkStatus();
 }
 
 // /response_code_class
@@ -465,17 +467,16 @@ Status set_response_code_class(const SupportedLabel& l,
                                const ReportRequestInfo& info,
                                Map<std::string, std::string>* labels) {
   (*labels)[l.name] = error_types[(get_status_code(info) / 100) % 10];
-  return Status::OK;
+  return OkStatus();
 }
 
 // /status_code
 Status set_status_code(const SupportedLabel& l, const ReportRequestInfo& info,
                        Map<std::string, std::string>* labels) {
   char status_code_buf[20];
-  snprintf(status_code_buf, sizeof(status_code_buf), "%d",
-           info.status.error_code());
+  snprintf(status_code_buf, sizeof(status_code_buf), "%d", info.status.code());
   (*labels)[l.name] = status_code_buf;
-  return Status::OK;
+  return OkStatus();
 }
 
 // cloud.googleapis.com/location
@@ -487,7 +488,7 @@ Status set_location(const SupportedLabel& l, const ReportRequestInfo& info,
     // This label SHOULD not be empty, otherwise the server will fail the call.
     (*labels)[l.name] = kDefaultLocation;
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // serviceruntime.googleapis.com/api_method
@@ -496,7 +497,7 @@ Status set_api_method(const SupportedLabel& l, const ReportRequestInfo& info,
   if (!info.api_method.empty()) {
     (*labels)[l.name] = info.api_method;
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // serviceruntime.googleapis.com/api_version
@@ -505,28 +506,28 @@ Status set_api_version(const SupportedLabel& l, const ReportRequestInfo& info,
   if (!info.api_version.empty()) {
     (*labels)[l.name] = info.api_version;
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 // servicecontrol.googleapis.com/platform
 Status set_platform(const SupportedLabel& l, const ReportRequestInfo& info,
                     Map<std::string, std::string>* labels) {
   (*labels)[l.name] = info.compute_platform;
-  return Status::OK;
+  return OkStatus();
 }
 
 // servicecontrol.googleapis.com/service_agent
 Status set_service_agent(const SupportedLabel& l, const ReportRequestInfo&,
                          Map<std::string, std::string>* labels) {
   (*labels)[l.name] = get_service_agent();
-  return Status::OK;
+  return OkStatus();
 }
 
 // serviceruntime.googleapis.com/user_agent
 Status set_user_agent(const SupportedLabel& l, const ReportRequestInfo&,
                       Map<std::string, std::string>* labels) {
   (*labels)[l.name] = kUserAgent;
-  return Status::OK;
+  return OkStatus();
 }
 
 const SupportedLabel supported_labels[] = {
@@ -792,15 +793,15 @@ Timestamp CreateTimestamp(std::chrono::system_clock::time_point tp) {
 
 Status VerifyRequiredCheckFields(const OperationInfo& info) {
   if (info.operation_id.empty()) {
-    return Status(Code::INVALID_ARGUMENT, "operation_id is required.");
+    return Status(StatusCode::kInvalidArgument, "operation_id is required.");
   }
   if (info.operation_name.empty()) {
-    return Status(Code::INVALID_ARGUMENT, "operation_name is required.");
+    return Status(StatusCode::kInvalidArgument, "operation_name is required.");
   }
-  return Status::OK;
+  return OkStatus();
 }
 
-Status VerifyRequiredReportFields(const OperationInfo&) { return Status::OK; }
+Status VerifyRequiredReportFields(const OperationInfo&) { return OkStatus(); }
 
 void SetOperationCommonFields(const OperationInfo& info,
                               const Timestamp& current_time, Operation* op) {
@@ -914,15 +915,16 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   if (!info.jwt_payloads.empty()) {
     (*fields)[kLogFieldNameJwtPayloads].set_string_value(info.jwt_payloads);
   }
-  if (!info.status.ok() && info.status.error_message().length() > 0) {
+  if (!info.status.ok() && info.status.message().length() > 0) {
     (*fields)[kLogFieldNameErrorCause].set_string_value(
-        info.status.error_message().as_string());
+        info.status.message().as_string());
   }
 
   if (info.grpc_response_code.has_value()) {
     const std::string grpc_status_string =
         Envoy::Grpc::Utility::grpcStatusToString(
-            info.grpc_response_code.value());
+            static_cast<Envoy::Grpc::Status::GrpcStatus>(
+                info.grpc_response_code.value()));
     (*fields)[kLogFieldNameGrpcStatusCode].set_string_value(grpc_status_string);
   }
 }
@@ -1030,7 +1032,7 @@ Status RequestBuilder::FillAllocateQuotaRequest(
     value->set_int64_value(cost <= 0 ? 1 : cost);
   }
 
-  return Status::OK;
+  return OkStatus();
 }
 
 Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
@@ -1072,7 +1074,7 @@ Status RequestBuilder::FillCheckRequest(const CheckRequestInfo& info,
     (*labels)[kServiceControlIosBundleId] = info.ios_bundle_id;
   }
 
-  return Status::OK;
+  return OkStatus();
 }
 
 Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
@@ -1134,7 +1136,7 @@ Status RequestBuilder::FillReportRequest(const ReportRequestInfo& info,
     return AppendByConsumerOperations(info, request, current_time);
   }
 
-  return Status::OK;
+  return OkStatus();
 }
 
 Status RequestBuilder::AppendByConsumerOperations(
@@ -1175,7 +1177,7 @@ Status RequestBuilder::AppendByConsumerOperations(
     }
   }
 
-  return Status::OK;
+  return OkStatus();
 }
 
 bool RequestBuilder::IsMetricSupported(

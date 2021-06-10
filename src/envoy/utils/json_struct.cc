@@ -17,8 +17,9 @@
 #include "google/protobuf/util/time_util.h"
 
 using ::google::protobuf::Value;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 namespace espv2 {
 namespace envoy {
@@ -28,29 +29,29 @@ Status JsonStruct::getString(const std::string& key, std::string* value) {
   const auto& fields = struct_.fields();
   const auto it = fields.find(key);
   if (it == fields.end()) {
-    return Status(::google::protobuf::util::error::NOT_FOUND,
+    return Status(::google::protobuf::util::StatusCode::kNotFound,
                   "Field not found");
   }
 
   if (it->second.kind_case() != Value::kStringValue) {
-    return Status(::google::protobuf::util::error::INVALID_ARGUMENT,
+    return Status(::google::protobuf::util::StatusCode::kInvalidArgument,
                   "Field is not a string");
   }
 
   *value = it->second.string_value();
-  return Status::OK;
+  return OkStatus();
 }
 
 Status JsonStruct::getInteger(const std::string& key, int* value) {
   const auto& fields = struct_.fields();
   const auto it = fields.find(key);
   if (it == fields.end()) {
-    return Status(::google::protobuf::util::error::NOT_FOUND,
+    return Status(::google::protobuf::util::StatusCode::kNotFound,
                   "Field not found");
   }
 
   if (it->second.kind_case() != Value::kNumberValue) {
-    return Status(::google::protobuf::util::error::INVALID_ARGUMENT,
+    return Status(::google::protobuf::util::StatusCode::kInvalidArgument,
                   "Field is not a number");
   }
 
@@ -58,25 +59,25 @@ Status JsonStruct::getInteger(const std::string& key, int* value) {
   const double number_value = it->second.number_value();
   if (number_value < INT_MIN || number_value > INT_MAX ||
       std::isnan(number_value)) {
-    return Status(::google::protobuf::util::error::INVALID_ARGUMENT,
+    return Status(::google::protobuf::util::StatusCode::kInvalidArgument,
                   "Field overflows an integer");
   }
 
   // Warning: Truncates value!
   *value = static_cast<int>(number_value);
-  return Status::OK;
+  return OkStatus();
 }
 
 Status JsonStruct::getTimestamp(const std::string& key,
                                 ::google::protobuf::Timestamp* value) {
   std::string strValue;
   ::google::protobuf::util::Status parse_status = getString(key, &strValue);
-  if (parse_status != Status::OK) {
+  if (parse_status != OkStatus()) {
     return parse_status;
   }
   return ::google::protobuf::util::TimeUtil::FromString(strValue, value)
-             ? Status::OK
-             : Status(::google::protobuf::util::error::INVALID_ARGUMENT,
+             ? OkStatus()
+             : Status(::google::protobuf::util::StatusCode::kInvalidArgument,
                       "Field is not a Timestamp");
 }
 

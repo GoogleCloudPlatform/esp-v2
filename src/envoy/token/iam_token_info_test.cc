@@ -15,9 +15,9 @@
 #include "src/envoy/token/iam_token_info.h"
 
 #include "absl/strings/str_cat.h"
-#include "common/common/empty_string.h"
-#include "common/http/message_impl.h"
 #include "gtest/gtest.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/http/message_impl.h"
 #include "test/test_common/utility.h"
 
 namespace espv2 {

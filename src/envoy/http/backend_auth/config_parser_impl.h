@@ -18,8 +18,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
 #include "api/envoy/v9/http/backend_auth/config.pb.h"
-#include "common/common/empty_string.h"
 #include "envoy/thread_local/thread_local.h"
+#include "source/common/common/empty_string.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
 #include "src/envoy/token/token_subscriber_factory_impl.h"
 

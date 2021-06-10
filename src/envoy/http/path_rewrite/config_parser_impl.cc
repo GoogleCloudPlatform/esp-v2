@@ -15,7 +15,7 @@
 #include "src/envoy/http/path_rewrite/config_parser_impl.h"
 
 #include "absl/strings/str_cat.h"
-#include "common/common/empty_string.h"
+#include "source/common/common/empty_string.h"
 #include "src/api_proxy/path_matcher/variable_binding_utils.h"
 
 namespace espv2 {

@@ -15,11 +15,11 @@
 #pragma once
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/logger.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/tracing/http_tracer.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
+#include "source/common/common/logger.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/filter_stats.h"
 #include "src/envoy/http/service_control/http_call.h"
@@ -93,7 +93,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
           filter_config);
 
   void collectCallStatus(CallStatusStats& filter_stats,
-                         const ::google::protobuf::util::error::Code& code);
+                         const ::google::protobuf::util::StatusCode& code);
 
   template <class Response>
   static ::google::protobuf::util::Status processScCallTransportStatus(

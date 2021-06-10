@@ -54,7 +54,6 @@ using ::google::protobuf::TextFormat;
 using ::google::protobuf::io::IstreamInputStream;
 using ::google::protobuf::io::OstreamOutputStream;
 using ::google::protobuf::util::TypeResolver;
-using ::google::protobuf::util::error::Code;
 const char kTypeUrlPrefix[] = "type.googleapis.com";
 const char kRpcStatusTypeUrl[] = "type.googleapis.com/google.rpc.Status";
 
@@ -80,7 +79,7 @@ std::string GetTypeUrl(const Message &message) {
 ::google::protobuf::util::Status FromProto(
     const ::google::protobuf::util::Status &proto_status) {
   if (proto_status.ok()) {
-    return ::google::protobuf::util::Status::OK;
+    return ::google::protobuf::util::OkStatus();
   }
   return proto_status;
 }
@@ -98,10 +97,10 @@ std::string GetTypeUrl(const Message &message) {
     return FromProto(status);
   }
   if (message->ParseFromString(binary)) {
-    return ::google::protobuf::util::Status::OK;
+    return ::google::protobuf::util::OkStatus();
   }
   return ::google::protobuf::util::Status(
-      Code::INTERNAL,
+      ::google::protobuf::util::StatusCode::kInternal,
       "Unable to parse bytes generated from JsonToBinaryString as proto.");
 }
 

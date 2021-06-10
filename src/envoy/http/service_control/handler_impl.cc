@@ -17,9 +17,9 @@
 #include <chrono>
 
 #include "absl/strings/match.h"
-#include "common/common/empty_string.h"
-#include "common/http/headers.h"
-#include "common/http/utility.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/http/headers.h"
+#include "source/common/http/utility.h"
 #include "src/envoy/http/service_control/handler_utils.h"
 #include "src/envoy/utils/filter_state_utils.h"
 #include "src/envoy/utils/http_header_utils.h"
@@ -39,8 +39,9 @@ using ::espv2::api_proxy::service_control::OperationInfo;
 using ::espv2::api_proxy::service_control::QuotaResponseInfo;
 using ::espv2::api_proxy::service_control::ScResponseError;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 namespace {
 RegisterCustomInlineHeader<CustomInlineHeaderRegistry::Type::RequestHeaders>
@@ -181,7 +182,7 @@ void ServiceControlHandlerImpl::callCheck(
   // Don't have per-route config so pass through the request, regarded as the
   // unknown method.
   if (!isConfigured()) {
-    callback.onCheckDone(Status::OK, "");
+    callback.onCheckDone(OkStatus(), "");
     return;
   }
   check_callback_ = &callback;
@@ -194,7 +195,7 @@ void ServiceControlHandlerImpl::callCheck(
   if (!hasApiKey()) {
     filter_stats_.filter_.denied_consumer_error_.inc();
     check_status_ =
-        Status(Code::UNAUTHENTICATED,
+        Status(StatusCode::kUnauthenticated,
                "Method doesn't allow unregistered callers (callers without "
                "established identity). Please use API Key or other form of "
                "API consumer identity to call this API.");

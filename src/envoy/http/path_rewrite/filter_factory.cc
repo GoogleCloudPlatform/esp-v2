@@ -15,7 +15,7 @@
 #include "api/envoy/v9/http/path_rewrite/config.pb.h"
 #include "api/envoy/v9/http/path_rewrite/config.pb.validate.h"
 #include "envoy/registry/registry.h"
-#include "extensions/filters/http/common/factory_base.h"
+#include "source/extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/path_rewrite/config_parser_impl.h"
 #include "src/envoy/http/path_rewrite/filter.h"
 

@@ -18,8 +18,9 @@
 #include "test/test_common/utility.h"
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 using ::testing::_;
 
 namespace espv2 {
@@ -28,7 +29,7 @@ namespace http_filters {
 namespace service_control {
 namespace {
 struct CodeToCounter {
-  Code code;
+  StatusCode code;
   Envoy::Stats::Counter& counter;
 };
 
@@ -43,7 +44,7 @@ class FilterStatsTest : public ::testing::Test {
 
   void runTest(
       const std::vector<CodeToCounter>& mappings,
-      const std::function<void(CallStatusStats&, Code&)>& collectStatus) {
+      const std::function<void(CallStatusStats&, StatusCode&)>& collectStatus) {
     for (auto i : mappings) {
       // All counters are 0.
       for (auto j : mappings) {
@@ -67,23 +68,23 @@ class FilterStatsTest : public ::testing::Test {
 
 TEST_F(FilterStatsTest, CollectCallStatus) {
   std::vector<CodeToCounter> mappings = {
-      {Code::OK, stats_.check_.OK_},
-      {Code::CANCELLED, stats_.check_.CANCELLED_},
-      {Code::UNKNOWN, stats_.check_.UNKNOWN_},
-      {Code::INVALID_ARGUMENT, stats_.check_.INVALID_ARGUMENT_},
-      {Code::DEADLINE_EXCEEDED, stats_.check_.DEADLINE_EXCEEDED_},
-      {Code::NOT_FOUND, stats_.check_.NOT_FOUND_},
-      {Code::ALREADY_EXISTS, stats_.check_.ALREADY_EXISTS_},
-      {Code::PERMISSION_DENIED, stats_.check_.PERMISSION_DENIED_},
-      {Code::RESOURCE_EXHAUSTED, stats_.check_.RESOURCE_EXHAUSTED_},
-      {Code::FAILED_PRECONDITION, stats_.check_.FAILED_PRECONDITION_},
-      {Code::ABORTED, stats_.check_.ABORTED_},
-      {Code::OUT_OF_RANGE, stats_.check_.OUT_OF_RANGE_},
-      {Code::UNIMPLEMENTED, stats_.check_.UNIMPLEMENTED_},
-      {Code::INTERNAL, stats_.check_.INTERNAL_},
-      {Code::UNAVAILABLE, stats_.check_.UNAVAILABLE_},
-      {Code::DATA_LOSS, stats_.check_.DATA_LOSS_},
-      {Code::UNAUTHENTICATED, stats_.check_.UNAUTHENTICATED_}};
+      {StatusCode::kOk, stats_.check_.OK_},
+      {StatusCode::kCancelled, stats_.check_.CANCELLED_},
+      {StatusCode::kUnknown, stats_.check_.UNKNOWN_},
+      {StatusCode::kInvalidArgument, stats_.check_.INVALID_ARGUMENT_},
+      {StatusCode::kDeadlineExceeded, stats_.check_.DEADLINE_EXCEEDED_},
+      {StatusCode::kNotFound, stats_.check_.NOT_FOUND_},
+      {StatusCode::kAlreadyExists, stats_.check_.ALREADY_EXISTS_},
+      {StatusCode::kPermissionDenied, stats_.check_.PERMISSION_DENIED_},
+      {StatusCode::kResourceExhausted, stats_.check_.RESOURCE_EXHAUSTED_},
+      {StatusCode::kFailedPrecondition, stats_.check_.FAILED_PRECONDITION_},
+      {StatusCode::kAborted, stats_.check_.ABORTED_},
+      {StatusCode::kOutOfRange, stats_.check_.OUT_OF_RANGE_},
+      {StatusCode::kUnimplemented, stats_.check_.UNIMPLEMENTED_},
+      {StatusCode::kInternal, stats_.check_.INTERNAL_},
+      {StatusCode::kUnavailable, stats_.check_.UNAVAILABLE_},
+      {StatusCode::kDataLoss, stats_.check_.DATA_LOSS_},
+      {StatusCode::kUnauthenticated, stats_.check_.UNAUTHENTICATED_}};
 
   runTest(mappings, ServiceControlFilterStats::collectCallStatus);
 }

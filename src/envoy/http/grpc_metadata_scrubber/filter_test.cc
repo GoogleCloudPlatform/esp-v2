@@ -14,9 +14,9 @@
 
 #include "src/envoy/http/grpc_metadata_scrubber/filter.h"
 
-#include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "source/common/common/empty_string.h"
 #include "test/mocks/http/mocks.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"

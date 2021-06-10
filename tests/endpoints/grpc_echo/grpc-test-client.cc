@@ -25,7 +25,6 @@ using ::google::protobuf::io::IstreamInputStream;
 using ::google::protobuf::io::OstreamOutputStream;
 using ::google::protobuf::util::Status;
 using ::google::protobuf::util::TypeResolver;
-using ::google::protobuf::util::error::Code;
 
 namespace {
 std::string ReadInput(std::istream& src) {

@@ -17,15 +17,15 @@
 #include <chrono>
 #include <string>
 
-#include "common/common/logger.h"
-#include "common/grpc/codec.h"
-#include "common/grpc/common.h"
 #include "envoy/buffer/buffer.h"
 #include "envoy/common/random_generator.h"
 #include "envoy/common/time.h"
 #include "envoy/http/header_map.h"
 #include "envoy/http/query_params.h"
 #include "envoy/runtime/runtime.h"
+#include "source/common/common/logger.h"
+#include "source/common/grpc/codec.h"
+#include "source/common/grpc/common.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/api_proxy/service_control/request_info.h"
 #include "src/envoy/http/service_control/config_parser.h"

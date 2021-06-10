@@ -16,8 +16,8 @@
 
 #include <chrono>
 
-#include "common/grpc/status.h"
 #include "envoy/http/header_map.h"
+#include "source/common/grpc/status.h"
 #include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/utils/http_header_utils.h"
 #include "src/envoy/utils/rc_detail_utils.h"
@@ -97,7 +97,7 @@ void ServiceControlFilter::onCheckDone(
     // protobuf::util::Status.error_code is the same as Envoy GrpcStatus
     // This cast is safe.
     auto http_code = Envoy::Grpc::Utility::grpcToHttpStatus(
-        static_cast<Envoy::Grpc::Status::GrpcStatus>(status.error_code()));
+        static_cast<Envoy::Grpc::Status::GrpcStatus>(status.code()));
     rejectRequest(static_cast<Envoy::Http::Code>(http_code), status.ToString(),
                   rc_detail);
     return;

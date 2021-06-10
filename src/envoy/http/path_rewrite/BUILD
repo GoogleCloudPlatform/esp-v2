@@ -70,7 +70,7 @@ envoy_cc_library(
         ":config_parser_interface",
         "//src/envoy/utils:http_header_utils_lib",
         "//src/envoy/utils:rc_detail_utils_lib",
-        "@envoy//include/envoy/stats:stats_interface",
+        "@envoy//envoy/stats:stats_interface",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
     ],
 )

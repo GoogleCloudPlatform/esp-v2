@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "extensions/filters/http/common/pass_through_filter.h"
+#include "source/extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/grpc_metadata_scrubber/filter_config.h"
 
 namespace espv2 {
