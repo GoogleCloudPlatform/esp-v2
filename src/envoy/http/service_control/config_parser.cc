@@ -14,7 +14,7 @@
 
 #include "src/envoy/http/service_control/config_parser.h"
 
-#include "common/protobuf/utility.h"
+#include "source/common/protobuf/utility.h"
 
 using ::espv2::api::envoy::v9::http::service_control::FilterConfig;
 

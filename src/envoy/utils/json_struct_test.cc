@@ -17,8 +17,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 namespace espv2 {
 namespace envoy {
@@ -54,12 +55,12 @@ TEST(JsonStructTest, GetString) {
   // Test: Getting a string that is not a string type fails
   std::string bad_string;
   EXPECT_EQ(json_struct.getString("bad_string", &bad_string).code(),
-            Code::INVALID_ARGUMENT);
+            StatusCode::kInvalidArgument);
 
   // Test: Getting a missing string fails
   std::string missing_string;
   EXPECT_EQ(json_struct.getString("missing_string", &missing_string).code(),
-            Code::NOT_FOUND);
+            StatusCode::kNotFound);
 }
 
 TEST(JsonStructTest, GetInt) {
@@ -91,12 +92,12 @@ TEST(JsonStructTest, GetInt) {
   // Test: Getting an integer that is not a number type fails
   int bad_int;
   EXPECT_EQ(json_struct.getInteger("bad_int", &bad_int).code(),
-            Code::INVALID_ARGUMENT);
+            StatusCode::kInvalidArgument);
 
   // Test: Getting a missing integer fails
   int missing_int;
   EXPECT_EQ(json_struct.getInteger("missing_int", &missing_int).code(),
-            Code::NOT_FOUND);
+            StatusCode::kNotFound);
 }
 
 }  // namespace

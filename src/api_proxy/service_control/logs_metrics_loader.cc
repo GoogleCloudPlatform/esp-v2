@@ -32,8 +32,9 @@ using ::google::api::Monitoring;
 using ::google::api::Monitoring_MonitoringDestination;
 using ::google::api::Service;
 using ::google::protobuf::RepeatedPtrField;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 Status LogsMetricsLoader::Load(const Service& service,
                                std::set<std::string>* logs,
@@ -54,7 +55,7 @@ Status LogsMetricsLoader::AddLabels(
     auto existing = labels->find(ld.key());
     if (existing != labels->end()) {
       if (existing->second.value_type() != ld.value_type()) {
-        return Status(Code::INVALID_ARGUMENT,
+        return Status(StatusCode::kInvalidArgument,
                       "Conflicting label in the configuration: " + ld.key());
       }
     }
@@ -69,7 +70,7 @@ Status LogsMetricsLoader::AddLabels(
     }
   }
 
-  return Status::OK;
+  return OkStatus();
 }
 
 Status LogsMetricsLoader::AddLogLabels(
@@ -83,7 +84,7 @@ Status LogsMetricsLoader::AddLogLabels(
       return AddLabels(ld.labels(), labels);
     }
   }
-  return Status(Code::INVALID_ARGUMENT, "Log not found: " + log_name);
+  return Status(StatusCode::kInvalidArgument, "Log not found: " + log_name);
 }
 
 Status LogsMetricsLoader::AddMonitoredResourceLabels(
@@ -97,7 +98,7 @@ Status LogsMetricsLoader::AddMonitoredResourceLabels(
       return AddLabels(mr.labels(), labels);
     }
   }
-  return Status(Code::INVALID_ARGUMENT,
+  return Status(StatusCode::kInvalidArgument,
                 "Monitored resource not found: " + monitored_resource_name);
 }
 
@@ -107,7 +108,7 @@ Status LogsMetricsLoader::AddLoggingDestinations(
     const RepeatedPtrField<LogDescriptor>& log_descriptors,
     std::set<std::string>* logs,
     std::map<std::string, const LabelDescriptor&>* labels) {
-  Status s = Status::OK;
+  Status s = OkStatus();
   for (int d = 0, dsize = destinations.size(); d < dsize; d++) {
     const Logging_LoggingDestination& ld = destinations.Get(d);
 
@@ -127,7 +128,7 @@ Status LogsMetricsLoader::AddLoggingDestinations(
       logs->insert(log_name);
     }
   }
-  return Status::OK;
+  return OkStatus();
 }
 
 const MetricDescriptor* FindMetricDescriptor(
@@ -146,7 +147,7 @@ Status LogsMetricsLoader::AddMonitoringDestinations(
     const RepeatedPtrField<MetricDescriptor>& metric_descriptors,
     std::map<std::string, const MetricDescriptor&>* metrics,
     std::map<std::string, const LabelDescriptor&>* labels) {
-  Status s = Status::OK;
+  Status s = OkStatus();
 
   for (int d = 0, dsize = destinations.size(); d < dsize; d++) {
     const Monitoring_MonitoringDestination& md = destinations.Get(d);
@@ -178,7 +179,7 @@ Status LogsMetricsLoader::AddMonitoringDestinations(
     }
   }
 
-  return Status::OK;
+  return OkStatus();
 }
 
 Status LogsMetricsLoader::LoadLogsMetrics(const Service& service,
@@ -188,7 +189,7 @@ Status LogsMetricsLoader::LoadLogsMetrics(const Service& service,
   std::map<std::string, const LabelDescriptor&> labels_map;
   std::map<std::string, const MetricDescriptor&> metrics_map;
 
-  Status s = Status::OK;
+  Status s = OkStatus();
 
   // ESPv2 logs into all producer destination logs.
   const Logging& logging = service.logging();
@@ -219,7 +220,7 @@ Status LogsMetricsLoader::LoadLogsMetrics(const Service& service,
     labels->insert(it->first);
   }
 
-  return Status::OK;
+  return OkStatus();
 }
 
 }  // namespace service_control

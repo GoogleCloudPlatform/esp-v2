@@ -16,21 +16,22 @@
 
 #include <memory>
 
-#include "common/common/empty_string.h"
-#include "common/common/enum_to_int.h"
-#include "common/grpc/status.h"
-#include "common/http/headers.h"
-#include "common/http/message_impl.h"
-#include "common/http/utility.h"
-#include "common/tracing/http_tracer_impl.h"
 #include "envoy/event/deferred_deletable.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/common/enum_to_int.h"
+#include "source/common/grpc/status.h"
+#include "source/common/http/headers.h"
+#include "source/common/http/message_impl.h"
+#include "source/common/http/utility.h"
+#include "source/common/tracing/http_tracer_impl.h"
 
 using Envoy::Http::CustomHeaders;
 using Envoy::Http::CustomInlineHeaderRegistry;
 using Envoy::Http::RegisterCustomInlineHeader;
 using ::espv2::api::envoy::v9::http::common::HttpUri;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 namespace espv2 {
 namespace envoy {
@@ -102,7 +103,7 @@ class HttpCallImpl : public HttpCall,
       if (status_code == Envoy::enumToInt(Envoy::Http::Code::OK)) {
         ENVOY_LOG(debug, "http call [uri = {}]: success with body {}", uri_,
                   body);
-        on_done_(Status::OK, body);
+        on_done_(OkStatus(), body);
       } else {
         ENVOY_LOG(debug, "http call response status code: {}, body: {}",
                   status_code, body);
@@ -117,11 +118,12 @@ class HttpCallImpl : public HttpCall,
           absl::StrAppend(&error_msg, " and body: ", body);
         }
         auto grpc_code = Envoy::Grpc::Utility::httpToGrpcStatus(status_code);
-        on_done_(Status(static_cast<Code>(grpc_code), error_msg), body);
+        on_done_(Status(static_cast<StatusCode>(grpc_code), error_msg), body);
       }
     } catch (const Envoy::EnvoyException& e) {
       ENVOY_LOG(debug, "http call invalid status");
-      on_done_(Status(Code::INTERNAL, "Failed to call service control"), body);
+      on_done_(Status(StatusCode::kInternal, "Failed to call service control"),
+               body);
     }
 
     reset();
@@ -149,7 +151,7 @@ class HttpCallImpl : public HttpCall,
       return;
     }
 
-    on_done_(Status(Code::INTERNAL, "Failed to call service control"),
+    on_done_(Status(StatusCode::kInternal, "Failed to call service control"),
              std::string());
     reset();
     deferredDelete();
@@ -182,7 +184,7 @@ class HttpCallImpl : public HttpCall,
     request_count_++;
     std::string token = token_fn_();
     if (token.empty()) {
-      on_done_(Status(Code::INTERNAL,
+      on_done_(Status(StatusCode::kInternal,
                       "Missing access token for service control call"),
                Envoy::EMPTY_STRING);
       deferredDelete();
@@ -235,7 +237,7 @@ class HttpCallImpl : public HttpCall,
       ENVOY_LOG(debug, "Http call [uri = {}]: canceled", uri_);
       reset();
     }
-    on_done_(Status(Code::CANCELLED, std::string("Request cancelled")),
+    on_done_(Status(StatusCode::kCancelled, std::string("Request cancelled")),
              Envoy::EMPTY_STRING);
     deferredDelete();
   }

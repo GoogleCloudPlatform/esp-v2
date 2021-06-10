@@ -17,7 +17,7 @@
 #include "google/protobuf/stubs/status.h"
 
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 namespace espv2 {
 namespace envoy {
@@ -25,59 +25,59 @@ namespace http_filters {
 namespace service_control {
 
 void ServiceControlFilterStats::collectCallStatus(CallStatusStats& stats,
-                                                  const Code& code) {
+                                                  const StatusCode& code) {
   // The status error code cases must match the error codes defined by
   // https://github.com/protocolbuffers/protobuf/blob/4b4e66743503bf927cfb0f27a267ecd077250667/src/google/protobuf/stubs/status.h#L45
   switch (code) {
-    case Code::OK:
+    case StatusCode::kOk:
       stats.OK_.inc();
       return;
-    case Code::CANCELLED:
+    case StatusCode::kCancelled:
       stats.CANCELLED_.inc();
       return;
-    case Code::UNKNOWN:
+    case StatusCode::kUnknown:
       stats.UNKNOWN_.inc();
       return;
-    case Code::INVALID_ARGUMENT:
+    case StatusCode::kInvalidArgument:
       stats.INVALID_ARGUMENT_.inc();
       return;
-    case Code::DEADLINE_EXCEEDED:
+    case StatusCode::kDeadlineExceeded:
       stats.DEADLINE_EXCEEDED_.inc();
       return;
-    case Code::NOT_FOUND:
+    case StatusCode::kNotFound:
       stats.NOT_FOUND_.inc();
       return;
-    case Code::ALREADY_EXISTS:
+    case StatusCode::kAlreadyExists:
       stats.ALREADY_EXISTS_.inc();
       return;
-    case Code::PERMISSION_DENIED:
+    case StatusCode::kPermissionDenied:
       stats.PERMISSION_DENIED_.inc();
       return;
-    case Code::RESOURCE_EXHAUSTED:
+    case StatusCode::kResourceExhausted:
       stats.RESOURCE_EXHAUSTED_.inc();
       return;
-    case Code::FAILED_PRECONDITION:
+    case StatusCode::kFailedPrecondition:
       stats.FAILED_PRECONDITION_.inc();
       return;
-    case Code::ABORTED:
+    case StatusCode::kAborted:
       stats.ABORTED_.inc();
       return;
-    case Code::OUT_OF_RANGE:
+    case StatusCode::kOutOfRange:
       stats.OUT_OF_RANGE_.inc();
       return;
-    case Code::UNIMPLEMENTED:
+    case StatusCode::kUnimplemented:
       stats.UNIMPLEMENTED_.inc();
       return;
-    case Code::INTERNAL:
+    case StatusCode::kInternal:
       stats.INTERNAL_.inc();
       return;
-    case Code::UNAVAILABLE:
+    case StatusCode::kUnavailable:
       stats.UNAVAILABLE_.inc();
       return;
-    case Code::DATA_LOSS:
+    case StatusCode::kDataLoss:
       stats.DATA_LOSS_.inc();
       return;
-    case Code::UNAUTHENTICATED:
+    case StatusCode::kUnauthenticated:
       stats.UNAUTHENTICATED_.inc();
       return;
     default:

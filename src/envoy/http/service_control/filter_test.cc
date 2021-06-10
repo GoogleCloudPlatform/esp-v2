@@ -14,11 +14,11 @@
 
 #include "src/envoy/http/service_control/filter.h"
 
-#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "source/common/common/empty_string.h"
 #include "src/envoy/http/service_control/config_parser.h"
 #include "src/envoy/http/service_control/handler.h"
 #include "src/envoy/http/service_control/mocks.h"
@@ -29,8 +29,9 @@
 
 using Envoy::Http::MockStreamDecoderFilterCallbacks;
 using Envoy::Server::Configuration::MockFactoryContext;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 using ::testing::_;
 using ::testing::ByMove;
 using ::testing::Invoke;
@@ -42,7 +43,7 @@ namespace http_filters {
 namespace service_control {
 namespace {
 
-const Status kBadStatus(Code::UNAUTHENTICATED, "test");
+const Status kBadStatus(StatusCode::kUnauthenticated, "test");
 
 class ServiceControlFilterTest : public ::testing::Test {
  protected:
@@ -117,7 +118,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncOKStatus) {
   EXPECT_CALL(*mock_handler_, callCheck(_, _, _))
       .WillOnce(Invoke([](Envoy::Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
-        callback.onCheckDone(Status::OK, "");
+        callback.onCheckDone(OkStatus(), "");
       }));
   EXPECT_CALL(*mock_handler_, fillFilterState(_));
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
@@ -177,7 +178,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncGoodStatus) {
             filter_->decodeHeaders(req_headers_, true));
 
   EXPECT_CALL(mock_decoder_callbacks_, continueDecoding());
-  stored_check_done_callback->onCheckDone(Status::OK, "");
+  stored_check_done_callback->onCheckDone(OkStatus(), "");
 }
 
 TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
@@ -260,7 +261,7 @@ TEST_F(ServiceControlFilterTest, DecodeHelpersWhileContinuing) {
   EXPECT_CALL(*mock_handler_, callCheck(_, _, _))
       .WillOnce(Invoke([](Envoy::Http::RequestHeaderMap&, Envoy::Tracing::Span&,
                           ServiceControlHandler::CheckDoneCallback& callback) {
-        callback.onCheckDone(Status::OK, "");
+        callback.onCheckDone(OkStatus(), "");
       }));
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
             filter_->decodeHeaders(req_headers_, true));

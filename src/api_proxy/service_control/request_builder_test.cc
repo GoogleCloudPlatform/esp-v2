@@ -33,8 +33,9 @@ namespace service_control {
 namespace {
 
 namespace gasv1 = ::google::api::servicecontrol::v1;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 const char kFakeVersion[] = "TEST.0.0";
 
@@ -242,8 +243,8 @@ TEST_F(RequestBuilderTest, CheckRequestMissingOperationNameTest) {
   info.operation_id = "operation_id";
 
   gasv1::CheckRequest request;
-  ASSERT_EQ(Code::INVALID_ARGUMENT,
-            scp_.FillCheckRequest(info, &request).error_code());
+  ASSERT_EQ(StatusCode::kInvalidArgument,
+            scp_.FillCheckRequest(info, &request).code());
 }
 
 TEST_F(RequestBuilderTest, CheckRequestMissingOperationIdTest) {
@@ -251,8 +252,8 @@ TEST_F(RequestBuilderTest, CheckRequestMissingOperationIdTest) {
   info.operation_name = "operation_name";
 
   gasv1::CheckRequest request;
-  ASSERT_EQ(Code::INVALID_ARGUMENT,
-            scp_.FillCheckRequest(info, &request).error_code());
+  ASSERT_EQ(StatusCode::kInvalidArgument,
+            scp_.FillCheckRequest(info, &request).code());
 }
 
 TEST_F(RequestBuilderTest, FillGoodReportRequestTest) {
@@ -300,7 +301,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedTest) {
   info.http_response_code = 401;
 
   // Use the corresponding status for that response code.
-  info.status = Status(Code::PERMISSION_DENIED, "");
+  info.status = Status(StatusCode::kPermissionDenied, "");
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -320,7 +321,7 @@ TEST_F(RequestBuilderTest, FillReportRequestFailedByGrpcBackendTest) {
   // Test a case where HTTP request was successful, but gRPC backend returned
   // an application error.
   info.http_response_code = 200;
-  info.grpc_response_code = Code::NOT_FOUND;
+  info.grpc_response_code = StatusCode::kNotFound;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -345,7 +346,7 @@ TEST_F(RequestBuilderTest, FillReportWithUntrustedApiKeyTest) {
   info.http_response_code = 401;
 
   // Use the corresponding status for that response code.
-  info.status = Status(Code::PERMISSION_DENIED, "");
+  info.status = Status(StatusCode::kPermissionDenied, "");
 
   for (const auto api_key_state :
        {api_key::ApiKeyState::INVALID, api_key::ApiKeyState::NOT_ENABLED,

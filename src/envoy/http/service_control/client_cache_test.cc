@@ -15,9 +15,9 @@
 #include "src/envoy/http/service_control/client_cache.h"
 
 #include "absl/functional/bind_front.h"
-#include "common/common/empty_string.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "source/common/common/empty_string.h"
 #include "src/envoy/http/service_control/mocks.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 #include "test/mocks/common.h"
@@ -48,8 +48,9 @@ using ::google::api::servicecontrol::v1::QuotaError;
 using ::google::api::servicecontrol::v1::QuotaError_Code;
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::api::servicecontrol::v1::ReportResponse;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 using ::testing::_;
 using ::testing::InSequence;
@@ -128,14 +129,15 @@ class ClientCacheCheckResponseTest : public ClientCacheTestBase {
 TEST_F(ClientCacheCheckResponseTest, Http5xxAllowed) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::UNAVAILABLE, response, Code::OK, ApiKeyState::NOT_CHECKED, "");
+  runTest(StatusCode::kUnavailable, response, StatusCode::kOk,
+          ApiKeyState::NOT_CHECKED, "");
   checkAndReset(stats_.filter_.allowed_control_plane_fault_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, Http4xxTranslatedAndBlocked) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::PERMISSION_DENIED, response, Code::INTERNAL,
+  runTest(StatusCode::kPermissionDenied, response, StatusCode::kInternal,
           ApiKeyState::NOT_CHECKED, "PERMISSION_DENIED");
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
@@ -145,7 +147,7 @@ TEST_F(ClientCacheCheckResponseTest, Sc5xxAllowed) {
   CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
-  runTest(Code::OK, response, Code::OK, ApiKeyState::NOT_CHECKED,
+  runTest(StatusCode::kOk, response, StatusCode::kOk, ApiKeyState::NOT_CHECKED,
           "NAMESPACE_LOOKUP_UNAVAILABLE");
   checkAndReset(stats_.filter_.allowed_control_plane_fault_, 1);
 }
@@ -155,15 +157,16 @@ TEST_F(ClientCacheCheckResponseTest, Sc4xxBlocked) {
   CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::CLIENT_APP_BLOCKED);
 
-  runTest(Code::OK, response, Code::PERMISSION_DENIED, ApiKeyState::VERIFIED,
-          "CLIENT_APP_BLOCKED");
+  runTest(StatusCode::kOk, response, StatusCode::kPermissionDenied,
+          ApiKeyState::VERIFIED, "CLIENT_APP_BLOCKED");
   checkAndReset(stats_.filter_.denied_consumer_blocked_, 1);
 }
 
 TEST_F(ClientCacheCheckResponseTest, ScOkAllowed) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::OK, response, Code::OK, ApiKeyState::VERIFIED, "");
+  runTest(StatusCode::kOk, response, StatusCode::kOk, ApiKeyState::VERIFIED,
+          "");
 }
 
 class ClientCacheCheckResponseNetworkFailClosedTest
@@ -181,7 +184,7 @@ class ClientCacheCheckResponseNetworkFailClosedTest
 TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Http5xxBlocked) {
   CheckResponse* response = new CheckResponse();
 
-  runTest(Code::UNAVAILABLE, response, Code::UNAVAILABLE,
+  runTest(StatusCode::kUnavailable, response, StatusCode::kUnavailable,
           ApiKeyState::NOT_CHECKED, "UNAVAILABLE");
   checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
@@ -191,8 +194,8 @@ TEST_F(ClientCacheCheckResponseNetworkFailClosedTest, Sc5xxBlocked) {
   CheckError* check_error = response->mutable_check_errors()->Add();
   check_error->set_code(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE);
 
-  runTest(Code::OK, response, Code::UNAVAILABLE, ApiKeyState::NOT_CHECKED,
-          "NAMESPACE_LOOKUP_UNAVAILABLE");
+  runTest(StatusCode::kOk, response, StatusCode::kUnavailable,
+          ApiKeyState::NOT_CHECKED, "NAMESPACE_LOOKUP_UNAVAILABLE");
   checkAndReset(stats_.filter_.denied_control_plane_fault_, 1);
 }
 
@@ -208,7 +211,7 @@ class ClientCacheCheckResponseErrorTypeTest : public ClientCacheTestBase {
       EXPECT_EQ(info.api_key_state, want_api_key_state);
       EXPECT_EQ(info.error.name, want_error_name);
     };
-    const Status http_status(Code::OK, Envoy::EMPTY_STRING);
+    const Status http_status(StatusCode::kOk, Envoy::EMPTY_STRING);
     cache_->handleCheckResponse(http_status, response, on_done);
   }
 };
@@ -265,7 +268,7 @@ class ClientCacheQuotaResponseTest : public ClientCacheTestBase {
 TEST_F(ClientCacheQuotaResponseTest, HttpErrorBlocked) {
   AllocateQuotaResponse* response = new AllocateQuotaResponse();
 
-  runTest(Code::INTERNAL, response, Code::INTERNAL, "INTERNAL");
+  runTest(StatusCode::kInternal, response, StatusCode::kInternal, "INTERNAL");
   checkAndReset(stats_.filter_.denied_producer_error_, 1);
 }
 
@@ -274,14 +277,15 @@ TEST_F(ClientCacheQuotaResponseTest, ScErrorBlocked) {
   QuotaError* quota_error = response->mutable_allocate_errors()->Add();
   quota_error->set_code(QuotaError::RESOURCE_EXHAUSTED);
 
-  runTest(Code::OK, response, Code::RESOURCE_EXHAUSTED, "RESOURCE_EXHAUSTED");
+  runTest(StatusCode::kOk, response, StatusCode::kResourceExhausted,
+          "RESOURCE_EXHAUSTED");
   checkAndReset(stats_.filter_.denied_consumer_quota_, 1);
 }
 
 TEST_F(ClientCacheQuotaResponseTest, ScOkAllowed) {
   AllocateQuotaResponse* response = new AllocateQuotaResponse();
 
-  runTest(Code::OK, response, Code::OK, "");
+  runTest(StatusCode::kOk, response, StatusCode::kOk, "");
 }
 
 class ClientCacheQuotaResponseErrorTypeTest : public ClientCacheTestBase {
@@ -294,7 +298,7 @@ class ClientCacheQuotaResponseErrorTypeTest : public ClientCacheTestBase {
     QuotaDoneFunc on_done =
         [&](const Status&,
             const ::espv2::api_proxy::service_control::QuotaResponseInfo&) {};
-    const Status http_status(Code::OK, Envoy::EMPTY_STRING);
+    const Status http_status(StatusCode::kOk, Envoy::EMPTY_STRING);
     cache_->handleQuotaOnDone(http_status, response, on_done);
   }
 };
@@ -377,7 +381,7 @@ class ClientCacheCheckHttpRequestTest : public ClientCacheHttpRequestTest {
             Invoke([this](const Envoy::Protobuf::Message&,
                           Envoy::Tracing::Span&, HttpCall::DoneFunc on_done) {
               // Similar to production behavior of the HttpCallFactory.
-              on_done(Status(Code::CANCELLED, "Request cancelled"),
+              on_done(Status(StatusCode::kCancelled, "Request cancelled"),
                       Envoy::EMPTY_STRING);
               return http_call_.get();
             }));
@@ -415,7 +419,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
   cache_->callCheck(request, mock_parent_span_,
                     [this](const Status& got_status, const CheckResponseInfo&) {
                       got_num_callbacks_++;
-                      EXPECT_EQ(got_status.code(), Code::OK);
+                      EXPECT_EQ(got_status.code(), StatusCode::kOk);
                     });
 
   // RPC is pending, no callback invoked until http is done.
@@ -426,7 +430,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneSuccessfulHttpCall) {
   std::string response_body;
   const CheckResponse response = getValidCheckResponse();
   response.SerializeToString(&response_body);
-  http_done_(Status::OK, response_body);
+  http_done_(OkStatus(), response_body);
 
   // RPC finished and invoked callback.
   EXPECT_EQ(got_num_callbacks_, 1);
@@ -448,14 +452,14 @@ TEST_F(ClientCacheCheckHttpRequestTest, OneHttpCallWithBadBody) {
   cache_->callCheck(request, mock_parent_span_,
                     [this](const Status& got_status, const CheckResponseInfo&) {
                       got_num_callbacks_++;
-                      EXPECT_EQ(got_status.code(), Code::INTERNAL);
+                      EXPECT_EQ(got_status.code(), StatusCode::kInternal);
                     });
 
   // RPC is pending, no callback invoked until http is done.
   EXPECT_EQ(got_num_callbacks_, 0);
 
   // Stimulate bad http response body.
-  http_done_(Status::OK, "this http body does not parse into a CheckResponse");
+  http_done_(OkStatus(), "this http body does not parse into a CheckResponse");
 
   // RPC finished and invoked callback.
   EXPECT_EQ(got_num_callbacks_, 1);
@@ -480,7 +484,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
       request, mock_parent_span_,
       [this](const Status& got_status, const CheckResponseInfo&) {
         got_num_callbacks_++;
-        EXPECT_EQ(got_status.code(), Code::INTERNAL);
+        EXPECT_EQ(got_status.code(), StatusCode::kInternal);
       });
 
   // RPC is pending, no callback invoked until http is done.
@@ -488,7 +492,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, OnePendingHttpCallCancelled) {
 
   // Cancel the pending RPC.
   EXPECT_CALL(*http_call_, cancel()).WillOnce(Invoke([this]() {
-    http_done_(Status(Code::CANCELLED, "Request cancelled"),
+    http_done_(Status(StatusCode::kCancelled, "Request cancelled"),
                Envoy::EMPTY_STRING);
   }));
   cancel_func();
@@ -516,7 +520,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
   CheckDoneFunc on_check_done = [this](const Status& got_status,
                                        const CheckResponseInfo&) {
     got_num_callbacks_++;
-    EXPECT_EQ(got_status.code(), Code::OK);
+    EXPECT_EQ(got_status.code(), StatusCode::kOk);
   };
 
   // Check call 1.
@@ -528,7 +532,7 @@ TEST_F(ClientCacheCheckHttpRequestTest, SuccessfulHttpCallWithCache) {
   std::string response_body;
   const CheckResponse response = getValidCheckResponse();
   response.SerializeToString(&response_body);
-  http_done_(Status::OK, response_body);
+  http_done_(OkStatus(), response_body);
 
   // Check call 2 & 3.
   cache_->callCheck(request, mock_parent_span_, on_check_done);

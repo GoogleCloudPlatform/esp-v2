@@ -14,7 +14,7 @@
 
 #include "src/envoy/http/service_control/client_cache.h"
 
-#include "common/tracing/http_tracer_impl.h"
+#include "source/common/tracing/http_tracer_impl.h"
 #include "src/api_proxy/service_control/check_response_convert_utils.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/http_call.h"
@@ -25,8 +25,9 @@ namespace http_filters {
 namespace service_control {
 
 using ::espv2::api::envoy::v9::http::service_control::FilterConfig;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaResponseInfo;
@@ -156,7 +157,8 @@ Status ClientCache::processScCallTransportStatus(const Status& status,
     if (!resp->ParseFromString(body)) {
       ENVOY_LOG(error, "Failed to call {}, error: {}, str body: {}", callName,
                 "invalid response", body);
-      return Status(Code::INVALID_ARGUMENT, std::string("Invalid response"));
+      return Status(StatusCode::kInvalidArgument,
+                    std::string("Invalid response"));
     }
   }
 
@@ -200,7 +202,7 @@ void ClientCache::initHttpRequestSetting(const FilterConfig& filter_config) {
 }
 
 void ClientCache::collectCallStatus(CallStatusStats& call_stats,
-                                    const Code& code) {
+                                    const StatusCode& code) {
   ServiceControlFilterStats::collectCallStatus(call_stats, code);
 }
 
@@ -375,7 +377,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
     // Everything succeeded, API Key is trusted.
     response_info.api_key_state = ApiKeyState::VERIFIED;
     on_done(final_status, response_info);
-  } else if (final_status.error_code() == Code::UNAVAILABLE) {
+  } else if (final_status.code() == StatusCode::kUnavailable) {
     // All 5xx errors are already translated to Unavailable.
     // API Key cannot be trusted due to a network error.
     response_info.api_key_state = ApiKeyState::NOT_CHECKED;
@@ -386,17 +388,18 @@ void ClientCache::handleCheckResponse(const Status& http_status,
                 "Google Service Control Check is unavailable, but the "
                 "request is allowed due to network fail open. Original "
                 "error: {}",
-                final_status.error_message());
-      on_done(Status::OK, response_info);
+                final_status.message());
+      on_done(OkStatus(), response_info);
     } else {
       // Preserve the original 5xx error code in the response back.
       filter_stats_.filter_.denied_control_plane_fault_.inc();
       ENVOY_LOG(warn,
                 "Google Service Control Check is unavailable, and the "
                 "request is denied due to network fail closed, with error: {}",
-                final_status.error_message());
+                final_status.message());
 
-      // If http_status is not ok, the Code::UNAVAILABLE is from http_status.
+      // If http_status is not ok, the StatusCode::kUnavailable is from
+      // http_status.
       if (!http_status.ok()) {
         response_info.error = failCallStatusToScResponseError(http_status);
       }
@@ -414,7 +417,7 @@ void ClientCache::handleCheckResponse(const Status& http_status,
       // non-5xx error codes to 500 Internal Server Error. Error message
       // contains details on the original error (including the original
       // HTTP status code).
-      Status scrubbed_status(Code::INTERNAL, final_status.error_message());
+      Status scrubbed_status(StatusCode::kInternal, final_status.message());
 
       response_info.error = failCallStatusToScResponseError(http_status);
       on_done(scrubbed_status, response_info);

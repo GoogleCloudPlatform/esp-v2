@@ -14,9 +14,9 @@
 
 #include "src/envoy/http/path_rewrite/config_parser_impl.h"
 
-#include "common/protobuf/utility.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "source/common/protobuf/utility.h"
 #include "test/test_common/utility.h"
 
 namespace espv2 {

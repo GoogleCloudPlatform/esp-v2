@@ -27,7 +27,7 @@ envoy_cc_library(
     deps = [
         ":service_control_callback_func_lib",
         "//api/envoy/v9/http/service_control:config_proto_cc_proto",
-        "@envoy//include/envoy/tracing:http_tracer_interface",
+        "@envoy//envoy/tracing:http_tracer_interface",
     ],
 )
 
@@ -39,8 +39,8 @@ envoy_cc_library(
         ":filter_stats_lib",
         ":service_control_callback_func_lib",
         "//src/envoy/utils:filter_state_utils_lib",
-        "@envoy//include/envoy/http:header_map_interface",
-        "@envoy//include/envoy/stream_info:stream_info_interface",
+        "@envoy//envoy/http:header_map_interface",
+        "@envoy//envoy/stream_info:stream_info_interface",
     ],
 )
 
@@ -51,7 +51,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":service_control_call_interface",
-        "@envoy//include/envoy/router:router_interface",
+        "@envoy//envoy/router:router_interface",
         "@envoy//source/common/protobuf:utility_lib",
     ],
 )
@@ -63,8 +63,8 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "//api/envoy/v9/http/common:base_proto_cc_proto",
-        "@envoy//include/envoy/event:deferred_deletable",
-        "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//envoy/event:deferred_deletable",
+        "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/common:empty_string",
         "@envoy//source/common/common:enum_to_int",
         "@envoy//source/common/http:headers_lib",
@@ -88,8 +88,8 @@ envoy_cc_library(
         "//api/envoy/v9/http/common:base_proto_cc_proto",
         "//api/envoy/v9/http/service_control:config_proto_cc_proto",
         "//src/api_proxy/service_control:check_response_converter_lib",
-        "@envoy//include/envoy/event:dispatcher_interface",
-        "@envoy//include/envoy/upstream:cluster_manager_interface",
+        "@envoy//envoy/event:dispatcher_interface",
+        "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/tracing:http_tracer_lib",
         "@servicecontrol_client_git//:service_control_client_lib",
     ],
@@ -124,7 +124,7 @@ envoy_cc_library(
         ":service_control_call_interface",
         "//src/api_proxy/service_control:logs_metrics_loader_lib",
         "//src/envoy/token:token_subscriber_factory_lib",
-        "@envoy//include/envoy/server:filter_config_interface",
+        "@envoy//envoy/server:filter_config_interface",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:empty_string",
         "@envoy//source/common/protobuf:utility_lib",

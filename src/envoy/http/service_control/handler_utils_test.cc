@@ -16,11 +16,11 @@
 #include "src/envoy/http/service_control/handler_utils.h"
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "source/common/common/empty_string.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"

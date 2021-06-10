@@ -13,11 +13,11 @@
 // limitations under the License.
 #include "src/envoy/http/backend_auth/filter.h"
 
-#include "common/common/empty_string.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+#include "source/common/common/empty_string.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
 #include "src/envoy/http/backend_auth/mocks.h"
 #include "src/envoy/utils/filter_state_utils.h"

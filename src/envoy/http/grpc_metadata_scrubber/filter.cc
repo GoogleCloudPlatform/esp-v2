@@ -16,8 +16,8 @@
 
 #include <string>
 
-#include "common/grpc/common.h"
-#include "common/http/headers.h"
+#include "source/common/grpc/common.h"
+#include "source/common/http/headers.h"
 
 namespace espv2 {
 namespace envoy {

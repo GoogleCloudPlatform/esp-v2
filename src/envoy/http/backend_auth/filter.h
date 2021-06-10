@@ -16,10 +16,10 @@
 
 #include <string>
 
-#include "common/common/logger.h"
 #include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
-#include "extensions/filters/http/common/pass_through_filter.h"
+#include "source/common/common/logger.h"
+#include "source/extensions/filters/http/common/pass_through_filter.h"
 #include "src/envoy/http/backend_auth/filter_config.h"
 
 namespace espv2 {

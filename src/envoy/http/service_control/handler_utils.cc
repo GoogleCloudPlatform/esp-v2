@@ -21,21 +21,21 @@
 #include "absl/strings/str_split.h"
 #include "absl/types/optional.h"
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/logger.h"
-#include "common/grpc/common.h"
-#include "common/http/header_utility.h"
-#include "common/http/utility.h"
+#include "envoy/grpc/status.h"
 #include "envoy/http/header_map.h"
 #include "envoy/server/filter_config.h"
-#include "extensions/filters/http/well_known_names.h"
-#include "external/envoy/include/envoy/grpc/_virtual_includes/status/envoy/grpc/status.h"
+#include "source/common/common/logger.h"
+#include "source/common/grpc/common.h"
+#include "source/common/http/header_utility.h"
+#include "source/common/http/utility.h"
+#include "source/extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
 using ::espv2::api::envoy::v9::http::service_control::ApiKeyLocation;
 using ::espv2::api::envoy::v9::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LatencyInfo;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 namespace espv2 {
 namespace envoy {
@@ -354,7 +354,7 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
     return;
   }
 
-  info.grpc_response_code = static_cast<Code>(status.value());
+  info.grpc_response_code = static_cast<StatusCode>(status.value());
 }
 
 }  // namespace service_control

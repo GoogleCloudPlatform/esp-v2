@@ -14,11 +14,11 @@
 
 #pragma once
 
-#include "common/common/logger.h"
-#include "common/grpc/status.h"
 #include "google/protobuf/struct.pb.h"
 #include "google/protobuf/timestamp.pb.h"
 #include "google/protobuf/util/json_util.h"
+#include "source/common/common/logger.h"
+#include "source/common/grpc/status.h"
 
 namespace espv2 {
 namespace envoy {

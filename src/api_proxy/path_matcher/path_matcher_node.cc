@@ -91,7 +91,7 @@ const typename Collection::value_type::second_type* Find2KeysOrNull(
 PathMatcherNode::PathInfo::Builder&
 PathMatcherNode::PathInfo::Builder::AppendLiteralNode(std::string name) {
   if (name == HttpTemplate::kSingleParameterKey) {
-    //    status_.Update(util::Status(util::error::INVALID_ARGUMENT,
+    //    status_.Update(util::Status(util::StatusCode::kInvalidArgument,
     //                          StrCat(name, " is a reserved node name.")));
   }
   path_.emplace_back(name);

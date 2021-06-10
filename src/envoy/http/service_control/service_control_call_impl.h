@@ -15,12 +15,12 @@
 #pragma once
 
 #include "api/envoy/v9/http/service_control/config.pb.h"
-#include "common/common/empty_string.h"
-#include "common/common/logger.h"
 #include "envoy/server/filter_config.h"
 #include "envoy/thread_local/thread_local.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "google/api/service.pb.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/common/logger.h"
 #include "src/api_proxy/service_control/request_builder.h"
 #include "src/envoy/http/service_control/client_cache.h"
 #include "src/envoy/http/service_control/service_control_call.h"

@@ -14,8 +14,8 @@
 
 #include "src/envoy/token/imds_token_info.h"
 
-#include "common/http/message_impl.h"
 #include "gtest/gtest.h"
+#include "source/common/http/message_impl.h"
 
 namespace espv2 {
 namespace envoy {

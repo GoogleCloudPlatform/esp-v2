@@ -14,8 +14,8 @@
 
 #include "src/envoy/utils/filter_state_utils.h"
 
-#include "common/common/empty_string.h"
-#include "common/router/string_accessor_impl.h"
+#include "source/common/common/empty_string.h"
+#include "source/common/router/string_accessor_impl.h"
 
 namespace espv2 {
 namespace envoy {

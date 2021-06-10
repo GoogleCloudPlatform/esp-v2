@@ -17,14 +17,14 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "common/http/headers.h"
-#include "common/http/message_impl.h"
-#include "common/tracing/http_tracer_impl.h"
 #include "envoy/http/async_client.h"
 #include "gmock/gmock.h"
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
 #include "google/protobuf/stubs/status.h"
 #include "gtest/gtest.h"
+#include "source/common/http/headers.h"
+#include "source/common/http/message_impl.h"
+#include "source/common/tracing/http_tracer_impl.h"
 #include "test/mocks/common.h"
 #include "test/mocks/event/mocks.h"
 #include "test/mocks/http/mocks.h"
@@ -49,8 +49,9 @@ using ::Envoy::Http::ResponseMessageImpl;
 using ::espv2::api::envoy::v9::http::common::HttpUri;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 class HttpCallTest : public testing::Test {
  protected:
@@ -183,7 +184,7 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpOk) {
 
   // Phase 2: Emulate successful http response
   EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
-  EXPECT_CALL(mock_done_fn_, Call(Status::OK, _)).Times(1);
+  EXPECT_CALL(mock_done_fn_, Call(OkStatus(), _)).Times(1);
 
   async_callbacks_[0]->onSuccess(lastHttpRequest(),
                                  makeResponseWithStatus(200));
@@ -205,7 +206,7 @@ TEST_F(HttpCallTest, TestSingleCallSuccessHttpNotFound) {
   EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
   EXPECT_CALL(
       mock_done_fn_,
-      Call(Status(Code::UNAVAILABLE,
+      Call(Status(StatusCode::kUnavailable,
                   "Calling Google Service Control API failed with: 503"),
            _))
       .Times(1);
@@ -228,8 +229,9 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
 
   // Phase 2: Emulate failure in http call
   EXPECT_CALL(*mock_child_span, finishSpan()).Times(1);
-  EXPECT_CALL(mock_done_fn_,
-              Call(Status(Code::INTERNAL, "Failed to call service control"), _))
+  EXPECT_CALL(
+      mock_done_fn_,
+      Call(Status(StatusCode::kInternal, "Failed to call service control"), _))
       .Times(1);
 
   async_callbacks_[0]->onFailure(
@@ -239,7 +241,7 @@ TEST_F(HttpCallTest, TestSingleCallFailure) {
 TEST_F(HttpCallTest, TestEmptyTokenCallFailure) {
   // If take_token is empty, on_done is called within call()
   EXPECT_CALL(mock_done_fn_,
-              Call(Status(Code::INTERNAL,
+              Call(Status(StatusCode::kInternal,
                           "Missing access token for service control call"),
                    _))
       .Times(1);
@@ -286,7 +288,7 @@ TEST_F(HttpCallTest, TestRetryCallSuccess) {
 
   // Phase 4: Emulate successful http response on last retry
   EXPECT_CALL(*mock_child_span_3, finishSpan()).Times(1);
-  EXPECT_CALL(mock_done_fn_, Call(Status::OK, _)).Times(1);
+  EXPECT_CALL(mock_done_fn_, Call(OkStatus(), _)).Times(1);
   async_callbacks_[2]->onSuccess(lastHttpRequest(),
                                  makeResponseWithStatus(200));
 }
@@ -327,7 +329,7 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastSuccess) {
 
   // Phase 4: Emulate successful http response on last retry
   EXPECT_CALL(*mock_child_span_3, finishSpan()).Times(1);
-  EXPECT_CALL(mock_done_fn_, Call(Status::OK, _)).Times(1);
+  EXPECT_CALL(mock_done_fn_, Call(OkStatus(), _)).Times(1);
   async_callbacks_[2]->onSuccess(lastHttpRequest(),
                                  makeResponseWithStatus(200));
 }
@@ -368,7 +370,7 @@ TEST_F(HttpCallTest, TestThreeRetriesWithLastFailure) {
   EXPECT_CALL(*mock_child_span_3, finishSpan()).Times(1);
   EXPECT_CALL(
       mock_done_fn_,
-      Call(Status(Code::UNAVAILABLE,
+      Call(Status(StatusCode::kUnavailable,
                   "Calling Google Service Control API failed with: 504"),
            _))
       .Times(1);

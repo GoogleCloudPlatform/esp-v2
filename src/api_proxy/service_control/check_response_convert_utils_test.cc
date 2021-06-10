@@ -27,8 +27,9 @@ using ::google::api::servicecontrol::v1::CheckError_Code_Name;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::api::servicecontrol::v1::
     CheckResponse_ConsumerInfo_ConsumerType;
+using ::google::protobuf::util::OkStatus;
 using ::google::protobuf::util::Status;
-using ::google::protobuf::util::error::Code;
+using ::google::protobuf::util::StatusCode;
 
 class CheckResponseConverterTest : public ::testing::Test {
  protected:
@@ -48,109 +49,110 @@ class CheckResponseConverterTest : public ::testing::Test {
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsKeyInvalid) {
-  runTest(CheckError::API_KEY_INVALID, Code::INVALID_ARGUMENT,
+  runTest(CheckError::API_KEY_INVALID, StatusCode::kInvalidArgument,
           ScResponseErrorType::API_KEY_INVALID);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsKeyExpired) {
-  runTest(CheckError::API_KEY_EXPIRED, Code::INVALID_ARGUMENT,
+  runTest(CheckError::API_KEY_EXPIRED, StatusCode::kInvalidArgument,
           ScResponseErrorType::API_KEY_INVALID);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsBlockedWithKeyNotFound) {
-  runTest(CheckError::API_KEY_NOT_FOUND, Code::INVALID_ARGUMENT,
+  runTest(CheckError::API_KEY_NOT_FOUND, StatusCode::kInvalidArgument,
           ScResponseErrorType::API_KEY_INVALID);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithInvalidArgumentWhenRespIsBlockedWithNotFound) {
-  runTest(CheckError::NOT_FOUND, Code::INVALID_ARGUMENT,
+  runTest(CheckError::NOT_FOUND, StatusCode::kInvalidArgument,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithPermissionDenied) {
-  runTest(CheckError::PERMISSION_DENIED, Code::PERMISSION_DENIED,
+  runTest(CheckError::PERMISSION_DENIED, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithIpAddressBlocked) {
-  runTest(CheckError::IP_ADDRESS_BLOCKED, Code::PERMISSION_DENIED,
+  runTest(CheckError::IP_ADDRESS_BLOCKED, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithRefererBlocked) {
-  runTest(CheckError::REFERER_BLOCKED, Code::PERMISSION_DENIED,
+  runTest(CheckError::REFERER_BLOCKED, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenRespIsBlockedWithClientAppBlocked) {
-  runTest(CheckError::CLIENT_APP_BLOCKED, Code::PERMISSION_DENIED,
+  runTest(CheckError::CLIENT_APP_BLOCKED, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectDeleted) {
-  runTest(CheckError::PROJECT_DELETED, Code::PERMISSION_DENIED,
+  runTest(CheckError::PROJECT_DELETED, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenResponseIsBlockedWithProjectInvalid) {
-  runTest(CheckError::PROJECT_INVALID, Code::INVALID_ARGUMENT,
+  runTest(CheckError::PROJECT_INVALID, StatusCode::kInvalidArgument,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(CheckResponseConverterTest,
        AbortedWithPermissionDeniedWhenResponseIsBlockedWithBillingDisabled) {
-  runTest(CheckError::BILLING_DISABLED, Code::PERMISSION_DENIED,
+  runTest(CheckError::BILLING_DISABLED, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithInvalidCredentail) {
-  runTest(CheckError::INVALID_CREDENTIAL, Code::PERMISSION_DENIED,
+  runTest(CheckError::INVALID_CREDENTIAL, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithConsumerInvalid) {
-  runTest(CheckError::CONSUMER_INVALID, Code::PERMISSION_DENIED,
+  runTest(CheckError::CONSUMER_INVALID, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_ERROR);
 }
 
 TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithResourceExhuasted) {
-  runTest(CheckError::RESOURCE_EXHAUSTED, Code::RESOURCE_EXHAUSTED,
+  runTest(CheckError::RESOURCE_EXHAUSTED, StatusCode::kResourceExhausted,
           ScResponseErrorType::CONSUMER_QUOTA);
 }
 
 TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithApiTargetBlocked) {
-  runTest(CheckError::API_TARGET_BLOCKED, Code::PERMISSION_DENIED,
+  runTest(CheckError::API_TARGET_BLOCKED, StatusCode::kPermissionDenied,
           ScResponseErrorType::CONSUMER_BLOCKED);
 }
 
 TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithNamespaceLookup) {
-  runTest(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE, Code::UNAVAILABLE,
+  runTest(CheckError::NAMESPACE_LOOKUP_UNAVAILABLE, StatusCode::kUnavailable,
           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithBillingStatus) {
-  runTest(CheckError::BILLING_STATUS_UNAVAILABLE, Code::UNAVAILABLE,
+  runTest(CheckError::BILLING_STATUS_UNAVAILABLE, StatusCode::kUnavailable,
           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST_F(CheckResponseConverterTest, WhenResponseIsBlockedWithServiceStatus) {
-  runTest(CheckError::SERVICE_STATUS_UNAVAILABLE, Code::UNAVAILABLE,
+  runTest(CheckError::SERVICE_STATUS_UNAVAILABLE, StatusCode::kUnavailable,
           ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST_F(CheckResponseConverterTest,
        WhenResponseIsBlockedWithCloudResourceManager) {
   runTest(CheckError::CLOUD_RESOURCE_MANAGER_BACKEND_UNAVAILABLE,
-          Code::UNAVAILABLE, ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
+          StatusCode::kUnavailable,
+          ScResponseErrorType::ERROR_TYPE_UNSPECIFIED);
 }
 
 TEST_F(CheckResponseConverterTest,
@@ -163,7 +165,7 @@ TEST_F(CheckResponseConverterTest,
 
   Status result = ConvertCheckResponse(response, "api_xxxx", &info);
 
-  EXPECT_EQ(Code::PERMISSION_DENIED, result.code());
+  EXPECT_EQ(StatusCode::kPermissionDenied, result.code());
   EXPECT_EQ(result.message(), "API api_xxxx is not enabled for the project.");
   EXPECT_EQ(info.error.type, ScResponseErrorType::SERVICE_NOT_ACTIVATED);
 }
