@@ -626,6 +626,16 @@ class TestStartProxy(unittest.TestCase):
               '--service_json_path', '/tmp/service_config.json',
               '--disallow_escaped_slashes_in_path',
               ]),
+            # Operation name header.
+            (['--rollout_strategy=fixed',
+              '--service_json_path=/tmp/service_config.json',
+              '--enable_operation_name_header'
+              ],
+             ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--enable_operation_name_header',
+              '--service_json_path', '/tmp/service_config.json',
+              ]),
         ]
 
         i = 0
