@@ -127,8 +127,8 @@ var (
 	ConnectionBufferLimitBytes = flag.Int("connection_buffer_limit_bytes", -1, `Configure the maximum amount of data that is buffered for each request/response body. 
 			If not provided, Envoy will decide the default value.`)
 
-	EnableJwksAsyncFetch = flag.Bool("enable_jwks_async_fetch", false, `When false, Jwks is fetched on-demand when processing the requests. When true, Jwks is fetched before processing any requests.`)
-	JwksCacheDurationInS = flag.Int("jwks_cache_duration_in_s", 300, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
+	DisableJwksAsyncFetch = flag.Bool("disable_jwks_async_fetch", false, `When the feature is enabled, JWKS is fetched before processing any requests. When disabled, JWKS is fetched on-demand when processing the requests.`)
+	JwksCacheDurationInS  = flag.Int("jwks_cache_duration_in_s", 300, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
 
 	ScCheckTimeoutMs  = flag.Int("service_control_check_timeout_ms", 0, `Set the timeout in millisecond for service control Check request. Must be > 0 and the default is 1000 if not set.`)
 	ScQuotaTimeoutMs  = flag.Int("service_control_quota_timeout_ms", 0, `Set the timeout in millisecond for service control Quota request. Must be > 0 and the default is 1000 if not set.`)
@@ -231,7 +231,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ServiceControlNetworkFailOpen:           *ServiceControlNetworkFailOpen,
 		EnableGrpcForHttp1:                      *EnableGrpcForHttp1,
 		ConnectionBufferLimitBytes:              *ConnectionBufferLimitBytes,
-		EnableJwksAsyncFetch:                    *EnableJwksAsyncFetch,
+		DisableJwksAsyncFetch:                   *DisableJwksAsyncFetch,
 		JwksCacheDurationInS:                    *JwksCacheDurationInS,
 		BackendRetryOns:                         *BackendRetryOns,
 		BackendRetryNum:                         *BackendRetryNum,

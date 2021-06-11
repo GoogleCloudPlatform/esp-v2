@@ -76,7 +76,7 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 				Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
 			},
 		}
-		if serviceInfo.Options.EnableJwksAsyncFetch {
+		if !serviceInfo.Options.DisableJwksAsyncFetch {
 			jwks.AsyncFetch = &jwtpb.JwksAsyncFetch{}
 		}
 

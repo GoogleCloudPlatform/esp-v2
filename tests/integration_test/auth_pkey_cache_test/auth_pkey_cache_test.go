@@ -70,6 +70,7 @@ func TestAuthJwksCache(t *testing.T) {
 			args := utils.CommonArgs()
 
 			s := env.NewTestEnv(platform.TestAuthJwksCache, platform.EchoSidecar)
+			args = append(args, "--disable_jwks_async_fetch")
 			if tc.jwksCacheDurationInS != 0 {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
 			}
@@ -77,6 +78,16 @@ func TestAuthJwksCache(t *testing.T) {
 			defer s.TearDown(t)
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			// Verify jwks fetching count is 0 for on-demand fetching
+			if tc.wantRequestsToProvider != nil {
+				provider, ok := s.FakeJwtService.ProviderMap[tc.wantRequestsToProvider.key]
+				if !ok {
+					t.Errorf("Test (%s): failed, the provider is not inited.", tc.desc)
+				} else if realCnt := provider.GetReqCnt(); realCnt != 0 {
+					t.Errorf("Test (%s): failed, pubkey of %s shoud be fetched 0 times instead of %v times.", tc.desc, tc.wantRequestsToProvider.key, realCnt)
+				}
 			}
 
 			var resp []byte
@@ -155,7 +166,6 @@ func TestAuthJwksAsyncFetch(t *testing.T) {
 			args := utils.CommonArgs()
 
 			s := env.NewTestEnv(platform.TestAuthJwksAsyncFetch, platform.EchoSidecar)
-			args = append(args, "--enable_jwks_async_fetch=true")
 			if tc.jwksCacheDurationInS != 0 {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
 			}

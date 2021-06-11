@@ -231,6 +231,7 @@
                             "issuer": "e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com",
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
+                              "asyncFetch": {},
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "jwt-provider-cluster-www.googleapis.com:443",

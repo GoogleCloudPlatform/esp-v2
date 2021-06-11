@@ -29,10 +29,10 @@ import (
 
 func TestJwtAuthnFilter(t *testing.T) {
 	testData := []struct {
-		desc                 string
-		fakeServiceConfig    *confpb.Service
-		enableJwksAsyncFetch bool
-		wantJwtAuthnFilter   string
+		desc                  string
+		fakeServiceConfig     *confpb.Service
+		disableJwksAsyncFetch bool
+		wantJwtAuthnFilter    string
 	}{
 		{
 			desc: "Success. Generate jwt authn filter with default jwt locations",
@@ -102,7 +102,8 @@ func TestJwtAuthnFilter(t *testing.T) {
                         "cluster": "jwt-provider-cluster-fake-jwks.com:443",
                         "timeout": "30s",
                         "uri": "https://fake-jwks.com"
-                    }
+                    },
+                    "asyncFetch": {}
                 }
             }
         },
@@ -116,7 +117,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 `,
 		},
 		{
-			desc: "Success. Generate jwt authn filter with default locations and enableJwksAsyncFetch",
+			desc: "Success. Generate jwt authn filter with default locations and disableJwksAsyncFetch",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -152,7 +153,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			enableJwksAsyncFetch: true,
+			disableJwksAsyncFetch: true,
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
@@ -184,8 +185,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                         "cluster": "jwt-provider-cluster-fake-jwks.com:443",
                         "timeout": "30s",
                         "uri": "https://fake-jwks.com"
-                    },
-                    "asyncFetch": {}
+                    }
                 }
             }
         },
@@ -277,7 +277,8 @@ func TestJwtAuthnFilter(t *testing.T) {
                         "cluster": "jwt-provider-cluster-fake-jwks.com:443",
                         "timeout": "30s",
                         "uri": "https://fake-jwks.com"
-                    }
+                    },
+                    "asyncFetch": {}
                 }
             }
         },
@@ -303,7 +304,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = "grpc://127.0.0.0:80"
-		opts.EnableJwksAsyncFetch = tc.enableJwksAsyncFetch
+		opts.DisableJwksAsyncFetch = tc.disableJwksAsyncFetch
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)
