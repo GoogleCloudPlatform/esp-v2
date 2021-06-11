@@ -64,21 +64,26 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 			return nil, nil, err
 		}
 
+		jwks := &jwtpb.RemoteJwks{
+			HttpUri: &corepb.HttpUri{
+				Uri: provider.GetJwksUri(),
+				HttpUpstreamType: &corepb.HttpUri_Cluster{
+					Cluster: clusterName,
+				},
+				Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
+			},
+			CacheDuration: &durationpb.Duration{
+				Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
+			},
+		}
+		if !serviceInfo.Options.DisableJwksAsyncFetch {
+			jwks.AsyncFetch = &jwtpb.JwksAsyncFetch{}
+		}
+
 		jp := &jwtpb.JwtProvider{
 			Issuer: provider.GetIssuer(),
 			JwksSourceSpecifier: &jwtpb.JwtProvider_RemoteJwks{
-				RemoteJwks: &jwtpb.RemoteJwks{
-					HttpUri: &corepb.HttpUri{
-						Uri: provider.GetJwksUri(),
-						HttpUpstreamType: &corepb.HttpUri_Cluster{
-							Cluster: clusterName,
-						},
-						Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
-					},
-					CacheDuration: &durationpb.Duration{
-						Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
-					},
-				},
+				RemoteJwks: jwks,
 			},
 			FromHeaders:          fromHeaders,
 			FromParams:           fromParams,

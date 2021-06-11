@@ -188,6 +188,7 @@
                             "issuer": "123456789-compute@developer.gserviceaccount.com",
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
+                              "asyncFetch": {},
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "jwt-provider-cluster-www.googleapis.com:443",
@@ -217,6 +218,7 @@
                             "issuer": "https://securetoken.google.com/apiproxy-231719",
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
+                              "asyncFetch": {},
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "jwt-provider-cluster-www.googleapis.com:443",
@@ -246,6 +248,7 @@
                             "issuer": "https://accounts.google.com",
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
+                              "asyncFetch": {},
                               "cacheDuration": "300s",
                               "httpUri": {
                                 "cluster": "jwt-provider-cluster-www.googleapis.com:443",

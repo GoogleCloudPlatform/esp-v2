@@ -29,9 +29,10 @@ import (
 
 func TestJwtAuthnFilter(t *testing.T) {
 	testData := []struct {
-		desc               string
-		fakeServiceConfig  *confpb.Service
-		wantJwtAuthnFilter string
+		desc                  string
+		fakeServiceConfig     *confpb.Service
+		disableJwksAsyncFetch bool
+		wantJwtAuthnFilter    string
 	}{
 		{
 			desc: "Success. Generate jwt authn filter with default jwt locations",
@@ -70,6 +71,89 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
+			wantJwtAuthnFilter: `{
+    "name": "envoy.filters.http.jwt_authn",
+    "typedConfig": {
+        "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
+        "providers": {
+            "auth_provider": {
+                "audiences": [
+                    "https://bookstore.endpoints.project123.cloud.goog"
+                ],
+                "forward": true,
+                "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
+                "fromHeaders": [
+                    {
+                        "name": "Authorization",
+                        "valuePrefix": "Bearer "
+                    },
+                    {
+                        "name": "X-Goog-Iap-Jwt-Assertion"
+                    }
+                ],
+                "fromParams": [
+                    "access_token"
+                ],
+                "issuer": "issuer-0",
+                "payloadInMetadata": "jwt_payloads",
+                "remoteJwks": {
+                    "cacheDuration": "300s",
+                    "httpUri": {
+                        "cluster": "jwt-provider-cluster-fake-jwks.com:443",
+                        "timeout": "30s",
+                        "uri": "https://fake-jwks.com"
+                    },
+                    "asyncFetch": {}
+                }
+            }
+        },
+        "requirementMap": {
+            "testapi.foo": {
+                "providerName": "auth_provider"
+            }
+        }
+    }
+}
+`,
+		},
+		{
+			desc: "Success. Generate jwt authn filter with default locations and disableJwksAsyncFetch",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "testapi",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:      "auth_provider",
+							Issuer:  "issuer-0",
+							JwksUri: "https://fake-jwks.com",
+						},
+					},
+					Rules: []*confpb.AuthenticationRule{
+						{
+							Selector: "testapi.foo",
+							Requirements: []*confpb.AuthRequirement{
+								{
+									ProviderId: "auth_provider",
+								},
+							},
+						},
+					},
+				},
+			},
+			disableJwksAsyncFetch: true,
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
@@ -193,7 +277,8 @@ func TestJwtAuthnFilter(t *testing.T) {
                         "cluster": "jwt-provider-cluster-fake-jwks.com:443",
                         "timeout": "30s",
                         "uri": "https://fake-jwks.com"
-                    }
+                    },
+                    "asyncFetch": {}
                 }
             }
         },
@@ -219,6 +304,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.BackendAddress = "grpc://127.0.0.0:80"
+		opts.DisableJwksAsyncFetch = tc.disableJwksAsyncFetch
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {
 			t.Fatal(err)

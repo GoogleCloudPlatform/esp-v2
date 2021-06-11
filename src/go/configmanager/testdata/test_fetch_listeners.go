@@ -345,7 +345,8 @@ var (
                           "cluster": "jwt-provider-cluster-$JWKSURI:443",
                           "timeout": "30s",
                           "uri": "$JWKSURI"
-                        }
+                        },
+                        "asyncFetch": {}
                       }
                     }
                   }
@@ -618,7 +619,8 @@ var (
                           "cluster": "jwt-provider-cluster-$JWKSURI:443",
                           "timeout": "30s",
                           "uri": "$JWKSURI"
-                        }
+                        },
+                        "asyncFetch": {}
                       }
                     }
                   }
@@ -1121,7 +1123,8 @@ var (
                           "cluster": "jwt-provider-cluster-$JWKSURI:443",
                           "timeout": "30s",
                           "uri": "$JWKSURI"
-                        }
+                        },
+                        "asyncFetch": {}
                       }
                     },
                     "firebase2": {
@@ -1150,7 +1153,8 @@ var (
                           "cluster": "jwt-provider-cluster-$JWKSURI:443",
                           "timeout": "30s",
                           "uri": "$JWKSURI"
-                        }
+                        },
+                        "asyncFetch": {}
                       }
                     }
                   }
@@ -2091,7 +2095,8 @@ var (
                           "cluster": "jwt-provider-cluster-$JWKSURI:443",
                           "timeout": "30s",
                           "uri": "$JWKSURI"
-                        }
+                        },
+                        "asyncFetch": {}
                       }
                     }
                   }

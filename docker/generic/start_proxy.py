@@ -496,6 +496,15 @@ environment variable or by passing "-k" flag to this script.
         otherwise, it will be rejected. Default is `open`.
         ''')
     parser.add_argument(
+        '--disable_jwks_async_fetch',
+        action='store_true',
+        default=False,
+        help='''
+        Disable fetching JWKS for JWT authentication to be done before processing any requests.
+        If disabled, JWKS fetching is done when authenticating the JWT, the fetching will add
+        to the request processing latency. Default is enabled.'''
+    )
+    parser.add_argument(
         '--jwks_cache_duration_in_s',
         default=None,
         help='''
@@ -964,6 +973,8 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--envoy_xff_num_trusted_hops",
                            '{}'.format(SERVERLESS_XFF_NUM_TRUSTED_HOPS)])
 
+    if args.disable_jwks_async_fetch:
+        proxy_conf.append("--disable_jwks_async_fetch")
     if args.jwks_cache_duration_in_s:
          proxy_conf.extend(["--jwks_cache_duration_in_s", args.jwks_cache_duration_in_s])
 
