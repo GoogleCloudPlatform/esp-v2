@@ -33,6 +33,7 @@ const (
 	TestAsymmetricKeys
 	TestAuthAllowMissing
 	TestAuthJwksCache
+	TestAuthJwksAsyncFetch
 	TestBackendAddressOverride
 	TestBackendAuthDisableAuth
 	TestBackendAuthUsingIamIdTokenWithDelegates

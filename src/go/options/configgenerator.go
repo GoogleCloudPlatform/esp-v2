@@ -105,6 +105,8 @@ type ConfigGeneratorOptions struct {
 	EnableGrpcForHttp1            bool
 	ConnectionBufferLimitBytes    int
 
+	// JwtAuthn related flags
+	EnableJwksAsyncFetch bool
 	JwksCacheDurationInS int
 
 	ScCheckTimeoutMs  int
@@ -140,6 +142,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ClusterConnectTimeout:            20 * time.Second,
 		StreamIdleTimeout:                util.DefaultIdleTimeout,
 		EnvoyXffNumTrustedHops:           2,
+		EnableJwksAsyncFetch:             false,
 		JwksCacheDurationInS:             300,
 		ListenerAddress:                  "0.0.0.0",
 		ListenerPort:                     8080,

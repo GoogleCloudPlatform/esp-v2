@@ -102,6 +102,21 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
+            # enable_jwks_async_fetch
+            (['-R=managed','--enable_jwks_async_fetch',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--check_metadata',
+              '--disable_tracing', '--underscores_in_headers'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--enable_jwks_async_fetch',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata', '--underscores_in_headers',
+              '--disable_tracing'
+              ]),
             # service_control_network_fail_policy=open
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
