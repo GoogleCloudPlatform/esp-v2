@@ -56,6 +56,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 		"--rollout_strategy=fixed",
 		"--service_control_check_retries=2",
 		"--service_control_check_timeout_ms=100",
+		"--disable_jwks_async_fetch",
 	}
 	s := env.NewTestEnv(platform.TestTracesServiceControlCheckWithRetry, platform.GrpcBookstoreSidecar)
 	s.SetupFakeTraceServer(1)
@@ -237,7 +238,6 @@ func TestTracesFetchingJwks(t *testing.T) {
 		clientProtocol string
 		httpMethod     string
 		method         string
-		queryInToken   bool
 		token          string
 		headers        map[string][]string
 		wantSpanNames  []string
@@ -258,7 +258,6 @@ func TestTracesFetchingJwks(t *testing.T) {
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.Es256Token,
 			wantSpanNames: []string{
-				"JWT Remote PubKey Fetch",
 				"Service Control remote call: Check",
 				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"ingress ListShelves",
@@ -268,11 +267,7 @@ func TestTracesFetchingJwks(t *testing.T) {
 
 	for _, tc := range tests {
 		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
-		if tc.queryInToken {
-			_, _ = bsclient.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
-		} else {
-			_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
-		}
+		_, _ = bsclient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 
 		if err := checkSpanNames(s, tc.wantSpanNames); err != nil {
 			t.Errorf("Test (%s) failed: %v", tc.desc, err)
