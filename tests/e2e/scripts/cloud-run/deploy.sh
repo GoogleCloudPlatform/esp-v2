@@ -86,7 +86,7 @@ function deployBackend() {
         ;;
       esac
 
-      gcloud run deploy "${BACKEND_SERVICE_NAME}" \
+      gcloud beta run deploy "${BACKEND_SERVICE_NAME}" --use-http2 \
         --image="${backend_image}" \
         --port="${backend_port}" \
         --no-allow-unauthenticated \
@@ -160,7 +160,7 @@ function deployProxy() {
       ;;
   esac
 
-  gcloud run deploy "${PROXY_SERVICE_NAME}" ${args}
+  gcloud beta run deploy "${PROXY_SERVICE_NAME}" --use-http2 ${args}
 }
 
 

@@ -144,15 +144,10 @@ if __name__ == "__main__":
 
     subtests = [
         SubtestEcho(),
+        SubtestEchoStream(),
+        SubtestEchoStreamAuthFail(),
+        SubtestEchoStreamNoApiKey(),
     ]
-
-    # TODO: When Cloud Run supports streaming RPCs, disable this check.
-    if not FLAGS.use_ssl:
-        subtests += [
-            SubtestEchoStream(),
-            SubtestEchoStreamAuthFail(),
-            SubtestEchoStreamNoApiKey(),
-        ]
 
     print json.dumps({
         'server_addr': FLAGS.server,
