@@ -86,7 +86,7 @@ function deployBackend() {
         ;;
       esac
 
-      gcloud beta run deploy "${BACKEND_SERVICE_NAME}" --use-http2 \
+      gcloud alpha run deploy "${BACKEND_SERVICE_NAME}" --use-http2 \
         --image="${backend_image}" \
         --port="${backend_port}" \
         --no-allow-unauthenticated \
@@ -149,7 +149,7 @@ function deployProxy() {
 
   case ${PROXY_PLATFORM} in
     "cloud-run")
-      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed"
+      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed --use-http2"
       ;;
     "anthos-cloud-run")
       args+=" --platform=gke"
@@ -160,7 +160,7 @@ function deployProxy() {
       ;;
   esac
 
-  gcloud beta run deploy "${PROXY_SERVICE_NAME}" --use-http2 ${args}
+  gcloud alpha run deploy "${PROXY_SERVICE_NAME}" ${args}
 }
 
 
