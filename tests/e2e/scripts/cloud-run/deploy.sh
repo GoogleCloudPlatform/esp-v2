@@ -64,11 +64,11 @@ if [[ "${PROXY_PLATFORM}" == "anthos-cloud-run" ]] ; then
   CLUSTER_NAME=$(get_anthos_cluster_name_with_sha)-${UNIQUE_ID}
 fi
 
-GCLOUD_RUN="gcloud run"
+GCLOUD_BETA="gcloud"
 USE_HTTP2=""
 # For grpc echo test, need to use gcloud beta with --use-http2 flag
 if [[ ${BACKEND_PLATFORM} == "cloud-run" ]] && [[ ${BACKEND} == "echo" ]]; then
-  GCLOUD_RUN="gcloud beta run"
+  GCLOUD_BETA="gcloud beta"
   USE_HTTP2="--use-http2"
 fi
 
@@ -95,7 +95,7 @@ function deployBackend() {
         ;;
       esac
 
-      "${GCLOUD_RUN}" deploy "${BACKEND_SERVICE_NAME}" "${USE_HTTP2}" \
+      ${GCLOUD_BETA} run deploy "${BACKEND_SERVICE_NAME}" "${USE_HTTP2}" \
         --image="${backend_image}" \
         --port="${backend_port}" \
         --no-allow-unauthenticated \
@@ -169,7 +169,7 @@ function deployProxy() {
       ;;
   esac
 
-  "${GCLOUD_RUN}" deploy "${PROXY_SERVICE_NAME}" "${USE_HTTP2}" ${args}
+  ${GCLOUD_BETA} run deploy "${PROXY_SERVICE_NAME}" "${USE_HTTP2}" ${args}
 }
 
 
