@@ -95,7 +95,7 @@ function deployBackend() {
         ;;
       esac
 
-      ${GCLOUD_BETA} run deploy "${BACKEND_SERVICE_NAME}" "${USE_HTTP2}" \
+      ${GCLOUD_BETA} run deploy "${BACKEND_SERVICE_NAME}" ${USE_HTTP2} \
         --image="${backend_image}" \
         --port="${backend_port}" \
         --no-allow-unauthenticated \
@@ -169,7 +169,7 @@ function deployProxy() {
       ;;
   esac
 
-  ${GCLOUD_BETA} run deploy "${PROXY_SERVICE_NAME}" "${USE_HTTP2}" ${args}
+  ${GCLOUD_BETA} run deploy "${PROXY_SERVICE_NAME}" ${USE_HTTP2} ${args}
 }
 
 
