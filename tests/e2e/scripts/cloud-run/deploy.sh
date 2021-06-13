@@ -31,6 +31,7 @@ e2e_options "${@}"
 echo "Installing tools if necessary"
 install_e2e_dependencies
 update_wrk
+gcloud components update -q
 
 PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
@@ -86,7 +87,7 @@ function deployBackend() {
         ;;
       esac
 
-      gcloud alpha run deploy "${BACKEND_SERVICE_NAME}" --use-http2 \
+      gcloud beta run deploy "${BACKEND_SERVICE_NAME}" --use-http2 \
         --image="${backend_image}" \
         --port="${backend_port}" \
         --no-allow-unauthenticated \
@@ -160,7 +161,7 @@ function deployProxy() {
       ;;
   esac
 
-  gcloud alpha run deploy "${PROXY_SERVICE_NAME}" ${args}
+  gcloud beta run deploy "${PROXY_SERVICE_NAME}" ${args}
 }
 
 
