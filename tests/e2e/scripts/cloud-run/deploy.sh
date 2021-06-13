@@ -55,13 +55,21 @@ BACKEND_HOST=""
 CLUSTER_ZONE="us-central1-a"
 CLOUD_RUN_REGION="us-central1"
 
- CLUSTER_VERSION="latest"
+CLUSTER_VERSION="latest"
 
 APP_ENGINE_IAP_CLIENT_ID="245521401045-qh1j3eq583qdkmn9m60pfc67303ps6cu.apps.googleusercontent.com"
 
 STATUS=0
 if [[ "${PROXY_PLATFORM}" == "anthos-cloud-run" ]] ; then
   CLUSTER_NAME=$(get_anthos_cluster_name_with_sha)-${UNIQUE_ID}
+fi
+
+# For grpc echo test, need to use gcloud beta with --use-http2 flag
+USE_HTTP2_BETA=""
+USE_HTTP2=""
+if [[ ${BACKEND_PLATFORM} == "cloud-run" ]] && [[ ${BACKEND} == "echo" ]]; then
+  USE_HTTP2_BETA="beta"
+  USE_HTTP2="--use-http2"
 fi
 
 function deployBackend() {
@@ -87,7 +95,7 @@ function deployBackend() {
         ;;
       esac
 
-      gcloud beta run deploy "${BACKEND_SERVICE_NAME}" --use-http2 \
+      gcloud "${USE_HTTP2_BETA}" run deploy "${BACKEND_SERVICE_NAME}" "${USE_HTTP2}" \
         --image="${backend_image}" \
         --port="${backend_port}" \
         --no-allow-unauthenticated \
@@ -150,7 +158,7 @@ function deployProxy() {
 
   case ${PROXY_PLATFORM} in
     "cloud-run")
-      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed --use-http2"
+      args+=" --allow-unauthenticated --service-account=${PROXY_RUNTIME_SERVICE_ACCOUNT} --platform=managed"
       ;;
     "anthos-cloud-run")
       args+=" --platform=gke"
@@ -161,7 +169,7 @@ function deployProxy() {
       ;;
   esac
 
-  gcloud beta run deploy "${PROXY_SERVICE_NAME}" ${args}
+  gcloud "${USE_HTTP2_BETA}" run deploy "${PROXY_SERVICE_NAME}" "${USE_HTTP2}" ${args}
 }
 
 
