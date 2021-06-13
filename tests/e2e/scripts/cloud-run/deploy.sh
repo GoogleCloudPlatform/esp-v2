@@ -65,8 +65,6 @@ if [[ "${PROXY_PLATFORM}" == "anthos-cloud-run" ]] ; then
 fi
 
 # For grpc echo test, need to use gcloud beta with --use-http2 flag
-USE_HTTP2_BETA=""
-USE_HTTP2=""
 if [[ ${BACKEND_PLATFORM} == "cloud-run" ]] && [[ ${BACKEND} == "echo" ]]; then
   USE_HTTP2_BETA="beta"
   USE_HTTP2="--use-http2"
