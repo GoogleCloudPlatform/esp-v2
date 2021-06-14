@@ -31,6 +31,7 @@ e2e_options "${@}"
 echo "Installing tools if necessary"
 install_e2e_dependencies
 update_wrk
+gcloud components update -q
 
 PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
@@ -54,13 +55,22 @@ BACKEND_HOST=""
 CLUSTER_ZONE="us-central1-a"
 CLOUD_RUN_REGION="us-central1"
 
- CLUSTER_VERSION="latest"
+CLUSTER_VERSION="latest"
 
 APP_ENGINE_IAP_CLIENT_ID="245521401045-qh1j3eq583qdkmn9m60pfc67303ps6cu.apps.googleusercontent.com"
 
 STATUS=0
 if [[ "${PROXY_PLATFORM}" == "anthos-cloud-run" ]] ; then
   CLUSTER_NAME=$(get_anthos_cluster_name_with_sha)-${UNIQUE_ID}
+fi
+
+GCLOUD_BETA="gcloud"
+USE_HTTP2=""
+# For grpc echo test, need to use gcloud beta with --use-http2 flag
+# in order to support bidirectional streaming.
+if [[ ${BACKEND_PLATFORM} == "cloud-run" ]] && [[ ${BACKEND} == "echo" ]]; then
+  GCLOUD_BETA="gcloud beta"
+  USE_HTTP2="--use-http2"
 fi
 
 function deployBackend() {
@@ -86,7 +96,7 @@ function deployBackend() {
         ;;
       esac
 
-      gcloud run deploy "${BACKEND_SERVICE_NAME}" \
+      ${GCLOUD_BETA} run deploy "${BACKEND_SERVICE_NAME}" ${USE_HTTP2} \
         --image="${backend_image}" \
         --port="${backend_port}" \
         --no-allow-unauthenticated \
@@ -160,7 +170,7 @@ function deployProxy() {
       ;;
   esac
 
-  gcloud run deploy "${PROXY_SERVICE_NAME}" ${args}
+  ${GCLOUD_BETA} run deploy "${PROXY_SERVICE_NAME}" ${USE_HTTP2} ${args}
 }
 
 
