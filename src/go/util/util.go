@@ -124,6 +124,9 @@ const (
 
 	// The stat prefix.
 	StatPrefix = "ingress_http"
+
+	// The suffix that forms the operation name header.
+	OperationHeaderSuffix = "Api-Operation-Name"
 )
 
 type BackendProtocol int32

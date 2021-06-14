@@ -256,6 +256,36 @@ environment variable or by passing "-k" flag to this script.
         For example: --append_response_header=key1=value1 --append_response_header=key2=value2.''')
 
     parser.add_argument(
+        '--enable_operation_name_header',
+        action='store_true',
+        help='''
+        When enabled, ESPv2 will attach the operation name of the matched route
+        in the request to the backend.
+        
+        The operation name:
+        - For OpenAPI: Is derived from the `operationId` field.
+        - For gRPC: Is the fully-qualified name of the RPC.
+        
+        The header will be attached with key `X-Endpoint-API-Operation-Name`.
+        
+        NOTE: We do NOT recommend relying on this feature. There are no
+        guarantees that the operation name will remain consistent across
+        multiple service configuration IDs.
+        
+        NOTE: If you are using this feature with OpenAPI,
+        please only use the last segment of the operation name. For example:
+        
+        `1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader`
+        Your backend should parse past the last `.` and only use `EchoHeader`.
+        
+        NOTE: For OpenAPI, the operation name may not match the `operationId`
+        field exactly. For example, some sanitization may occur that only allows
+        alphanumeric characters. The exact sanitization is internal
+        implementation detail and is not guaranteed to be consistent.
+        '''
+    )
+
+    parser.add_argument(
         '-R',
         '--rollout_strategy',
         default=DEFAULT_ROLLOUT_STRATEGY,
@@ -1040,6 +1070,9 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--add_response_headers", ";".join(args.add_response_header)])
     if args.append_response_header:
         proxy_conf.extend(["--append_response_headers", ";".join(args.append_response_header)])
+
+    if args.enable_operation_name_header:
+        proxy_conf.append("--enable_operation_name_header")
 
     # Generate self-signed cert if needed
     if args.generate_self_signed_cert:

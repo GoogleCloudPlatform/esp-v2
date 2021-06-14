@@ -60,7 +60,7 @@ func TestGeneratedHeaders(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			args := []string{"--service_config_id=test-config-id",
 				"--rollout_strategy=fixed", "--suppress_envoy_headers"}
 			if tc.generatedHeaderPrefixArg != "" {
@@ -100,7 +100,74 @@ func TestGeneratedHeaders(t *testing.T) {
 					t.Errorf("Test (%s): get headers %v, not find expected header %s:%s,  ", tc.desc, headers, wantHeaderName, wantHeaderVal)
 				}
 			}
-		}()
+		})
+	}
+}
 
+func TestOperationNameHeader(t *testing.T) {
+	t.Parallel()
+	operationName := "1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader"
+
+	testData := []struct {
+		desc           string
+		confArgs       []string
+		requestHeader  map[string]string
+		wantRespHeader map[string]string
+	}{
+		{
+			desc: "Enable generated operation name header",
+			confArgs: append([]string{
+				"--enable_operation_name_header",
+			}, utils.CommonArgs()...),
+			wantRespHeader: map[string]string{
+				"Echo-X-Endpoint-Api-Operation-Name": operationName,
+			},
+		},
+		{
+			desc: "Enable generated operation name header with customized prefix",
+			confArgs: append([]string{
+				"--enable_operation_name_header",
+				"--generated_header_prefix=x-apigateway-",
+			}, utils.CommonArgs()...),
+			wantRespHeader: map[string]string{
+				"Echo-X-Apigateway-Api-Operation-Name": operationName,
+			},
+		},
+		{
+			desc: "Enable generated operation name header, overwrites existing one",
+			confArgs: append([]string{
+				"--enable_operation_name_header",
+			}, utils.CommonArgs()...),
+			requestHeader: map[string]string{
+				"Echo-X-Endpoint-Api-Operation-Name": "bad-value-set-by-client",
+			},
+			wantRespHeader: map[string]string{
+				"Echo-X-Endpoint-Api-Operation-Name": operationName,
+			},
+		},
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestGeneratedHeaders, platform.EchoSidecar)
+
+			defer s.TearDown(t)
+			if err := s.Setup(tc.confArgs); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			url := fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echoHeader", "?key=api-key-2")
+			headers, _, err := utils.DoWithHeaders(url, "GET", "", tc.requestHeader)
+			if err != nil {
+				t.Errorf("fail to make request: %v", err)
+			}
+
+			for wantHeaderName, wantHeaderVal := range tc.wantRespHeader {
+				if !utils.CheckHeaderExist(headers, wantHeaderName, func(gotHeaderVal string) bool {
+					return wantHeaderVal == gotHeaderVal
+				}) {
+					t.Errorf("Test (%s): get headers %v, not find expected header %s:%s,  ", tc.desc, headers, wantHeaderName, wantHeaderVal)
+				}
+			}
+		})
 	}
 }

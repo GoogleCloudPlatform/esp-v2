@@ -361,6 +361,21 @@ func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 					},
 				}
 			}
+
+			if serviceInfo.Options.EnableOperationNameHeader {
+				r.RequestHeadersToAdd = []*corepb.HeaderValueOption{
+					{
+						Header: &corepb.HeaderValue{
+							Key:   serviceInfo.Options.GeneratedHeaderPrefix + util.OperationHeaderSuffix,
+							Value: operation,
+						},
+						Append: &wrapperspb.BoolValue{
+							Value: false,
+						},
+					},
+				}
+			}
+
 			backendRoutes = append(backendRoutes, r)
 
 			jsonStr, err := util.ProtoToJson(r)

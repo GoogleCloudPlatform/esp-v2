@@ -39,6 +39,7 @@ func TestMakeRouteConfig(t *testing.T) {
 	testData := []struct {
 		desc                          string
 		enableStrictTransportSecurity bool
+		enableOperationNameHeader     bool
 		fakeServiceConfig             *confpb.Service
 		wantedError                   string
 		wantRouteConfig               string
@@ -2358,12 +2359,161 @@ func TestMakeRouteConfig(t *testing.T) {
 			},
 			wantedError: "fail to sort route match, endpoints.examples.bookstore.Bookstore.Echo has duplicate http pattern `GET /{echoId=*}`",
 		},
+		{
+			desc:                      "Enable operation name header",
+			enableOperationNameHeader: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: fmt.Sprintf("%s.Echo", testApiName),
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo",
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `
+{
+    "name": "local_route",
+    "virtualHosts": [
+        {
+            "domains": [
+                "*"
+            ],
+            "name": "backend",
+            "routes": [
+                {
+                    "decorator": {
+                        "operation": "ingress Echo"
+                    },
+                    "match": {
+                        "headers": [
+                            {
+                                "exactMatch": "GET",
+                                "name": ":method"
+                            }
+                        ],
+                        "path": "/echo"
+                    },
+                    "requestHeadersToAdd": [
+                        {
+                            "append":false,
+                            "header": {
+                                "key": "X-Endpoint-Api-Operation-Name",
+                                "value": "endpoints.examples.bookstore.Bookstore.Echo"
+                            }
+                        }
+                    ],
+                    "route": {
+                        "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
+                        "retryPolicy": {
+                            "numRetries": 1,
+                            "retryOn": "reset,connect-failure,refused-stream"
+                        },
+                        "timeout": "15s"
+                    }
+                },
+                {
+                    "decorator": {
+                        "operation": "ingress Echo"
+                    },
+                    "match": {
+                        "headers": [
+                            {
+                                "exactMatch": "GET",
+                                "name": ":method"
+                            }
+                        ],
+                        "path": "/echo/"
+                    },
+                    "requestHeadersToAdd": [
+                        {
+                            "append":false,
+                            "header": {
+                                "key": "X-Endpoint-Api-Operation-Name",
+                                "value": "endpoints.examples.bookstore.Bookstore.Echo"
+                            }
+                        }
+                    ],
+                    "route": {
+                        "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+                        "idleTimeout": "300s",
+                        "retryPolicy": {
+                            "numRetries": 1,
+                            "retryOn": "reset,connect-failure,refused-stream"
+                        },
+                        "timeout": "15s"
+                    }
+                },
+                {
+                    "decorator": {
+                        "operation": "ingress UnknownHttpMethodForPath_/echo"
+                    },
+                    "directResponse": {
+                        "body": {
+                            "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+                        },
+                        "status": 405
+                    },
+                    "match": {
+                        "path": "/echo"
+                    }
+                },
+                {
+                    "decorator": {
+                        "operation": "ingress UnknownHttpMethodForPath_/echo"
+                    },
+                    "directResponse": {
+                        "body": {
+                            "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+                        },
+                        "status": 405
+                    },
+                    "match": {
+                        "path": "/echo/"
+                    }
+                },
+                {
+                    "decorator": {
+                        "operation": "ingress UnknownOperationName"
+                    },
+                    "directResponse": {
+                        "body": {
+                            "inlineString": "The current request is not defined by this API."
+                        },
+                        "status": 404
+                    },
+                    "match": {
+                        "prefix": "/"
+                    }
+                }
+            ]
+        }
+    ]
+}
+`,
+		},
 	}
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.EnableHSTS = tc.enableStrictTransportSecurity
+			opts.EnableOperationNameHeader = tc.enableOperationNameHeader
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
