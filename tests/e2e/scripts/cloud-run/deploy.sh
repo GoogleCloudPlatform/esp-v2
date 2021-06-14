@@ -67,6 +67,7 @@ fi
 GCLOUD_BETA="gcloud"
 USE_HTTP2=""
 # For grpc echo test, need to use gcloud beta with --use-http2 flag
+# in order to support bidirectional streaming.
 if [[ ${BACKEND_PLATFORM} == "cloud-run" ]] && [[ ${BACKEND} == "echo" ]]; then
   GCLOUD_BETA="gcloud beta"
   USE_HTTP2="--use-http2"
