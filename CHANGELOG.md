@@ -5,7 +5,7 @@
 
 # Release 2.27.0 01-06-2021
 - Fix overhead latency calculation for backend timeout (#505)
-- Reduce backoff initial latency. (#520)
+- API Gateway: Reduce backoff initial latency. (#520)
 
 # Release 2.26.1 19-05-2021
 
