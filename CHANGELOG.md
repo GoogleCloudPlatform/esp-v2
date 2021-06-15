@@ -1,3 +1,12 @@
+# Release 2.28.0 15-06-2021
+- Add flag to enable operation name header (#535)
+- Enable jwks async fetch by default (#534)
+- Update envoy to 06/09/2021, revert the breaking change of padding the forward jwt payload header(#532)
+
+# Release 2.27.0 01-06-2021
+- Fix overhead latency calculation for backend timeout (#505)
+- Reduce backoff initial latency. (#520)
+
 # Release 2.26.1 19-05-2021
 
 No changes involve Cloud Endpoints users.
