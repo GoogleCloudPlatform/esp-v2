@@ -65,7 +65,7 @@ done
 
 set -x
 
-if [ "${VERSION}" = ""]; then
+if [ "${VERSION}" = "" ]; then
   VERSION="$(command cat ${ROOT}/VERSION)" \
     || error_exit "Cannot find release version (${ROOT}/VERSION)"
 fi

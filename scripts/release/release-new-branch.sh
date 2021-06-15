@@ -34,26 +34,20 @@ EOF
   exit 1
 }
 
-# Create a branch for release.
-NEXT_VERSION=''
 SHA=''
 
 while getopts :n:s: arg; do
   case ${arg} in
-    n) NEXT_VERSION="${OPTARG}";;
     s) SHA="${OPTARG}";;
     *) usage "Invalid option: -${OPTARG}";;
   esac
 done
 
-[[ -n "${NEXT_VERSION}" ]] \
-  || usage "Please provide the next release version."
-# The version format is: 1.2.3
-[[ "${NEXT_VERSION}" =~ [0-9]+\.[0-9]+\.[0-9] ]] \
-  || usage "Invalid version number: ${NEXT_VERSION}."
 [[ -n "${SHA}" ]] \
   || usage "Please provide the release SHA."
 
+# Assume the ${ROOT}/VERSION has been updated to be the version number for
+# this release.
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 VERSION="$(command cat ${ROOT}/VERSION)"
 # If version name is 1.0.0, the release branch name is: v1.0.x
@@ -72,18 +66,9 @@ git push upstream ${SHA}:refs/heads/${RELEASE_BRANCH} \
 
 
 
-# When NEXT_VERSION is not equal to the current one,
-# assume doing a minor release 2.x.y -> 2.{x+1}.0, so
-# update the version number and push for review.
-# Otherwise, it is a patch release, no need to update the `VERSION` file.
-if [ "${NEXT_VERSION}" != "${VERSION}" ]; then
-  MASTER_BRANCH="${VERSION}-master"
-  git checkout -b "${MASTER_BRANCH}" upstream/master
-  echo "${NEXT_VERSION}" > ${ROOT}/VERSION
-  git add ${ROOT}/VERSION
-  git commit -m "Update version number to ${NEXT_VERSION}."
-  git push --set-upstream origin "${MASTER_BRANCH}"
-fi
+MASTER_BRANCH="${VERSION}-master"
+git checkout -b "${MASTER_BRANCH}" upstream/master
+
 git checkout ${RELEASE_BRANCH}
 
 printf '\e[31m
