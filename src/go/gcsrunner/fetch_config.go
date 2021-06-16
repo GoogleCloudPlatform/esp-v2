@@ -27,13 +27,36 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/cenkalti/backoff"
 	"github.com/golang/glog"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
-
-	google_oauth "golang.org/x/oauth2/google"
 )
+
+var (
+	// can be overwritten in unit tests
+	newGCS             = newGCSClient
+	newDefaultCredsGCS = newDefaultCredsGCSClient
+	osCreate           = func(p string) (io.WriteCloser, error) { return os.Create(p) }
+)
+
+// can be mocked in unit tests
+type gcsReader interface {
+	Reader(ctx context.Context, bucket, object string) (io.Reader, error)
+}
+
+// Implements a minimal GCS client for reading files from GCS.
+type gcsClient struct {
+	client *storage.Client
+}
+
+func (c *gcsClient) Reader(ctx context.Context, bucket, object string) (io.Reader, error) {
+	return c.client.Bucket(bucket).Object(object).NewReader(ctx)
+}
 
 // FetchConfigOptions provides a set of configurations when fetching and writing config files.
 type FetchConfigOptions struct {
+	// ServiceAccount, if provided, is impersonated in the GCS fetch call.
+	// If left blank, the default credentials are used.
+	ServiceAccount                string
 	BucketName                    string
 	ConfigFileName                string
 	WriteFilePath                 string
@@ -41,38 +64,30 @@ type FetchConfigOptions struct {
 	FetchGCSObjectTimeout         time.Duration
 }
 
-var findDefaultCredentials = google_oauth.FindDefaultCredentials
-
-type getObjectRequest struct {
-	Bucket, Object string
-}
-type storageObjectReader interface {
-	readObject(ctx context.Context, req getObjectRequest) (io.Reader, error)
-}
-
-type gcsObjectReader struct {
-	client *storage.Client
-}
-
-func (g *gcsObjectReader) readObject(ctx context.Context, req getObjectRequest) (io.Reader, error) {
-	return g.client.Bucket(req.Bucket).Object(req.Object).NewReader(ctx)
-}
-
-var newStorageObjectReader = func(ctx context.Context, opts ...option.ClientOption) (storageObjectReader, error) {
-	c, err := storage.NewClient(ctx, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &gcsObjectReader{c}, nil
-}
-
-type file interface {
-	io.Writer
-	io.Closer
-}
-
 var (
-	osCreate = func(p string) (file, error) { return os.Create(p) }
+	// can be overwritten in unit tests
+	newGCSClient = func(ctx context.Context, sa string) (gcsReader, error) {
+		ts, err := TokenSource(ctx, sa)
+		if err != nil {
+			return nil, err
+		}
+		client, err := storage.NewClient(ctx, option.WithTokenSource(ts))
+		if err != nil {
+			return nil, err
+		}
+		return &gcsClient{client}, nil
+	}
+	newDefaultCredsGCSClient = func(ctx context.Context) (gcsReader, error) {
+		creds, err := google.FindDefaultCredentials(ctx)
+		if err != nil {
+			return nil, err
+		}
+		c, err := storage.NewClient(ctx, option.WithCredentials(creds))
+		if err != nil {
+			return nil, err
+		}
+		return &gcsClient{c}, nil
+	}
 )
 
 // FetchConfigFromGCS handles fetching a config from GCS, applying any transformation,
@@ -85,7 +100,7 @@ var (
 func FetchConfigFromGCS(opts FetchConfigOptions) error {
 	b, err := readBytes(opts)
 	if err != nil {
-		return fmt.Errorf("failed to get reader for object: %v", err)
+		return fmt.Errorf("failed to read object: %v", err)
 	}
 	if err := writeFile(b, opts); err != nil {
 		return fmt.Errorf("failed to write data to file: %v", err)
@@ -97,13 +112,18 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), opts.FetchGCSObjectTimeout)
 	defer cancel()
 
-	creds, err := findDefaultCredentials(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find default credentials: %v", err)
-	}
-	client, err := newStorageObjectReader(ctx, option.WithCredentials(creds))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create new storage client: %v", err)
+	var client gcsReader
+	var err error
+	if opts.ServiceAccount == "" {
+		client, err = newDefaultCredsGCS(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		client, err = newGCS(ctx, opts.ServiceAccount)
+		if err != nil {
+			return nil, err
+		}
 	}
 	ebo := backoff.NewExponentialBackOff()
 	ebo.InitialInterval = opts.FetchGCSObjectInitialInterval
@@ -112,10 +132,7 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 		if err := ctx.Err(); err != nil {
 			return backoff.Permanent(err)
 		}
-		r, err := client.readObject(ctx, getObjectRequest{
-			Bucket: opts.BucketName,
-			Object: opts.ConfigFileName,
-		})
+		r, err := client.Reader(ctx, opts.BucketName, opts.ConfigFileName)
 		if err != nil {
 			glog.Errorf("error getting reader for object (retrying): %v", err)
 			return err
@@ -137,12 +154,10 @@ func writeFile(b []byte, opts FetchConfigOptions) error {
 	file, err := osCreate(opts.WriteFilePath)
 	defer file.Close()
 	if err != nil {
-		return fmt.Errorf("failed to create file: %v", err)
+		return err
 	}
-
 	if _, err := file.Write(b); err != nil {
-		return fmt.Errorf("failed to write to file: %v", err)
+		return err
 	}
-
 	return nil
 }

@@ -24,6 +24,9 @@
 // `gsutil cp "gs://${BUCKET}/${CONFIG_FILE_NAME}" envoy.json`
 //
 // without needing `gsutil` in the image.
+//
+// If RUN_AS_SERVICE_ACCOUNT is provided, gcsrunner will attempt to impersonate
+// the given service account in the call to read from GCS.
 package main
 
 import (
@@ -52,6 +55,7 @@ var (
 	envoyLogPath = flag.String("envoy_log_path", "",
 		"Envoy application logging path. Default is to write to stderr.")
 	envoyComponentLogLevel = flag.String("envoy_component_log_level", "", "Mapping for Envoy log level by component.")
+	sa                     = flag.String("run_as_service_account", "", "If provided, use this account when fetching the config from GCS.")
 )
 
 func main() {
@@ -86,6 +90,11 @@ func main() {
 		envoyBin = *envoyBinaryPath
 	}
 
+	runAsSA := os.Getenv("RUN_AS_SERVICE_ACCOUNT")
+	if runAsSA == "" {
+		runAsSA = *sa
+	}
+
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
@@ -95,6 +104,7 @@ func main() {
 		FetchGCSObjectInitialInterval: fetchGCSObjectInitialInterval,
 		FetchGCSObjectTimeout:         fetchGCSObjectTimeout,
 		WriteFilePath:                 envoyConfigPath,
+		ServiceAccount:                runAsSA,
 	}); err != nil {
 		glog.Fatalf("Failed to fetch config: %v", err)
 	}
