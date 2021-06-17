@@ -15,17 +15,14 @@
 package gcsrunner
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"testing"
 	"time"
 
+	"github.com/cenkalti/backoff"
 	"github.com/google/go-cmp/cmp"
-	"google.golang.org/api/option"
-
-	google_oauth "golang.org/x/oauth2/google"
 )
 
 const (
@@ -33,45 +30,75 @@ const (
 	fetchTimeout         = time.Second
 )
 
-var ()
-
-type mockObjectReader struct {
-	newReaderReturns       io.Reader
-	newReaderErr           error
-	newReaderCallCount     int
+type mockReader struct {
+	readerReturns          io.Reader
+	readerErr              error
+	readerCallCount        int
 	passAfterMultipleCalls bool
 }
 
-func (m *mockObjectReader) readObject(ctx context.Context, _ getObjectRequest) (io.Reader, error) {
+func (m *mockReader) Reader(ctx context.Context, _, _ string) (io.Reader, error) {
 	if deadline, ok := ctx.Deadline(); ok {
 		if time.Now().After(deadline) {
 			return nil, context.DeadlineExceeded
 		}
 	}
-	m.newReaderCallCount++
-	if m.passAfterMultipleCalls && m.newReaderCallCount > 2 {
-		return m.newReaderReturns, nil
+	m.readerCallCount++
+	if m.passAfterMultipleCalls && m.readerCallCount > 2 {
+		return m.readerReturns, nil
 	}
-	return m.newReaderReturns, m.newReaderErr
+	return m.readerReturns, m.readerErr
 }
 
 type mockFile struct {
 	closeCalled bool
+	readErr     error
 	writeErr    error
-	gotBytes    []byte
+	content     []byte
 }
 
 func (m *mockFile) Close() error {
 	m.closeCalled = true
 	return nil
 }
+
+func (m *mockFile) Read(b []byte) (int, error) {
+	if m.readErr != nil {
+		return 0, m.readErr
+	}
+	return copy(b, m.content), io.EOF
+}
+
 func (m *mockFile) Write(b []byte) (int, error) {
-	m.gotBytes = b
-	return len(b), m.writeErr
+	if m.writeErr != nil {
+		return 0, m.writeErr
+	}
+	m.content = b
+	return len(b), nil
+}
+
+func readerFactory(r *mockReader, err error) func(context.Context, string) (gcsReader, error) {
+	return func(context.Context, string) (gcsReader, error) {
+		return r, err
+	}
+}
+
+func defaultCredsReaderFactory(r *mockReader, err error) func(context.Context) (gcsReader, error) {
+	return func(context.Context) (gcsReader, error) {
+		return r, err
+	}
 }
 
 func TestReadBytes(t *testing.T) {
-	opts := FetchConfigOptions{
+	optsNoSA := FetchConfigOptions{
+		BucketName:                    "bucket",
+		ConfigFileName:                "file",
+		WriteFilePath:                 "path/file",
+		FetchGCSObjectInitialInterval: fetchInitialInterval,
+		FetchGCSObjectTimeout:         fetchTimeout,
+	}
+	optsSA := FetchConfigOptions{
+		ServiceAccount:                "some-service@account",
 		BucketName:                    "bucket",
 		ConfigFileName:                "file",
 		WriteFilePath:                 "path/file",
@@ -79,83 +106,102 @@ func TestReadBytes(t *testing.T) {
 		FetchGCSObjectTimeout:         fetchTimeout,
 	}
 	output := []byte("some output")
-	goodFindDefaultCredentials := func(context.Context, ...string) (*google_oauth.Credentials, error) {
-		return nil, nil
-	}
-	badFindDefaultCredentials := func(context.Context, ...string) (*google_oauth.Credentials, error) {
-		return nil, fmt.Errorf("default creds failure")
-	}
+	testError := fmt.Errorf("test error")
 	testCases := []struct {
-		name                    string
-		wantErr                 bool
-		wantMultipleReaderCalls bool
-		passMultipleReaderCalls bool
-		wantBytes               []byte
-		credsFunc               func(context.Context, ...string) (*google_oauth.Credentials, error)
-		newClientErr            error
-		newReaderReturns        io.Reader
-		newReaderErr            error
+		name                  string
+		wantErr               error
+		wantTimeoutErr        bool
+		opts                  FetchConfigOptions
+		reader                *mockReader
+		readerErr             error
+		defaultCredsReader    *mockReader
+		defaultCredsReaderErr error
 	}{
 		{
-			name:      "error getting default creds",
-			wantErr:   true,
-			credsFunc: badFindDefaultCredentials,
+			name: "success",
+			opts: optsSA,
+			reader: &mockReader{
+				readerReturns: &mockFile{content: output},
+			},
+			defaultCredsReaderErr: fmt.Errorf("expected defaultCredsReader not to be called"),
 		},
 		{
-			name:         "error creating client with creds",
-			wantErr:      true,
-			newClientErr: fmt.Errorf("client error"),
-			credsFunc:    goodFindDefaultCredentials,
+			name: "success with retries",
+			opts: optsSA,
+			reader: &mockReader{
+				readerReturns:          &mockFile{content: output},
+				passAfterMultipleCalls: true,
+			},
+			defaultCredsReaderErr: fmt.Errorf("expected defaultCredsReader not to be called"),
 		},
 		{
-			name:                    "timeout retrying NewReader()",
-			wantErr:                 true,
-			wantMultipleReaderCalls: true,
-			newReaderErr:            fmt.Errorf("reader error"),
-			credsFunc:               goodFindDefaultCredentials,
+			name:      "success with defaultCreds",
+			opts:      optsNoSA,
+			readerErr: fmt.Errorf("expected reader not to be called"),
+			defaultCredsReader: &mockReader{
+				readerReturns: &mockFile{content: output},
+			},
 		},
 		{
-			name:             "success",
-			wantBytes:        output,
-			newReaderReturns: bytes.NewReader(output),
-			credsFunc:        goodFindDefaultCredentials,
+			name:                  "error creating client",
+			opts:                  optsSA,
+			wantErr:               testError,
+			readerErr:             testError,
+			defaultCredsReaderErr: fmt.Errorf("expected defaultCredsReader not to be called"),
 		},
 		{
-			name:                    "success with retries",
-			wantBytes:               output,
-			wantMultipleReaderCalls: true,
-			passMultipleReaderCalls: true,
-			newReaderReturns:        bytes.NewReader(output),
-			newReaderErr:            fmt.Errorf("temporary reader error should resolve"),
-			credsFunc:               goodFindDefaultCredentials,
+			name:                  "error creating client with creds",
+			opts:                  optsNoSA,
+			wantErr:               testError,
+			readerErr:             fmt.Errorf("expected reader not to be called"),
+			defaultCredsReaderErr: testError,
+		},
+		{
+			name:           "timeout retrying newGCS",
+			wantTimeoutErr: true,
+			opts:           optsSA,
+			reader: &mockReader{
+				readerErr: fmt.Errorf("permanent error"),
+			},
+			defaultCredsReaderErr: fmt.Errorf("expected defaultCredsReader not to be called"),
+		},
+		{
+			name:           "timeout retrying ReadAll()",
+			wantTimeoutErr: true,
+			opts:           optsSA,
+			reader: &mockReader{
+				readerReturns: &mockFile{readErr: fmt.Errorf("permmanent error")},
+			},
+			defaultCredsReaderErr: fmt.Errorf("expected defaultCredsReader not to be called"),
 		},
 	}
 
 	for _, tc := range testCases {
-		findDefaultCredentials = tc.credsFunc
-		m := &mockObjectReader{
-			newReaderReturns:       tc.newReaderReturns,
-			newReaderErr:           tc.newReaderErr,
-			passAfterMultipleCalls: tc.passMultipleReaderCalls,
-		}
-		newStorageObjectReader = func(ctx context.Context, opts ...option.ClientOption) (storageObjectReader, error) {
-			if tc.newClientErr != nil {
-				return nil, tc.newClientErr
+		t.Run(tc.name, func(t *testing.T) {
+			oldNewGCS := newGCS
+			oldNewDefaultCredsGCS := newDefaultCredsGCS
+			newGCS = readerFactory(tc.reader, tc.readerErr)
+			newDefaultCredsGCS = defaultCredsReaderFactory(tc.defaultCredsReader, tc.defaultCredsReaderErr)
+			defer func() {
+				newGCS = oldNewGCS
+				newDefaultCredsGCS = oldNewDefaultCredsGCS
+			}()
+			b, err := readBytes(tc.opts)
+			if err != tc.wantErr {
+				if tc.wantTimeoutErr {
+					if _, ok := err.(*backoff.PermanentError); tc.wantTimeoutErr == ok {
+						t.Errorf("readBytes() wanted %v=PermanentError to be %v", err, tc.wantTimeoutErr)
+					}
+				} else {
+					t.Errorf("readBytes() = %v, wanted %v", err, tc.wantErr)
+				}
 			}
-			return m, nil
-		}
-		b, err := readBytes(opts)
-		if err != nil != tc.wantErr {
-			t.Errorf("readBytes() wanted %v!=nil to be %v", err, tc.wantErr)
-		}
-		if m.newReaderCallCount > 1 != tc.wantMultipleReaderCalls {
-			t.Errorf("NewReader() wanted %d>1 to be %v", m.newReaderCallCount, tc.wantMultipleReaderCalls)
-		}
-		if !tc.wantErr {
-			if diff := bytes.Compare(b, tc.wantBytes); diff != 0 {
-				t.Errorf("readBytes() = %s, _, want %s", string(b), string(tc.wantBytes))
+			if tc.wantErr == nil && !tc.wantTimeoutErr {
+				if diff := cmp.Diff(string(output), string(b)); diff != "" {
+					t.Errorf("readBytes() got unexpected value (-want/+got): %s", diff)
+				}
 			}
-		}
+		})
 	}
 }
 
@@ -200,23 +246,30 @@ func TestWriteFile(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		osCreate = func(got string) (file, error) {
-			if got != tc.createWant {
-				t.Errorf("osCreate called with %s, want %s", got, tc.createWant)
+		t.Run(tc.name, func(t *testing.T) {
+			oldOSCreate := osCreate
+			osCreate = func(got string) (io.WriteCloser, error) {
+				if got != tc.createWant {
+					t.Errorf("osCreate called with %s, want %s", got, tc.createWant)
+				}
+				return tc.createReturns, tc.createErr
 			}
-			return tc.createReturns, tc.createErr
-		}
-		err := writeFile(tc.input, opts)
-		if err != nil != tc.wantErr {
-			t.Errorf("writeFile() wanted %v!=nil to be %v", err, tc.wantErr)
-		}
-		if !tc.createReturns.closeCalled {
-			t.Errorf("Created file was not closed")
-		}
-		if !tc.wantErr {
-			if diff := cmp.Diff(string(tc.createReturns.gotBytes), tc.wantOutput); diff != "" {
-				t.Errorf("WriteString() unexpected output (-got,+want): %s", diff)
+			defer func() {
+				osCreate = oldOSCreate
+			}()
+			err := writeFile(tc.input, opts)
+			if err != nil != tc.wantErr {
+				t.Errorf("writeFile() wanted %v!=nil to be %v", err, tc.wantErr)
+
 			}
-		}
+			if !tc.createReturns.closeCalled {
+				t.Errorf("Created file was not closed")
+			}
+			if !tc.wantErr {
+				if diff := cmp.Diff(string(tc.createReturns.content), tc.wantOutput); diff != "" {
+					t.Errorf("WriteString() unexpected output (-got,+want): %s", diff)
+				}
+			}
+		})
 	}
 }
