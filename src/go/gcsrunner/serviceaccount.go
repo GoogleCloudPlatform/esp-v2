@@ -17,7 +17,6 @@ import (
 // staticTokenSource implements oath2.TokenSource
 type staticTokenSource struct {
 	accessToken string    `json:"access_token"`
-	tokenType   string    `json:"token_type,omitempty"`
 	expiry      time.Time `json:"expiry,omitempty"`
 }
 
@@ -60,12 +59,19 @@ func TokenSource(ctx context.Context, sa string) (oauth2.TokenSource, error) {
 	}
 	token.SetAuthHeader(req)
 
-	resp, err := http.DefaultClient.Do(req)
+	client := http.Client{
+		Timeout: time.Second * 5,
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed iamcredentials request: %v", resp.Status)
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed iamcredentials request (could not read body): %v", resp.Status)
+		}
+		return nil, fmt.Errorf("failed iamcredentials request: %v\n%v", resp.Status, string(respBody))
 	}
 
 	respBody, err := ioutil.ReadAll(resp.Body)

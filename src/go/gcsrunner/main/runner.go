@@ -55,7 +55,7 @@ var (
 	envoyLogPath = flag.String("envoy_log_path", "",
 		"Envoy application logging path. Default is to write to stderr.")
 	envoyComponentLogLevel = flag.String("envoy_component_log_level", "", "Mapping for Envoy log level by component.")
-	sa                     = flag.String("run_as_service_account", "", "If provided, use this account when fetching the config from GCS.")
+	sa                     = flag.String("run_as_service_account", "", "If provided, use this account when fetching the config from GCS. If not provided, the container's default credentials are used.")
 )
 
 func main() {

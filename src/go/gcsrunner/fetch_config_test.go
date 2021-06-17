@@ -157,7 +157,7 @@ func TestReadBytes(t *testing.T) {
 			defaultCredsReaderErr: testError,
 		},
 		{
-			name:           "timeout retrying newGSC",
+			name:           "timeout retrying newGCS",
 			wantTimeoutErr: true,
 			opts:           optsSA,
 			reader: &mockReader{

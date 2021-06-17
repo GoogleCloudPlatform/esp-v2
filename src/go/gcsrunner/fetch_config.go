@@ -64,31 +64,28 @@ type FetchConfigOptions struct {
 	FetchGCSObjectTimeout         time.Duration
 }
 
-var (
-	// can be overwritten in unit tests
-	newGCSClient = func(ctx context.Context, sa string) (gcsReader, error) {
-		ts, err := TokenSource(ctx, sa)
-		if err != nil {
-			return nil, err
-		}
-		client, err := storage.NewClient(ctx, option.WithTokenSource(ts))
-		if err != nil {
-			return nil, err
-		}
-		return &gcsClient{client}, nil
+func newGCSClient(ctx context.Context, sa string) (gcsReader, error) {
+	ts, err := TokenSource(ctx, sa)
+	if err != nil {
+		return nil, err
 	}
-	newDefaultCredsGCSClient = func(ctx context.Context) (gcsReader, error) {
-		creds, err := google.FindDefaultCredentials(ctx)
-		if err != nil {
-			return nil, err
-		}
-		c, err := storage.NewClient(ctx, option.WithCredentials(creds))
-		if err != nil {
-			return nil, err
-		}
-		return &gcsClient{c}, nil
+	client, err := storage.NewClient(ctx, option.WithTokenSource(ts))
+	if err != nil {
+		return nil, err
 	}
-)
+	return &gcsClient{client}, nil
+}
+func newDefaultCredsGCSClient(ctx context.Context) (gcsReader, error) {
+	creds, err := google.FindDefaultCredentials(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c, err := storage.NewClient(ctx, option.WithCredentials(creds))
+	if err != nil {
+		return nil, err
+	}
+	return &gcsClient{c}, nil
+}
 
 // FetchConfigFromGCS handles fetching a config from GCS, applying any transformation,
 // and writing it to file.
