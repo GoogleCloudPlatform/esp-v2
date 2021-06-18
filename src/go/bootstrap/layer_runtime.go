@@ -26,13 +26,19 @@ func CreateLayeredRuntime() *bootstrappb.LayeredRuntime {
 		Layers: []*bootstrappb.RuntimeLayer{
 			//
 			{
-				Name: "deprecation",
+				Name: "static-runtime",
 				LayerSpecifier: &bootstrappb.RuntimeLayer_StaticLayer{
 					StaticLayer: &structpb.Struct{
 						Fields: map[string]*structpb.Value{
 							"re2.max_program_size.error_level": {
 								Kind: &structpb.Value_NumberValue{
 									NumberValue: 1000,
+								},
+							},
+							// b/191411628: disable envoy preserve_downstream_scheme
+							"envoy.reloadable_features.preserve_downstream_scheme": {
+								Kind: &structpb.Value_BoolValue{
+									BoolValue: false,
 								},
 							},
 						},
