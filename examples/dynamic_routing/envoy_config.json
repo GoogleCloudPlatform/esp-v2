@@ -3,9 +3,9 @@
   "layeredRuntime": {
     "layers": [
       {
-        "name": "deprecation",
+        "name": "static-runtime",
         "staticLayer": {
-          "re2.max_program_size.error_level": 1000
+          "envoy.reloadable_features.preserve_downstream_scheme": false
         }
       }
     ]

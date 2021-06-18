@@ -68,9 +68,9 @@ func TestCreateBootstrapConfig(t *testing.T) {
    "layeredRuntime":{
       "layers":[
          {
-            "name":"deprecation",
-            "staticLayer":{
-               "re2.max_program_size.error_level":1000
+            "name": "static-runtime",
+            "staticLayer": {
+              "envoy.reloadable_features.preserve_downstream_scheme": false
             }
          }
       ]
@@ -159,9 +159,9 @@ func TestCreateBootstrapConfig(t *testing.T) {
    "layeredRuntime":{
       "layers":[
          {
-            "name":"deprecation",
-            "staticLayer":{
-               "re2.max_program_size.error_level":1000
+            "name": "static-runtime",
+            "staticLayer": {
+              "envoy.reloadable_features.preserve_downstream_scheme": false
             }
          }
       ]
