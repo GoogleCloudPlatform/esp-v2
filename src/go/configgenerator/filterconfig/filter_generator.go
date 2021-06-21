@@ -24,7 +24,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/common"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"

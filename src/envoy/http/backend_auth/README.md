@@ -9,7 +9,7 @@ filter config, the request will pass through unmodified.
 
 ## Configuration
 
-View the [backend auth configuration proto](../../../../api/envoy/v9/http/backend_auth/config.proto)
+View the [backend auth configuration proto](../../../../api/envoy/v10/http/backend_auth/config.proto)
 for inline documentation.
 
 ## Statistics

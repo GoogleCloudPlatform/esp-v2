@@ -61,7 +61,7 @@ class BackendAuthFilterTest : public ::testing::Test {
   }
 
   void setPerRouteJwtAudience(const std::string& jwt_audience) {
-    ::espv2::api::envoy::v9::http::backend_auth::PerRouteFilterConfig
+    ::espv2::api::envoy::v10::http::backend_auth::PerRouteFilterConfig
         per_route_cfg;
     per_route_cfg.set_jwt_audience(jwt_audience);
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);

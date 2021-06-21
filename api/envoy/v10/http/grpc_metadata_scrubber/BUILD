@@ -9,17 +9,10 @@ api_cc_py_proto_library(
         "config.proto",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "//api/envoy/v9/http/common:base_proto",
-    ],
 )
 
 go_proto_library(
     name = "config_go_proto",
-    importpath = "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth",
+    importpath = "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/grpc_metadata_scrubber",
     proto = ":config_proto",
-    deps = [
-        "//api/envoy/v9/http/common:base_go_proto",
-        "@com_envoyproxy_protoc_gen_validate//validate:go_default_library",
-    ],
 )

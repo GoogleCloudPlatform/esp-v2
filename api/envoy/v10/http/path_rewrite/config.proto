@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.v9.http.path_rewrite;
+package espv2.api.envoy.v10.http.path_rewrite;
 
 import "validate/validate.proto";
 

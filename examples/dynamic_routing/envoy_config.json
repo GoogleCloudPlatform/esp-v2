@@ -207,7 +207,7 @@
                     {
                       "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.FilterConfig",
                         "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
@@ -281,11 +281,11 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "ESPv2"
                               },
                               "com.google.espv2.filters.http.path_rewrite": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.PerRouteFilterConfig",
                                 "pathPrefix": "/shelves"
                               }
                             }
@@ -315,11 +315,11 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "ESPv2"
                               },
                               "com.google.espv2.filters.http.path_rewrite": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.PerRouteFilterConfig",
                                 "pathPrefix": "/shelves"
                               }
                             }
@@ -349,7 +349,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.path_rewrite": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.PerRouteFilterConfig",
                                 "constantPath": {
                                   "path": "/shelves"
                                 }
@@ -381,7 +381,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.path_rewrite": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v9.http.path_rewrite.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.PerRouteFilterConfig",
                                 "constantPath": {
                                   "path": "/shelves"
                                 }

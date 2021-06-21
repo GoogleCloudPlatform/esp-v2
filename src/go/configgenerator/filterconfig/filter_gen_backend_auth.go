@@ -25,9 +25,9 @@ import (
 	anypb "github.com/golang/protobuf/ptypes/any"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	aupb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
-	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/backend_auth"
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
+	aupb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/backend_auth"
+	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/backend_auth"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/common"
 )
 
 var baPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
