@@ -28,7 +28,7 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
-using ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior;
+using ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior;
 
 class ConfigParserImplTest : public ::testing::Test {
  protected:
@@ -38,7 +38,7 @@ class ConfigParserImplTest : public ::testing::Test {
     config_parser_ = std::make_unique<FilterConfigParserImpl>(
         proto_config_, mock_factory_context_, mock_token_subscriber_factory_);
   }
-  ::espv2::api::envoy::v9::http::backend_auth::FilterConfig proto_config_;
+  ::espv2::api::envoy::v10::http::backend_auth::FilterConfig proto_config_;
   testing::NiceMock<Envoy::Server::Configuration::MockFactoryContext>
       mock_factory_context_;
   testing::NiceMock<token::test::MockTokenSubscriberFactory>

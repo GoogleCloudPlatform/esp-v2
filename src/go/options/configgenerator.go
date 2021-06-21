@@ -20,7 +20,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/common"
 )
 
 // ConfigGeneratorOptions describes the possible overrides for the service config to envoy config translation.

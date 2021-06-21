@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v9/http/common/base.pb.h"
+#include "api/envoy/v10/http/common/base.pb.h"
 #include "envoy/common/time.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/http/message.h"
@@ -45,7 +45,7 @@ class TokenSubscriber
                   const TokenType& token_type, const std::string& token_cluster,
                   const std::string& token_url,
                   std::chrono::seconds fetch_timeout,
-                  ::espv2::api::envoy::v9::http::common::DependencyErrorBehavior
+                  ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior
                       error_behavior,
                   UpdateTokenCallback callback, TokenInfoPtr token_info);
   void init();
@@ -73,7 +73,7 @@ class TokenSubscriber
   const std::string token_cluster_;
   const std::string token_url_;
   const std::chrono::seconds fetch_timeout_;
-  const api::envoy::v9::http::common::DependencyErrorBehavior error_behavior_;
+  const api::envoy::v10::http::common::DependencyErrorBehavior error_behavior_;
   const UpdateTokenCallback callback_;
   TokenInfoPtr token_info_;
 

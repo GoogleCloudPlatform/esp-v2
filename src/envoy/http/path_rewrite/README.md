@@ -9,7 +9,7 @@ The path can be modifed in two ways
 
 This filter will be funtional independently.
 
-View the [path_rewrite configuration proto](../../../../api/envoy/v9/http/path_rewrite/config.proto)
+View the [path_rewrite configuration proto](../../../../api/envoy/v10/http/path_rewrite/config.proto)
 for inline documentation.
 
 ## Statistics

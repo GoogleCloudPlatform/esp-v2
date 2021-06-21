@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
 
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/service_control"
 )
 
 const (

@@ -20,8 +20,8 @@ import (
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/common"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v9/http/service_control"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/common"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"

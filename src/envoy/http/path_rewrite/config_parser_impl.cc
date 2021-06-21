@@ -30,7 +30,7 @@ constexpr const char kHttpMethod[] = "GET";
 }  // namespace
 
 ConfigParserImpl::ConfigParserImpl(
-    const ::espv2::api::envoy::v9::http::path_rewrite::PerRouteFilterConfig&
+    const ::espv2::api::envoy::v10::http::path_rewrite::PerRouteFilterConfig&
         config)
     : config_(config) {
   if (config_.has_constant_path()) {
@@ -40,7 +40,7 @@ ConfigParserImpl::ConfigParserImpl(
                 path_cfg.url_template());
 
       ::espv2::api_proxy::path_matcher::PathMatcherBuilder<
-          const ::espv2::api::envoy::v9::http::path_rewrite::
+          const ::espv2::api::envoy::v10::http::path_rewrite::
               PerRouteFilterConfig*>
           pmb;
       pmb.Register(kHttpMethod, path_cfg.url_template(), Envoy::EMPTY_STRING,
