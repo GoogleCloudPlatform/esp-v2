@@ -50,7 +50,8 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 	return []*listenerpb.Listener{listener}, nil
 }
 
-func addPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *filterconfig.FilterGenerator) error {
+// AddPerRouteConfigGenToMethods adds the filterGenerator functions to all the methods in place.
+func AddPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *filterconfig.FilterGenerator) error {
 	if filterGen.PerRouteConfigGenFunc == nil {
 		return fmt.Errorf("the PerRouteConfigGenFunc of filter %s is empty", filterGen.FilterName)
 	}
@@ -78,7 +79,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 			httpFilters = append(httpFilters, filter)
 
 			if len(perRouteConfigRequiredMethods) > 0 {
-				if err := addPerRouteConfigGenToMethods(perRouteConfigRequiredMethods, filterGenerator); err != nil {
+				if err := AddPerRouteConfigGenToMethods(perRouteConfigRequiredMethods, filterGenerator); err != nil {
 					return nil, err
 				}
 			}
@@ -86,7 +87,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 		}
 	}
 
-	route, err := MakeRouteConfig(serviceInfo)
+	route, err := makeRouteConfig(serviceInfo)
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}

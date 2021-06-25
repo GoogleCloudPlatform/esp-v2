@@ -38,7 +38,7 @@ const (
 	virtualHostName = "backend"
 )
 
-func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfiguration, error) {
+func makeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfiguration, error) {
 	var virtualHosts []*routepb.VirtualHost
 	host := routepb.VirtualHost{
 		Name:    virtualHostName,
@@ -54,7 +54,7 @@ func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	//
 	//
 	// // Per-selector routes for both local and remote backends.
-	backendRoutes, methodNotAllowedRoutes, err := makeRouteTable(serviceInfo)
+	backendRoutes, methodNotAllowedRoutes, err := MakeRouteTable(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +305,8 @@ func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, h
 	return perFilterConfig, nil
 }
 
-func makeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*routepb.Route, error) {
+// MakeRouteTable generates the backendRoute and denylistRoute from serviceInfo
+func MakeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
 	var methodNotAllowedRoutes []*routepb.Route
 	httpPatternMethods, err := getSortMethodsByHttpPattern(serviceInfo)

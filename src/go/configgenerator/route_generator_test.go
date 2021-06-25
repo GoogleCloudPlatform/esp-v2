@@ -2519,7 +2519,7 @@ func TestMakeRouteConfig(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo)
 			if tc.wantedError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 					t.Fatalf("expected err: %v, got: %v", tc.wantedError, err)
@@ -2536,7 +2536,7 @@ func TestMakeRouteConfig(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
-				t.Errorf("MakeRouteConfig failed, \n %v", err)
+				t.Errorf("makeRouteConfig failed, \n %v", err)
 			}
 		})
 	}
@@ -3335,7 +3335,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -3347,7 +3347,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
-				t.Errorf("Test(%s): MakeRouteConfig failed, \n %v", tc.desc, err)
+				t.Errorf("Test(%s): makeRouteConfig failed, \n %v", tc.desc, err)
 			}
 		})
 	}
@@ -3466,7 +3466,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		}
 		opts.CorsAllowCredentials = tc.allowCredentials
 
-		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
+		gotRoute, err := makeRouteConfig(&configinfo.ServiceInfo{
 			Name:    "test-api",
 			Options: opts,
 		})
@@ -3597,7 +3597,7 @@ func TestHeadersToAdd(t *testing.T) {
 		opts.AddResponseHeaders = tc.addResponseHeaders
 		opts.AppendResponseHeaders = tc.appendResponseHeaders
 
-		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
+		gotRoute, err := makeRouteConfig(&configinfo.ServiceInfo{
 			Name:    "test-api",
 			Options: opts,
 		})
@@ -3608,7 +3608,7 @@ func TestHeadersToAdd(t *testing.T) {
 			continue
 		}
 		if err != nil {
-			t.Fatalf("Test (%s): MakeRouteConfig got error: %v", tc.desc, err)
+			t.Fatalf("Test (%s): makeRouteConfig got error: %v", tc.desc, err)
 		}
 
 		if len(tc.wantedRequestHeaders) != len(gotRoute.RequestHeadersToAdd) {
