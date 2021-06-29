@@ -403,6 +403,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) 
 	}
 
 	return &routepb.Route{
+		Name:  method.Operation(),
 		Match: routeMatcher,
 		Action: &routepb.Route_Route{
 			Route: &routepb.RouteAction{

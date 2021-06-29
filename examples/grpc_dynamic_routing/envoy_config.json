@@ -910,6 +910,7 @@
                               ],
                               "path": "/echo"
                             },
+                            "name": "test.grpc.Test.Echo",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -944,6 +945,7 @@
                               ],
                               "path": "/echo/"
                             },
+                            "name": "test.grpc.Test.Echo",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -978,6 +980,7 @@
                               ],
                               "path": "/echoreport"
                             },
+                            "name": "test.grpc.Test.EchoReport",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1012,6 +1015,7 @@
                               ],
                               "path": "/echoreport/"
                             },
+                            "name": "test.grpc.Test.EchoReport",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1046,6 +1050,7 @@
                               ],
                               "path": "/echostream"
                             },
+                            "name": "test.grpc.Test.EchoStream",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1084,6 +1089,7 @@
                               ],
                               "path": "/echostream/"
                             },
+                            "name": "test.grpc.Test.EchoStream",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1122,6 +1128,7 @@
                               ],
                               "path": "/test.grpc.Test/Cork"
                             },
+                            "name": "test.grpc.Test.Cork",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1156,6 +1163,7 @@
                               ],
                               "path": "/test.grpc.Test/Cork/"
                             },
+                            "name": "test.grpc.Test.Cork",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1190,6 +1198,7 @@
                               ],
                               "path": "/test.grpc.Test/Echo"
                             },
+                            "name": "test.grpc.Test.Echo",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1224,6 +1233,7 @@
                               ],
                               "path": "/test.grpc.Test/Echo/"
                             },
+                            "name": "test.grpc.Test.Echo",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1258,6 +1268,7 @@
                               ],
                               "path": "/test.grpc.Test/EchoReport"
                             },
+                            "name": "test.grpc.Test.EchoReport",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1292,6 +1303,7 @@
                               ],
                               "path": "/test.grpc.Test/EchoReport/"
                             },
+                            "name": "test.grpc.Test.EchoReport",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1326,6 +1338,7 @@
                               ],
                               "path": "/test.grpc.Test/EchoStream"
                             },
+                            "name": "test.grpc.Test.EchoStream",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",
@@ -1364,6 +1377,7 @@
                               ],
                               "path": "/test.grpc.Test/EchoStream/"
                             },
+                            "name": "test.grpc.Test.EchoStream",
                             "route": {
                               "cluster": "backend-cluster-grpc-echo-oxouww7xzq-uc.a.run.app:443",
                               "hostRewriteLiteral": "grpc-echo-oxouww7xzq-uc.a.run.app",

@@ -335,6 +335,7 @@
                               ],
                               "path": "/shelves"
                             },
+                            "name": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves",
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
                               "idleTimeout": "300s",
@@ -364,6 +365,7 @@
                               ],
                               "path": "/shelves/"
                             },
+                            "name": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.ListShelves",
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
                               "idleTimeout": "300s",
@@ -393,6 +395,7 @@
                               ],
                               "path": "/shelves"
                             },
+                            "name": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
                               "idleTimeout": "300s",
@@ -422,6 +425,7 @@
                               ],
                               "path": "/shelves/"
                             },
+                            "name": "1.examples_auth_endpoints_cloudesf_testing_cloud_goog.CreateShelf",
                             "route": {
                               "cluster": "backend-cluster-examples-auth.endpoints.cloudesf-testing.cloud.goog_local",
                               "idleTimeout": "300s",

@@ -65,13 +65,16 @@ func AddPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *filterco
 
 }
 
-// MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.FilterGenerator) (*listenerpb.Listener, error) {
+// GetFilterConfigAndAddPerRouteConfigGen does two things
+//   * Return all http filter configs in a list
+//   * In place add the perRouteConfigGen function to all methods defined in serviceInfo
+func GetFilterConfigAndAddPerRouteConfigGen(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.FilterGenerator) ([]*hcmpb.HttpFilter, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
+
 	for _, filterGenerator := range filterGenerators {
 		filter, perRouteConfigRequiredMethods, err := filterGenerator.FilterGenFunc(serviceInfo)
 		if err != nil {
-			return nil, fmt.Errorf("fail to create config for the filter %s: %v", filterGenerator.FilterName, err)
+			return nil, fmt.Errorf("fail to create config for the filter %q: %v", filterGenerator.FilterName, err)
 		}
 		if filter != nil {
 			jsonStr, _ := util.ProtoToJson(filter)
@@ -83,8 +86,16 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 					return nil, err
 				}
 			}
-
 		}
+	}
+	return httpFilters, nil
+}
+
+// MakeListener provides a dynamic listener for Envoy
+func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.FilterGenerator) (*listenerpb.Listener, error) {
+	httpFilters, err := GetFilterConfigAndAddPerRouteConfigGen(serviceInfo, filterGenerators)
+	if err != nil {
+		return nil, err
 	}
 
 	route, err := makeRouteConfig(serviceInfo)

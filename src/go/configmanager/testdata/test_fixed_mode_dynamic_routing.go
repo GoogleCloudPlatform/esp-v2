@@ -312,6 +312,7 @@ var (
                         ],
                         "path": "/echo"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
                       "route": {
                         "cluster": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -335,6 +336,7 @@ var (
                         ],
                         "path": "/echo/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
                       "route": {
                         "cluster": "backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -358,6 +360,7 @@ var (
                         ],
                         "path": "/hello"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
                       "route": {
                         "cluster": "backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-central1-cloud-esf.cloudfunctions.net",
@@ -392,6 +395,7 @@ var (
                         ],
                         "path": "/hello/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Hello",
                       "route": {
                         "cluster": "backend-cluster-us-central1-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-central1-cloud-esf.cloudfunctions.net",
@@ -426,6 +430,7 @@ var (
                         ],
                         "path": "/pet"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
@@ -460,6 +465,7 @@ var (
                         ],
                         "path": "/pet/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_AddPet",
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
@@ -497,6 +503,7 @@ var (
                           "regex": "^/pet/[^\\/]+\\/?$"
                         }
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:8008",
                         "hostRewriteLiteral": "pets.appspot.com",
@@ -531,6 +538,7 @@ var (
                         ],
                         "path": "/pets"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
@@ -565,6 +573,7 @@ var (
                         ],
                         "path": "/pets/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_ListPets",
                       "route": {
                         "cluster": "backend-cluster-pets.appspot.com:443",
                         "hostRewriteLiteral": "pets.appspot.com",
@@ -599,6 +608,7 @@ var (
                         ],
                         "path": "/search"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
                       "route": {
                         "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-west2-cloud-esf.cloudfunctions.net",
@@ -635,6 +645,7 @@ var (
                         ],
                         "path": "/search/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_Search",
                       "route": {
                         "cluster": "backend-cluster-us-west2-cloud-esf.cloudfunctions.net:443",
                         "hostRewriteLiteral": "us-west2-cloud-esf.cloudfunctions.net",

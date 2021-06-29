@@ -144,6 +144,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "%s",
                         "idleTimeout": "300s",
@@ -167,6 +168,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "%s",
                         "idleTimeout": "300s",
@@ -388,6 +390,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "%s",
                         "idleTimeout": "300s",
@@ -417,6 +420,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "%s",
                         "idleTimeout": "300s",
@@ -662,6 +666,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -691,6 +696,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf/"
                       },
+                     	"name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -720,6 +726,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/ListShelves"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -749,6 +756,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/ListShelves/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -778,6 +786,7 @@ var (
                         ],
                         "path": "/v1/shelves"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -807,6 +816,7 @@ var (
                         ],
                         "path": "/v1/shelves/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -839,6 +849,7 @@ var (
                           "regex": "^/v1/shelves/[^\\/]+\\/?$"
                         }
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1196,6 +1207,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/DeleteBook"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.DeleteBook",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1219,6 +1231,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/DeleteBook/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.DeleteBook",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1242,6 +1255,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/GetBook"
                       },
+                     "name": "endpoints.examples.bookstore.Bookstore.GetBook",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1271,6 +1285,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/GetBook/"
                       },
+                     "name": "endpoints.examples.bookstore.Bookstore.GetBook",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1303,6 +1318,7 @@ var (
                           "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.DeleteBook",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1329,6 +1345,7 @@ var (
                           "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       },
+                     "name": "endpoints.examples.bookstore.Bookstore.GetBook",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1634,6 +1651,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1663,6 +1681,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/CreateShelf/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1692,6 +1711,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/ListShelves"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1721,6 +1741,7 @@ var (
                         ],
                         "path": "/endpoints.examples.bookstore.Bookstore/ListShelves/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1750,6 +1771,7 @@ var (
                         ],
                         "path": "/v1/shelves"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1779,6 +1801,7 @@ var (
                         ],
                         "path": "/v1/shelves/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.ListShelves",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1808,6 +1831,7 @@ var (
                         ],
                         "path": "/v1/shelves"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -1837,6 +1861,7 @@ var (
                         ],
                         "path": "/v1/shelves/"
                       },
+                      "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2135,6 +2160,7 @@ var (
                         ],
                         "path": "/auth/info/googlejwt"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2164,6 +2190,7 @@ var (
                         ],
                         "path": "/auth/info/googlejwt/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_Auth_Jwt",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2193,6 +2220,7 @@ var (
                         ],
                         "path": "/echo"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2216,6 +2244,7 @@ var (
                         ],
                         "path": "/echo/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2457,6 +2486,7 @@ var (
                         ],
                         "path": "/simplegetcors"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2486,6 +2516,7 @@ var (
                         ],
                         "path": "/simplegetcors/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2515,6 +2546,7 @@ var (
                         ],
                         "path": "/simplegetcors"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_Simplegetcors",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
@@ -2544,6 +2576,7 @@ var (
                         ],
                         "path": "/simplegetcors/"
                       },
+                      "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.ESPv2_Autogenerated_CORS_Simplegetcors",
                       "route": {
                         "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
                         "idleTimeout": "300s",
