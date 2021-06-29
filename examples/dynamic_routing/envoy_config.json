@@ -269,6 +269,7 @@
                               ],
                               "path": "/shelves"
                             },
+                            "name": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
@@ -303,6 +304,7 @@
                               ],
                               "path": "/shelves/"
                             },
+                            "name": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.ListShelves",
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-abc123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-abc123456-uc.a.run.app",
@@ -337,6 +339,7 @@
                               ],
                               "path": "/shelves"
                             },
+                            "name": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
@@ -369,6 +372,7 @@
                               ],
                               "path": "/shelves/"
                             },
+                            "name": "1.examples_dynamic_routing_wd6ufmzfya_uc_a_run_app.CreateShelf",
                             "route": {
                               "cluster": "backend-cluster-http-bookstore-edf123456-uc.a.run.app:443",
                               "hostRewriteLiteral": "http-bookstore-edf123456-uc.a.run.app",
