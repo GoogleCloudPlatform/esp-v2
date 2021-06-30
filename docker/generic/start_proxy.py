@@ -605,6 +605,15 @@ environment variable or by passing "-k" flag to this script.
         x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).
         ''')
     parser.add_argument(
+        '--backend_retry_on_status_codes',
+        default=None,
+        help='''
+        The list of backend http status codes will be retried, in
+        addition to the status codes enabled for retry through other retry
+        policies set in `--backend_retry_ons`. 
+        The format is a comma-delimited String, like "501, 503".
+        ''')
+    parser.add_argument(
         '--backend_retry_num',
         default=None,
         help='''
@@ -1154,7 +1163,8 @@ def gen_proxy_config(args):
 
     if args.backend_retry_ons:
         proxy_conf.extend(["--backend_retry_ons", args.backend_retry_ons])
-
+    if args.backend_retry_on_status_codes:
+        proxy_conf.extend(["--backend_retry_on_status_codes", args.backend_retry_on_status_codes])
     if args.backend_retry_num:
         proxy_conf.extend(["--backend_retry_num", args.backend_retry_num])
 

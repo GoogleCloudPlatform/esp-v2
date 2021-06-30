@@ -396,6 +396,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) 
 		NumRetries: &wrapperspb.UInt32Value{
 			Value: uint32(method.BackendInfo.RetryNum),
 		},
+		RetriableStatusCodes: method.BackendInfo.RetriableStatusCodes,
 	}
 
 	if method.BackendInfo.PerTryTimeout.Nanoseconds() > 0 {

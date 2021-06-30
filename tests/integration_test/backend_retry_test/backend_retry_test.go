@@ -52,6 +52,7 @@ func TestBackendRetry(t *testing.T) {
 		backendRejectRequestNum    int
 		backendRejectRequestStatus int
 		backendRetryOnsFlag        string
+		backendRetryOnStatusCode   string
 		backendRetryNumFlag        int
 		backendTypeUsed            backendType
 		message                    string
@@ -226,6 +227,34 @@ func TestBackendRetry(t *testing.T) {
 				"ingress Echo",
 			},
 		},
+		{
+			desc:                       "Failed request for remote backend, no retry as the retriable status codes doesn't cover 500",
+			backendRejectRequestStatus: 500,
+			backendRejectRequestNum:    2,
+			backendRetryOnStatusCode:   "503",
+			backendRetryNumFlag:        2,
+			backendTypeUsed:            remoteBackend,
+			wantError:                  "500 Internal Server Error",
+			wantSpanNames: []string{
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				"ingress Echo",
+			},
+		},
+		{
+			desc:                       "Successful request for remote backend with correct retriable status codes",
+			backendRejectRequestStatus: 500,
+			backendRejectRequestNum:    2,
+			backendRetryOnStatusCode:   "500,503",
+			backendRetryNumFlag:        2,
+			backendTypeUsed:            remoteBackend,
+			wantResp:                   `{"message":""}`,
+			wantSpanNames: []string{
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				fmt.Sprintf("router backend-cluster-%v:BACKEND_PORT egress", platform.GetLoopbackAddress()),
+				"ingress Echo",
+			},
+		},
 	}
 	for _, tc := range testData {
 		func() {
@@ -237,6 +266,9 @@ func TestBackendRetry(t *testing.T) {
 			}
 			if tc.backendRetryOnsFlag != defaultBackendRetryOns {
 				args = append(args, "--backend_retry_ons="+tc.backendRetryOnsFlag)
+			}
+			if tc.backendRetryOnStatusCode != "" {
+				args = append(args, "--backend_retry_on_status_codes="+tc.backendRetryOnStatusCode)
 			}
 
 			if tc.backendRetryNumFlag != defaultBackendRetryNum {
