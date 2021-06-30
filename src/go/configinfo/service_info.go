@@ -645,7 +645,7 @@ func (s *ServiceInfo) processAllBackends() error {
 		backendInfo.PerTryTimeout = s.Options.BackendPerTryTimeout
 
 		if s.Options.BackendRetryOnStatusCodes != "" {
-			retriableStatusCodes, err := parseStatusCodes(s.Options.BackendRetryOnStatusCodes)
+			retriableStatusCodes, err := parseRetriableStatusCodes(s.Options.BackendRetryOnStatusCodes)
 			if err != nil {
 				return fmt.Errorf("invalid retriable status codes: %v", err)
 			}
@@ -923,12 +923,12 @@ func calculateStreamIdleTimeout(operationDeadline time.Duration, opts options.Co
 	return util.MaxDuration(operationIdleTimeout, opts.StreamIdleTimeout)
 }
 
-func parseStatusCodes(statusCodes string) ([]uint32, error) {
+func parseRetriableStatusCodes(statusCodes string) ([]uint32, error) {
 	codeList := strings.Split(statusCodes, ",")
 	var codes []uint32
 	for _, codeStr := range codeList {
-		if code, err := strconv.Atoi(codeStr); err != nil {
-			return nil, err
+		if code, err := strconv.Atoi(codeStr); err != nil || code < 100 || code >= 600 {
+			return nil, fmt.Errorf("invalid http status codes: %v, the valid one should be a number in [100, 600)", code)
 		} else {
 			codes = append(codes, uint32(code))
 		}

@@ -2714,7 +2714,7 @@ func TestProcessBackendRuleForRetry(t *testing.T) {
 			wantBackendPerTryTimeout: time.Second * 60,
 		},
 		{
-			desc: "invalid retriable status codes",
+			desc: "invalid retriable status code in wrong format",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -2729,7 +2729,25 @@ func TestProcessBackendRuleForRetry(t *testing.T) {
 			},
 			backendRetryOns:          "",
 			backendRetryOnStatusCode: "invalid-status-code",
-			wantError:                "invalid retriable status codes",
+			wantError:                "invalid http status code",
+		},
+		{
+			desc: "invalid retriable status code in wrong range",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			backendRetryOns:          "",
+			backendRetryOnStatusCode: "600",
+			wantError:                "invalid http status code",
 		},
 		{
 			desc: "set RetryOnStatusCodes and add `retriable-status-codes` to retryOns if it is empty",
