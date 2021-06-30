@@ -17,6 +17,7 @@ package configinfo
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -148,6 +149,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 		return nil, err
 	}
 	if err := serviceInfo.processLocalBackendOperations(); err != nil {
+		return nil, err
+	}
+	if err := serviceInfo.processAllBackends(); err != nil {
 		return nil, err
 	}
 	if err := serviceInfo.processAuthRequirement(); err != nil {
@@ -594,9 +598,6 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		TranslationType: r.PathTranslation,
 		Deadline:        deadline,
 		IdleTimeout:     idleTimeout,
-		RetryOns:        s.Options.BackendRetryOns,
-		RetryNum:        s.Options.BackendRetryNum,
-		PerTryTimeout:   s.Options.BackendPerTryTimeout,
 	}
 
 	jwtAud := s.determineBackendAuthJwtAud(r, scheme, hostname)
@@ -630,6 +631,39 @@ func (s *ServiceInfo) determineBackendAuthJwtAud(r *confpb.BackendRule, scheme s
 	}
 }
 
+// Apply global setting to all the backends.
+func (s *ServiceInfo) processAllBackends() error {
+	for _, method := range s.Methods {
+		backendInfo := method.BackendInfo
+		if backendInfo == nil {
+			return fmt.Errorf("all the methods should have an un-empty BackendInfo")
+
+		}
+
+		backendInfo.RetryOns = s.Options.BackendRetryOns
+		backendInfo.RetryNum = s.Options.BackendRetryNum
+		backendInfo.PerTryTimeout = s.Options.BackendPerTryTimeout
+
+		if s.Options.BackendRetryOnStatusCodes != "" {
+			retriableStatusCodes, err := parseStatusCodes(s.Options.BackendRetryOnStatusCodes)
+			if err != nil {
+				return fmt.Errorf("invalid retriable status codes: %v", err)
+			}
+
+			if backendInfo.RetryOns == "" {
+				backendInfo.RetryOns = util.RetryOnRetriableStatusCodes
+			} else if !strings.Contains(backendInfo.RetryOns, util.RetryOnRetriableStatusCodes) {
+				backendInfo.RetryOns = backendInfo.RetryOns + "," + util.RetryOnRetriableStatusCodes
+			}
+
+			backendInfo.RetriableStatusCodes = retriableStatusCodes
+		}
+
+	}
+
+	return nil
+}
+
 func (s *ServiceInfo) processLocalBackendOperations() error {
 
 	// For methods that are not associated with any backend rules, create one
@@ -645,12 +679,9 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 
 		// Associate the method with the local backend.
 		method.BackendInfo = &backendInfo{
-			ClusterName:   s.LocalBackendCluster.ClusterName,
-			Deadline:      util.DefaultResponseDeadline,
-			IdleTimeout:   idleTimeout,
-			RetryOns:      s.Options.BackendRetryOns,
-			RetryNum:      s.Options.BackendRetryNum,
-			PerTryTimeout: s.Options.BackendPerTryTimeout,
+			ClusterName: s.LocalBackendCluster.ClusterName,
+			Deadline:    util.DefaultResponseDeadline,
+			IdleTimeout: idleTimeout,
 		}
 	}
 
@@ -890,4 +921,17 @@ func calculateStreamIdleTimeout(operationDeadline time.Duration, opts options.Co
 	// So offset the idle timeout to ensure response deadline is always hit first.
 	operationIdleTimeout := operationDeadline + time.Second
 	return util.MaxDuration(operationIdleTimeout, opts.StreamIdleTimeout)
+}
+
+func parseStatusCodes(statusCodes string) ([]uint32, error) {
+	codeList := strings.Split(statusCodes, ",")
+	var codes []uint32
+	for _, codeStr := range codeList {
+		if code, err := strconv.Atoi(codeStr); err != nil {
+			return nil, err
+		} else {
+			codes = append(codes, uint32(code))
+		}
+	}
+	return codes, nil
 }

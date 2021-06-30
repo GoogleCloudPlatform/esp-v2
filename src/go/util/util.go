@@ -74,6 +74,8 @@ const (
 	// System Parameter Name
 	ApiKeyParameterName = "api_key"
 
+	// retriable-status-codes retryOn policy
+	RetryOnRetriableStatusCodes = "retriable-status-codes"
 	// Default response deadline used if user does not specify one in the BackendRule.
 	DefaultResponseDeadline = 15 * time.Second
 

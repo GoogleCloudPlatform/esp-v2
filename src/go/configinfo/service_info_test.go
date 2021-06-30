@@ -2678,6 +2678,151 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 	}
 }
 
+func TestProcessBackendRuleForRetry(t *testing.T) {
+	testData := []struct {
+		desc                          string
+		fakeServiceConfig             *confpb.Service
+		backendRetryOns               string
+		backendRetryNum               uint
+		backendPerTryTimeout          time.Duration
+		backendRetryOnStatusCode      string
+		wantBackendRetryOns           string
+		wantBackendRetryNum           uint
+		wantBackendPerTryTimeout      time.Duration
+		wantBackendRetryOnStatusCodes []uint32
+		wantError                     string
+	}{
+		{
+			desc: "pass backend retry parameters",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			backendRetryOns:          "foo,bar",
+			backendRetryNum:          5,
+			backendPerTryTimeout:     time.Second * 60,
+			wantBackendRetryOns:      "foo,bar",
+			wantBackendRetryNum:      5,
+			wantBackendPerTryTimeout: time.Second * 60,
+		},
+		{
+			desc: "invalid retriable status codes",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			backendRetryOns:          "",
+			backendRetryOnStatusCode: "invalid-status-code",
+			wantError:                "invalid retriable status codes",
+		},
+		{
+			desc: "add `retriable-status-codes` to retryOns when retriable status codes are set",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			backendRetryOns:               "",
+			backendRetryOnStatusCode:      "500,501",
+			wantBackendRetryOns:           "retriable-status-codes",
+			wantBackendRetryOnStatusCodes: []uint32{500, 501},
+		},
+		{
+			desc: "add `retriable-status-codes` to retryOns when retriable status codes are set",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			backendRetryOns:               "foo,bar",
+			backendRetryOnStatusCode:      "500,501",
+			wantBackendRetryOns:           "foo,bar,retriable-status-codes",
+			wantBackendRetryOnStatusCodes: []uint32{500, 501},
+		},
+		{
+			desc: "no op when retriable status codes are set and `retriable-status-codes` is in retryOns ",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			backendRetryOns:               "foo,bar,retriable-status-codes",
+			backendRetryOnStatusCode:      "500,501",
+			wantBackendRetryOns:           "foo,bar,retriable-status-codes",
+			wantBackendRetryOnStatusCodes: []uint32{500, 501},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendRetryOns = tc.backendRetryOns
+			opts.BackendRetryNum = tc.backendRetryNum
+			opts.BackendPerTryTimeout = tc.backendPerTryTimeout
+			opts.BackendRetryOnStatusCodes = tc.backendRetryOnStatusCode
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if tc.wantError != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
+					t.Fatalf("different error, want: %s, get: %v", tc.wantError, err)
+				}
+				return
+			}
+
+			for _, method := range s.Methods {
+				backendInfo := method.BackendInfo
+				if backendInfo.RetryOns != tc.wantBackendRetryOns {
+					t.Errorf("different RetryOns, want: %v, get: %v", tc.wantBackendRetryOns, backendInfo.RetryOns)
+				}
+				if backendInfo.RetryNum != tc.wantBackendRetryNum {
+					t.Errorf("different RetryNum, want: %v, get: %v", tc.wantBackendRetryNum, backendInfo.RetryNum)
+				}
+				if backendInfo.PerTryTimeout != tc.wantBackendPerTryTimeout {
+					t.Errorf("different PerTryTimeout, want: %v, get: %v", tc.wantBackendPerTryTimeout, backendInfo.PerTryTimeout)
+				}
+				if !reflect.DeepEqual(backendInfo.RetriableStatusCodes, tc.wantBackendRetryOnStatusCodes) {
+					t.Errorf("different RetriableStatusCodes, want: %v, get: %v", tc.wantBackendRetryOnStatusCodes, backendInfo.RetriableStatusCodes)
+				}
+			}
+		})
+	}
+}
 func TestBackendAddressOverride(t *testing.T) {
 	testData := []struct {
 		desc                         string

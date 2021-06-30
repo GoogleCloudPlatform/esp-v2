@@ -172,6 +172,11 @@ var (
         backend_per_try_timeout=0 means ESPv2 will use the  "deadline"" in
         the "x-google-backend" extension. Consequently, a request that times out
         will not be retried as the total timeout budget would have been exhausted.`)
+	BackendRetryOnStatusCodes = flag.String("backend_retry_on_status_codes", "",
+		`The list of backend http status codes will be retried, in
+        addition to the status codes enabled for retry through other retry
+        policies set in "--backend_retry_ons".
+        The format is a comma-delimited String, like "501, 503`)
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -238,6 +243,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		BackendRetryOns:                         *BackendRetryOns,
 		BackendRetryNum:                         *BackendRetryNum,
 		BackendPerTryTimeout:                    *BackendPerTryTimeout,
+		BackendRetryOnStatusCodes:               *BackendRetryOnStatusCodes,
 		ScCheckTimeoutMs:                        *ScCheckTimeoutMs,
 		ScQuotaTimeoutMs:                        *ScQuotaTimeoutMs,
 		ScReportTimeoutMs:                       *ScReportTimeoutMs,
