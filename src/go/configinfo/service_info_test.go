@@ -2732,7 +2732,7 @@ func TestProcessBackendRuleForRetry(t *testing.T) {
 			wantError:                "invalid retriable status codes",
 		},
 		{
-			desc: "add `retriable-status-codes` to retryOns when retriable status codes are set",
+			desc: "set RetryOnStatusCodes and add `retriable-status-codes` to retryOns if it is empty",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -2751,7 +2751,7 @@ func TestProcessBackendRuleForRetry(t *testing.T) {
 			wantBackendRetryOnStatusCodes: []uint32{500, 501},
 		},
 		{
-			desc: "add `retriable-status-codes` to retryOns when retriable status codes are set",
+			desc: "set RetryOnStatusCodes and add `retriable-status-codes` to retryOns if it is un-empty but doesn't have `retriable-status-codes`",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -2770,7 +2770,7 @@ func TestProcessBackendRuleForRetry(t *testing.T) {
 			wantBackendRetryOnStatusCodes: []uint32{500, 501},
 		},
 		{
-			desc: "no op when retriable status codes are set and `retriable-status-codes` is in retryOns ",
+			desc: "set RetryOnStatusCodes and no op on retryOns when it contains `retriable-status-codes`",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
