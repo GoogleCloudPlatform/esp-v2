@@ -1,3 +1,7 @@
+# Release 2.29.0 30-06-2021
+
+- Restored the old way of setting scheme header according to upstream connection security level (#546)
+
 # Release 2.28.0 15-06-2021
 - Add flag to enable operation name header (#535)
 - Enable jwks async fetch by default (#534)
