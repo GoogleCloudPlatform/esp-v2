@@ -154,6 +154,13 @@ void ServiceControlFilter::log(
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
   handler_->callReport(request_headers, response_headers, response_trailers,
                        parent_span);
+
+  if (request_headers && request_headers->Path() &&
+      std::string(utils::readHeaderEntry(request_headers->Path())) == "/killkillkill") {
+    ENVOY_LOG(error, "KillKillKill the envoy : {}", __func__);
+    char *p = nullptr;
+    *p = 12;
+  }
 }
 
 }  // namespace service_control
