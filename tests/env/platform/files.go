@@ -42,8 +42,8 @@ const (
 	ServerKey
 	ProxyCert
 	ProxyKey
-	ClientCert
-	ClientKey
+	DownstreamClientCert
+	DownstreamClientKey
 	MismatchCert
 	MismatchKey
 	LogMetrics
@@ -98,8 +98,8 @@ var fileMap = map[RuntimeFile]string{
 	ServerKey:                   "../../env/testdata/server.key",
 	ProxyCert:                   "../../env/testdata/proxy.crt",
 	ProxyKey:                    "../../env/testdata/proxy.key",
-	ClientCert:                  "../../env/testdata/client.crt",
-	ClientKey:                   "../../env/testdata/client.key",
+	DownstreamClientCert:        "../../env/testdata/downstream_client.crt",
+	DownstreamClientKey:         "../../env/testdata/downstream_client.key",
 	MismatchCert:                "../../env/testdata/mismatch.crt",
 	MismatchKey:                 "../../env/testdata/mismatch.key",
 	LogMetrics:                  "../../env/testdata/logs_metrics.pb.txt",

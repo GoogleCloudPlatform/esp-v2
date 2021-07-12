@@ -185,7 +185,7 @@ func TestDownstreamMTLS(t *testing.T) {
 			desc:                  "failure(client authn),  client doesn't set up cert",
 			scheme:                "http",
 			httpVersions:          []int{1},
-			sslServerRootCertPath: platform.GetFilePath(platform.ClientCert),
+			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			getClientCred:         nil,
 			wantError:             fmt.Errorf(`tls: unknown certificate authority`),
 		},
@@ -193,7 +193,7 @@ func TestDownstreamMTLS(t *testing.T) {
 			desc:                  "failure(client authn),  client cert is unknown to proxy's root cert",
 			scheme:                "http",
 			httpVersions:          []int{1},
-			sslServerRootCertPath: platform.GetFilePath(platform.ClientCert),
+			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
 				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.MismatchCert), platform.GetFilePath(platform.MismatchKey))
 				if err != nil {
@@ -208,9 +208,9 @@ func TestDownstreamMTLS(t *testing.T) {
 			desc:                  "success(client authn),  correct setup",
 			scheme:                "http",
 			httpVersions:          []int{1},
-			sslServerRootCertPath: platform.GetFilePath(platform.ClientCert),
+			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.ClientCert), platform.GetFilePath(platform.ClientKey))
+				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.DownstreamClientCert), platform.GetFilePath(platform.DownstreamClientKey))
 				if err != nil {
 					fmt.Printf("Error loading key pair: %v\n", err)
 					return nil, err
@@ -248,7 +248,7 @@ func TestDownstreamMTLS(t *testing.T) {
 			desc:                  "failure(mTLS), client cert is unknown to proxy",
 			scheme:                "https",
 			httpVersions:          []int{1},
-			sslServerRootCertPath: platform.GetFilePath(platform.ClientCert),
+			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
 			certPath:              platform.GetFilePath(platform.ServerCert),
 			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
@@ -265,11 +265,11 @@ func TestDownstreamMTLS(t *testing.T) {
 			desc:                  "failure(mTLS), proxy's cert is unknown to client",
 			scheme:                "https",
 			httpVersions:          []int{1},
-			sslServerRootCertPath: platform.GetFilePath(platform.ClientCert),
+			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
 			certPath:              platform.GetFilePath(platform.MismatchCert),
 			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.ClientCert), platform.GetFilePath(platform.ClientKey))
+				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.DownstreamClientCert), platform.GetFilePath(platform.DownstreamClientKey))
 				if err != nil {
 					fmt.Printf("Error loading key pair: %v\n", err)
 					return nil, err
@@ -282,11 +282,11 @@ func TestDownstreamMTLS(t *testing.T) {
 			desc:                  "success(mTLS),  correct setup",
 			scheme:                "https",
 			httpVersions:          []int{1},
-			sslServerRootCertPath: platform.GetFilePath(platform.ClientCert),
+			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
 			certPath:              platform.GetFilePath(platform.ServerCert),
 			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.ClientCert), platform.GetFilePath(platform.ClientKey))
+				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.DownstreamClientCert), platform.GetFilePath(platform.DownstreamClientKey))
 				if err != nil {
 					fmt.Printf("Error loading key pair: %v\n", err)
 					return nil, err
