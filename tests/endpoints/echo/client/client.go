@@ -175,17 +175,22 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer s
 }
 
 // DoHttpsGet performs a HTTPS Get request to a specified url
-func DoHttpsGet(url string, httpVersion int, certPath string) (http.Header, []byte, error) {
+func DoHttpsGet(url string, httpVersion int, rootCertPath string, getClientCert func(*tls.CertificateRequestInfo) (*tls.Certificate, error)) (http.Header, []byte, error) {
 	client := &http.Client{}
-	caCert, err := ioutil.ReadFile(certPath)
-	if err != nil {
-		return nil, nil, err
+	tlsConfig := &tls.Config{}
+	if rootCertPath != "" {
+		caCert, err := ioutil.ReadFile(rootCertPath)
+		if err != nil {
+			return nil, nil, err
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		// Create TLS configuration with the certificate of the server
+		tlsConfig.RootCAs = caCertPool
 	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	// Create TLS configuration with the certificate of the server
-	tlsConfig := &tls.Config{
-		RootCAs: caCertPool,
+
+	if getClientCert != nil {
+		tlsConfig.GetClientCertificate = getClientCert
 	}
 
 	// Use the proper transport in the client

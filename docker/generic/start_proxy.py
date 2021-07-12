@@ -182,6 +182,10 @@ environment variable or by passing "-k" flag to this script.
         Cipher suites to use for downstream connections as a comma-separated list.
         Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/common.proto#auth-tlsparameters''')
 
+    parser.add_argument('--ssl_server_root_cert_path', default=None, help='''
+         The file path of root certificates that ESPv2 uses to verify downstream client certificate.
+        If not specified, ESPv2 doesn't the validation by default.''')
+
     parser.add_argument('--ssl_backend_client_cert_path', default=None, help='''
         Proxy's client cert path. When configured, ESPv2 enables TLS mutual
         authentication for HTTPS backends. Requires the certificate and
@@ -1037,6 +1041,8 @@ def gen_proxy_config(args):
         proxy_conf.extend(["--listener_port", str(args.listener_port)])
     if args.ssl_server_cert_path:
         proxy_conf.extend(["--ssl_server_cert_path", str(args.ssl_server_cert_path)])
+    if args.ssl_server_root_cert_path:
+        proxy_conf.extend(["--ssl_server_root_cert_path", str(args.ssl_server_root_cert_path)])
     if args.ssl_port:
         proxy_conf.extend(["--ssl_server_cert_path", "/etc/nginx/ssl"])
         proxy_conf.extend(["--listener_port", str(args.ssl_port)])

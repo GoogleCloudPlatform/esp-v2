@@ -156,6 +156,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 	testData := []struct {
 		desc                string
 		sslPath             string
+		sslRootCertPath     string
 		sslMinimumProtocol  string
 		sslMaximumProtocol  string
 		cipherSuites        string
@@ -183,6 +184,42 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 						],
 						"tlsParams":{
 							"tlsMinimumProtocolVersion":"TLSv1_1"
+						}
+					}
+				}
+			} `,
+		},
+		{
+			desc:               "Downstream Transport Socket for mTLS",
+			sslPath:            "/etc/ssl/endpoints/",
+			sslRootCertPath:    "/etc/ssl/endpoints/root.crt",
+			sslMinimumProtocol: "TLSv1.1",
+			wantTransportSocket: `{
+				"name": "envoy.transport_sockets.tls",
+				"typedConfig": {
+					"@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
+					"commonTlsContext": {
+						"alpnProtocols": [
+							"h2",
+							"http/1.1"
+						],
+						"tlsCertificates": [
+							{
+								"certificateChain": {
+									"filename": "/etc/ssl/endpoints/server.crt"
+								},
+								"privateKey": {
+									"filename": "/etc/ssl/endpoints/server.key"
+								}
+							}
+						],
+						"tlsParams": {
+							"tlsMinimumProtocolVersion": "TLSv1_1"
+						},
+						"validationContext": {
+							"trustedCa": {
+								"filename": "/etc/ssl/endpoints/root.crt"
+							}
 						}
 					}
 				}
@@ -252,7 +289,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 	}
 
 	for i, tc := range testData {
-		gotTransportSocket, err := CreateDownstreamTransportSocket(tc.sslPath, tc.sslMinimumProtocol, tc.sslMaximumProtocol, tc.cipherSuites)
+		gotTransportSocket, err := CreateDownstreamTransportSocket(tc.sslPath, tc.sslRootCertPath, tc.sslMinimumProtocol, tc.sslMaximumProtocol, tc.cipherSuites)
 		if err != nil {
 			t.Fatal(err)
 		}

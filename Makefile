@@ -308,11 +308,14 @@ format.check: tools.goimports
 	@make spelling.check
 
 test-ssl-files:
+	@openssl genrsa -out tests/env/testdata/client.key 2048
+	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/client.key -out tests/env/testdata/client.crt
+	@openssl genrsa -out tests/env/testdata/proxy.key 2048
+	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/proxy.key -out tests/env/testdata/proxy.crt
 	@openssl genrsa -out tests/env/testdata/server.key 2048
 	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/server.key -out tests/env/testdata/server.crt
-	@cp tests/env/testdata/server.crt tests/env/testdata/client.crt
-	@cp tests/env/testdata/server.key tests/env/testdata/client.key
-	# TODO(taoxuy@): also add cmd for proxy.crt and proxy.key
+	@openssl genrsa -out tests/env/testdata/mismatch.key 2048
+	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/mismatch.key -out tests/env/testdata/mismatch.crt
 
 
 

@@ -75,7 +75,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 }
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
-func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*corepb.TransportSocket, error) {
+func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*corepb.TransportSocket, error) {
 	if sslServerPath == "" {
 		return nil, fmt.Errorf("SSL path cannot be empty.")
 	}
@@ -86,7 +86,7 @@ func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaxim
 		sslFileName = "nginx"
 	}
 
-	commonTls, err := createCommonTlsContext("", sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
+	commonTls, err := createCommonTlsContext(sslServerRootPath, sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
 	if err != nil {
 		return nil, err
 	}

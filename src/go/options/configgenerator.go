@@ -57,6 +57,7 @@ type ConfigGeneratorOptions struct {
 	ListenerPort                     int
 	SslServerCertPath                string
 	SslServerCipherSuites            string
+	SslServerRootCertPath            string
 	SslMinimumProtocol               string
 	SslMaximumProtocol               string
 	EnableHSTS                       bool
