@@ -962,7 +962,7 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			s := env.NewTestEnv(platform.TestDynamicBackendRoutingTLS, platform.EchoRemote)
 			s.UseWrongBackendCertForDR(tc.useWrongCert)
 			defer s.TearDown(t)
@@ -992,7 +992,7 @@ func TestDynamicBackendRoutingTLS(t *testing.T) {
 			if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
 				t.Error(err)
 			}
-		}()
+		})
 	}
 }
 
@@ -1087,7 +1087,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			s := env.NewTestEnv(platform.TestDynamicBackendRoutingMutualTLS, platform.EchoRemote)
 			s.SetBackendMTLSCert(tc.mtlsCertFile)
 			defer s.TearDown(t)
@@ -1117,7 +1117,7 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 			if err := utils.VerifyServiceControlResp(tc.desc, tc.wantScRequests, scRequests); err != nil {
 				t.Errorf("Test Desc(%s): %v", tc.desc, err)
 			}
-		}()
+		})
 	}
 }
 
@@ -1183,7 +1183,7 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 
 	for _, tc := range tests {
 		args := utils.CommonArgs()
-		func() {
+		t.Run(tc.desc, func(t *testing.T) {
 			s := env.NewTestEnv(platform.TestDynamicGrpcBackendTLS, platform.GrpcBookstoreRemote)
 			defer s.TearDown(t)
 			s.UseWrongBackendCertForDR(tc.useWrongBackendCert)
@@ -1208,6 +1208,6 @@ func TestDynamicGrpcBackendTLS(t *testing.T) {
 			if !strings.Contains(resp, tc.wantResp) {
 				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 			}
-		}()
+		})
 	}
 }

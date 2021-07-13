@@ -32,12 +32,12 @@ const (
 	TestAddHeaders
 	TestAsymmetricKeys
 	TestAuthAllowMissing
-	TestAuthJwksCache
 	TestAuthJwksAsyncFetch
+	TestAuthJwksCache
 	TestBackendAddressOverride
 	TestBackendAuthDisableAuth
-	TestBackendAuthUsingIamIdTokenWithDelegates
 	TestBackendAuthPerPlatform
+	TestBackendAuthUsingIamIdTokenWithDelegates
 	TestBackendAuthWithIamIdToken
 	TestBackendAuthWithIamIdTokenRetries
 	TestBackendAuthWithIamIdTokenTimeouts
@@ -53,6 +53,7 @@ const (
 	TestDeadlinesForGrpcDynamicRouting
 	TestDeadlinesForLocalBackend
 	TestDnsResolver
+	TestDownstreamMTLS
 	TestDynamicBackendRoutingMutualTLS
 	TestDynamicBackendRoutingTLS
 	TestDynamicGrpcBackendTLS
@@ -80,10 +81,9 @@ const (
 	TestHttp1Basic
 	TestHttp1JWT
 	TestHttpHeaders
-	TestHttpsClients
 	TestIamImdsDataPath
-	TestIdleTimeoutsForUnaryRPCs
 	TestIdleTimeoutsForGrpcStreaming
+	TestIdleTimeoutsForUnaryRPCs
 	TestInvalidOpenIDConnectDiscovery
 	TestJwtLocations
 	TestManagedServiceConfig
@@ -93,8 +93,10 @@ const (
 	TestMethodOverrideBackendMethod
 	TestMethodOverrideScReport
 	TestMultiGrpcServices
-	TestProxyHandlesCorsPreflightRequestsBasic
 	TestPreflightRequestWithAllowCors
+	TestProxyHandleCorsSimpleRequestsBasic
+	TestProxyHandleCorsSimpleRequestsRegex
+	TestProxyHandlesCorsPreflightRequestsBasic
 	TestReportGCPAttributes
 	TestReportGCPAttributesPerPlatform
 	TestReportTraceId
@@ -137,8 +139,6 @@ const (
 	TestServiceControlTLSWithValidCert
 	TestServiceManagementWithInvalidCert
 	TestServiceManagementWithValidCert
-	TestProxyHandleCorsSimpleRequestsBasic
-	TestProxyHandleCorsSimpleRequestsRegex
 	TestStartupDuplicatedPathsWithAllowCors
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
@@ -149,11 +149,11 @@ const (
 	TestTracesServiceControlCheckWithRetry
 	TestTracesServiceControlSkipUsage
 	TestTracingSampleRate
+	TestTranscodingBackendUnavailableError
 	TestTranscodingBindings
 	TestTranscodingErrors
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
-	TestTranscodingBackendUnavailableError
 	TestWebsocket
 	// The number of total tests. has to be the last one.
 	maxTestNum

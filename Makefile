@@ -308,11 +308,18 @@ format.check: tools.goimports
 	@make spelling.check
 
 test-ssl-files:
+	@openssl genrsa -out tests/env/testdata/downstream_client.key 2048
+	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/downstream_client.key -out tests/env/testdata/downstream_client.crt
+	@openssl genrsa -out tests/env/testdata/proxy.key 2048
+	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/proxy.key -out tests/env/testdata/proxy.crt
 	@openssl genrsa -out tests/env/testdata/server.key 2048
+	@openssl genrsa -out tests/env/testdata/mismatch.key 2048
+	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/mismatch.key -out tests/env/testdata/mismatch.crt
 	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/server.key -out tests/env/testdata/server.crt
+    # The client.crt and client.key are for upstream client certs.
+    # https://github.com/GoogleCloudPlatform/esp-v2/blob/f963f0318a8981e5713b99652f62438ca174fe4b/docker/generic/start_proxy.py#L188
 	@cp tests/env/testdata/server.crt tests/env/testdata/client.crt
 	@cp tests/env/testdata/server.key tests/env/testdata/client.key
-	# TODO(taoxuy@): also add cmd for proxy.crt and proxy.key
 
 
 

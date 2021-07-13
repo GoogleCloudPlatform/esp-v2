@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
@@ -75,7 +76,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 }
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
-func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*corepb.TransportSocket, error) {
+func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*corepb.TransportSocket, error) {
 	if sslServerPath == "" {
 		return nil, fmt.Errorf("SSL path cannot be empty.")
 	}
@@ -86,15 +87,20 @@ func CreateDownstreamTransportSocket(sslServerPath, sslMinimumProtocol, sslMaxim
 		sslFileName = "nginx"
 	}
 
-	commonTls, err := createCommonTlsContext("", sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
+	commonTls, err := createCommonTlsContext(sslServerRootPath, sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
 	if err != nil {
 		return nil, err
 	}
 	commonTls.AlpnProtocols = []string{"h2", "http/1.1"}
-	tlsContext, err := ptypes.MarshalAny(&tlspb.DownstreamTlsContext{
+	downstreamTlsContext := &tlspb.DownstreamTlsContext{
 		CommonTlsContext: commonTls,
-	},
-	)
+	}
+	if sslServerRootPath != "" {
+		downstreamTlsContext.RequireClientCertificate = &wrappers.BoolValue{
+			Value: true,
+		}
+	}
+	tlsContext, err := ptypes.MarshalAny(downstreamTlsContext)
 	if err != nil {
 		return nil, err
 	}

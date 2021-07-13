@@ -130,6 +130,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 	if serviceInfo.Options.SslServerCertPath != "" {
 		transportSocket, err := util.CreateDownstreamTransportSocket(
 			serviceInfo.Options.SslServerCertPath,
+			serviceInfo.Options.SslServerRootCertPath,
 			serviceInfo.Options.SslMinimumProtocol,
 			serviceInfo.Options.SslMaximumProtocol,
 			serviceInfo.Options.SslServerCipherSuites,

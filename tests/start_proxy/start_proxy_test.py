@@ -154,6 +154,14 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080', '--ssl_server_cert_path',
               '/etc/endpoint/ssl', '--disable_tracing'
               ]),
+            # ssl_server_root_cert_path specified
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--ssl_server_root_cert_path=/etc/endpoint/ssl/root.cert'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8080', '--ssl_server_root_cert_path',
+              '/etc/endpoint/ssl/root.cert', '--disable_tracing'
+              ]),
             # legacy ssl_port specified
             (['-R=managed','--ssl_port=9000', '--disable_tracing'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
