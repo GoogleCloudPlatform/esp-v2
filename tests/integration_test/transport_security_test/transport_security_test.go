@@ -15,7 +15,6 @@
 package transport_security_test
 
 import (
-	"crypto/tls"
 	"fmt"
 	"strings"
 	"testing"
@@ -172,8 +171,9 @@ func TestDownstreamMTLS(t *testing.T) {
 
 	testData := []struct {
 		desc                  string
-		certPath              string
-		getClientCred         func(info *tls.CertificateRequestInfo) (*tls.Certificate, error)
+		clientRootCertPath              string
+		clientCertPath string
+		clientKeyPath string
 		httpVersions          []int
 		scheme                string
 		sslServerCertPath     string
@@ -182,64 +182,51 @@ func TestDownstreamMTLS(t *testing.T) {
 		wantResp              string
 	}{
 		{
-			desc:                  "failure(client authn),  client doesn't set up cert",
+			desc:                  "failure(validate client cert),  client doesn't set up cert",
 			scheme:                "http",
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
-			getClientCred:         nil,
 			wantError:             fmt.Errorf(`tls: unknown certificate authority`),
 		},
 		{
-			desc:                  "failure(client authn),  client cert is unknown to proxy's root cert",
+			desc:                  "failure(validate client cert),  client cert is unknown to proxy's root cert",
 			scheme:                "http",
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
-			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.MismatchCert), platform.GetFilePath(platform.MismatchKey))
-				if err != nil {
-					fmt.Printf("Error loading key pair: %v\n", err)
-					return nil, err
-				}
-				return &c, nil
-			},
+			clientCertPath:  platform.GetFilePath(platform.MismatchCert),
+			clientKeyPath: platform.GetFilePath(platform.MismatchKey),
 			wantError: fmt.Errorf(`tls: unknown certificate authority`),
 		},
 		{
-			desc:                  "success(client authn),  correct setup",
+			desc:                  "success(validate client cert),  correct setup",
 			scheme:                "http",
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
-			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.DownstreamClientCert), platform.GetFilePath(platform.DownstreamClientKey))
-				if err != nil {
-					fmt.Printf("Error loading key pair: %v\n", err)
-					return nil, err
-				}
-				return &c, nil
-			},
+			clientCertPath:  platform.GetFilePath(platform.DownstreamClientCert),
+			clientKeyPath: platform.GetFilePath(platform.DownstreamClientKey),
 			wantResp: `simple get message`,
 		},
 		{
-			desc:         "failure(common TLS, server authn), proxy doesn't set up cert",
+			desc:         "failure(common TLS, validate server cert), proxy doesn't set up cert",
 			scheme:       "https",
 			httpVersions: []int{1, 2},
-			certPath:     platform.GetFilePath(platform.ServerCert),
+			clientRootCertPath:     platform.GetFilePath(platform.ServerCert),
 			wantError:    fmt.Errorf("http: server gave HTTP response to HTTPS client"),
 		},
 		{
-			desc:              "failure(common TLS, server authn), proxy's cert is unknown to client's root cert",
+			desc:              "failure(common TLS, validate server cert), proxy's cert is unknown to client's root cert",
 			scheme:            "https",
 			httpVersions:      []int{1, 2},
 			sslServerCertPath: platform.GetFilePath(platform.TestDataFolder),
-			certPath:          platform.GetFilePath(platform.MismatchCert),
+			clientRootCertPath:          platform.GetFilePath(platform.MismatchCert),
 			wantError:         fmt.Errorf("x509: certificate signed by unknown authority"),
 		},
 		{
-			desc:              "success(common TLS, server authn), correct setup",
+			desc:              "success(common TLS, validate server cert), correct setup",
 			scheme:            "https",
 			httpVersions:      []int{1, 2},
 			sslServerCertPath: platform.GetFilePath(platform.TestDataFolder),
-			certPath:          platform.GetFilePath(platform.ServerCert),
+			clientRootCertPath:          platform.GetFilePath(platform.ServerCert),
 			wantResp:          `simple get message`,
 		},
 		// The following mTLS test cases can be derived from the test cases above. They
@@ -250,15 +237,9 @@ func TestDownstreamMTLS(t *testing.T) {
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
-			certPath:              platform.GetFilePath(platform.ServerCert),
-			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.MismatchCert), platform.GetFilePath(platform.MismatchKey))
-				if err != nil {
-					fmt.Printf("Error loading key pair: %v\n", err)
-					return nil, err
-				}
-				return &c, nil
-			},
+			clientRootCertPath:              platform.GetFilePath(platform.ServerCert),
+			clientCertPath:  platform.GetFilePath(platform.MismatchCert),
+			clientKeyPath: platform.GetFilePath(platform.MismatchKey),
 			wantError: fmt.Errorf(`tls: unknown certificate authority`),
 		},
 		{
@@ -267,15 +248,9 @@ func TestDownstreamMTLS(t *testing.T) {
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
-			certPath:              platform.GetFilePath(platform.MismatchCert),
-			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.DownstreamClientCert), platform.GetFilePath(platform.DownstreamClientKey))
-				if err != nil {
-					fmt.Printf("Error loading key pair: %v\n", err)
-					return nil, err
-				}
-				return &c, nil
-			},
+			clientRootCertPath:              platform.GetFilePath(platform.MismatchCert),
+			clientCertPath:  platform.GetFilePath(platform.DownstreamClientCert),
+			clientKeyPath: platform.GetFilePath(platform.DownstreamClientKey),
 			wantError: fmt.Errorf("x509: certificate signed by unknown authority"),
 		},
 		{
@@ -284,15 +259,9 @@ func TestDownstreamMTLS(t *testing.T) {
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
-			certPath:              platform.GetFilePath(platform.ServerCert),
-			getClientCred: func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-				c, err := tls.LoadX509KeyPair(platform.GetFilePath(platform.DownstreamClientCert), platform.GetFilePath(platform.DownstreamClientKey))
-				if err != nil {
-					fmt.Printf("Error loading key pair: %v\n", err)
-					return nil, err
-				}
-				return &c, nil
-			},
+			clientRootCertPath:              platform.GetFilePath(platform.ServerCert),
+			clientCertPath:  platform.GetFilePath(platform.DownstreamClientCert),
+			clientKeyPath: platform.GetFilePath(platform.DownstreamClientKey),
 			wantResp: `simple get message`,
 		},
 	}
@@ -320,7 +289,7 @@ func TestDownstreamMTLS(t *testing.T) {
 			url := fmt.Sprintf("%s://%v:%v/simpleget?key=api-key", tc.scheme, platform.GetLocalhost(), s.Ports().ListenerPort)
 
 			sendTestCall := func(httpsVersion int) {
-				_, resp, err = client.DoHttpsGet(url, httpsVersion, tc.certPath, tc.getClientCred)
+				_, resp, err = client.DoHttpsGet(url, httpsVersion, tc.clientRootCertPath, tc.clientCertPath, tc.clientKeyPath)
 				desc := fmt.Sprintf("%s with Http%v", tc.desc, httpsVersion)
 				if tc.wantError == nil {
 					if err != nil {
@@ -380,7 +349,7 @@ func TestHSTS(t *testing.T) {
 	for _, tc := range testData {
 		// FIXME: Use of localhost. Difficult to generate certs with ip addresses.
 		url := fmt.Sprintf("https://%v:%v/simpleget?key=api-key", platform.GetLocalhost(), s.Ports().ListenerPort)
-		respHeader, respBody, err := client.DoHttpsGet(url, tc.httpsVersion, tc.certPath, nil)
+		respHeader, respBody, err := client.DoHttpsGet(url, tc.httpsVersion, tc.certPath, "", "")
 
 		if err != nil {
 			t.Fatal(err)

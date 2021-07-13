@@ -186,7 +186,7 @@ environment variable or by passing "-k" flag to this script.
          The file path of root certificates that ESPv2 uses to verify downstream client certificate.
         If not specified, ESPv2 doesn't verify client certificates by default. 
         
-        Before using this feature, please verify if your compute environment is compatible with it.
+        Before using this feature, please verify if your compute platform is compatible with it.
         ''')
 
     parser.add_argument('--ssl_backend_client_cert_path', default=None, help='''

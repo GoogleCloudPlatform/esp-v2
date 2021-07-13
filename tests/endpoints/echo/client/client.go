@@ -175,7 +175,7 @@ func DoCorsPreflightRequest(url, origin, requestMethod, requestHeader, referer s
 }
 
 // DoHttpsGet performs a HTTPS Get request to a specified url
-func DoHttpsGet(url string, httpVersion int, rootCertPath string, getClientCert func(*tls.CertificateRequestInfo) (*tls.Certificate, error)) (http.Header, []byte, error) {
+func DoHttpsGet(url string, httpVersion int, rootCertPath, certPath, keyPath string) (http.Header, []byte, error) {
 	client := &http.Client{}
 	tlsConfig := &tls.Config{}
 	if rootCertPath != "" {
@@ -189,8 +189,15 @@ func DoHttpsGet(url string, httpVersion int, rootCertPath string, getClientCert 
 		tlsConfig.RootCAs = caCertPool
 	}
 
-	if getClientCert != nil {
-		tlsConfig.GetClientCertificate = getClientCert
+	if certPath != "" && keyPath != ""{
+		tlsConfig.GetClientCertificate = func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
+			c, err := tls.LoadX509KeyPair(certPath, keyPath)
+			if err != nil {
+				fmt.Printf("Error loading key pair: %v\n", err)
+				return nil, err
+			}
+			return &c, nil
+		}
 	}
 
 	// Use the proper transport in the client
