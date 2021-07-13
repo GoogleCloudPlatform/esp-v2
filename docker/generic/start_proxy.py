@@ -193,7 +193,7 @@ environment variable or by passing "-k" flag to this script.
         If not specified, ESPv2 doesn't verify client certificates by default. 
         
         Before using this feature, please make sure mTLS isn't terminated before ESPv2
-        in your deployment model. In general, Cloud Run, GKE(GCLB enforced in ingress)
+        in your deployment model. In general, Cloud Run, GKE with container-native load balancing
         and GCE with GCLB configured terminates mTLS before ESPv2. If that's the case,
         please don't set up flag. 
         ''')
