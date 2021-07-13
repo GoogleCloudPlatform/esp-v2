@@ -189,7 +189,7 @@ func DoHttpsGet(url string, httpVersion int, rootCertPath, certPath, keyPath str
 		tlsConfig.RootCAs = caCertPool
 	}
 
-	if certPath != "" && keyPath != ""{
+	if certPath != "" && keyPath != "" {
 		tlsConfig.GetClientCertificate = func(info *tls.CertificateRequestInfo) (*tls.Certificate, error) {
 			c, err := tls.LoadX509KeyPair(certPath, keyPath)
 			if err != nil {

@@ -171,9 +171,9 @@ func TestDownstreamMTLS(t *testing.T) {
 
 	testData := []struct {
 		desc                  string
-		clientRootCertPath              string
-		clientCertPath string
-		clientKeyPath string
+		clientRootCertPath    string
+		clientCertPath        string
+		clientKeyPath         string
 		httpVersions          []int
 		scheme                string
 		sslServerCertPath     string
@@ -193,41 +193,41 @@ func TestDownstreamMTLS(t *testing.T) {
 			scheme:                "http",
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
-			clientCertPath:  platform.GetFilePath(platform.MismatchCert),
-			clientKeyPath: platform.GetFilePath(platform.MismatchKey),
-			wantError: fmt.Errorf(`tls: unknown certificate authority`),
+			clientCertPath:        platform.GetFilePath(platform.MismatchCert),
+			clientKeyPath:         platform.GetFilePath(platform.MismatchKey),
+			wantError:             fmt.Errorf(`tls: unknown certificate authority`),
 		},
 		{
 			desc:                  "success(validate client cert),  correct setup",
 			scheme:                "http",
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
-			clientCertPath:  platform.GetFilePath(platform.DownstreamClientCert),
-			clientKeyPath: platform.GetFilePath(platform.DownstreamClientKey),
-			wantResp: `simple get message`,
+			clientCertPath:        platform.GetFilePath(platform.DownstreamClientCert),
+			clientKeyPath:         platform.GetFilePath(platform.DownstreamClientKey),
+			wantResp:              `simple get message`,
 		},
 		{
-			desc:         "failure(common TLS, validate server cert), proxy doesn't set up cert",
-			scheme:       "https",
-			httpVersions: []int{1, 2},
-			clientRootCertPath:     platform.GetFilePath(platform.ServerCert),
-			wantError:    fmt.Errorf("http: server gave HTTP response to HTTPS client"),
+			desc:               "failure(common TLS, validate server cert), proxy doesn't set up cert",
+			scheme:             "https",
+			httpVersions:       []int{1, 2},
+			clientRootCertPath: platform.GetFilePath(platform.ServerCert),
+			wantError:          fmt.Errorf("http: server gave HTTP response to HTTPS client"),
 		},
 		{
-			desc:              "failure(common TLS, validate server cert), proxy's cert is unknown to client's root cert",
-			scheme:            "https",
-			httpVersions:      []int{1, 2},
-			sslServerCertPath: platform.GetFilePath(platform.TestDataFolder),
-			clientRootCertPath:          platform.GetFilePath(platform.MismatchCert),
-			wantError:         fmt.Errorf("x509: certificate signed by unknown authority"),
+			desc:               "failure(common TLS, validate server cert), proxy's cert is unknown to client's root cert",
+			scheme:             "https",
+			httpVersions:       []int{1, 2},
+			sslServerCertPath:  platform.GetFilePath(platform.TestDataFolder),
+			clientRootCertPath: platform.GetFilePath(platform.MismatchCert),
+			wantError:          fmt.Errorf("x509: certificate signed by unknown authority"),
 		},
 		{
-			desc:              "success(common TLS, validate server cert), correct setup",
-			scheme:            "https",
-			httpVersions:      []int{1, 2},
-			sslServerCertPath: platform.GetFilePath(platform.TestDataFolder),
-			clientRootCertPath:          platform.GetFilePath(platform.ServerCert),
-			wantResp:          `simple get message`,
+			desc:               "success(common TLS, validate server cert), correct setup",
+			scheme:             "https",
+			httpVersions:       []int{1, 2},
+			sslServerCertPath:  platform.GetFilePath(platform.TestDataFolder),
+			clientRootCertPath: platform.GetFilePath(platform.ServerCert),
+			wantResp:           `simple get message`,
 		},
 		// The following mTLS test cases can be derived from the test cases above. They
 		// only validate the mTLS work.
@@ -237,10 +237,10 @@ func TestDownstreamMTLS(t *testing.T) {
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
-			clientRootCertPath:              platform.GetFilePath(platform.ServerCert),
-			clientCertPath:  platform.GetFilePath(platform.MismatchCert),
-			clientKeyPath: platform.GetFilePath(platform.MismatchKey),
-			wantError: fmt.Errorf(`tls: unknown certificate authority`),
+			clientRootCertPath:    platform.GetFilePath(platform.ServerCert),
+			clientCertPath:        platform.GetFilePath(platform.MismatchCert),
+			clientKeyPath:         platform.GetFilePath(platform.MismatchKey),
+			wantError:             fmt.Errorf(`tls: unknown certificate authority`),
 		},
 		{
 			desc:                  "failure(mTLS), proxy's cert is unknown to client",
@@ -248,10 +248,10 @@ func TestDownstreamMTLS(t *testing.T) {
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
-			clientRootCertPath:              platform.GetFilePath(platform.MismatchCert),
-			clientCertPath:  platform.GetFilePath(platform.DownstreamClientCert),
-			clientKeyPath: platform.GetFilePath(platform.DownstreamClientKey),
-			wantError: fmt.Errorf("x509: certificate signed by unknown authority"),
+			clientRootCertPath:    platform.GetFilePath(platform.MismatchCert),
+			clientCertPath:        platform.GetFilePath(platform.DownstreamClientCert),
+			clientKeyPath:         platform.GetFilePath(platform.DownstreamClientKey),
+			wantError:             fmt.Errorf("x509: certificate signed by unknown authority"),
 		},
 		{
 			desc:                  "success(mTLS),  correct setup",
@@ -259,10 +259,10 @@ func TestDownstreamMTLS(t *testing.T) {
 			httpVersions:          []int{1},
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
-			clientRootCertPath:              platform.GetFilePath(platform.ServerCert),
-			clientCertPath:  platform.GetFilePath(platform.DownstreamClientCert),
-			clientKeyPath: platform.GetFilePath(platform.DownstreamClientKey),
-			wantResp: `simple get message`,
+			clientRootCertPath:    platform.GetFilePath(platform.ServerCert),
+			clientCertPath:        platform.GetFilePath(platform.DownstreamClientCert),
+			clientKeyPath:         platform.GetFilePath(platform.DownstreamClientKey),
+			wantResp:              `simple get message`,
 		},
 	}
 
