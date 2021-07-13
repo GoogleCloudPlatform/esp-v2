@@ -176,7 +176,13 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument('--ssl_server_cert_path', default=None, help='''
         Proxy's server cert path. When configured, ESPv2 only accepts HTTP/1.x and
         HTTP/2 secure connections on listener_port. Requires the certificate and
-        key files "server.crt" and "server.key" within this path.''')
+        key files "server.crt" and "server.key" within this path.
+        
+        Before using this feature, please make sure TLS isn't terminated before ESPv2
+        in your deployment model. In general, Cloud Run, GKE(GCLB enforced in ingress)
+        and GCE with GCLB configured terminates TLS before ESPv2. If that's the case,
+        please don't set up flag. 
+        ''')
 
     parser.add_argument('--ssl_server_cipher_suites', default=None, help='''
         Cipher suites to use for downstream connections as a comma-separated list.
@@ -186,7 +192,10 @@ environment variable or by passing "-k" flag to this script.
          The file path of root certificates that ESPv2 uses to verify downstream client certificate.
         If not specified, ESPv2 doesn't verify client certificates by default. 
         
-        Before using this feature, please check if the compute platform ESPv2 is deployed supports self-managed mTLS.
+        Before using this feature, please make sure mTLS isn't terminated before ESPv2
+        in your deployment model. In general, Cloud Run, GKE(GCLB enforced in ingress)
+        and GCE with GCLB configured terminates mTLS before ESPv2. If that's the case,
+        please don't set up flag. 
         ''')
 
     parser.add_argument('--ssl_backend_client_cert_path', default=None, help='''
