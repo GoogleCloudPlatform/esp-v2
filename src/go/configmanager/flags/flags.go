@@ -60,7 +60,7 @@ var (
 
 	SslServerCertPath                = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
 	SslServerCipherSuites            = flag.String("ssl_server_cipher_suites", "", "Cipher suites to use for downstream connections as a comma-separated list.")
-	SslServerRootCertsPath           = flag.String("ssl_server_root_cert_path", "", "The file path of root certificates that ESPv2 uses to verify downstream client certificate. If not specified, ESPv2 doesn't the validation by default.")
+	SslServerRootCertsPath           = flag.String("ssl_server_root_cert_path", "", "The file path of root certificates that ESPv2 uses to verify downstream client certificate. If not specified, ESPv2 doesn't verify client certificates by default")
 	SslSidestreamClientRootCertsPath = flag.String("ssl_sidestream_client_root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection to all external services other than the backend.")
 	SslBackendClientCertPath         = flag.String("ssl_backend_client_cert_path", "", "Path to the certificate and key that ESPv2 uses to enable TLS mutual authentication for HTTPS backend")
 	SslBackendClientRootCertsPath    = flag.String("ssl_backend_client_root_certs_path", util.DefaultRootCAPaths, "Path to the root certificates to make TLS connection to the HTTPS backend.")

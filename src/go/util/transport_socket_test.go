@@ -221,9 +221,10 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 								"filename": "/etc/ssl/endpoints/root.crt"
 							}
 						}
-					}
+					},
+					"requireClientCertificate": true
 				}
-			} `,
+			}`,
 		},
 		{
 			desc:               "Downstream Transport Socket for TLS, with version requirements",

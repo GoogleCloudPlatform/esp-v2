@@ -183,8 +183,8 @@ environment variable or by passing "-k" flag to this script.
         Please refer to https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/auth/common.proto#auth-tlsparameters''')
 
     parser.add_argument('--ssl_server_root_cert_path', default=None, help='''
-         The file path of root certificates that ESPv2 uses to do downstream client certificate-based authentication.
-        If not specified, ESPv2 doesn't it by default. 
+         The file path of root certificates that ESPv2 uses to verify downstream client certificate.
+        If not specified, ESPv2 doesn't verify client certificates by default. 
         
         Before using this feature, please verify if your compute environment is compatible with it.
         ''')

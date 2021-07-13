@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
@@ -91,10 +92,15 @@ func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimu
 		return nil, err
 	}
 	commonTls.AlpnProtocols = []string{"h2", "http/1.1"}
-	tlsContext, err := ptypes.MarshalAny(&tlspb.DownstreamTlsContext{
+	downstreamTlsContext := &tlspb.DownstreamTlsContext{
 		CommonTlsContext: commonTls,
-	},
-	)
+	}
+	if sslServerRootPath != "" {
+		downstreamTlsContext.RequireClientCertificate = &wrappers.BoolValue{
+			Value: true,
+		}
+	}
+	tlsContext, err := ptypes.MarshalAny(downstreamTlsContext)
 	if err != nil {
 		return nil, err
 	}
