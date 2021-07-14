@@ -1,3 +1,8 @@
+# Release 2.29.1 14-07-2021
+
+- Support downstream mTLS (#560)
+- Support backendRetryOnStatusCodes (#554)
+
 # Release 2.29.0 30-06-2021
 
 - Restored the old way of setting scheme header according to upstream connection security level (#546)
