@@ -557,6 +557,25 @@ environment variable or by passing "-k" flag to this script.
         Specify JWT public key cache duration in seconds. The default is 5 minutes.'''
     )
     parser.add_argument(
+        '--jwks_fetch_num_retries',
+        default=None, type=int,
+        help='''
+        Specify the remote JWKS fetch retry policy's number of retries. default None.'''
+    )
+    parser.add_argument(
+        '--jwks_fetch_retry_back_off_base_interval_ms',
+        default=None, type=int,
+        help='''
+        Specify JWKS fetch retry exponential back off base interval in milliseconds. default 200ms if not set'''
+    )
+    parser.add_argument(
+        '--jwks_fetch_retry_back_off_max_interval_ms',
+        default=None, type=int,
+        help='''
+        Specify JWKS fetch retry exponential back off maximum interval in milliseconds. default 32 seconds if not set.'''
+    )
+
+    parser.add_argument(
         '--http_request_timeout_s',
         default=None, type=int,
         help='''
@@ -1032,6 +1051,12 @@ def gen_proxy_config(args):
         proxy_conf.append("--disable_jwks_async_fetch")
     if args.jwks_cache_duration_in_s:
          proxy_conf.extend(["--jwks_cache_duration_in_s", args.jwks_cache_duration_in_s])
+    if args.jwks_fetch_num_retries:
+         proxy_conf.extend(["--jwks_fetch_num_retries", args.jwks_fetch_num_retries])
+    if args.jwks_fetch_retry_back_off_base_interval_ms:
+         proxy_conf.extend(["--jwks_fetch_retry_back_off_base_interval_ms", args.jwks_fetch_retry_back_off_base_interval_ms])
+    if args.jwks_fetch_retry_back_off_max_interval_ms:
+         proxy_conf.extend(["--jwks_fetch_retry_back_off_max_interval_ms", args.jwks_fetch_retry_back_off_max_interval_ms])
 
     if args.management:
         proxy_conf.extend(["--service_management_url", args.management])
