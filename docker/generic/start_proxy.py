@@ -563,16 +563,16 @@ environment variable or by passing "-k" flag to this script.
         Specify the remote JWKS fetch retry policy's number of retries. default None.'''
     )
     parser.add_argument(
-        '--jwks_fetch_retry_back_off_base_interval_ms',
-        default=None, type=int,
+        '--jwks_fetch_retry_back_off_base_interval',
+        default=None,
         help='''
-        Specify JWKS fetch retry exponential back off base interval in milliseconds. default 200ms if not set'''
+        Specify JWKS fetch retry exponential back off base interval in milliseconds. duration string. default 0.2s if not set'''
     )
     parser.add_argument(
-        '--jwks_fetch_retry_back_off_max_interval_ms',
-        default=None, type=int,
+        '--jwks_fetch_retry_back_off_max_interval',
+        default=None,
         help='''
-        Specify JWKS fetch retry exponential back off maximum interval in milliseconds. default 32 seconds if not set.'''
+        Specify JWKS fetch retry exponential back off maximum interval in milliseconds. duration string. default 32s if not set.'''
     )
 
     parser.add_argument(
