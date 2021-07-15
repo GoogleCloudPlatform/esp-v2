@@ -1053,10 +1053,10 @@ def gen_proxy_config(args):
          proxy_conf.extend(["--jwks_cache_duration_in_s", args.jwks_cache_duration_in_s])
     if args.jwks_fetch_num_retries:
          proxy_conf.extend(["--jwks_fetch_num_retries", args.jwks_fetch_num_retries])
-    if args.jwks_fetch_retry_back_off_base_interval_ms:
-         proxy_conf.extend(["--jwks_fetch_retry_back_off_base_interval_ms", args.jwks_fetch_retry_back_off_base_interval_ms])
-    if args.jwks_fetch_retry_back_off_max_interval_ms:
-         proxy_conf.extend(["--jwks_fetch_retry_back_off_max_interval_ms", args.jwks_fetch_retry_back_off_max_interval_ms])
+    if args.jwks_fetch_retry_back_off_base_interval:
+         proxy_conf.extend(["--jwks_fetch_retry_back_off_base_interval", args.jwks_fetch_retry_back_off_base_interval])
+    if args.jwks_fetch_retry_back_off_max_interval:
+         proxy_conf.extend(["--jwks_fetch_retry_back_off_max_interval", args.jwks_fetch_retry_back_off_max_interval])
 
     if args.management:
         proxy_conf.extend(["--service_management_url", args.management])
