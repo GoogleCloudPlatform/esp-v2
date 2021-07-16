@@ -42,10 +42,11 @@ var (
 	}
 	content, _ = ptypes.MarshalAny(sourceFile)
 
-	testProjectName       = "bookstore.endpoints.project123.cloud.goog"
-	testApiName           = "endpoints.examples.bookstore.Bookstore"
-	testServiceControlEnv = "servicecontrol.googleapis.com"
-	testConfigID          = "2019-03-02r0"
+	testProjectName         = "bookstore.endpoints.project123.cloud.goog"
+	testApiName             = "endpoints.examples.bookstore.Bookstore"
+	testServiceControlEnv   = "servicecontrol.googleapis.com"
+	testConfigID            = "2019-03-02r0"
+	testProtoDescriptorPath = "/host/descriptor"
 )
 
 func TestTranscoderFilter(t *testing.T) {
@@ -57,6 +58,7 @@ func TestTranscoderFilter(t *testing.T) {
 		transcodingPreserveProtoFieldNames      bool
 		transcodingIgnoreQueryParameters        string
 		transcodingIgnoreUnknownQueryParameters bool
+		transcodingFilePath                     string
 		wantTranscoderFilter                    string
 	}{
 		{
@@ -237,6 +239,63 @@ func TestTranscoderFilter(t *testing.T) {
 }
       `, fakeProtoDescriptor, testApiName),
 		},
+		{
+			desc: "Success. Generate transcoder filter with proto descriptor path",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+			},
+			transcodingFilePath: testProtoDescriptorPath,
+			wantTranscoderFilter: fmt.Sprintf(`
+{
+   "name":"envoy.filters.http.grpc_json_transcoder",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
+      "autoMapping":true,
+      "convertGrpcStatus":true,
+			"ignoredQueryParameters": [
+				"api_key",
+				"key"
+			],
+      "printOptions":{},
+      "protoDescriptor":"%s",
+      "services":[
+         "%s"
+      ]
+   }
+}
+      `, testProtoDescriptorPath, testApiName),
+		},
+		{
+			desc: "Not generate transcoder filter without protofile",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+			},
+			transcodingFilePath:  testProtoDescriptorPath,
+			wantTranscoderFilter: "",
+		},
 	}
 
 	for i, tc := range testData {
@@ -248,13 +307,23 @@ func TestTranscoderFilter(t *testing.T) {
 			opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
 			opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
 			opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
+			opts.TranscodingFilePath = tc.transcodingFilePath
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
 
+			filterConfig := makeTranscoderFilter(fakeServiceInfo)
+			if filterConfig == nil && tc.wantTranscoderFilter == "" {
+				// Expected no filter config generated
+				return
+			}
+			if filterConfig == nil {
+				t.Fatal("Got empty filter config.")
+			}
+
 			marshaler := &jsonpb.Marshaler{}
-			gotFilter, err := marshaler.MarshalToString(makeTranscoderFilter(fakeServiceInfo))
+			gotFilter, err := marshaler.MarshalToString(filterConfig)
 			if err != nil {
 				t.Fatal(err)
 			}
