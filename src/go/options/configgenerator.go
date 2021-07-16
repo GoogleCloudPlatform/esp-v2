@@ -130,6 +130,7 @@ type ConfigGeneratorOptions struct {
 	TranscodingPreserveProtoFieldNames      bool
 	TranscodingIgnoreQueryParameters        string
 	TranscodingIgnoreUnknownQueryParameters bool
+	TranscodingFilePath                     string
 }
 
 // DefaultConfigGeneratorOptions returns ConfigGeneratorOptions with default values.

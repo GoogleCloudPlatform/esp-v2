@@ -191,6 +191,11 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) *hcmpb.HttpFilter {
 					PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
 				},
 			}
+			if serviceInfo.Options.TranscodingFilePath != "" {
+				transcodeConfig.DescriptorSet = &transcoderpb.GrpcJsonTranscoder_ProtoDescriptor{
+					ProtoDescriptor: serviceInfo.Options.TranscodingFilePath,
+				}
+			}
 
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
 
