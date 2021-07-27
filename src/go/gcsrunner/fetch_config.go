@@ -95,13 +95,17 @@ func newDefaultCredsGCSClient(ctx context.Context) (gcsReader, error) {
 //
 // Note that writing to file does not time out.
 func FetchConfigFromGCS(opts FetchConfigOptions) error {
+	start := time.Now()
 	b, err := readBytes(opts)
 	if err != nil {
 		return fmt.Errorf("failed to read object: %v", err)
 	}
+	glog.Infof("fetched config from GCS in %s", time.Since(start))
+	start = time.Now()
 	if err := writeFile(b, opts); err != nil {
 		return fmt.Errorf("failed to write data to file: %v", err)
 	}
+	glog.Infof("saved config to a local file in %s", time.Since(start))
 	return nil
 }
 
