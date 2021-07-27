@@ -14,15 +14,15 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-SERVICE_CONTROL_CLIENT_GIT_SHA = "fe31b51ebd60b8e2741ad1feb844e982a7c61fd1"
-SERVICE_CONTROL_CLIENT_SHA = "d8611b90b9e401770987c838afa8a79dd3d5af47b76bf77e9c59dcd6a38ef201"
+SERVICE_CONTROL_CLIENT_GIT_SHA = "b9e4683280549467e2962d2e030ff5fd52216755"
+SERVICE_CONTROL_CLIENT_SHA = "38817f4c6d2c374603a53a274f856c31c72d45848a41ff2b6ba1aa3fddbb7f6f"
 
 def service_control_client_repositories(bind = True):
     http_archive(
         name = "servicecontrol_client_git",
         sha256 = SERVICE_CONTROL_CLIENT_SHA,
-        strip_prefix = "service-control-client-cxx-" + SERVICE_CONTROL_CLIENT_GIT_SHA, # 2021-06-09
-        urls = ["https://github.com/cloudendpoints/service-control-client-cxx/archive/" + SERVICE_CONTROL_CLIENT_GIT_SHA + ".tar.gz"],
+        strip_prefix = "service-control-client-cxx-" + SERVICE_CONTROL_CLIENT_GIT_SHA,  # 2021-06-09
+        urls = ["https://github.com/qiwzhang/service-control-client-cxx/archive/" + SERVICE_CONTROL_CLIENT_GIT_SHA + ".tar.gz"],
         #TODO(taoxuy): remove this mapping once Envoy googleapis_git is updated to use the version with servicecontrol_proto change
         repo_mapping = {"@googleapis_git": "@com_github_googleapis_googleapis"},
     )
