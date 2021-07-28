@@ -76,6 +76,8 @@ func (fjs *FakeJwtService) SetupJwt(requestedProviders map[string]bool, ports *p
 			provider, err = newMockInvalidJwtProvider(addr)
 		} else if config.IsNonexistent {
 			provider = &MockJwtProvider{}
+		} else if config.IsPeriodicallyFailing && config.SuccessPeriod > 0 {
+			provider, err = newMockPeriodicallyFailingJwtProvider(addr, config.Keys, config.SuccessPeriod)
 		} else {
 			provider, err = newMockJwtProvider(addr, config.Keys)
 		}
@@ -224,6 +226,32 @@ func newMockInvalidJwtProvider(addr string) (*MockJwtProvider, error) {
 	mockJwtProvider.s.Listener = l
 	mockJwtProvider.s.Start()
 	return mockJwtProvider, nil
+}
+
+func newMockPeriodicallyFailingJwtProvider(addr, respKeys string, successPeriod int) (*MockJwtProvider, error) {
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("fail to create MockJwtProvider %v", err)
+	}
+	mockJwtProvider := &MockJwtProvider{
+		cnt: new(int32),
+	}
+	mockJwtProvider.s = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		atomic.AddInt32(mockJwtProvider.cnt, 1)
+		if mockJwtProvider.GetReqCnt()%successPeriod == 0 {
+			glog.Infof("Provider at addr %v responding with: %v", addr, respKeys)
+			w.Write([]byte(respKeys))
+		} else {
+			glog.Infof("Provider at addr %v responding with: HTTP 503 as requested", addr)
+			http.Error(w, `{"code": 503, "message": "service not found"}`, 503)
+		}
+	}))
+	mockJwtProvider.s.Listener.Close()
+	mockJwtProvider.s.Listener = l
+	mockJwtProvider.s.Start()
+	return mockJwtProvider, nil
+
 }
 
 // newOpenIDServer creates a new Jwt provider with fixed address.
