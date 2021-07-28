@@ -19,10 +19,10 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/wrappers"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
 const (
@@ -96,7 +96,7 @@ func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimu
 		CommonTlsContext: commonTls,
 	}
 	if sslServerRootPath != "" {
-		downstreamTlsContext.RequireClientCertificate = &wrappers.BoolValue{
+		downstreamTlsContext.RequireClientCertificate = &wrapperspb.BoolValue{
 			Value: true,
 		}
 	}
