@@ -198,7 +198,11 @@ func TestAuthJwksAsyncFetch(t *testing.T) {
 			method:              "GET",
 			jwksFetchNumRetries: 5,
 			token:               testdata.FakeCloudTokenMultiAudiences,
-			initProviderCnt:     &expectedRequestCount{provider, 1},
+			// minimum number of requests ( successful or otherwise ) done after envoy is started, but before a valid, JWT authorized, service request is issued )
+			// one successful fetch at init
+			initProviderCnt:     &expectedRequestCount{provider, 5},
+			// minimum number of requests ( successful or otherwise ) done after a JWT authorized service request succeeded )
+			// one successful fetch. so 5 minimum since using a provider that will fail 4 times before succeeding once.
 			afterProviderCnt:    &expectedRequestCount{provider, 5},
 			wantResp:            `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
