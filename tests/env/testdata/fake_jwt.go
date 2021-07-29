@@ -22,13 +22,15 @@ import (
 )
 
 type ProviderConfig struct {
-	Id               string
-	Issuer           string
-	Keys             string
-	IsInvalid        bool   // If invalid, then a server that always returns 503 is started up
-	IsNonexistent    bool   // If non-existent, then a server is not started up
-	HardcodedJwksUri string // This needs to be set for non-existent, since the URL cannot be derived
-	JwtLocations     []*confpb.JwtLocation
+	Id                    string
+	Issuer                string
+	Keys                  string
+	IsInvalid             bool // If invalid, then a server that always returns 503 is started up
+	IsNonexistent         bool // If non-existent, then a server is not started up
+	IsPeriodicallyFailing bool // If periodically failing, server succeeds 1/SuccessPeriod times, returns 503 otherwise
+	SuccessPeriod         int
+	HardcodedJwksUri      string // This needs to be set for non-existent, since the URL cannot be derived
+	JwtLocations          []*confpb.JwtLocation
 }
 
 var (
@@ -48,7 +50,8 @@ var (
 			Id:     GoogleJwtProvider,
 			Issuer: ApiProxyTestingIssuer,
 			Keys:   FakeCloudJwks,
-		}, {
+		},
+		{
 
 			Id:     EndpointsJwtProvider,
 			Issuer: JwtEndpointsIssuer,

@@ -108,8 +108,11 @@ type ConfigGeneratorOptions struct {
 	ConnectionBufferLimitBytes    int
 
 	// JwtAuthn related flags
-	DisableJwksAsyncFetch bool
-	JwksCacheDurationInS  int
+	DisableJwksAsyncFetch             bool
+	JwksCacheDurationInS              int
+	JwksFetchNumRetries               int
+	JwksFetchRetryBackOffBaseInterval time.Duration
+	JwksFetchRetryBackOffMaxInterval  time.Duration
 
 	ScCheckTimeoutMs  int
 	ScQuotaTimeoutMs  int
@@ -139,36 +142,39 @@ type ConfigGeneratorOptions struct {
 func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 
 	return ConfigGeneratorOptions{
-		CommonOptions:                    DefaultCommonOptions(),
-		BackendDnsLookupFamily:           "auto",
-		BackendAddress:                   fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
-		EnableBackendAddressOverride:     false,
-		ClusterConnectTimeout:            20 * time.Second,
-		StreamIdleTimeout:                util.DefaultIdleTimeout,
-		EnvoyXffNumTrustedHops:           2,
-		DisableJwksAsyncFetch:            false,
-		JwksCacheDurationInS:             300,
-		ListenerAddress:                  "0.0.0.0",
-		ListenerPort:                     8080,
-		TokenAgentPort:                   8791,
-		DisableOidcDiscovery:             false,
-		DependencyErrorBehavior:          commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
-		SslSidestreamClientRootCertsPath: util.DefaultRootCAPaths,
-		SslBackendClientRootCertsPath:    util.DefaultRootCAPaths,
-		SuppressEnvoyHeaders:             true,
-		NormalizePath:                    true,
-		MergeSlashesInPath:               true,
-		DisallowEscapedSlashesInPath:     false,
-		ServiceControlNetworkFailOpen:    true,
-		EnableGrpcForHttp1:               true,
-		ConnectionBufferLimitBytes:       -1,
-		ServiceManagementURL:             "https://servicemanagement.googleapis.com",
-		ServiceControlURL:                "https://servicecontrol.googleapis.com",
-		BackendRetryNum:                  1,
-		BackendRetryOns:                  "reset,connect-failure,refused-stream",
-		ScCheckRetries:                   -1,
-		ScQuotaRetries:                   -1,
-		ScReportRetries:                  -1,
-		CorsMaxAge:                       480 * time.Hour,
+		CommonOptions:                     DefaultCommonOptions(),
+		BackendDnsLookupFamily:            "auto",
+		BackendAddress:                    fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
+		EnableBackendAddressOverride:      false,
+		ClusterConnectTimeout:             20 * time.Second,
+		StreamIdleTimeout:                 util.DefaultIdleTimeout,
+		EnvoyXffNumTrustedHops:            2,
+		DisableJwksAsyncFetch:             false,
+		JwksCacheDurationInS:              300,
+		JwksFetchNumRetries:               0,
+		JwksFetchRetryBackOffBaseInterval: 200 * time.Millisecond,
+		JwksFetchRetryBackOffMaxInterval:  32 * time.Second,
+		ListenerAddress:                   "0.0.0.0",
+		ListenerPort:                      8080,
+		TokenAgentPort:                    8791,
+		DisableOidcDiscovery:              false,
+		DependencyErrorBehavior:           commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
+		SslSidestreamClientRootCertsPath:  util.DefaultRootCAPaths,
+		SslBackendClientRootCertsPath:     util.DefaultRootCAPaths,
+		SuppressEnvoyHeaders:              true,
+		NormalizePath:                     true,
+		MergeSlashesInPath:                true,
+		DisallowEscapedSlashesInPath:      false,
+		ServiceControlNetworkFailOpen:     true,
+		EnableGrpcForHttp1:                true,
+		ConnectionBufferLimitBytes:        -1,
+		ServiceManagementURL:              "https://servicemanagement.googleapis.com",
+		ServiceControlURL:                 "https://servicecontrol.googleapis.com",
+		BackendRetryNum:                   1,
+		BackendRetryOns:                   "reset,connect-failure,refused-stream",
+		ScCheckRetries:                    -1,
+		ScQuotaRetries:                    -1,
+		ScReportRetries:                   -1,
+		CorsMaxAge:                        480 * time.Hour,
 	}
 }

@@ -42,6 +42,7 @@ func TestAuthJwksCache(t *testing.T) {
 		token                  string
 		apiKey                 string
 		jwksCacheDurationInS   int
+		jwksFetchNumRetries    int
 		wantRequestsToProvider *expectedRequestCount
 		wantResp               string
 	}{
@@ -64,6 +65,16 @@ func TestAuthJwksCache(t *testing.T) {
 			wantRequestsToProvider: &expectedRequestCount{provider, 5},
 			wantResp:               `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
+		{
+			desc:                   "Success, the customized jwks succeeds once every five requests so 5 request to the jwks provider will be made",
+			path:                   "/auth/info/auth0",
+			apiKey:                 "api-key",
+			method:                 "GET",
+			jwksFetchNumRetries:    5,
+			token:                  testdata.FakeCloudTokenMultiAudiences,
+			wantRequestsToProvider: &expectedRequestCount{provider, 5},
+			wantResp:               `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
 	}
 	for _, tc := range testData {
 		func() {
@@ -73,6 +84,25 @@ func TestAuthJwksCache(t *testing.T) {
 			args = append(args, "--disable_jwks_async_fetch")
 			if tc.jwksCacheDurationInS != 0 {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
+			}
+			if tc.jwksFetchNumRetries != 0 {
+				args = append(args, fmt.Sprintf("--jwks_fetch_num_retries=%v", tc.jwksFetchNumRetries))
+				for _, config := range testdata.ProviderConfigs {
+					if config.Id == provider {
+						// alter hard-coded provider's configuration just for this test
+						// all requests will only succeed on the last retry.
+						config.IsPeriodicallyFailing = true
+						config.SuccessPeriod = tc.jwksFetchNumRetries
+					}
+				}
+			} else {
+				for _, config := range testdata.ProviderConfigs {
+					if config.Id == provider {
+						// restore hard-coded provider's configuration do default
+						config.IsPeriodicallyFailing = false
+						config.SuccessPeriod = 0
+					}
+				}
 			}
 
 			defer s.TearDown(t)
@@ -130,6 +160,7 @@ func TestAuthJwksAsyncFetch(t *testing.T) {
 		token                string
 		apiKey               string
 		jwksCacheDurationInS int
+		jwksFetchNumRetries  int
 		initProviderCnt      *expectedRequestCount
 		sleep                int
 		afterProviderCnt     *expectedRequestCount
@@ -160,6 +191,21 @@ func TestAuthJwksAsyncFetch(t *testing.T) {
 			afterProviderCnt: &expectedRequestCount{provider, 5},
 			wantResp:         `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
+		{
+			desc:                "Success, the jwks provider succeeds only once every 5 requests so at least 5 request to the jwks provider will be made",
+			path:                "/auth/info/auth0",
+			apiKey:              "api-key",
+			method:              "GET",
+			jwksFetchNumRetries: 5,
+			token:               testdata.FakeCloudTokenMultiAudiences,
+			// minimum number of requests ( successful or otherwise ) done after envoy is started, but before a valid, JWT authorized, service request is issued )
+			// one successful fetch at init
+			initProviderCnt: &expectedRequestCount{provider, 5},
+			// minimum number of requests ( successful or otherwise ) done after a JWT authorized service request succeeded )
+			// one successful fetch. so 5 minimum since using a provider that will fail 4 times before succeeding once.
+			afterProviderCnt: &expectedRequestCount{provider, 5},
+			wantResp:         `{"aud":["admin.cloud.goog","bookstore_test_client.cloud.goog"],"exp":4698318999,"iat":1544718999,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
 	}
 	for _, tc := range testData {
 		func() {
@@ -168,6 +214,25 @@ func TestAuthJwksAsyncFetch(t *testing.T) {
 			s := env.NewTestEnv(platform.TestAuthJwksAsyncFetch, platform.EchoSidecar)
 			if tc.jwksCacheDurationInS != 0 {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
+			}
+			if tc.jwksFetchNumRetries != 0 {
+				args = append(args, fmt.Sprintf("--jwks_fetch_num_retries=%v", tc.jwksFetchNumRetries))
+				for _, config := range testdata.ProviderConfigs {
+					if config.Id == provider {
+						// alter hard-coded provider's configuration just for this test
+						// all requests will only succeed on the last retry.
+						config.IsPeriodicallyFailing = true
+						config.SuccessPeriod = tc.jwksFetchNumRetries
+					}
+				}
+			} else {
+				for _, config := range testdata.ProviderConfigs {
+					if config.Id == provider {
+						// restore hard-coded provider's configuration do default
+						config.IsPeriodicallyFailing = false
+						config.SuccessPeriod = 0
+					}
+				}
 			}
 
 			defer s.TearDown(t)

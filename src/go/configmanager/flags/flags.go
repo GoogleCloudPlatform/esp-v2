@@ -132,6 +132,10 @@ var (
 	DisableJwksAsyncFetch = flag.Bool("disable_jwks_async_fetch", false, `When the feature is enabled, JWKS is fetched before processing any requests. When disabled, JWKS is fetched on-demand when processing the requests.`)
 	JwksCacheDurationInS  = flag.Int("jwks_cache_duration_in_s", 300, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
 
+	JwksFetchNumRetries                 = flag.Int("jwks_fetch_num_retries", 0, `Specify the remote JWKS fetch retry policy's number of retries. The default is 0, meaning no retry policy applied.`)
+	JwksFetchRetryBackOffBaseIntervalMs = flag.Int("jwks_fetch_retry_back_off_base_interval_ms", 200, `Specify JWKS fetch retry exponential back off base interval in milliseconds. The default is 200 milliseconds.`)
+	JwksFetchRetryBackOffMaxIntervalMs  = flag.Int("jwks_fetch_retry_back_off_max_interval_ms", 32000, `Specify JWKS fetch retry exponential back off maximum interval in milliseconds. The default is 32 seconds.`)
+
 	ScCheckTimeoutMs  = flag.Int("service_control_check_timeout_ms", 0, `Set the timeout in millisecond for service control Check request. Must be > 0 and the default is 1000 if not set.`)
 	ScQuotaTimeoutMs  = flag.Int("service_control_quota_timeout_ms", 0, `Set the timeout in millisecond for service control Quota request. Must be > 0 and the default is 1000 if not set.`)
 	ScReportTimeoutMs = flag.Int("service_control_report_timeout_ms", 0, `Set the timeout in millisecond for service control Report request. Must be > 0 and the default is 2000 if not set.`)
@@ -242,6 +246,9 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ConnectionBufferLimitBytes:              *ConnectionBufferLimitBytes,
 		DisableJwksAsyncFetch:                   *DisableJwksAsyncFetch,
 		JwksCacheDurationInS:                    *JwksCacheDurationInS,
+		JwksFetchNumRetries:                     *JwksFetchNumRetries,
+		JwksFetchRetryBackOffBaseInterval:       time.Duration(*JwksFetchRetryBackOffBaseIntervalMs) * time.Millisecond,
+		JwksFetchRetryBackOffMaxInterval:        time.Duration(*JwksFetchRetryBackOffMaxIntervalMs) * time.Millisecond,
 		BackendRetryOns:                         *BackendRetryOns,
 		BackendRetryNum:                         *BackendRetryNum,
 		BackendPerTryTimeout:                    *BackendPerTryTimeout,

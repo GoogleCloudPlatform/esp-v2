@@ -117,6 +117,27 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
+            # jwks_fetch retry backoff
+            (['-R=managed','--disable_jwks_async_fetch',
+              '--jwks_fetch_num_retries=10',
+              '--jwks_fetch_retry_back_off_base_interval=100',
+              '--jwks_fetch_retry_back_off_max_interval=32000',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--check_metadata',
+              '--disable_tracing', '--underscores_in_headers'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--disable_jwks_async_fetch',
+              '--jwks_fetch_num_retries', '10',
+              '--jwks_fetch_retry_back_off_base_interval_ms', '100',
+              '--jwks_fetch_retry_back_off_max_interval_ms', '32000',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata', '--underscores_in_headers',
+              '--disable_tracing'
+              ]),
             # service_control_network_fail_policy=open
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',

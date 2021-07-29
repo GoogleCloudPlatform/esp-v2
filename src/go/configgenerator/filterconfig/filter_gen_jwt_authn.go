@@ -23,6 +23,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
 	anypb "github.com/golang/protobuf/ptypes/any"
+	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 
@@ -78,6 +79,19 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 		}
 		if !serviceInfo.Options.DisableJwksAsyncFetch {
 			jwks.AsyncFetch = &jwtpb.JwksAsyncFetch{}
+		}
+		if serviceInfo.Options.JwksFetchNumRetries > 0 {
+			// only create a retry policy, evenutally with a backoff if it is required.
+			rp := &corepb.RetryPolicy{
+				NumRetries: &wrapperspb.UInt32Value{
+					Value: uint32(serviceInfo.Options.JwksFetchNumRetries),
+				},
+				RetryBackOff: &corepb.BackoffStrategy{
+					BaseInterval: ptypes.DurationProto(serviceInfo.Options.JwksFetchRetryBackOffBaseInterval),
+					MaxInterval:  ptypes.DurationProto(serviceInfo.Options.JwksFetchRetryBackOffMaxInterval),
+				},
+			}
+			jwks.RetryPolicy = rp
 		}
 
 		jp := &jwtpb.JwtProvider{
