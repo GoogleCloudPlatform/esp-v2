@@ -2092,7 +2092,7 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 			},
 		},
 		{
-			desc:              "Streaming methods with NO deadline specified use the default stream timeout.",
+			desc:              "Streaming methods with NO deadline specified and the global timeout larger than the default deadline, use the global timeout.",
 			globalIdleTimeout: 25 * time.Second,
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
@@ -2118,6 +2118,35 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 			},
 			wantedMethodIdleTimeout: map[string]time.Duration{
 				"abc.com.api": 25 * time.Second,
+			},
+		},
+		{
+			desc:              "Streaming methods with NO deadline specified and the global timeout smaller than the default deadline, use the default deadline.",
+			globalIdleTimeout: 7 * time.Second,
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:             "api",
+								RequestStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							// Missing deadline
+						},
+					},
+				},
+			},
+			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultResponseDeadline + time.Second,
 			},
 		},
 	}

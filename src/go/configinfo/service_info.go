@@ -578,8 +578,8 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 	var idleTimeout time.Duration
 	if method.IsStreaming {
 		if r.Deadline <= 0 {
-			// User did not specify a deadline, use global stream idle timeout.
-			idleTimeout = s.Options.StreamIdleTimeout
+			// When the backend deadline is unspecified , calculate the streamIdleTimeout based on max{defaultTimeout, globalStreamIdleTimeout} .
+			idleTimeout = calculateStreamIdleTimeout(util.DefaultResponseDeadline, s.Options)
 		} else {
 			// User configured deadline serves as the stream idle timeout.
 			idleTimeout = deadline
