@@ -224,16 +224,13 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 			},
 		},
 		{
-			// TODO(nareddyt): The response code here is a minor bug.
-			// It's coming from the SC filter, as the CORS filters just continues
-			// the pipeline when the origin mismatches.
 			desc: "CORS preflight request is invalid because the origin does not match.",
 			reqHeaders: map[string]string{
 				"Origin":                         "https://some.unknown.origin.com",
 				"Access-Control-Request-Method":  corsRequestMethod,
 				"Access-Control-Request-Headers": corsRequestHeader,
 			},
-			wantError: `405 Method Not Allowed`,
+			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`,
 			wantRespHeaders: map[string]string{
 				"Access-Control-Allow-Origin":      "",
 				"Access-Control-Allow-Methods":     "",
@@ -249,7 +246,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Access-Control-Request-Method":  corsRequestMethod,
 				"Access-Control-Request-Headers": corsRequestHeader,
 			},
-			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"}`,
+			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`,
 			wantRespHeaders: map[string]string{
 				"Access-Control-Allow-Origin":      "",
 				"Access-Control-Allow-Methods":     "",
@@ -265,7 +262,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Origin":                         corsAllowOriginValue,
 				"Access-Control-Request-Headers": corsRequestHeader,
 			},
-			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"}`,
+			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`,
 			wantRespHeaders: map[string]string{
 				"Access-Control-Allow-Origin":      "",
 				"Access-Control-Allow-Methods":     "",

@@ -2908,7 +2908,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 `,
 		},
 		{
-			desc: "ensure the order of backend routes, 405 routes, cors routes and 404 route",
+			desc: "ensure the order of backend routes, 405 routes, cors exact origin routes, and 404 route",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -3069,7 +3069,7 @@ func TestMakeFallbackRoute(t *testing.T) {
               },
               {
                 "name": "origin",
-                "presentMatch": true
+                "exactMatch": "http://example.com"
               },
               {
                 "name": "access-control-request-method",
@@ -3088,7 +3088,255 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "directResponse": {
             "body": {
-              "inlineString": "The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"
+              "inlineString": "The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."
+            },
+            "status": 400
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "OPTIONS",
+                "name": ":method"
+              }
+            ],
+            "prefix": "/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}`,
+		},
+		{
+			desc: "ensure the order of backend routes, 405 routes, cors regex origin routes, and 404 route",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo_Get",
+							},
+							{
+								Name: "Echo_Post",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo_Get", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/echo",
+						},
+					},
+					{
+						Selector: fmt.Sprintf("%s.Echo_Post", testApiName),
+						Pattern: &annotationspb.HttpRule_Post{
+							Post: "/echo",
+						},
+					},
+				},
+				},
+			},
+			params: []string{"cors_with_regex", "", ".*", "GET,POST,PUT,OPTIONS", "", "", "2m"},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "cors": {
+        "allowCredentials": false,
+        "allowMethods": "GET,POST,PUT,OPTIONS",
+        "allowOriginStringMatch": [
+          {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": ".*"
+            }
+          }
+        ],
+        "maxAge": "120"
+      },
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Echo_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo_Get",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Get"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "GET",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo/"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo_Get",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Post"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo_Post",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo_Post"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "POST",
+                "name": ":method"
+              }
+            ],
+            "path": "/echo/"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo_Post",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress"
+          },
+          "match": {
+            "headers": [
+              {
+                "exactMatch": "OPTIONS",
+                "name": ":method"
+              },
+              {
+                "name": "origin",
+                "safeRegexMatch": {
+                  "googleRe2": {},
+                  "regex": ".*"
+                }
+              },
+              {
+                "name": "access-control-request-method",
+                "presentMatch": true
+              }
+            ],
+            "prefix": "/"
+          },
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."
             },
             "status": 400
           },
