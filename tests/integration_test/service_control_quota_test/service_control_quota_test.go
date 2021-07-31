@@ -210,7 +210,7 @@ func (h *unavailableQuotaServiceHandler) ServeHTTP(w http.ResponseWriter, r *htt
 	w.WriteHeader(404)
 }
 
-func TestServiceControlQuotaUnavailable(t *testing.T) {
+func TestServiceControlQuotaFailOpen(t *testing.T) {
 	t.Parallel()
 
 	serviceName := "test-bookstore"
@@ -237,7 +237,7 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
 
-	type testType struct {
+	testData := []struct {
 		desc                  string
 		clientProtocol        string
 		method                string
@@ -249,19 +249,156 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 		wantScRequestCount    int
 		wantScRequests        []interface{}
 		wantGetScRequestError error
+	}{
+		{
+			desc:           "first request is granted with 3 service calls: check, quota and report",
+			clientProtocol: "http",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
+			httpMethod:     "GET",
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedCheck{
+					Version:         utils.ESPv2Version(),
+					ServiceName:     "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID: "test-config-id",
+					ConsumerID:      "api_key:api-key",
+					OperationName:   "endpoints.examples.bookstore.Bookstore.ListShelves",
+					CallerIp:        platform.GetLoopbackAddress(),
+				},
+				&utils.ExpectedQuota{
+					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ConsumerID:  "api_key:api-key",
+					QuotaMetrics: map[string]int64{
+						"metrics_first":  2,
+						"metrics_second": 1,
+					},
+					QuotaMode:       scpb.QuotaOperation_BEST_EFFORT,
+					ServiceConfigID: "test-config-id",
+				},
+				&utils.ExpectedReport{
+					Version:                      utils.ESPv2Version(),
+					ServiceName:                  "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:              "test-config-id",
+					URL:                          "/v1/shelves?key=api-key",
+					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiVersion:                   "1.0.0",
+					ApiKeyState:                  "VERIFIED",
+					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ApiName:                      "endpoints.examples.bookstore.Bookstore",
+					ProducerProjectID:            "producer project",
+					ConsumerProjectID:            "123456",
+					FrontendProtocol:             "http",
+					BackendProtocol:              "grpc",
+					HttpMethod:                   "GET",
+					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
+					StatusCode:                   "0",
+					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
+					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
+					// Here is the first request.
+					ResponseCode: 200,
+					Platform:     util.GCE,
+					Location:     "test-zone",
+				},
+			},
+		},
+		{
+			// quota server return 404, with fail-open policy, cached quota result is positive.
+			// check use cache,  use cached quota, but aggregated quota is flushed out before report
+			desc:           "second call, request is granted with 2 service control: quota, report",
+			clientProtocol: "http",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
+			httpMethod:     "GET",
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedQuota{
+					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ConsumerID:  "api_key:api-key",
+					QuotaMetrics: map[string]int64{
+						"metrics_first":  2,
+						"metrics_second": 1,
+					},
+					QuotaMode:       scpb.QuotaOperation_BEST_EFFORT,
+					ServiceConfigID: "test-config-id",
+				},
+				&utils.ExpectedReport{
+					Version:                      utils.ESPv2Version(),
+					ServiceName:                  "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:              "test-config-id",
+					URL:                          "/v1/shelves?key=api-key",
+					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiVersion:                   "1.0.0",
+					ApiKeyState:                  "VERIFIED",
+					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ApiName:                      "endpoints.examples.bookstore.Bookstore",
+					ProducerProjectID:            "producer project",
+					ConsumerProjectID:            "123456",
+					FrontendProtocol:             "http",
+					BackendProtocol:              "grpc",
+					HttpMethod:                   "GET",
+					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
+					StatusCode:                   "0",
+					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
+					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
+					// Here is the first request.
+					ResponseCode: 200,
+					Platform:     util.GCE,
+					Location:     "test-zone",
+				},
+			},
+		},
+		{
+			// the third call should be the same as the second one.
+			desc:           "third call, request is granted with 2 service control: quota, report",
+			clientProtocol: "http",
+			method:         "/v1/shelves?key=api-key",
+			token:          testdata.FakeCloudTokenMultiAudiences,
+			httpMethod:     "GET",
+			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
+			wantScRequests: []interface{}{
+				&utils.ExpectedQuota{
+					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ConsumerID:  "api_key:api-key",
+					QuotaMetrics: map[string]int64{
+						"metrics_first":  2,
+						"metrics_second": 1,
+					},
+					QuotaMode:       scpb.QuotaOperation_BEST_EFFORT,
+					ServiceConfigID: "test-config-id",
+				},
+				&utils.ExpectedReport{
+					Version:                      utils.ESPv2Version(),
+					ServiceName:                  "bookstore.endpoints.cloudesf-testing.cloud.goog",
+					ServiceConfigID:              "test-config-id",
+					URL:                          "/v1/shelves?key=api-key",
+					ApiKeyInOperationAndLogEntry: "api-key",
+					ApiVersion:                   "1.0.0",
+					ApiKeyState:                  "VERIFIED",
+					ApiMethod:                    "endpoints.examples.bookstore.Bookstore.ListShelves",
+					ApiName:                      "endpoints.examples.bookstore.Bookstore",
+					ProducerProjectID:            "producer project",
+					ConsumerProjectID:            "123456",
+					FrontendProtocol:             "http",
+					BackendProtocol:              "grpc",
+					HttpMethod:                   "GET",
+					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
+					StatusCode:                   "0",
+					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
+					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
+					// Here is the first request.
+					ResponseCode: 200,
+					Platform:     util.GCE,
+					Location:     "test-zone",
+				},
+			},
+		},
 	}
 
-	tc := testType{
-		desc:               "succeed, when the service control quota api is unavailable, the request still passes and works well",
-		clientProtocol:     "http",
-		method:             "/v1/shelves?key=api-key",
-		token:              testdata.FakeCloudTokenMultiAudiences,
-		httpMethod:         "GET",
-		wantResp:           `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
-		wantScRequestCount: 3,
-	}
-
-	for i := 0; i < 3; i++ {
+	for _, tc := range testData {
 		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 		resp, err := bsClient.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, http.Header{})
 
@@ -272,10 +409,11 @@ func TestServiceControlQuotaUnavailable(t *testing.T) {
 			t.Errorf("Test (%s): failed,  expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
 		}
 
-		err = s.ServiceControlServer.VerifyRequestCount(tc.wantScRequestCount)
-		if err != nil {
-			t.Fatalf("Test (%s): failed, %s", tc.desc, err.Error())
+		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+		if err1 != nil {
+			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
 		}
+		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}
 }
 
@@ -343,7 +481,6 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					OperationName:   "endpoints.examples.bookstore.Bookstore.ListShelves",
 					CallerIp:        platform.GetLoopbackAddress(),
 				},
-
 				&utils.ExpectedQuota{
 					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
 					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
@@ -389,17 +526,6 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			httpMethod:     "GET",
 			httpCallError:  `429 Too Many Requests, {"code":429,"message":"RESOURCE_EXHAUSTED"}`,
 			wantScRequests: []interface{}{
-				&utils.ExpectedQuota{
-					ServiceName: "bookstore.endpoints.cloudesf-testing.cloud.goog",
-					MethodName:  "endpoints.examples.bookstore.Bookstore.ListShelves",
-					ConsumerID:  "api_key:api-key",
-					QuotaMetrics: map[string]int64{
-						"metrics_first":  2,
-						"metrics_second": 1,
-					},
-					QuotaMode:       scpb.QuotaOperation_NORMAL,
-					ServiceConfigID: "test-config-id",
-				},
 				&utils.ExpectedReport{
 					Version:                      utils.ESPv2Version(),
 					ServiceName:                  "bookstore.endpoints.cloudesf-testing.cloud.goog",
@@ -445,9 +571,11 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			}
 		}
 
-		scRequests, err1 := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
+		// If cached quota response is negative, it send CHECK_ONLY quota call every second.
+		// Such Check_only calls should be removed when verifying ScRequests.
+		scRequests, err1 := s.ServiceControlServer.GetRequestsWithoutCheckOnlyQuota(len(tc.wantScRequests))
 		if err1 != nil {
-			t.Fatalf("Test (%s): failed, GetRequests returns error: %v", tc.desc, err1)
+			t.Fatalf("Test (%s): failed, GetRequestsWithoutCheckOnlyQuota returns error: %v", tc.desc, err1)
 		}
 		utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
 	}

@@ -259,6 +259,35 @@ func (m *MockServiceCtrl) GetRequests(n int) ([]*utils.ServiceRequest, error) {
 	return r, nil
 }
 
+func isCheckOnlyQuota(in *utils.ServiceRequest) bool {
+	if in.ReqType != utils.QuotaRequest {
+		return false
+	}
+	got, err := utils.UnmarshalQuotaRequest(in.ReqBody)
+	// If not QuotaRequest, not to ignore
+	if err != nil {
+		return false
+	}
+	return got.AllocateOperation.QuotaMode == scpb.QuotaOperation_CHECK_ONLY
+}
+
+// GetRequestsWithoutCheckOnlyQuota returns a slice of requests received.
+func (m *MockServiceCtrl) GetRequestsWithoutCheckOnlyQuota(n int) ([]*utils.ServiceRequest, error) {
+	r := make([]*utils.ServiceRequest, n)
+	for i := 0; i < n; {
+		select {
+		case d := <-m.ch:
+			if !isCheckOnlyQuota(d) {
+				r[i] = d
+				i++
+			}
+		case <-time.After(m.getRequestsTimeout):
+			return nil, fmt.Errorf("Timeout got %d, expected: %d", i, n)
+		}
+	}
+	return r, nil
+}
+
 // GetRequests returns a slice of requests received.
 func (m *MockServiceCtrl) GetAllRequests() []*utils.ServiceRequest {
 	r := []*utils.ServiceRequest{}
