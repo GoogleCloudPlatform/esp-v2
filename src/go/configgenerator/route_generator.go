@@ -154,6 +154,9 @@ func makeResponseHeadersToAdd(serviceInfo *configinfo.ServiceInfo) ([]*corepb.He
 
 func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []*routepb.Route, error) {
 	var cors *routepb.CorsPolicy
+	originMatcher := &routepb.HeaderMatcher{
+		Name: "origin",
+	}
 	switch serviceInfo.Options.CorsPreset {
 	case "basic":
 		org := serviceInfo.Options.CorsAllowOrigin
@@ -169,6 +172,9 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 				},
 			},
 		}
+		originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_ExactMatch{
+			ExactMatch: org,
+		}
 	case "cors_with_regex":
 		orgReg := serviceInfo.Options.CorsAllowOriginRegex
 		if orgReg == "" {
@@ -177,19 +183,23 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 		if err := util.ValidateRegexProgramSize(orgReg, util.GoogleRE2MaxProgramSize); err != nil {
 			return nil, nil, fmt.Errorf("invalid cors origin regex: %v", err)
 		}
+		regexMatcher := &matcher.RegexMatcher{
+			EngineType: &matcher.RegexMatcher_GoogleRe2{
+				GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
+			},
+			Regex: orgReg,
+		}
 		cors = &routepb.CorsPolicy{
 			AllowOriginStringMatch: []*matcher.StringMatcher{
 				{
 					MatchPattern: &matcher.StringMatcher_SafeRegex{
-						SafeRegex: &matcher.RegexMatcher{
-							EngineType: &matcher.RegexMatcher_GoogleRe2{
-								GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-							},
-							Regex: orgReg,
-						},
+						SafeRegex: regexMatcher,
 					},
 				},
 			},
+		}
+		originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_SafeRegexMatch{
+			SafeRegexMatch: regexMatcher,
 		}
 	case "":
 		if serviceInfo.Options.CorsAllowMethods != "" || serviceInfo.Options.CorsAllowHeaders != "" ||
@@ -223,12 +233,7 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 						ExactMatch: "OPTIONS",
 					},
 				},
-				{
-					Name: "origin",
-					HeaderMatchSpecifier: &routepb.HeaderMatcher_PresentMatch{
-						PresentMatch: true,
-					},
-				},
+				originMatcher,
 				{
 					Name: "access-control-request-method",
 					HeaderMatchSpecifier: &routepb.HeaderMatcher_PresentMatch{
@@ -272,7 +277,7 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 				Status: http.StatusBadRequest,
 				Body: &corepb.DataSource{
 					Specifier: &corepb.DataSource_InlineString{
-						InlineString: fmt.Sprintf("The CORS preflight request is missing one (or more) of the following required headers: Origin, Access-Control-Request-Method"),
+						InlineString: fmt.Sprintf("The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."),
 					},
 				},
 			},
