@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -370,14 +369,13 @@ plans {
 		t.Run(tc.desc, func(t *testing.T) {
 			s := env.NewTestEnv(platform.TestIdleTimeoutsForGrpcStreaming, platform.GrpcEchoSidecar)
 
-			if tc.methodDeadline != 0 {
-				s.AppendBackendRules([]*confpb.BackendRule{
-					{
-						Selector: "test.grpc.Test.EchoStream",
-						Deadline: tc.methodDeadline.Seconds(),
-					},
-				})
-			}
+			// b/194502699: Always create the backend rule, even if deadline is 0.
+			s.AppendBackendRules([]*confpb.BackendRule{
+				{
+					Selector: "test.grpc.Test.EchoStream",
+					Deadline: tc.methodDeadline.Seconds(),
+				},
+			})
 
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {
