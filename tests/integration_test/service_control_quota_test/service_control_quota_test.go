@@ -294,16 +294,14 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 					HttpMethod:                   "GET",
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:                   "0",
-					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
-					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
-					// Here is the first request.
-					ResponseCode: 200,
-					Platform:     util.GCE,
-					Location:     "test-zone",
+					ResponseCode:                 200,
+					Platform:                     util.GCE,
+					Location:                     "test-zone",
 				},
 			},
 		},
 		{
+			// TODO(b/194517193): Consider fail close for client-side error (4xx errors)
 			// quota server return 404, with fail-open policy, cached quota result is positive.
 			// check use cache,  use cached quota, but aggregated quota is flushed out before report
 			desc:           "second call, request is granted with 2 service control: quota, report",
@@ -341,12 +339,9 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 					HttpMethod:                   "GET",
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:                   "0",
-					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
-					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
-					// Here is the first request.
-					ResponseCode: 200,
-					Platform:     util.GCE,
-					Location:     "test-zone",
+					ResponseCode:                 200,
+					Platform:                     util.GCE,
+					Location:                     "test-zone",
 				},
 			},
 		},
@@ -387,12 +382,9 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 					HttpMethod:                   "GET",
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:                   "0",
-					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
-					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
-					// Here is the first request.
-					ResponseCode: 200,
-					Platform:     util.GCE,
-					Location:     "test-zone",
+					ResponseCode:                 200,
+					Platform:                     util.GCE,
+					Location:                     "test-zone",
 				},
 			},
 		},
@@ -509,12 +501,9 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					HttpMethod:                   "GET",
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:                   "0",
-					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
-					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
-					// Here is the first request.
-					ResponseCode: 200,
-					Platform:     util.GCE,
-					Location:     "test-zone",
+					ResponseCode:                 200,
+					Platform:                     util.GCE,
+					Location:                     "test-zone",
 				},
 			},
 		},
@@ -543,13 +532,10 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 					HttpMethod:                   "GET",
 					LogMessage:                   "endpoints.examples.bookstore.Bookstore.ListShelves is called",
 					StatusCode:                   "8",
-					// It always allow the first request, then cache its cost, accumulate all costs for 1 second,
-					// then call remote allocateQuota,  if fail, the next request will be failed with 429.
-					// Here is the second request.
-					ResponseCode:       429,
-					Platform:           util.GCE,
-					Location:           "test-zone",
-					ResponseCodeDetail: "service_control_quota_error{RESOURCE_EXHAUSTED}",
+					ResponseCode:                 429,
+					Platform:                     util.GCE,
+					Location:                     "test-zone",
+					ResponseCodeDetail:           "service_control_quota_error{RESOURCE_EXHAUSTED}",
 				},
 			},
 		},
@@ -573,6 +559,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 
 		// If cached quota response is negative, it send CHECK_ONLY quota call every second.
 		// Such Check_only calls should be removed when verifying ScRequests.
+		// Otherwise number of quota calls depends on the time, not easy to verify scRequests.
 		scRequests, err1 := s.ServiceControlServer.GetRequestsWithoutCheckOnlyQuota(len(tc.wantScRequests))
 		if err1 != nil {
 			t.Fatalf("Test (%s): failed, GetRequestsWithoutCheckOnlyQuota returns error: %v", tc.desc, err1)
