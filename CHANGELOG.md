@@ -1,3 +1,10 @@
+# Release 2.30.0 03-08-2021
+
+- Update service_control_client_cxx with improved quota cache. (#573)
+- b/194945474: Unify route match policy with CORS filter (#575)
+- Issue 533 update envoy 16319 jwks retries flags (#564)
+- Update Envoy to 1.19.0 (#572)
+
 # Release 2.29.1 14-07-2021
 
 - Support downstream mTLS (#560)
