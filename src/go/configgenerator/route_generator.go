@@ -172,8 +172,14 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 				},
 			},
 		}
-		originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_ExactMatch{
-			ExactMatch: org,
+		if org == "*" {
+			originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_PresentMatch{
+				PresentMatch: true,
+			}
+		} else {
+			originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_ExactMatch{
+				ExactMatch: org,
+			}
 		}
 	case "cors_with_regex":
 		orgReg := serviceInfo.Options.CorsAllowOriginRegex
