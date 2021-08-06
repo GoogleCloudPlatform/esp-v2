@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/python3
 
 # Copyright 2019 Google LLC
 
@@ -136,7 +136,7 @@ class ReleaseValidation(object):
 
     table.align = 'l'
     table.sortby = TEST_ID
-    print table
+    print(table)
 
   def PrintSummary(self):
     """Prints tests summary."""
@@ -157,7 +157,7 @@ class ReleaseValidation(object):
 
     table.align = 'l'
     table.sortby = TEST_ID
-    print table
+    print(table)
 
   def ValidateRelease(self):
     missing_tests = set(RUN_TESTS).difference(self._successful_test)
