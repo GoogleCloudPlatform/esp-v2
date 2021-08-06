@@ -300,6 +300,86 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 	}
 }
 
+// Default --cors_allow_origin=* from start_proxy.py for basic.
+// Tests preflight requests. These are actual OPTIONS requests.
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#preflighted_requests
+func TestProxyHandlesCorsPreflightWithDefaultAllorOrigin(t *testing.T) {
+	t.Parallel()
+
+	serviceName := "test-echo"
+	configId := "test-config-id"
+	corsRequestMethod := "PATCH"
+	corsRequestHeader := "X-PINGOTHER"
+	corsAllowOriginValue := "http://cloud.google.com"
+	corsAllowMethodsValue := "GET, PATCH, DELETE, OPTIONS"
+	corsAllowHeadersValue := "DNT,User-Agent,Cache-Control,Content-Type,Authorization, X-PINGOTHER"
+	corsExposeHeadersValue := "Content-Length,Content-Range"
+	corsAllowCredentialsValue := "true"
+	corsMaxAgeValue := "7200"
+
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
+		"--rollout_strategy=fixed", "--cors_preset=basic",
+		"--cors_allow_origin=*", "--cors_allow_methods=" + corsAllowMethodsValue,
+		"--cors_allow_headers=" + corsAllowHeadersValue,
+		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials",
+		"--cors_max_age=2h"}
+
+	s := env.NewTestEnv(platform.TestProxyHandlesCorsPreflightRequestsBasic, platform.EchoSidecar)
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc            string
+		reqHeaders      map[string]string
+		wantError       string
+		wantRespHeaders map[string]string
+	}{
+		{
+			desc: "CORS preflight request is valid.",
+			reqHeaders: map[string]string{
+				"Origin":                         corsAllowOriginValue,
+				"Access-Control-Request-Method":  corsRequestMethod,
+				"Access-Control-Request-Headers": corsRequestHeader,
+			},
+			wantRespHeaders: map[string]string{
+				"Access-Control-Allow-Origin":      corsAllowOriginValue,
+				"Access-Control-Allow-Methods":     corsAllowMethodsValue,
+				"Access-Control-Allow-Headers":     corsAllowHeadersValue,
+				"Access-Control-Expose-Headers":    corsExposeHeadersValue,
+				"Access-Control-Allow-Credentials": corsAllowCredentialsValue,
+				"Access-Control-Max-Age":           corsMaxAgeValue,
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo")
+			respHeaders, _, err := utils.DoWithHeaders(url, "OPTIONS", "", tc.reqHeaders)
+
+			if err != nil && tc.wantError == "" {
+				t.Fatal(err)
+			} else if err == nil && tc.wantError != "" {
+				t.Fatalf("Want error, got no error")
+			} else if err != nil && !strings.Contains(err.Error(), tc.wantError) {
+				t.Errorf("\nwant error: %v, \ngot  error: %v", tc.wantError, err)
+			}
+
+			if respHeaders == nil {
+				t.Fatalf("could not read response headers")
+			}
+
+			for key, value := range tc.wantRespHeaders {
+				if respHeaders.Get(key) != value {
+					t.Errorf("%s expected: %s, got: %s", key, value, respHeaders.Get(key))
+				}
+			}
+		})
+	}
+}
+
 // Simple CORS request with GRPC backend and basic preset in config manager, response should have CORS headers
 func TestGrpcBackendSimpleCors(t *testing.T) {
 	t.Parallel()
