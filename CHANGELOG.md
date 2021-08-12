@@ -1,3 +1,7 @@
+# Release 2.30.1 12-08-2021
+
+- Fix basic CORS with default cors_allow_origin=* (#579)
+
 # Release 2.30.0 03-08-2021
 
 - Update service_control_client_cxx with improved quota cache (#573)
