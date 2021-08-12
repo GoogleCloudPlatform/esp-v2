@@ -14,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from absl import flags
 import collections
 import fnmatch
-import gflags
 import json
 import logging
 import os
-import prettytable
+from prettytable import PrettyTable
 import sys
 
 from datetime import date
@@ -38,18 +38,18 @@ RUN_TESTS = [
     'long-run-test_gke-http-bookstore',
 ]
 
-FLAGS = gflags.FLAGS
+FLAGS = flags.FLAGS
 
-gflags.DEFINE_string(
+flags.DEFINE_string(
     'commit_sha', '',
     'The expected git commit sha'
 )
-gflags.DEFINE_string(
+flags.DEFINE_string(
     'path',
     '',
     'Path where all release information has been extracted'
 )
-gflags.DEFINE_boolean(
+flags.DEFINE_boolean(
     'detail',
     False,
     'Prints detailed output.'
@@ -125,11 +125,11 @@ class ReleaseValidation(object):
     """Prints all test information."""
     if not self._test_info:
       return
-    table = prettytable.PrettyTable(
+    table = PrettyTable(
         [TEST_ID, RUN_ID, DATE, STATUS])
 
-    for test_id, run in self._test_info.iteritems():
-      for run_id, values in run.iteritems():
+    for test_id, run in self._test_info.items():
+      for run_id, values in run.items():
         date = values[DATE]
         status = values[STATUS]
         table.add_row([test_id, run_id, date, status])
@@ -142,10 +142,10 @@ class ReleaseValidation(object):
     """Prints tests summary."""
     if not self._test_info:
       return
-    table = prettytable.PrettyTable(
+    table = PrettyTable(
         [TEST_ID, 'Success', 'Failure'])
 
-    for test_id, run in self._test_info.iteritems():
+    for test_id, run in self._test_info.items():
       failures, successes = 0, 0
       for values in run.values():
         status = values[STATUS]
