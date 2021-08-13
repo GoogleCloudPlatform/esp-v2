@@ -53,7 +53,7 @@ function check_result() {
   local FILE=${1}
   local COMMIT=${2}
 
-  python2 - << EOF ${FILE} ${COMMIT}
+  python3 - << EOF ${FILE} ${COMMIT}
 import sys
 import json
 
@@ -69,9 +69,9 @@ json_sha = result.get('headCommitHash', '')
 status_ok = json_status == 0
 sha_ok = json_sha == commit_sha
 
-print "Checking {} SHA={}".format(log_file, commit_sha)
-print "  Status == {} ({})".format(json_status, "OK" if status_ok else "FAIL")
-print "  SHA == {} ({})".format(json_sha, "OK" if sha_ok else "FAIL")
+print("Checking {} SHA={}".format(log_file, commit_sha))
+print("  Status == {} ({})".format(json_status, "OK" if status_ok else "FAIL"))
+print("  SHA == {} ({})".format(json_sha, "OK" if sha_ok else "FAIL"))
 
 exit(0 if status_ok and sha_ok else 1)
 EOF
@@ -117,8 +117,8 @@ echo "Downloading prow logs to '${LOGS}' directory."
 ${GSUTIL} -m -q cp -r "gs://apiproxy-continuous-long-run/${SHA}/logs/*" "${LOGS}/${SHA}/" 2>&1  \
  || error_exit "Failed to download logs from gs://apiproxy-continuous-long-run/${SHA}/logs/*"
 
-python2 "${ROOT}/scripts/release/validate_release.py"  \
- --commit_sha "${SHA}"  \
+python3 "${ROOT}/scripts/release/validate_release.py"  \
+ --commit_sha "${SHA}" \
  --path "${LOGS}/${SHA}"  \
  || error_exit "Release is not qualified."
 
