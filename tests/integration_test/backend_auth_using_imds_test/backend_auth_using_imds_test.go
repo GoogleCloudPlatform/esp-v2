@@ -123,7 +123,7 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			s := env.NewTestEnv(platform.TestBackendAuthWithImdsIdTokenRetries, platform.EchoRemote)
 			// Health checks prevent envoy from starting up due to bad responses from IMDS for tokens.
-			s.SkipHealthChecks()
+			s.SkipEnvoyHealthChecks()
 			s.OverrideMockMetadata(
 				map[string]string{
 					fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.constant",
@@ -133,9 +133,6 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 			if err := s.Setup(tc.confArgs); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
-
-			// Sleep some time to allow Envoy to startup.
-			time.Sleep(2 * time.Second)
 
 			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 
