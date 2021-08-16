@@ -134,9 +134,6 @@ func TestBackendAuthWithImdsIdTokenRetries(t *testing.T) {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
 
-			// Sleep some time to allow Envoy to startup.
-			time.Sleep(2 * time.Second)
-
 			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
 
 			// The first call should fail since IMDS is responding with failures.
