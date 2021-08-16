@@ -78,6 +78,7 @@ type TestEnv struct {
 	healthRegistry                  *components.HealthRegistry
 	FakeJwtService                  *components.FakeJwtService
 	skipHealthChecks                bool
+	skipEnvoyHealthChecks           bool
 	StatsVerifier                   *components.StatsVerifier
 
 	// Only implemented for a subset of backends.
@@ -263,6 +264,12 @@ func (e *TestEnv) SkipHealthChecks() {
 	e.skipHealthChecks = true
 }
 
+// SkipEnvoyHealthChecks skips health check on Envoy listener port. But not on admin port
+// Keeping health check on Envoy admin port will help to prevent test flakyness.
+func (e *TestEnv) SkipEnvoyHealthChecks() {
+	e.skipEnvoyHealthChecks = true
+}
+
 // In the service config for each backend, the backend port is represented with 2 constants.
 // Replace them as needed.
 func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) error {
@@ -422,7 +429,9 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err
 	}
-	e.healthRegistry.RegisterHealthChecker(e.envoy)
+	if !e.skipEnvoyHealthChecks {
+		e.healthRegistry.RegisterHealthChecker(e.envoy)
+	}
 
 	if err = e.envoy.StartAndWait(); err != nil {
 		return err

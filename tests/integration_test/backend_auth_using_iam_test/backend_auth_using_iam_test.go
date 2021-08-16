@@ -89,7 +89,7 @@ func TestBackendAuthWithIamIdTokenRetries(t *testing.T) {
 	s.SetBackendAuthIamServiceAccount(serviceAccount)
 
 	// Health checks prevent envoy from starting up due to bad responses from IAM for tokens.
-	s.SkipHealthChecks()
+	s.SkipEnvoyHealthChecks()
 
 	testData := []struct {
 		desc           string
