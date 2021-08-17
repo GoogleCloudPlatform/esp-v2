@@ -18,14 +18,12 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-	"github.com/golang/glog"
 )
 
 func TestIamImdsDataPath(t *testing.T) {
@@ -128,18 +126,12 @@ func TestIamImdsDataPath(t *testing.T) {
 
 			if tc.wantErr != "" {
 				// When we expect a Envoy startup error, we must skip health checks. Otherwise they will prevent the test from running.
-				s.SkipHealthChecks()
+				s.SkipEnvoyHealthChecks()
 			}
 
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
-			}
-
-			if tc.wantErr != "" {
-				// When health checks are skipped (above), we need to manually sleep some time. Otherwise Envoy will not have time to try starting up.
-				glog.Infof("Sleeping to ensure Envoy is starting")
-				time.Sleep(10 * time.Second)
 			}
 
 			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/bearertoken/constant/42")
