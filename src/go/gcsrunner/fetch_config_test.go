@@ -84,6 +84,9 @@ func readerFactory(r *mockReader, err error, passAfterRetrying bool) func(contex
 		if passAfterRetrying && callCount > 2 {
 			return r, nil
 		}
+		if err != nil {
+			return nil, err
+		}
 		return r, err
 	}
 }
@@ -94,6 +97,9 @@ func defaultCredsReaderFactory(r *mockReader, err error, passAfterRetrying bool)
 		callCount++
 		if passAfterRetrying && callCount > 2 {
 			return r, nil
+		}
+		if err != nil {
+			return nil, err
 		}
 		return r, err
 	}

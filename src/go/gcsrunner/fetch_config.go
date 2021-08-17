@@ -120,6 +120,8 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), opts.FetchGCSObjectTimeout)
 	defer cancel()
 
+	var client gcsReader
+
 	ebo := backoff.NewExponentialBackOff()
 	ebo.InitialInterval = opts.FetchGCSObjectInitialInterval
 	var out []byte
@@ -128,19 +130,20 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 			return backoff.Permanent(err)
 		}
 
-		var client gcsReader
-		var err error
-		if opts.ServiceAccount == "" {
-			client, err = newDefaultCredsGCS(ctx)
-			if err != nil {
-				glog.Errorf("error getting default creds GCS client (retrying): %v", err)
-				return err
-			}
-		} else {
-			client, err = newGCS(ctx, opts.ServiceAccount)
-			if err != nil {
-				glog.Errorf("error getting GCS client using service account (retrying): %v", err)
-				return err
+		if client == nil {
+			var err error
+			if opts.ServiceAccount == "" {
+				client, err = newDefaultCredsGCS(ctx)
+				if err != nil {
+					glog.Errorf("error getting default creds GCS client (retrying): %v", err)
+					return err
+				}
+			} else {
+				client, err = newGCS(ctx, opts.ServiceAccount)
+				if err != nil {
+					glog.Errorf("error getting GCS client using service account (retrying): %v", err)
+					return err
+				}
 			}
 		}
 
