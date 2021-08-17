@@ -139,7 +139,7 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 		} else {
 			client, err = newGCS(ctx, opts.ServiceAccount)
 			if err != nil {
-				glog.Errorf("error getting GCS client (retrying): %v", err)
+				glog.Errorf("error getting GCS client using service account (retrying): %v", err)
 				return err
 			}
 		}
