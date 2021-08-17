@@ -91,10 +91,10 @@ func newDefaultCredsGCSClient(ctx context.Context) (gcsReader, error) {
 	start = time.Now()
 	c, err := storage.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
-		glog.Errorf("error creating new GCS client with credentials: %v", err)
+		glog.Errorf("error creating new GCS client with default credentials: %v", err)
 		return nil, err
 	}
-	glog.Infof("created new GCS client with credentials in %s", time.Since(start))
+	glog.Infof("created new GCS client with default credentials in %s", time.Since(start))
 	return &gcsClient{c}, nil
 }
 
