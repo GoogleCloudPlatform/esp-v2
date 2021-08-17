@@ -98,6 +98,25 @@ func newDefaultCredsGCSClient(ctx context.Context) (gcsReader, error) {
 	return &gcsClient{c}, nil
 }
 
+func createGCSClient(ctx context.Context, serviceAccount string) (gcsReader, error) {
+	var client gcsReader
+	var err error
+	if serviceAccount == "" {
+		client, err = newDefaultCredsGCS(ctx)
+		if err != nil {
+			glog.Errorf("error creating default creds GCS client (retrying): %v", err)
+			return nil, err
+		}
+	} else {
+		client, err = newGCS(ctx, serviceAccount)
+		if err != nil {
+			glog.Errorf("error creating GCS client using service account (retrying): %v", err)
+			return nil, err
+		}
+	}
+	return client, err
+}
+
 // FetchConfigFromGCS handles fetching a config from GCS, applying any transformation,
 // and writing it to file.
 //
@@ -121,6 +140,7 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 	defer cancel()
 
 	var client gcsReader
+	var clientErr error
 
 	ebo := backoff.NewExponentialBackOff()
 	ebo.InitialInterval = opts.FetchGCSObjectInitialInterval
@@ -131,19 +151,9 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 		}
 
 		if client == nil {
-			var err error
-			if opts.ServiceAccount == "" {
-				client, err = newDefaultCredsGCS(ctx)
-				if err != nil {
-					glog.Errorf("error getting default creds GCS client (retrying): %v", err)
-					return err
-				}
-			} else {
-				client, err = newGCS(ctx, opts.ServiceAccount)
-				if err != nil {
-					glog.Errorf("error getting GCS client using service account (retrying): %v", err)
-					return err
-				}
+			client, clientErr = createGCSClient(ctx, opts.ServiceAccount)
+			if clientErr != nil {
+				return clientErr
 			}
 		}
 
