@@ -98,6 +98,7 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
+	start := time.Now()
 	if err := gcsrunner.FetchConfigFromGCS(gcsrunner.FetchConfigOptions{
 		BucketName:                    bucketName,
 		ConfigFileName:                configFileName,
@@ -108,6 +109,7 @@ func main() {
 	}); err != nil {
 		glog.Fatalf("Failed to fetch config: %v", err)
 	}
+	glog.Infof("fetched config from GCS in %s", time.Since(start))
 
 	if err := gcsrunner.StartEnvoyAndWait(signalChan, gcsrunner.StartEnvoyOptions{
 		BinaryPath:        envoyBin,

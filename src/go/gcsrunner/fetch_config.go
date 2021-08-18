@@ -69,22 +69,52 @@ func newGCSClient(ctx context.Context, sa string) (gcsReader, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	start := time.Now()
 	client, err := storage.NewClient(ctx, option.WithTokenSource(ts))
 	if err != nil {
+		glog.Errorf("error creating new GCS client with token source: %v", err)
 		return nil, err
 	}
+	glog.Infof("created new GCS client with token source in %s", time.Since(start))
 	return &gcsClient{client}, nil
 }
 func newDefaultCredsGCSClient(ctx context.Context) (gcsReader, error) {
+	start := time.Now()
 	creds, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
+		glog.Errorf("error finding default credentials: %v", err)
 		return nil, err
 	}
+	glog.Infof("found default credentials in %s", time.Since(start))
+
+	start = time.Now()
 	c, err := storage.NewClient(ctx, option.WithCredentials(creds))
 	if err != nil {
+		glog.Errorf("error creating new GCS client with default credentials: %v", err)
 		return nil, err
 	}
+	glog.Infof("created new GCS client with default credentials in %s", time.Since(start))
 	return &gcsClient{c}, nil
+}
+
+func createGCSClient(ctx context.Context, serviceAccount string) (gcsReader, error) {
+	var client gcsReader
+	var err error
+	if serviceAccount == "" {
+		client, err = newDefaultCredsGCS(ctx)
+		if err != nil {
+			glog.Errorf("error creating default creds GCS client (retrying): %v", err)
+			return nil, err
+		}
+	} else {
+		client, err = newGCS(ctx, serviceAccount)
+		if err != nil {
+			glog.Errorf("error creating GCS client using service account (retrying): %v", err)
+			return nil, err
+		}
+	}
+	return client, err
 }
 
 // FetchConfigFromGCS handles fetching a config from GCS, applying any transformation,
@@ -110,18 +140,8 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 	defer cancel()
 
 	var client gcsReader
-	var err error
-	if opts.ServiceAccount == "" {
-		client, err = newDefaultCredsGCS(ctx)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		client, err = newGCS(ctx, opts.ServiceAccount)
-		if err != nil {
-			return nil, err
-		}
-	}
+	var clientErr error
+
 	ebo := backoff.NewExponentialBackOff()
 	ebo.InitialInterval = opts.FetchGCSObjectInitialInterval
 	var out []byte
@@ -129,11 +149,22 @@ func readBytes(opts FetchConfigOptions) ([]byte, error) {
 		if err := ctx.Err(); err != nil {
 			return backoff.Permanent(err)
 		}
+
+		if client == nil {
+			client, clientErr = createGCSClient(ctx, opts.ServiceAccount)
+			if clientErr != nil {
+				return clientErr
+			}
+		}
+
+		start := time.Now()
 		r, err := client.Reader(ctx, opts.BucketName, opts.ConfigFileName)
 		if err != nil {
 			glog.Errorf("error getting reader for object (retrying): %v", err)
 			return err
 		}
+		glog.Infof("obtained reader for object in %s", time.Since(start))
+
 		if out, err = ioutil.ReadAll(r); err != nil {
 			glog.Errorf("error reading object bytes (retrying): %v", err)
 			return err

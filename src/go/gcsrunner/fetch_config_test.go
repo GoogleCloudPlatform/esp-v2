@@ -77,14 +77,30 @@ func (m *mockFile) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func readerFactory(r *mockReader, err error) func(context.Context, string) (gcsReader, error) {
+func readerFactory(r *mockReader, err error, passAfterRetrying bool) func(context.Context, string) (gcsReader, error) {
+	callCount := 0
 	return func(context.Context, string) (gcsReader, error) {
+		callCount++
+		if passAfterRetrying && callCount > 2 {
+			return r, nil
+		}
+		if err != nil {
+			return nil, err
+		}
 		return r, err
 	}
 }
 
-func defaultCredsReaderFactory(r *mockReader, err error) func(context.Context) (gcsReader, error) {
+func defaultCredsReaderFactory(r *mockReader, err error, passAfterRetrying bool) func(context.Context) (gcsReader, error) {
+	callCount := 0
 	return func(context.Context) (gcsReader, error) {
+		callCount++
+		if passAfterRetrying && callCount > 2 {
+			return r, nil
+		}
+		if err != nil {
+			return nil, err
+		}
 		return r, err
 	}
 }
@@ -108,14 +124,15 @@ func TestReadBytes(t *testing.T) {
 	output := []byte("some output")
 	testError := fmt.Errorf("test error")
 	testCases := []struct {
-		name                  string
-		wantErr               error
-		wantTimeoutErr        bool
-		opts                  FetchConfigOptions
-		reader                *mockReader
-		readerErr             error
-		defaultCredsReader    *mockReader
-		defaultCredsReaderErr error
+		name                               string
+		wantErr                            error
+		wantTimeoutErr                     bool
+		opts                               FetchConfigOptions
+		reader                             *mockReader
+		readerErr                          error
+		defaultCredsReader                 *mockReader
+		defaultCredsReaderErr              error
+		passAfterRetryingGCSClientCreation bool
 	}{
 		{
 			name: "success",
@@ -143,21 +160,42 @@ func TestReadBytes(t *testing.T) {
 			},
 		},
 		{
-			name:                  "error creating client",
+			name: "success retrying newGCS()",
+			opts: optsSA,
+			reader: &mockReader{
+				readerReturns: &mockFile{content: output},
+			},
+			readerErr:                          testError,
+			defaultCredsReaderErr:              fmt.Errorf("expected defaultCredsReader not to be called"),
+			passAfterRetryingGCSClientCreation: true,
+		},
+		{
+			name:      "success retrying newDefaultCredsGCS()",
+			opts:      optsNoSA,
+			readerErr: fmt.Errorf("expected reader not to be called"),
+			defaultCredsReader: &mockReader{
+				readerReturns: &mockFile{content: output},
+			},
+			defaultCredsReaderErr:              testError,
+			passAfterRetryingGCSClientCreation: true,
+		},
+
+		{
+			name:                  "timeout retrying newGCS()",
+			wantTimeoutErr:        true,
 			opts:                  optsSA,
-			wantErr:               testError,
 			readerErr:             testError,
 			defaultCredsReaderErr: fmt.Errorf("expected defaultCredsReader not to be called"),
 		},
 		{
-			name:                  "error creating client with creds",
+			name:                  "timeout retrying newDefaultCredsGCS()",
+			wantTimeoutErr:        true,
 			opts:                  optsNoSA,
-			wantErr:               testError,
 			readerErr:             fmt.Errorf("expected reader not to be called"),
 			defaultCredsReaderErr: testError,
 		},
 		{
-			name:           "timeout retrying newGCS",
+			name:           "timeout retrying client.Reader()",
 			wantTimeoutErr: true,
 			opts:           optsSA,
 			reader: &mockReader{
@@ -180,8 +218,8 @@ func TestReadBytes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			oldNewGCS := newGCS
 			oldNewDefaultCredsGCS := newDefaultCredsGCS
-			newGCS = readerFactory(tc.reader, tc.readerErr)
-			newDefaultCredsGCS = defaultCredsReaderFactory(tc.defaultCredsReader, tc.defaultCredsReaderErr)
+			newGCS = readerFactory(tc.reader, tc.readerErr, tc.passAfterRetryingGCSClientCreation)
+			newDefaultCredsGCS = defaultCredsReaderFactory(tc.defaultCredsReader, tc.defaultCredsReaderErr, tc.passAfterRetryingGCSClientCreation)
 			defer func() {
 				newGCS = oldNewGCS
 				newDefaultCredsGCS = oldNewDefaultCredsGCS

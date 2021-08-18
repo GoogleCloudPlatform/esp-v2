@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/golang/glog"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -49,23 +50,34 @@ func TokenSource(ctx context.Context, sa string) (oauth2.TokenSource, error) {
 		return nil, err
 	}
 
+	start := time.Now()
 	c, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
+		glog.Errorf("error finding default credentials: %v", err)
 		return nil, err
 	}
+	glog.Infof("found default credentials in %s", time.Since(start))
+
+	start = time.Now()
 	token, err := c.TokenSource.Token()
 	if err != nil {
+		glog.Errorf("error getting token: %v", err)
 		return nil, err
 	}
+	glog.Infof("obtained token in %s", time.Since(start))
 	token.SetAuthHeader(req)
 
 	client := http.Client{
 		Timeout: time.Second * 5,
 	}
+	start = time.Now()
 	resp, err := client.Do(req)
 	if err != nil {
+		glog.Errorf("error completing iamcredentials request: %v", err)
 		return nil, err
 	}
+	glog.Infof("iamcredentials request completed in %s", time.Since(start))
+
 	if resp.StatusCode != http.StatusOK {
 		respBody, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
