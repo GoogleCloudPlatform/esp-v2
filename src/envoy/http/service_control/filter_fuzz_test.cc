@@ -29,8 +29,10 @@ namespace sc_api = ::google::api::servicecontrol::v1;
 
 using ::Envoy::TestStreamInfo;
 using ::Envoy::Http::ResponseMessageImpl;
+using ::Envoy::Router::MockRoute;
 using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::testing::MockFunction;
+using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::ReturnRef;
 
@@ -146,9 +148,9 @@ DEFINE_PROTO_FUZZER(
         input.config().requirements(0).operation_name());
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
 
-    testing::NiceMock<Envoy::Router::MockRouteEntry> mock_route_entry;
-    stream_info->route_entry_ = &mock_route_entry;
-    EXPECT_CALL(mock_route_entry, perFilterConfig(kFilterName))
+    auto mock_route = std::make_shared<NiceMock<MockRoute>>();
+    stream_info->route_ = mock_route;
+    EXPECT_CALL(*mock_route, mostSpecificPerFilterConfig(kFilterName))
         .WillRepeatedly(
             Invoke([per_route](const std::string&)
                        -> const Envoy::Router::RouteSpecificFilterConfig* {

@@ -109,14 +109,15 @@ ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
 
 absl::string_view ServiceControlHandlerImpl::getOperationFromPerRoute(
     const Envoy::StreamInfo::StreamInfo& stream_info) {
-  if (stream_info_.routeEntry() == nullptr) {
+  if (stream_info_.route() == nullptr ||
+      stream_info_.route()->routeEntry() == nullptr) {
     ENVOY_LOG(debug, "No route entry");
     return Envoy::EMPTY_STRING;
   }
 
   const auto* per_route =
-      stream_info.routeEntry()->perFilterConfigTyped<PerRouteFilterConfig>(
-          kFilterName);
+      ::Envoy::Http::Utility::resolveMostSpecificPerFilterConfig<
+          PerRouteFilterConfig>(kFilterName, stream_info.route());
   if (per_route == nullptr) {
     ENVOY_LOG(debug, "no per-route config");
     return Envoy::EMPTY_STRING;

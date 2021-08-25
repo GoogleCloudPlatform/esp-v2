@@ -61,8 +61,8 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
   }
 
   const auto* per_route =
-      route->routeEntry()->perFilterConfigTyped<PerRouteFilterConfig>(
-          kFilterName);
+      ::Envoy::Http::Utility::resolveMostSpecificPerFilterConfig<
+          PerRouteFilterConfig>(kFilterName, route);
   if (per_route == nullptr) {
     ENVOY_LOG(debug, "no per-route config");
     config_->stats().allowed_by_auth_not_required_.inc();
