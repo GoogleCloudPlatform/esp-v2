@@ -64,7 +64,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			method:            "/v1/shelves/100?key=api-key-2",
 			serviceControlURL: fmt.Sprintf("http://%v:28753", platform.GetLoopbackAddress()),
 			allocatedPort:     platform.TestServiceControlCheckWrongServerName,
-			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
+			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure, transport failure reason: delayed connect error: 111"}`,
 		},
 	}
 

@@ -52,14 +52,13 @@ class HttpCallFactory
 
 class HttpCallFactoryImpl : public HttpCallFactory {
  public:
-  HttpCallFactoryImpl(Envoy::Upstream::ClusterManager& cm,
-                      Envoy::Event::Dispatcher& dispatcher,
-                      const ::espv2::api::envoy::v10::http::common::HttpUri& uri,
-                      const std::string& suffix_url,
-                      std::function<const std::string&()> token_fn,
-                      uint32_t timeout_ms, uint32_t retries,
-                      Envoy::TimeSource& time_source,
-                      const std::string& trace_operation_name);
+  HttpCallFactoryImpl(
+      Envoy::Upstream::ClusterManager& cm, Envoy::Event::Dispatcher& dispatcher,
+      const ::espv2::api::envoy::v10::http::common::HttpUri& uri,
+      const std::string& suffix_url,
+      std::function<const std::string&()> token_fn, uint32_t timeout_ms,
+      uint32_t retries, Envoy::TimeSource& time_source,
+      const std::string& trace_operation_name);
 
   HttpCall* createHttpCall(const Envoy::Protobuf::Message& body,
                            Envoy::Tracing::Span& parent_span,

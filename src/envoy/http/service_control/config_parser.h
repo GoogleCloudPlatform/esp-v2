@@ -79,7 +79,8 @@ using ServiceContextPtr = std::unique_ptr<ServiceContext>;
 class RequirementContext {
  public:
   RequirementContext(
-      const ::espv2::api::envoy::v10::http::service_control::Requirement& config,
+      const ::espv2::api::envoy::v10::http::service_control::Requirement&
+          config,
       const ServiceContext& service_ctx)
       : config_(config), service_ctx_(service_ctx) {
     metric_costs_.reserve(config.metric_costs().size());

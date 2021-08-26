@@ -147,7 +147,7 @@ TEST_F(FilterTest, NotPerRouteConfigNotChanged) {
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
       .WillRepeatedly(Return(mock_route_));
-  EXPECT_CALL(mock_route_->route_entry_, perFilterConfig(kFilterName))
+  EXPECT_CALL(*mock_route_, mostSpecificPerFilterConfig(kFilterName))
       .WillRepeatedly(Return(nullptr));
 
   Envoy::Http::FilterHeadersStatus status =
@@ -171,7 +171,7 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
       .WillRepeatedly(Return(mock_route_));
-  EXPECT_CALL(mock_route_->route_entry_, perFilterConfig(kFilterName))
+  EXPECT_CALL(*mock_route_, mostSpecificPerFilterConfig(kFilterName))
       .WillRepeatedly(Return(per_route_config_.get()));
 
   // Mismatch
@@ -210,7 +210,7 @@ TEST_F(FilterTest, PathUpdated) {
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
       .WillRepeatedly(Return(mock_route_));
-  EXPECT_CALL(mock_route_->route_entry_, perFilterConfig(kFilterName))
+  EXPECT_CALL(*mock_route_, mostSpecificPerFilterConfig(kFilterName))
       .WillRepeatedly(Return(per_route_config_.get()));
 
   // path rewrite ok

@@ -31,7 +31,8 @@ constexpr char kGrpcScrubberFilterName[] =
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v10::http::grpc_metadata_scrubber::FilterConfig> {
+          ::espv2::api::envoy::v10::http::grpc_metadata_scrubber::
+              FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kGrpcScrubberFilterName) {}
 
