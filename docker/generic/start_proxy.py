@@ -579,7 +579,7 @@ environment variable or by passing "-k" flag to this script.
         action='store_true',
         default=False,
         help='''For the JWT in request, the JWT payload is forwarded to backend 
-        in the `X-Endpoint-API-UserInfo` header. Normally JWT based64 encode doesn’t
+        in the `X-Endpoint-API-UserInfo` header by default. Normally JWT based64 encode doesn’t
         add padding. If this flag is true, the header will be padded.
         '''
     )
