@@ -1,6 +1,6 @@
 # Release 2.30.2 01-09-2021
 
-- Update Envoy to top of tree (#588)
+- Update Envoy to top of tree at 2021-08-24 (Envoy SHA `6f2726`) (#588)
 - Improve gcsrunner remote dependency handling (#586)
 
 # Release 2.30.1 12-08-2021
