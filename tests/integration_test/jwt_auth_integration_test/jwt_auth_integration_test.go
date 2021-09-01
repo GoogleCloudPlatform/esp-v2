@@ -360,59 +360,14 @@ func TestInvalidOpenIDConnectDiscovery(t *testing.T) {
 func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 	t.Parallel()
 
-	s := env.NewTestEnv(platform.TestFrontendAndBackendAuthHeaders, platform.EchoRemote)
-	s.OverrideAuthentication(&confpb.Authentication{
-		Rules: []*confpb.AuthenticationRule{
-			{
-				Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenConstantAddress",
-				Requirements: []*confpb.AuthRequirement{
-					{
-						ProviderId: testdata.TestAuthProvider,
-						Audiences:  "ok_audience",
-					},
-				},
-			},
-			{
-				Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
-				Requirements: []*confpb.AuthRequirement{
-					{
-						ProviderId: testdata.TestAuthProvider,
-						Audiences:  "ok_audience",
-					},
-				},
-			},
-		},
-	})
-	s.OverrideMockMetadata(
-		map[string]string{
-			fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.BackendAuthToken",
-		}, 0)
-
-	defer s.TearDown(t)
-	if err := s.Setup(utils.CommonArgs()); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-
 	testData := []struct {
-		desc        string
-		method      string
-		path        string
-		headers     map[string]string
-		wantHeaders map[string]string
+		desc                             string
+		method                           string
+		path                             string
+		enableJwtPadForwardPayloadHeader bool
+		headers                          map[string]string
+		wantHeaders                      map[string]string
 	}{
-		{
-			desc: "Frontend auth preserves `Authorization` and creates `X-Endpoint-API-UserInfo`." +
-				"Backend auth is disabled, so no further header modifications.",
-			method: "GET",
-			path:   "/disableauthsettotrue/constant/disableauthsettotrue",
-			headers: map[string]string{
-				"Authorization": "Bearer " + testdata.Es256Token,
-			},
-			wantHeaders: map[string]string{
-				"Authorization":           "Bearer " + testdata.Es256Token,
-				"X-Endpoint-API-UserInfo": testdata.Es256TokenPayloadBase64,
-			},
-		},
 		{
 			desc: "Frontend auth preserves `Authorization` and overrides `X-Endpoint-API-UserInfo`." +
 				"Backend auth is disabled, so no further header modifications.",
@@ -441,22 +396,89 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 				"X-Forwarded-Authorization": "Bearer " + testdata.Es256Token,
 			},
 		},
+		{
+			desc:                             "Not pad jwt authn X-Endpoint-API-UserInfo by default",
+			method:                           "GET",
+			path:                             "/disableauthsettotrue/constant/disableauthsettotrue",
+			enableJwtPadForwardPayloadHeader: false,
+			headers: map[string]string{
+				"Authorization": "Bearer " + testdata.FakeCloudTokenSingleAudience3,
+			},
+			wantHeaders: map[string]string{
+				"X-Endpoint-API-UserInfo": testdata.FakeCloudTokenSingleAudienc3Payload,
+			},
+		},
+		{
+			desc:                             "Pad jwt authn X-Endpoint-API-UserInfo",
+			method:                           "GET",
+			path:                             "/disableauthsettotrue/constant/disableauthsettotrue",
+			enableJwtPadForwardPayloadHeader: true,
+			headers: map[string]string{
+				"Authorization": "Bearer " + testdata.FakeCloudTokenSingleAudience3,
+			},
+			wantHeaders: map[string]string{
+				"X-Endpoint-API-UserInfo": testdata.FakeCloudTokenSingleAudienc3Payload + "==",
+			},
+		},
 	}
 
 	for _, tc := range testData {
-		url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
-		resp, err := echo_client.DoWithHeaders(url, tc.method, "", tc.headers)
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestFrontendAndBackendAuthHeaders, platform.EchoRemote)
+			s.OverrideAuthentication(&confpb.Authentication{
+				Rules: []*confpb.AuthenticationRule{
+					{
+						Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_BearertokenConstantAddress",
+						Requirements: []*confpb.AuthRequirement{
+							{
+								ProviderId: testdata.TestAuthProvider,
+								Audiences:  "ok_audience",
+							},
+						},
+					},
+					{
+						Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_DisableAuthSetToTrue",
+						Requirements: []*confpb.AuthRequirement{
+							{
+								ProviderId: testdata.TestAuthProvider,
+								Audiences:  "ok_audience",
+							},
+							{
+								ProviderId: testdata.GoogleServiceAccountProvider,
+								Audiences:  "need-pad",
+							},
+						},
+					},
+				},
+			})
+			s.OverrideMockMetadata(
+				map[string]string{
+					fmt.Sprintf("%v?format=standard&audience=https://%v/bearertoken/constant", util.IdentityTokenPath, platform.GetLoopbackAddress()): "ya29.BackendAuthToken",
+				}, 0)
 
-		if err != nil {
-			t.Fatalf("Test Desc(%s): %v", tc.desc, err)
-		}
-
-		gotResp := string(resp)
-		for wantKey, wantValue := range tc.wantHeaders {
-			wantHeader := fmt.Sprintf(`"%v": "%v"`, wantKey, wantValue)
-			if !strings.Contains(gotResp, wantHeader) {
-				t.Fatalf("Test Desc(%s) failed,\n  got: %v\n want: %v", tc.desc, gotResp, tc.wantHeaders)
+			defer s.TearDown(t)
+			flags := utils.CommonArgs()
+			if tc.enableJwtPadForwardPayloadHeader {
+				flags = append(flags, "--jwt_pad_forward_payload_header")
 			}
-		}
+
+			if err := s.Setup(flags); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, tc.path)
+			resp, err := echo_client.DoWithHeaders(url, tc.method, "", tc.headers)
+
+			if err != nil {
+				t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+			}
+
+			gotResp := string(resp)
+			for wantKey, wantValue := range tc.wantHeaders {
+				wantHeader := fmt.Sprintf(`"%v": "%v"`, wantKey, wantValue)
+				if !strings.Contains(gotResp, wantHeader) {
+					t.Fatalf("Test Desc(%s) failed,\n  got: %v\n want: %v", tc.desc, gotResp, wantHeader)
+				}
+			}
+		})
 	}
 }
