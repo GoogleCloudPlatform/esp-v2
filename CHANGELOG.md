@@ -1,3 +1,8 @@
+# Release 2.30.2 01-09-2021
+
+- Update Envoy to top of tree (#588)
+- Improve gcsrunner remote dependency handling (#586)
+
 # Release 2.30.1 12-08-2021
 
 - Fix basic CORS with default cors_allow_origin=* (#579)
