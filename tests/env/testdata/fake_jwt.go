@@ -298,7 +298,7 @@ const (
 
 	// python3 gen-jwt.py key.pem -jwks=./jwks.json --expire=31536000000
 	//  --iss=api-proxy-testing@cloud.goog --aud need-pad
-	FakeCloudTokenSingleAudience3       = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRI" +
+	FakeCloudTokenSingleAudience3 = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRI" +
 		"RmJwb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJK" +
 		"V1QifQ.eyJhdWQiOiJuZWVkLXBhZCIsImV4cCI6MzMxNjY1MzYxMjQsImlhdCI6MTYzM" +
 		"DUzNjEyNCwiaXNzIjoiYXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZyIsInN1YiI6I" +
@@ -308,7 +308,7 @@ const (
 		"n_SM18XT4s2XFZa9z8fFMf2fkmoPiwu9sVKLYwhv94xPwU4VWJs-AWpkyUBIrwR21n8H" +
 		"WEIDqb43oK6RzngfkJV4qj253W2KGCkpoq91C06FWptAMwFIyR6Dnu8BAlXyl4le9gxd" +
 		"ysPObKgkjxcyyKawhuzZowWy2Kk1fcAUXzuS6tlUkVzQ"
-	FakeCloudTokenSingleAudienc3Payload = "eyJhdWQiOiJuZWVkLXBhZCIsImV4cCI6" +
+	FakeCloudTokenSingleAudience3Payload = "eyJhdWQiOiJuZWVkLXBhZCIsImV4cCI6" +
 		"MzMxNjY1MzYxMjQsImlhdCI6MTYzMDUzNjEyNCwiaXNzIjoiYXBpLXByb3h5LXRlc3Rp" +
 		"bmdAY2xvdWQuZ29vZyIsInN1YiI6ImFwaS1wcm94eS10ZXN0aW5nQGNsb3VkLmdvb2cifQ"
 

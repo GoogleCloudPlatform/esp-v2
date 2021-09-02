@@ -406,7 +406,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 				"Authorization": "Bearer " + testdata.FakeCloudTokenSingleAudience3,
 			},
 			wantHeaders: map[string]string{
-				"X-Endpoint-API-UserInfo": testdata.FakeCloudTokenSingleAudienc3Payload,
+				"X-Endpoint-API-UserInfo": testdata.FakeCloudTokenSingleAudience3Payload,
 			},
 		},
 		{
@@ -418,7 +418,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 				"Authorization": "Bearer " + testdata.FakeCloudTokenSingleAudience3,
 			},
 			wantHeaders: map[string]string{
-				"X-Endpoint-API-UserInfo": testdata.FakeCloudTokenSingleAudienc3Payload + "==",
+				"X-Endpoint-API-UserInfo": testdata.FakeCloudTokenSingleAudience3Payload + "==",
 			},
 		},
 	}
@@ -475,7 +475,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 
 			var sec map[string]interface{}
 			if err = json.Unmarshal(resp, &sec); err != nil {
-									t.Fatalf("fail to parse response into json")
+				t.Fatalf("fail to parse response into json")
 			}
 			for wantKey, wantValue := range tc.wantHeaders {
 				wantHeader := fmt.Sprintf(`"%v": "%v"`, wantKey, wantValue)
