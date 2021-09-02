@@ -482,7 +482,7 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 				gotHeaderVal, ok := sec[wantKey]
 				gotHeaderValStr := fmt.Sprintf("%v", gotHeaderVal)
 				if !ok || wantValue != gotHeaderValStr {
-					t.Fatalf("failed to get header %s,\n  got: %s\n want: %v", wantKey, gotHeaderValStr, wantHeader)
+					t.Fatalf("failed on header %s,\n  got: %s\n want: %v", wantKey, gotHeaderValStr, wantHeader)
 				}
 			}
 		})
