@@ -15,6 +15,7 @@
 package jwt_auth_integration_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -469,14 +470,19 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 			resp, err := echo_client.DoWithHeaders(url, tc.method, "", tc.headers)
 
 			if err != nil {
-				t.Fatalf("Test Desc(%s): %v", tc.desc, err)
+				t.Fatalf("%v", err)
 			}
 
-			gotResp := string(resp)
+			var sec map[string]interface{}
+			if err = json.Unmarshal(resp, &sec); err != nil {
+									t.Fatalf("fail to parse response into json")
+			}
 			for wantKey, wantValue := range tc.wantHeaders {
 				wantHeader := fmt.Sprintf(`"%v": "%v"`, wantKey, wantValue)
-				if !strings.Contains(gotResp, wantHeader) {
-					t.Fatalf("Test Desc(%s) failed,\n  got: %v\n want: %v", tc.desc, gotResp, wantHeader)
+				gotHeaderVal, ok := sec[wantKey]
+				gotHeaderValStr := fmt.Sprintf("%v", gotHeaderVal)
+				if !ok || wantValue != gotHeaderValStr {
+					t.Fatalf("failed to get header %s,\n  got: %s\n want: %v", wantKey, gotHeaderValStr, wantHeader)
 				}
 			}
 		})
