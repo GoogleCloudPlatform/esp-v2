@@ -99,10 +99,11 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 			JwksSourceSpecifier: &jwtpb.JwtProvider_RemoteJwks{
 				RemoteJwks: jwks,
 			},
-			FromHeaders:          fromHeaders,
-			FromParams:           fromParams,
-			ForwardPayloadHeader: serviceInfo.Options.GeneratedHeaderPrefix + util.JwtAuthnForwardPayloadHeaderSuffix,
-			Forward:              true,
+			FromHeaders:             fromHeaders,
+			FromParams:              fromParams,
+			ForwardPayloadHeader:    serviceInfo.Options.GeneratedHeaderPrefix + util.JwtAuthnForwardPayloadHeaderSuffix,
+			Forward:                 true,
+			PadForwardPayloadHeader: serviceInfo.Options.JwtPadForwardPayloadHeader,
 		}
 
 		if len(provider.GetAudiences()) != 0 {
