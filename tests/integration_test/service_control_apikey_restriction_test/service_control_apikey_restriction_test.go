@@ -67,7 +67,7 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 				AndroidCertFingerprint: "ABCDESF",
 				AndroidPackageName:     "com.google.cloud",
 				IosBundleID:            "5b40ad6af9a806305a0a56d7cb91b82a27c26909",
-				Referer:                "referer",
+				Referer:                "https://www.google.com",
 				CallerIp:               platform.GetLoopbackAddress(),
 			},
 		},
@@ -122,7 +122,9 @@ func TestServiceControlAPIKeyRestriction(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		runTest(t, s, tc)
+		t.Run(tc.desc, func(t *testing.T) {
+			runTest(t, s, tc)
+		})
 	}
 }
 

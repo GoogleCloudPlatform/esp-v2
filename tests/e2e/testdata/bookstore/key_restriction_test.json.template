@@ -85,7 +85,7 @@
         "referrers": ["*.google.com/*"]
       },
       "headers": {
-        "Referer": "myapp.google.com/good.html"
+        "Referer": "https://myapp.google.com/good.html"
       },
       "status_code": 200
     }, {
@@ -96,7 +96,7 @@
         "referrers": ["*.google.com/*"]
       },
       "headers": {
-        "Referer": "myapp.verizonwireless.com/bad.html"
+        "Referer": "https://myapp.verizonwireless.com/bad.html"
       },
       "status_code": 403
     }],

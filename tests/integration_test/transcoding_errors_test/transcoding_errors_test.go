@@ -59,7 +59,7 @@ func TestTranscodingBackendUnavailableError(t *testing.T) {
 		clientProtocol: "http",
 		httpMethod:     "GET",
 		method:         "/v1/shelves/200/books/2001?key=api-key",
-		wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure"}`,
+		wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure, transport failure reason: delayed connect error: 111"}`,
 	}
 
 	addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)

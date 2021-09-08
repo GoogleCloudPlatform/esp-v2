@@ -296,6 +296,22 @@ const (
 		"U4anKQE67U6a6vZmMaT8yZDvp0u1S8WFt5XTMfeWeTJcl6ehLZmR_5Onjsb9E3lZvkjC" +
 		"bSCysNPy_PpODs8dPVpu2aJSciIFY6K_Emm5A"
 
+	// python3 gen-jwt.py key.pem -jwks=./jwks.json --expire=31536000000
+	//  --iss=api-proxy-testing@cloud.goog --aud need-pad
+	FakeCloudTokenSingleAudience3 = "eyJhbGciOiJSUzI1NiIsImtpZCI6IkRI" +
+		"RmJwb0lVcXJZOHQyenBBMnFYZkNtcjVWTzVaRXI0UnpIVV8tZW52dlEiLCJ0eXAiOiJK" +
+		"V1QifQ.eyJhdWQiOiJuZWVkLXBhZCIsImV4cCI6MzMxNjY1MzYxMjQsImlhdCI6MTYzM" +
+		"DUzNjEyNCwiaXNzIjoiYXBpLXByb3h5LXRlc3RpbmdAY2xvdWQuZ29vZyIsInN1YiI6I" +
+		"mFwaS1wcm94eS10ZXN0aW5nQGNsb3VkLmdvb2cifQ.egwbVVrwywLJXBLCg00mg-hS7d" +
+		"qsdl2frZdG4rDd_6Vqpt_cTlZZAAC3bppSMCWpDn96y-2-K0zxzjkl3JzcZ8o5KY1F5p" +
+		"oVwuOMsxr7WJatrj1-96NSCE4TXuyqtjG2p_0l3vhbE87bA9TN-XkK9-0NOMxUDWZOMK" +
+		"n_SM18XT4s2XFZa9z8fFMf2fkmoPiwu9sVKLYwhv94xPwU4VWJs-AWpkyUBIrwR21n8H" +
+		"WEIDqb43oK6RzngfkJV4qj253W2KGCkpoq91C06FWptAMwFIyR6Dnu8BAlXyl4le9gxd" +
+		"ysPObKgkjxcyyKawhuzZowWy2Kk1fcAUXzuS6tlUkVzQ"
+	FakeCloudTokenSingleAudience3Payload = "eyJhdWQiOiJuZWVkLXBhZCIsImV4cCI6" +
+		"MzMxNjY1MzYxMjQsImlhdCI6MTYzMDUzNjEyNCwiaXNzIjoiYXBpLXByb3h5LXRlc3Rp" +
+		"bmdAY2xvdWQuZ29vZyIsInN1YiI6ImFwaS1wcm94eS10ZXN0aW5nQGNsb3VkLmdvb2cifQ"
+
 	// gen-jwt.py key.pem -jwks=./jwks.json --expire=3153600000
 	// --iss="api-proxy-testing@cloud.goog"
 	//--aud admin.cloud.goog,bookstore_test_client.cloud.goog > demo.jwt
