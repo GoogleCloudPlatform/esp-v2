@@ -100,8 +100,8 @@ def url_path_fuzzer():
 
 def query_param_fuzzer():
   """ URL Path fuzzer that uses static templates """
-  QUERYPARAM_TEMPLATES = ['', '#', '#FUZZ', 'FUZZ', 'FUZZ=FUZZ', 'FUZZ&FUZZ']
-  QUERYPARAM_TOKEN_LIST = ['', '/', '#', '=', '&', '?', '&?#', '@#$%^=',
+  QUERYPARAM_TEMPLATES = ['', 'FUZZ', 'FUZZ=FUZZ', 'FUZZ&FUZZ']
+  QUERYPARAM_TOKEN_LIST = ['', '/', '=', '&', '?', '&?', '@$%^=',
                            'message',
                            'message=msg', '%2F%25%0A%20']
   return Fuzzer(QUERYPARAM_TEMPLATES, QUERYPARAM_TOKEN_LIST)

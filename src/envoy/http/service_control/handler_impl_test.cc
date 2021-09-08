@@ -38,7 +38,7 @@ using Envoy::Http::TestRequestHeaderMapImpl;
 using Envoy::Http::TestRequestTrailerMapImpl;
 using Envoy::Http::TestResponseHeaderMapImpl;
 using Envoy::Http::TestResponseTrailerMapImpl;
-using Envoy::Router::MockRouteEntry;
+using Envoy::Router::MockRoute;
 using Envoy::StreamInfo::MockStreamInfo;
 using ::espv2::api::envoy::v10::http::service_control::FilterConfig;
 using ::espv2::api_proxy::service_control::CheckRequestInfo;
@@ -201,9 +201,9 @@ class HandlerTest : public ::testing::Test {
         per_route_cfg;
     per_route_cfg.set_operation_name(operation);
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
-    EXPECT_CALL(mock_stream_info_, routeEntry())
-        .WillRepeatedly(Return(&mock_route_entry_));
-    EXPECT_CALL(mock_route_entry_, perFilterConfig(kFilterName))
+    mock_route_ = std::make_shared<NiceMock<MockRoute>>();
+    EXPECT_CALL(mock_stream_info_, route()).WillRepeatedly(Return(mock_route_));
+    EXPECT_CALL(*mock_route_, mostSpecificPerFilterConfig(kFilterName))
         .WillRepeatedly(
             Invoke([per_route](const std::string&)
                        -> const Envoy::Router::RouteSpecificFilterConfig* {
@@ -216,7 +216,7 @@ class HandlerTest : public ::testing::Test {
 
   testing::NiceMock<MockCheckDoneCallback> mock_check_done_callback_;
   testing::NiceMock<MockStreamInfo> mock_stream_info_;
-  testing::NiceMock<MockRouteEntry> mock_route_entry_;
+  std::shared_ptr<testing::NiceMock<MockRoute>> mock_route_;
   testing::NiceMock<MockServiceControlCallFactory> mock_call_factory_;
   Envoy::Event::SimulatedTimeSystem test_time_;
 

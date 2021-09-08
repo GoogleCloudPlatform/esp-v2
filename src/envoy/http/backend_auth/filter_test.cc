@@ -67,7 +67,7 @@ class BackendAuthFilterTest : public ::testing::Test {
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
     EXPECT_CALL(mock_decoder_callbacks_, route())
         .WillRepeatedly(Return(mock_route_));
-    EXPECT_CALL(mock_route_->route_entry_, perFilterConfig(kFilterName))
+    EXPECT_CALL(*mock_route_, mostSpecificPerFilterConfig(kFilterName))
         .WillRepeatedly(
             Invoke([per_route](const std::string&)
                        -> const Envoy::Router::RouteSpecificFilterConfig* {
@@ -102,7 +102,7 @@ TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
       .WillRepeatedly(Return(mock_route_));
-  EXPECT_CALL(mock_route_->route_entry_, perFilterConfig(kFilterName))
+  EXPECT_CALL(*mock_route_, mostSpecificPerFilterConfig(kFilterName))
       .WillRepeatedly(Return(nullptr));
 
   Envoy::Http::FilterHeadersStatus status =

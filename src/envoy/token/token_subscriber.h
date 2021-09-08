@@ -41,13 +41,13 @@ class TokenSubscriber
     : public Envoy::Http::AsyncClient::Callbacks,
       public Envoy::Logger::Loggable<Envoy::Logger::Id::init> {
  public:
-  TokenSubscriber(Envoy::Server::Configuration::FactoryContext& context,
-                  const TokenType& token_type, const std::string& token_cluster,
-                  const std::string& token_url,
-                  std::chrono::seconds fetch_timeout,
-                  ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior
-                      error_behavior,
-                  UpdateTokenCallback callback, TokenInfoPtr token_info);
+  TokenSubscriber(
+      Envoy::Server::Configuration::FactoryContext& context,
+      const TokenType& token_type, const std::string& token_cluster,
+      const std::string& token_url, std::chrono::seconds fetch_timeout,
+      ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior
+          error_behavior,
+      UpdateTokenCallback callback, TokenInfoPtr token_info);
   void init();
 
   ~TokenSubscriber();
