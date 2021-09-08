@@ -45,7 +45,6 @@ const (
 	envoyConfigPath               = "envoy.json"
 	fetchGCSObjectInitialInterval = 100 * time.Millisecond
 	fetchGCSObjectTimeout         = 3 * time.Minute
-	gcsrunnerDefaultLogLevel      = "INFO"
 	terminateEnvoyTimeout         = time.Minute
 )
 
