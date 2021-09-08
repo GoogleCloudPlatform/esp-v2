@@ -60,14 +60,17 @@ var (
 )
 
 func main() {
-	flag.Parse()
-
-	gcsrunnerLogLevel := os.Getenv("GCSRUNNER_LOG_LEVEL")
-	if gcsrunnerLogLevel == "" {
-		gcsrunnerLogLevel = gcsrunnerDefaultLogLevel
+	err := setGcsrunnerLogLevel(gcsrunnerDefaultLogLevel); if err != nil {
+		glog.Errorf("Failed to override flag --stderrthreshold to default log level %s: %v", gcsrunnerDefaultLogLevel, err)
 	}
-	if err := flag.Set("stderrthreshold", gcsrunnerLogLevel); err != nil {
-		glog.Errorf("Failed to override flag --stderrthreshold to %s: %v", gcsrunnerLogLevel, err)
+
+	flag.Parse()
+	
+	gcsrunnerLogLevel := os.Getenv("GCSRUNNER_LOG_LEVEL")
+	if gcsrunnerLogLevel != "" {
+		err := setGcsrunnerLogLevel(gcsrunnerLogLevel); if err != nil {
+			glog.Errorf("Failed to override flag --stderrthreshold to log level %s: %v", gcsrunnerLogLevel, err)
+		}
 	}
 
 	bucketName := os.Getenv("BUCKET")
@@ -131,6 +134,10 @@ func main() {
 	}); err != nil {
 		glog.Fatalf("Envoy erred: %v", err)
 	}
+}
+
+func setGcsrunnerLogLevel(logLevel string) error {
+	return flag.Set("stderrthreshold", logLevel)
 }
 
 func envNum(v string, defaultVal uint32) (uint32, error) {
