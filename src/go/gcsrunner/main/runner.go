@@ -45,6 +45,7 @@ const (
 	envoyConfigPath               = "envoy.json"
 	fetchGCSObjectInitialInterval = 100 * time.Millisecond
 	fetchGCSObjectTimeout         = 3 * time.Minute
+	gcsrunnerDefaultLogLevel      = "INFO"
 	terminateEnvoyTimeout         = time.Minute
 )
 
@@ -60,6 +61,15 @@ var (
 
 func main() {
 	flag.Parse()
+
+	gcsrunnerLogLevel := os.Getenv("GCSRUNNER_LOG_LEVEL")
+	if gcsrunnerLogLevel == "" {
+		gcsrunnerLogLevel = gcsrunnerDefaultLogLevel
+	}
+	if err := flag.Set("stderrthreshold", gcsrunnerLogLevel); err != nil {
+		glog.Errorf("Failed to override flag --stderrthreshold to %s: %v", gcsrunnerLogLevel, err)
+	}
+
 	bucketName := os.Getenv("BUCKET")
 	if bucketName == "" {
 		glog.Fatal("Must specify the BUCKET environment variable.")
