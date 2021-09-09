@@ -59,7 +59,9 @@ var (
 )
 
 func main() {
+	flag.Set("alsologtostderr", "true")
 	flag.Parse()
+
 	bucketName := os.Getenv("BUCKET")
 	if bucketName == "" {
 		glog.Fatal("Must specify the BUCKET environment variable.")
