@@ -308,10 +308,10 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata',
               '--disable_tracing'
               ]),
-            # Cors
+            # Cors: test default CORS flag values
             (['--service=test_bookstore.gloud.run',
               '--backend=https://127.0.0.1', '--cors_preset=basic',
-              '--cors_allow_headers=X-Requested-With', '--non_gcp',
+              '--non_gcp',
               '--service_account_key', '/tmp/service_accout_key'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'https://127.0.0.1', '--v', '0',
@@ -320,7 +320,7 @@ class TestStartProxy(unittest.TestCase):
               '--cors_preset', 'basic',
               '--cors_allow_origin', '*', '--cors_allow_origin_regex', '',
               '--cors_allow_methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-              '--cors_allow_headers', 'X-Requested-With',
+              '--cors_allow_headers', 'DNT,User-Agent,X-User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
               '--cors_expose_headers', 'Content-Length,Content-Range',
               '--cors_max_age', "480h",
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
