@@ -366,7 +366,7 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '--cors_allow_headers',
         default=
-        'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
+        'DNT,User-Agent,X-User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
         help='''
         Only works when --cors_preset is in use. Configures the CORS header
         Access-Control-Allow-Headers. Defaults to allow common HTTP
