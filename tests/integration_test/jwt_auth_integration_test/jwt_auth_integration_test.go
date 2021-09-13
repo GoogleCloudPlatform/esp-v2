@@ -166,24 +166,26 @@ func TestAsymmetricKeys(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
-		var resp string
-		var err error
-		if tc.queryInToken {
-			resp, err = client.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
-		} else {
-			resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
-		}
-
-		if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
-		} else if tc.wantError == "" && err != nil {
-			t.Errorf("Test (%s): failed, expected no error, got error: %s", tc.desc, err)
-		} else {
-			if !strings.Contains(resp, tc.wantResp) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+		t.Run(tc.desc, func(t *testing.T) {
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+			var resp string
+			var err error
+			if tc.queryInToken {
+				resp, err = client.MakeTokenInQueryCall(addr, tc.httpMethod, tc.method, tc.token)
+			} else {
+				resp, err = client.MakeCall(tc.clientProtocol, addr, tc.httpMethod, tc.method, tc.token, tc.headers)
 			}
-		}
+
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+			} else if tc.wantError == "" && err != nil {
+				t.Errorf("Test (%s): failed, expected no error, got error: %s", tc.desc, err)
+			} else {
+				if !strings.Contains(resp, tc.wantResp) {
+					t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+				}
+			}
+		})
 	}
 }
 

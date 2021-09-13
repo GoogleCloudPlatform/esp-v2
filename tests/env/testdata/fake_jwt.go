@@ -76,7 +76,7 @@ var (
 			Id:               NonexistentProvider,
 			Issuer:           NonexistentIssuer,
 			IsNonexistent:    true,
-			HardcodedJwksUri: fmt.Sprintf("http://%v:55550/pkey", platform.GetLoopbackAddress()),
+			HardcodedJwksUri: fmt.Sprintf("http://%v:55550/pkey?key=value", platform.GetLoopbackAddress()),
 		},
 		{
 			Id:     ServiceControlProvider,
