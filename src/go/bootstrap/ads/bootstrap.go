@@ -81,8 +81,8 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{
 						Type: clusterpb.Cluster_STATIC,
 					},
-					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{},
-					LoadAssignment:       util.CreateUdsLoadAssignment(opts.AdsNamedPipe),
+					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					LoadAssignment:                util.CreateUdsLoadAssignment(opts.AdsNamedPipe),
 				},
 			},
 		},

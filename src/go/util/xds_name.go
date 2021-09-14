@@ -41,6 +41,8 @@ const (
 	TLSTransportSocket = "envoy.transport_sockets.tls"
 	// AccessFileLogger filter name
 	AccessFileLogger = "envoy.access_loggers.file"
+	// Upstream protocol options
+	UpstreamProtocolOptions = "envoy.extensions.upstreams.http.v3.HttpProtocolOptions"
 
 	// ESPv2 custom http filters.
 

@@ -25,7 +25,6 @@ import (
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 )
 
 // MakeClusters provides dynamic cluster settings for Envoy
@@ -266,7 +265,7 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 	}
 
 	if isHttp2 {
-		c.Http2ProtocolOptions = &corepb.Http2ProtocolOptions{}
+		c.TypedExtensionProtocolOptions = util.CreateUpstreamProtocolOptions()
 	}
 
 	switch opt.BackendDnsLookupFamily {

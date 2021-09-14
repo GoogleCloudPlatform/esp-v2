@@ -17,7 +17,26 @@ package util
 import (
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	httppb "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 )
+
+// CreateUpstreamProtocolOptions creates a http2 protocol option as a typed upstream extension.
+func CreateUpstreamProtocolOptions() map[string]*any.Any {
+	o := &httppb.HttpProtocolOptions{
+		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
+			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
+				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
+			},
+		},
+	}
+	a, _ := ptypes.MarshalAny(o)
+
+	return map[string]*any.Any{
+		UpstreamProtocolOptions: a,
+	}
+}
 
 // CreateLoadAssignment creates a cluster for a TCP/IP port.
 func CreateLoadAssignment(hostname string, port uint32) *endpointpb.ClusterLoadAssignment {
