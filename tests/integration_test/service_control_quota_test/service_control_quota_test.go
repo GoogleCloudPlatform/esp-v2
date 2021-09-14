@@ -345,6 +345,7 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 				},
 			},
 		},
+		/** TODO(b/199809466): fix flaky integration test.
 		{
 			// the third call should be the same as the second one.
 			desc:           "third call, request is granted with 2 service control: quota, report",
@@ -387,7 +388,7 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 					Location:                     "test-zone",
 				},
 			},
-		},
+		}, */
 	}
 
 	for _, tc := range testData {
