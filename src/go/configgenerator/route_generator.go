@@ -163,22 +163,22 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 		if org == "" {
 			return nil, nil, fmt.Errorf("cors_allow_origin cannot be empty when cors_preset=basic")
 		}
-		cors = &routepb.CorsPolicy{
-			AllowOriginStringMatch: []*matcher.StringMatcher{
-				{
-					MatchPattern: &matcher.StringMatcher_Exact{
-						Exact: org,
-					},
-				},
+		stringMatcher := &matcher.StringMatcher{
+			MatchPattern: &matcher.StringMatcher_Exact{
+				Exact: org,
 			},
+		}
+
+		cors = &routepb.CorsPolicy{
+			AllowOriginStringMatch: []*matcher.StringMatcher{stringMatcher},
 		}
 		if org == "*" {
 			originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_PresentMatch{
 				PresentMatch: true,
 			}
 		} else {
-			originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_ExactMatch{
-				ExactMatch: org,
+			originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_StringMatch{
+				StringMatch: stringMatcher,
 			}
 		}
 	case "cors_with_regex":
@@ -235,8 +235,12 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 			Headers: []*routepb.HeaderMatcher{
 				{
 					Name: ":method",
-					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-						ExactMatch: "OPTIONS",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_StringMatch{
+						StringMatch: &matcher.StringMatcher{
+							MatchPattern: &matcher.StringMatcher_Exact{
+								Exact: "OPTIONS",
+							},
+						},
 					},
 				},
 				originMatcher,
@@ -272,8 +276,12 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 			Headers: []*routepb.HeaderMatcher{
 				{
 					Name: ":method",
-					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-						ExactMatch: "OPTIONS",
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_StringMatch{
+						StringMatch: &matcher.StringMatcher{
+							MatchPattern: &matcher.StringMatcher_Exact{
+								Exact: "OPTIONS",
+							},
+						},
 					},
 				},
 			},
@@ -545,8 +553,12 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRout
 			routeMatcher.Headers = []*routepb.HeaderMatcher{
 				{
 					Name: ":method",
-					HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-						ExactMatch: httpRule.HttpMethod,
+					HeaderMatchSpecifier: &routepb.HeaderMatcher_StringMatch{
+						StringMatch: &matcher.StringMatcher{
+							MatchPattern: &matcher.StringMatcher_Exact{
+								Exact: httpRule.HttpMethod,
+							},
+						},
 					},
 				},
 			}

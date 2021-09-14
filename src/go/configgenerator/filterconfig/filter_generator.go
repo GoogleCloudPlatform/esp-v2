@@ -31,6 +31,7 @@ import (
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -224,8 +225,12 @@ func makeHealthCheckFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, erro
 		Headers: []*routepb.HeaderMatcher{
 			{
 				Name: ":path",
-				HeaderMatchSpecifier: &routepb.HeaderMatcher_ExactMatch{
-					ExactMatch: serviceInfo.Options.Healthz,
+				HeaderMatchSpecifier: &routepb.HeaderMatcher_StringMatch{
+					StringMatch: &matcher.StringMatcher{
+						MatchPattern: &matcher.StringMatcher_Exact{
+							Exact: serviceInfo.Options.Healthz,
+						},
+					},
 				},
 			},
 		},

@@ -306,7 +306,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "POST",
+                            "stringMatch":{"exact":"POST"},
                             "name": ":method"
                           }
                         ],
@@ -330,7 +330,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "POST",
+                            "stringMatch":{"exact":"POST"},
                             "name": ":method"
                           }
                         ],
@@ -354,7 +354,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "GET",
+                            "stringMatch":{"exact":"GET"},
                             "name": ":method"
                           }
                         ],
@@ -389,7 +389,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "GET",
+                            "stringMatch":{"exact":"GET"},
                             "name": ":method"
                           }
                         ],
@@ -424,7 +424,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "POST",
+                            "stringMatch":{"exact":"POST"},
                             "name": ":method"
                           }
                         ],
@@ -459,7 +459,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "POST",
+                            "stringMatch":{"exact":"POST"},
                             "name": ":method"
                           }
                         ],
@@ -494,7 +494,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "GET",
+                            "stringMatch":{"exact":"GET"},
                             "name": ":method"
                           }
                         ],
@@ -532,7 +532,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "GET",
+                            "stringMatch":{"exact":"GET"},
                             "name": ":method"
                           }
                         ],
@@ -567,7 +567,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "GET",
+                            "stringMatch":{"exact":"GET"},
                             "name": ":method"
                           }
                         ],
@@ -602,7 +602,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "GET",
+                            "stringMatch":{"exact":"GET"},
                             "name": ":method"
                           }
                         ],
@@ -639,7 +639,7 @@ var (
                       "match": {
                         "headers": [
                           {
-                            "exactMatch": "GET",
+                            "stringMatch":{"exact":"GET"},
                             "name": ":method"
                           }
                         ],

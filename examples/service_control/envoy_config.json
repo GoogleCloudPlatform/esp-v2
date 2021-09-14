@@ -744,8 +744,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "GET",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "GET"
+                                  }
                                 }
                               ],
                               "path": "/shelves"
@@ -774,8 +776,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "GET",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "GET"
+                                  }
                                 }
                               ],
                               "path": "/shelves/"
@@ -804,8 +808,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/shelves"
@@ -834,8 +840,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/shelves/"

@@ -86,7 +86,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -118,7 +118,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -246,7 +246,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -279,7 +279,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -514,7 +514,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -542,7 +542,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -671,7 +671,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -696,7 +696,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -721,7 +721,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -746,7 +746,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -917,7 +917,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -942,7 +942,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -967,7 +967,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               }
             ],
@@ -992,7 +992,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               }
             ],
@@ -1017,7 +1017,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1045,7 +1045,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               }
             ],
@@ -1196,7 +1196,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1221,7 +1221,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1246,7 +1246,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1271,7 +1271,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1430,7 +1430,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1455,7 +1455,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1480,7 +1480,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1505,7 +1505,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1649,7 +1649,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1757,7 +1757,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1782,7 +1782,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1946,7 +1946,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -1978,7 +1978,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2062,7 +2062,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2097,7 +2097,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2132,7 +2132,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2167,7 +2167,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2202,7 +2202,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2438,7 +2438,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2471,7 +2471,7 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2637,7 +2637,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2661,7 +2661,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2685,7 +2685,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -2709,7 +2709,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -2823,7 +2823,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2850,7 +2850,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -2968,7 +2968,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -2992,7 +2992,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3016,7 +3016,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -3040,7 +3040,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -3064,7 +3064,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               },
               {
@@ -3095,7 +3095,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               }
             ],
@@ -3210,7 +3210,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3234,7 +3234,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3258,7 +3258,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -3282,7 +3282,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -3306,12 +3306,12 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               },
               {
                 "name": "origin",
-                "exactMatch": "http://example.com"
+                "stringMatch":{"exact":"http://example.com"}
               },
               {
                 "name": "access-control-request-method",
@@ -3337,7 +3337,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               }
             ],
@@ -3455,7 +3455,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3479,7 +3479,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3503,7 +3503,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -3527,7 +3527,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "POST",
+                "stringMatch":{"exact":"POST"},
                 "name": ":method"
               }
             ],
@@ -3551,7 +3551,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               },
               {
@@ -3585,7 +3585,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "OPTIONS",
+                "stringMatch":{"exact":"OPTIONS"},
                 "name": ":method"
               }
             ],
@@ -3689,7 +3689,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3713,7 +3713,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3737,7 +3737,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],
@@ -3761,7 +3761,7 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "exactMatch": "GET",
+                "stringMatch":{"exact":"GET"},
                 "name": ":method"
               }
             ],

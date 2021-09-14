@@ -904,8 +904,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/echo"
@@ -939,8 +941,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/echo/"
@@ -974,8 +978,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/echoreport"
@@ -1009,8 +1015,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/echoreport/"
@@ -1044,8 +1052,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/echostream"
@@ -1083,8 +1093,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/echostream/"
@@ -1122,8 +1134,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/Cork"
@@ -1157,8 +1171,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/Cork/"
@@ -1192,8 +1208,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/Echo"
@@ -1227,8 +1245,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/Echo/"
@@ -1262,8 +1282,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/EchoReport"
@@ -1297,8 +1319,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/EchoReport/"
@@ -1332,8 +1356,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/EchoStream"
@@ -1371,8 +1397,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "path": "/test.grpc.Test/EchoStream/"

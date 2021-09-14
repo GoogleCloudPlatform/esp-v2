@@ -260,8 +260,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "GET",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "GET"
+                                  }
                                 }
                               ],
                               "safeRegex": {
@@ -301,8 +303,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "OPTIONS",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "OPTIONS"
+                                  }
                                 }
                               ],
                               "safeRegex": {
@@ -342,8 +346,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "DELETE",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "DELETE"
+                                  }
                                 }
                               ],
                               "safeRegex": {
@@ -376,8 +382,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "GET",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "GET"
+                                  }
                                 }
                               ],
                               "safeRegex": {
@@ -410,8 +418,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "OPTIONS",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "OPTIONS"
+                                  }
                                 }
                               ],
                               "safeRegex": {
@@ -444,8 +454,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "PATCH",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "PATCH"
+                                  }
                                 }
                               ],
                               "safeRegex": {
@@ -478,8 +490,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "POST",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "POST"
+                                  }
                                 }
                               ],
                               "safeRegex": {
@@ -512,8 +526,10 @@
                             "match": {
                               "headers": [
                                 {
-                                  "exactMatch": "PUT",
-                                  "name": ":method"
+                                  "name": ":method",
+                                  "stringMatch": {
+                                    "exact": "PUT"
+                                  }
                                 }
                               ],
                               "safeRegex": {
