@@ -16,6 +16,7 @@ package configmanager
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
@@ -36,6 +37,7 @@ import (
 	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/serviceconfig"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	rsrc "github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -249,13 +251,13 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
-	return m.cache.SetSnapshot(m.envoyConfigOptions.Node, *snapshot)
+	return m.cache.SetSnapshot(context.Background(), m.envoyConfigOptions.Node, *snapshot)
 }
 
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.Name)
 
-	var clusterResources, endpoints, secrets, runtimes, routes, listenerResources []types.Resource
+	var clusterResources, listenerResources []types.Resource
 	clusters, err := gen.MakeClusters(m.serviceInfo)
 	if err != nil {
 		return nil, err
@@ -273,7 +275,13 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		listenerResources = append(listenerResources, lis)
 	}
 
-	snapshot := cache.NewSnapshot(m.curConfigId(), endpoints, clusterResources, routes, listenerResources, runtimes, secrets)
+	snapshot, err := cache.NewSnapshot(m.curConfigId(), map[rsrc.Type][]types.Resource{
+		rsrc.ListenerType: listenerResources,
+		rsrc.ClusterType:  clusterResources,
+	})
+	if err != nil {
+		return nil, err
+	}
 	m.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
 	return &snapshot, nil
 }

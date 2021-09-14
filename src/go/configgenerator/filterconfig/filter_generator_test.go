@@ -367,7 +367,7 @@ func TestHealthCheckFilter(t *testing.T) {
           "passThroughMode":false,
           "headers": [
             {
-              "exactMatch": "/healthz",
+              "stringMatch":{"exact":"/healthz"},
               "name":":path"
             }
           ]
@@ -408,7 +408,7 @@ func TestHealthCheckFilter(t *testing.T) {
           "passThroughMode":false,
           "headers": [
             {
-              "exactMatch": "/",
+              "stringMatch":{"exact":"/"},
               "name":":path"
             }
           ]
