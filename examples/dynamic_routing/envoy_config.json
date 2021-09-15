@@ -106,7 +106,6 @@
       },
       {
         "connectTimeout": "20s",
-        "http2ProtocolOptions": {},
         "loadAssignment": {
           "clusterName": "http-bookstore-abc123456-uc.a.run.app",
           "endpoints": [
@@ -144,7 +143,15 @@
             "sni": "http-bookstore-abc123456-uc.a.run.app"
           }
         },
-        "type": "LOGICAL_DNS"
+        "type": "LOGICAL_DNS",
+        "typedExtensionProtocolOptions": {
+          "envoy.extensions.upstreams.http.v3.HttpProtocolOptions": {
+            "@type": "type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
+            "explicitHttpConfig": {
+              "http2ProtocolOptions": {}
+            }
+          }
+        }
       },
       {
         "connectTimeout": "20s",

@@ -84,8 +84,11 @@ func TestCreateBootstrapConfig(t *testing.T) {
       "clusters":[
          {
             "connectTimeout":"10s",
-            "http2ProtocolOptions":{
-               
+            "typedExtensionProtocolOptions":{
+               "envoy.extensions.upstreams.http.v3.HttpProtocolOptions":{
+                  "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
+                  "explicitHttpConfig":{"http2ProtocolOptions":{}}
+               }
             },
             "loadAssignment":{
                "clusterName":"@espv2-ads-cluster",
@@ -176,8 +179,11 @@ func TestCreateBootstrapConfig(t *testing.T) {
       "clusters":[
          {
             "connectTimeout":"10s",
-            "http2ProtocolOptions":{
-               
+            "typedExtensionProtocolOptions":{
+               "envoy.extensions.upstreams.http.v3.HttpProtocolOptions":{
+                  "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
+                  "explicitHttpConfig":{"http2ProtocolOptions":{}}
+               }
             },
             "loadAssignment":{
                "clusterName":"@espv2-ads-cluster",

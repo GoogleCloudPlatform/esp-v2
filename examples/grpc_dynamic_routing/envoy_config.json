@@ -19,7 +19,6 @@
     "clusters": [
       {
         "connectTimeout": "20s",
-        "http2ProtocolOptions": {},
         "loadAssignment": {
           "clusterName": "127.0.0.1",
           "endpoints": [
@@ -40,7 +39,15 @@
           ]
         },
         "name": "backend-cluster-examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app_local",
-        "type": "LOGICAL_DNS"
+        "type": "LOGICAL_DNS",
+        "typedExtensionProtocolOptions": {
+          "envoy.extensions.upstreams.http.v3.HttpProtocolOptions": {
+            "@type": "type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
+            "explicitHttpConfig": {
+              "http2ProtocolOptions": {}
+            }
+          }
+        }
       },
       {
         "connectTimeout": "20s",
@@ -107,7 +114,6 @@
       },
       {
         "connectTimeout": "20s",
-        "http2ProtocolOptions": {},
         "loadAssignment": {
           "clusterName": "grpc-echo-oxouww7xzq-uc.a.run.app",
           "endpoints": [
@@ -145,7 +151,15 @@
             "sni": "grpc-echo-oxouww7xzq-uc.a.run.app"
           }
         },
-        "type": "LOGICAL_DNS"
+        "type": "LOGICAL_DNS",
+        "typedExtensionProtocolOptions": {
+          "envoy.extensions.upstreams.http.v3.HttpProtocolOptions": {
+            "@type": "type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
+            "explicitHttpConfig": {
+              "http2ProtocolOptions": {}
+            }
+          }
+        }
       },
       {
         "connectTimeout": "20s",

@@ -36,6 +36,7 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	httppb "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
@@ -109,6 +110,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(accessgrpcpb.TcpGrpcAccessLogConfig), nil
 	case "type.googleapis.com/envoy.extensions.access_loggers.grpc.v3.CommonGrpcAccessLogConfig":
 		return new(accessgrpcpb.CommonGrpcAccessLogConfig), nil
+	case "type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions":
+		return new(httppb.HttpProtocolOptions), nil
 	case "type.googleapis.com/envoy.config.listener.v3.Listener":
 		return new(listenerpb.Listener), nil
 	case "type.googleapis.com/envoy.config.metrics.v3.StatsConfig":
