@@ -1,3 +1,8 @@
+# Release 2.30.3 15-09-2021
+
+- Add X-User-Agent as default cors_allow_headers (#598)
+- Add jwt_pad_forward_payload_header flag (#593)
+
 # Release 2.30.2 01-09-2021
 
 - Update Envoy to top of tree at 2021-08-24 (Envoy SHA `6f2726`) (#588)
