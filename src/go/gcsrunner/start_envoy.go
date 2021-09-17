@@ -49,7 +49,7 @@ func StartEnvoyAndWait(signalChan chan os.Signal, opts StartEnvoyOptions) error 
 		"--config-path", opts.ConfigPath,
 		"--log-level", opts.LogLevel,
 		"--log-path", opts.LogPath,
-		"--log-format", "%L%m%d %T.%e %t envoy] [%t][%n]%v",
+		"--log-format", "%L%m%d %T.%e %t %@] [%t][%n]%v",
 		"--log-format-escaped",
 		"--allow-unknown-static-fields",
 	}
