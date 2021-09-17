@@ -777,7 +777,7 @@ class TestStartProxy(unittest.TestCase):
               [],
               ["bin/envoy", "-c", "/tmp/bootstrap.json",
                "--disable-hot-restart",
-               "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
+               "--log-format %L%m%d %T.%e %t %@] [%t][%n]%v",
                "--log-format-escaped"]
           ),
           # Debug mode enabled
@@ -785,7 +785,7 @@ class TestStartProxy(unittest.TestCase):
               ["--enable_debug"],
               ["bin/envoy", "-c", "/tmp/bootstrap.json",
                "--disable-hot-restart",
-               "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
+               "--log-format %L%m%d %T.%e %t %@] [%t][%n]%v",
                "--log-format-escaped",
                "-l debug",
                "--component-log-level upstream:info,main:info"]
