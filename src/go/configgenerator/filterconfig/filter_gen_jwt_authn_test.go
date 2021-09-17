@@ -56,7 +56,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 						{
 							Id:      "auth_provider",
 							Issuer:  "issuer-0",
-							JwksUri: "https://fake-jwks.com",
+							JwksUri: "https://fake-jwks.com?key=value",
 						},
 					},
 					Rules: []*confpb.AuthenticationRule{
@@ -101,7 +101,7 @@ func TestJwtAuthnFilter(t *testing.T) {
                     "httpUri": {
                         "cluster": "jwt-provider-cluster-fake-jwks.com:443",
                         "timeout": "30s",
-                        "uri": "https://fake-jwks.com"
+                        "uri": "https://fake-jwks.com?key=value"
                     },
                     "asyncFetch": {}
                 }
