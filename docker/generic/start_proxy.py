@@ -1333,7 +1333,7 @@ def gen_envoy_args(args):
            "--disable-hot-restart",
            # This will print logs in `glog` format.
            # Stackdriver logging integrates nicely with this format.
-           "--log-format %L%m%d %T.%e %t envoy] [%t][%n]%v",
+           "--log-format %L%m%d %T.%e %t %@] [%t][%n]%v",
            "--log-format-escaped"]
 
     if args.enable_debug:
