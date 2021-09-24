@@ -145,6 +145,6 @@ def gen_args(cmd):
 if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
-    cmd = "/usr/local/bin/python"
+    cmd = "python3"
     args = gen_args(cmd)
     os.execv(cmd, args)
