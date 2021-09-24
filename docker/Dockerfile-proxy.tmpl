@@ -27,7 +27,7 @@ ADD bin/bootstrap /bin/
 ADD bin/configmanager /bin/
 
 # create envoy user and group
-RUN groupadd -g 999 envoy && useradd -r -u 999 -g envoy envoy
+RUN addgroup -S envoy && adduser --no-create-home -S envoy -G envoy
 # run as user envoy
 USER envoy
 
