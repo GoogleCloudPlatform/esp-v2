@@ -14,6 +14,9 @@
 
 FROM frolvlad/alpine-glibc:alpine-3.14_glibc-2.33
 
+# Update to the latest
+RUN apk update && apk upgrade
+
 # Set the default root CA for gRpc.
 # opensensus lib is using gRpc to call Stackdriver
 ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH /etc/ssl/certs/ca-certificates.crt
