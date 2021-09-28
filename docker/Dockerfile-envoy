@@ -18,4 +18,6 @@ FROM python:3.6-buster
 # opensensus lib is using gRpc to call Stackdriver
 ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH /etc/ssl/certs/ca-certificates.crt
 
+ADD docker/licenses/LICENSE /LICENSE
+
 ADD bin/envoy /bin/envoy
