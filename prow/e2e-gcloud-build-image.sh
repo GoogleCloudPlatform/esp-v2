@@ -31,6 +31,11 @@ SERVICE_NAME="gcloud-build-image-e2e-test.endpoints.cloudesf-testing.cloud.goog"
 CONFIG_ID="2020-07-20r1"
 START_DIR="$(pwd)"
 
+# Create GAR repository
+GAR_LOCATION="us-west1"
+GAR_REPOSITORY="e2e-gcloud-build-image"
+GAR_REPOSITORY_IMAGE_PREFIX="${GAR_LOCATION}-docker.pkg.dev/${PROJECT_NAME}/${GAR_REPOSITORY}"
+
 function error_exit() {
   # ${BASH_SOURCE[1]} is the file name of the caller.
   echo "${BASH_SOURCE[1]}: line ${BASH_LINENO[0]}: ${1:-Unknown Error.} (exit ${2:-1})" 1>&2
@@ -40,6 +45,11 @@ function error_exit() {
 function formImageName() {
   local expected_version=$1
   echo "gcr.io/${PROJECT_NAME}/endpoints-runtime-serverless:${expected_version}-${SERVICE_NAME}-${CONFIG_ID}"
+}
+
+function formGarImageName() {
+  local expected_version=$1
+  echo "${GAR_REPOSITORY_IMAGE_PREFIX}/endpoints-runtime-serverless:${expected_version}-${SERVICE_NAME}-${CONFIG_ID}"
 }
 
 function cleanupOldImage() {
@@ -100,7 +110,18 @@ ${ROOT}/docker/serverless/gcloud_build_image \
     -i "gcr.io/cloudesf-testing/apiproxy-serverless:gcloud-build-image-test"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
-echo "=== Test 5: When no ESP version is specified, the script uses the latest ESPv2 release. ==="
+echo "=== Test 5: Specify a GAR_REPOSITORY_IMAGE_PREFIX with -g flag. ==="
+EXPECTED_IMAGE_NAME=$(formGarImageName "2.30.3")
+cleanupOldImage "${EXPECTED_IMAGE_NAME}"
+${ROOT}/docker/serverless/gcloud_build_image \
+    -s "${SERVICE_NAME}" \
+    -c "${CONFIG_ID}" \
+    -p "${PROJECT_NAME}" \
+    -v "2.30.3" \
+    -g "${GAR_REPOSITORY_IMAGE_PREFIX}"
+expectImage "${EXPECTED_IMAGE_NAME}"
+
+echo "=== Test 6: When no ESP version is specified, the script uses the latest ESPv2 release. ==="
 # Knowing the latest ESP version number is hard, it depends on what is tagged in GCR.
 # This is a chicken and egg problem, because `gcloud_build_image` uses that.
 # That means we don't have a reliable way of checking if the output is correct.
