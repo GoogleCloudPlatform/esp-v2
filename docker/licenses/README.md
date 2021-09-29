@@ -15,4 +15,6 @@ Run this script to update the license file when:
 * Envoy is updated or
 * go modules are updated.
 
+Notes: License files under "others" folder are manually fetched.
+
 

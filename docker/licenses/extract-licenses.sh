@@ -38,9 +38,16 @@ cd ${SRC_ROOT}
 
 # Please don't change this tmp folder, line 55 is hardcoded to this.
 TMP_FOLDER=/tmp/ggg
+if [ -d "${TMP_FOLDER}" ]; then
+  rm -rf "${TMP_FOLDER}"
+fi
 
 echo "Collecting LICENCE files from go modules..."
 go-licenses save "src/go/configmanager/main/server.go" --save_path "${TMP_FOLDER}"
+
+# Move the one under /tmp/ggg to sub-folder under go-licenses
+mkdir -p "${TMP_FOLDER}/go-licenses"
+mv "${TMP_FOLDER}/LICENSE" "${TMP_FOLDER}/go-licenses/"
 
 # Copy LICENSE files under external
 for i in $(ls bazel-esp-v2/external/ -1);
@@ -53,6 +60,10 @@ do
   fi
 done
 
+# copy LICENSE files from others folder
+# License files under "others" folder are manually fetched.
+cp -rf ${SRC_ROOT}/docker/licenses/others/* ${TMP_FOLDER}/
+
 # Clear file
 echo > ${TMP_LICENSES}
 
@@ -64,5 +75,4 @@ while read -r entry; do
   LIBRARY=$(expr match "$LIBRARY" '\(.*\)/LICENSE.*\?')
   append_license ${LIBRARY} ${entry}
 done <<< "$(find ${TMP_FOLDER} -regextype posix-extended -iregex '.*LICENSE(\.txt)?')"
-
 

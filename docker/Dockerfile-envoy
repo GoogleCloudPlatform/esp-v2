@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.6-buster
+FROM frolvlad/alpine-glibc:alpine-3.14_glibc-2.33
+
+# Update to the latest
+RUN apk update && apk upgrade
 
 # Set the default root CA for gRpc.
 # opensensus lib is using gRpc to call Stackdriver

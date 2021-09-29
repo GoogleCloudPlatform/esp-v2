@@ -14,6 +14,12 @@
 
 FROM _ENVOY_IMAGE_SHA_NAME
 
+# Install python3
+ENV PYTHONUNBUFFERED=1
+RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
+RUN python3 -m ensurepip
+RUN pip3 install --no-cache --upgrade pip setuptools
+
 ENV PATH /bin:$PATH
 
 ADD docker/generic/* /apiproxy/
@@ -21,9 +27,8 @@ ADD bin/bootstrap /bin/
 ADD bin/configmanager /bin/
 
 # create envoy user and group
-RUN groupadd -g 999 envoy && useradd -r -u 999 -g envoy envoy
+RUN addgroup -S envoy && adduser --no-create-home -S envoy -G envoy
 # run as user envoy
 USER envoy
 
-
-ENTRYPOINT ["python", "/apiproxy/start_proxy.py"]
+ENTRYPOINT ["python3", "/apiproxy/start_proxy.py"]
