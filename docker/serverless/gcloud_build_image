@@ -30,6 +30,10 @@ function error_exit() {
   exit ${2:-1}
 }
 
+# To support Google Artifact Registry (GAR), the flag -g can be used to set
+# IMAGE_REPOSITORY as following:
+#   'LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY'
+
 while getopts :c:s:p:v:z:g:i: arg; do
   case ${arg} in
     c) CONFIG_ID="${OPTARG}";;
@@ -37,7 +41,7 @@ while getopts :c:s:p:v:z:g:i: arg; do
     p) PROJECT="${OPTARG}";;
     v) ESP_TAG="${OPTARG}";;
     z) ZONE="${OPTARG}";;
-    g) IMAGE_REGISTRY="${OPTARG}";;
+    g) IMAGE_REPOSITORY="${OPTARG}";;
     i)
       BASE_IMAGE="${OPTARG}"
       ESP_FULL_VERSION="custom"
@@ -56,10 +60,12 @@ if [ -z "${BASE_IMAGE}" ]; then
 fi;
 echo "Using base image: ${BASE_IMAGE}"
 
-if [ -z "${IMAGE_REGISTRY}" ]; then
-  IMAGE_REGISTRY="gcr.io"
+# If IMAGE_REPOSITORY is not set, it is to support container registry format:
+#   'gcr.io/PROJECT-ID' or 'us.gcr.io/PROJECT-ID'
+if [ -z "${IMAGE_REPOSITORY}" ]; then
+  IMAGE_REPOSITORY="gcr.io/${PROJECT}"
   if [ -n "${ZONE}" ]; then
-    IMAGE_REGISTRY="${ZONE}.${IMAGE_REGISTRY}"
+    IMAGE_REPOSITORY="${ZONE}.${IMAGE_REPOSITORY}"
   fi
 fi
 
@@ -108,7 +114,7 @@ USER envoy
 ENTRYPOINT ["/env_start_proxy.py"]
 EOF
 
-NEW_IMAGE="${IMAGE_REGISTRY}/${PROJECT}/endpoints-runtime-serverless:${ESP_FULL_VERSION}-${SERVICE}-${CONFIG_ID}"
+NEW_IMAGE="${IMAGE_REPOSITORY}/endpoints-runtime-serverless:${ESP_FULL_VERSION}-${SERVICE}-${CONFIG_ID}"
 gcloud builds submit --tag "${NEW_IMAGE}" . --project="${PROJECT}"
 )
 
