@@ -15,7 +15,13 @@
 FROM frolvlad/alpine-glibc:alpine-3.14_glibc-2.33
 
 # Update to the latest
-RUN apk update && apk upgrade
+# and remove expired DST_Root_CA_X3.crt
+# TODO: After it is removed from the base image, remove the codes
+RUN apk update && apk upgrade \
+    && apk add ca-certificates \
+    && rm /usr/share/ca-certificates/mozilla/DST_Root_CA_X3.crt \
+    && sed -i '/DST_Root_CA_X3/d' /etc/ca-certificates.conf \
+    && update-ca-certificates
 
 # Set the default root CA for gRpc.
 # opensensus lib is using gRpc to call Stackdriver
