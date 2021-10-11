@@ -1,11 +1,9 @@
 # Release 2.30.4 11-10-2021
 
 - Remove expired DST_Root_CA_X3.crt root ca (#617)
-- b/185372123: Use alpine as base image (#611)
+- Use alpine as base image (#611)
 - Update gcloud_build_image again to support GAR (#613)
-- Add a register parameter to gcloud_build_image (#610)
-- b/200210941: Update application log format (#608)
-- b/198157523: Manually verify JWKS URI allows query param (#599)
+- Update application log format (#608)
 
 # Release 2.30.3 15-09-2021
 
