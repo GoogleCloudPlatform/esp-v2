@@ -1,3 +1,10 @@
+# Release 2.30.4 11-10-2021
+
+- Remove expired DST_Root_CA_X3.crt root ca (#617)
+- Use alpine as base image (#611)
+- Update gcloud_build_image again to support GAR (#613)
+- Update application log format (#608)
+
 # Release 2.30.3 15-09-2021
 
 - Add X-User-Agent as default cors_allow_headers (#598)
