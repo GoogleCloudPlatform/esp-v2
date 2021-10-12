@@ -1141,10 +1141,12 @@ def gen_proxy_config(args):
         if not os.path.exists("/tmp/ssl/endpoints"):
             os.makedirs("/tmp/ssl/endpoints")
         logging.info("Generating self-signed certificate...")
-        os.system(("openssl req -x509 -newkey rsa:2048"
+        if os.system(("openssl req -x509 -newkey rsa:2048"
                    " -keyout /tmp/ssl/endpoints/server.key -nodes"
                    " -out /tmp/ssl/endpoints/server.crt"
-                   ' -days 3650 -subj "/CN=localhost"'))
+                   ' -days 3650 -subj "/CN=localhost"')) != 0:
+            logging.fatal("Failed to create self-signed cert using openssl.")
+            sys.exit(1)
         proxy_conf.extend(["--ssl_server_cert_path", "/tmp/ssl/endpoints"])
 
     if args.enable_strict_transport_security:

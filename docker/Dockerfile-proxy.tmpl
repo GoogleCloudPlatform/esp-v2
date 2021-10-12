@@ -14,6 +14,9 @@
 
 FROM _ENVOY_IMAGE_SHA_NAME
 
+# Install openssl, only used for self signed cert in GKE/GCE deployment.
+RUN apk add --update --no-cache openssl
+
 # Install python3
 ENV PYTHONUNBUFFERED=1
 RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
