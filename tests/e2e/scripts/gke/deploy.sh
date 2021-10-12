@@ -71,7 +71,7 @@ if [ ${BACKEND} == "bookstore" ]; then
   [[ -n ${USING_SA_CRED} ]] && ARGS="$ARGS, \"--non_gcp\", \"--service_account_key=/etc/creds/$(basename "${SA_CRED_PATH}")\""
 
   # Support TLS termination in ESPv2.
-  ARGS="$ARGS, \"--ssl_server_cert_path=/etc/esp/ssl\""
+  ARGS="$ARGS, \"--generate_self_signed_cert\""
 fi
 
 sed "s|APIPROXY_IMAGE|${APIPROXY_IMAGE}|g" ${YAML_TEMPLATE}  \
@@ -123,15 +123,6 @@ if [ "${BACKEND}" == 'bookstore' ]; then
   # Service account key secret.
   get_test_client_key "e2e-non-gcp-instance-proxy-rt-sa.json" "${SA_CRED_PATH}"
   run kubectl create secret generic service-account-cred --from-file="${SA_CRED_PATH}" --namespace "${NAMESPACE}"
-
-  # Generate untrusted self-signed cert.
-  # Common name doesn't matter, client will not verify it.
-  openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-      -keyout ./server.key -out ./server.crt \
-      -subj "/C=US/ST=CA/O=Google/CN=fake-fqdn.cloud.google.com"
-
-  # SSL cert secret.
-  run kubectl create secret generic esp-ssl --from-file=./server.crt --from-file=./server.key --namespace "${NAMESPACE}"
 
   SCHEME="https"
   LISTENER_PORT="443"
