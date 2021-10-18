@@ -58,7 +58,7 @@ void TokenSubscriber::init() {
   init_target_ = std::make_unique<Envoy::Init::TargetImpl>(
       debug_name_, [this] { refresh(); });
   refresh_timer_ =
-      context_.dispatcher().createTimer([this]() -> void { refresh(); });
+      context_.mainThreadDispatcher().createTimer([this]() -> void { refresh(); });
 
   context_.initManager().add(*init_target_);
 }
