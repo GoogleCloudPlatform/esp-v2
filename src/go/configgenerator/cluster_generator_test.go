@@ -123,6 +123,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	for i, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
+			opts.ServiceControlURL = ""
 			opts.BackendAddress = tc.BackendAddress
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {

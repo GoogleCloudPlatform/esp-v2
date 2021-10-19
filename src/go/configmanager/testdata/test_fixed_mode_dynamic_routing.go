@@ -199,28 +199,68 @@ var (
 			"type":"LOGICAL_DNS"
 		}`,
 		`{
-                        "@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
-			"name": "metadata-cluster",
-			"type": "STRICT_DNS",
-			"connectTimeout": "20s",
+			"@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
+			"name":"metadata-cluster",
+			"type":"STRICT_DNS",
+			"connectTimeout":"20s",
 			"loadAssignment":{
 				"clusterName":"169.254.169.254",
 				"endpoints":[
-				{
-					"lbEndpoints":[
 					{
-						"endpoint":{
-							"address":{
-								"socketAddress":{
-									"address":"169.254.169.254",
-									"portValue":80
+						"lbEndpoints":[
+							{
+								"endpoint":{
+									"address":{
+										"socketAddress":{
+											"address":"169.254.169.254",
+											"portValue":80
+										}
+									}
 								}
+							}
+						]
+					}
+				]
+			}
+		}`,
+		`{
+			"@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
+			"name":"service-control-cluster",
+			"type":"LOGICAL_DNS",
+			"connectTimeout":"5s",
+			"loadAssignment":{
+				"clusterName":"servicecontrol.googleapis.com",
+				"endpoints":[
+					{
+						"lbEndpoints":[
+							{
+								"endpoint":{
+									"address":{
+										"socketAddress":{
+											"address":"servicecontrol.googleapis.com",
+											"portValue":443
+										}
+									}
+								}
+							}
+						]
+					}
+				]
+			},
+			"dnsLookupFamily":"V4_ONLY",
+			"transportSocket":{
+				"name":"envoy.transport_sockets.tls",
+				"typedConfig":{
+					"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+					"sni":"servicecontrol.googleapis.com",
+					"commonTlsContext": {
+						"validationContext": {
+							"trustedCa": {
+								"filename": "/etc/ssl/certs/ca-certificates.crt"
 							}
 						}
 					}
-				]
 				}
-			]
 			}
 		}`,
 	}

@@ -291,7 +291,7 @@ func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, e
 }
 
 func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
-	uri := serviceInfo.ServiceConfig().GetControl().GetEnvironment()
+	uri := serviceControlURL(serviceInfo, serviceInfo.Options)
 	if uri == "" {
 		return nil, nil
 	}
@@ -330,6 +330,14 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster,
 	}
 
 	return c, nil
+}
+
+func serviceControlURL(serviceInfo *sc.ServiceInfo, opts options.ConfigGeneratorOptions) string {
+	if uri := opts.ServiceControlURL; uri != "" {
+		// Ignore value from ServiceConfig if flag is set
+		return uri
+	}
+	return serviceInfo.ServiceConfig().GetControl().GetEnvironment()
 }
 
 func makeRemoteBackendClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
