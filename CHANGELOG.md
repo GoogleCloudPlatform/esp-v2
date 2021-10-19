@@ -1,5 +1,7 @@
-# Release 2.30.4 11-10-2021
+# Release 2.31.0 19-10-2021
 
+- Update Envoy to v1.20.0 (#625)
+- add openssl to the base alpine image (#623)
 - Remove expired DST_Root_CA_X3.crt root ca (#617)
 - Use alpine as base image (#611)
 - Update gcloud_build_image again to support GAR (#613)
