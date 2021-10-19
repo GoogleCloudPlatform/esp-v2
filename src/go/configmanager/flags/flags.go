@@ -56,7 +56,15 @@ var (
 	EnableBackendAddressOverride = flag.Bool("enable_backend_address_override", false, "Allow the --backend flag to override the backend.rule.address for all operations.")
 
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
-	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
+
+	// Health check related flags.
+	Healthz                = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
+	HealthCheckGrpcBackend = flag.Bool("health_check_grpc_backend", false, `If true, ESPv2 checks the backend gRPC Health service when answering the health check calls
+                      specified by the flag "--healthz"`)
+	HealthCheckGrpcBackendService = flag.String("health_check_grpc_backend_service", "", `Specify the service name in the HealthCheckRequest when calling the backend gRPC Health service.
+                       Default is empty. It only applies when the flag "--health_check_grpc_backend" is true.`)
+	HealthCheckGrpcBackendInterval = flag.Duration("health_check_grpc_backend_interval", 1*time.Second, `Specify the interval to call the backend gRPC Health service. Default is 1 second.
+                      It only applies when the flag "--health_check_grpc_backend" is true.`)
 
 	SslServerCertPath                = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
 	SslServerCipherSuites            = flag.String("ssl_server_cipher_suites", "", "Cipher suites to use for downstream connections as a comma-separated list.")
@@ -212,6 +220,9 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ServiceControlURL:                             *ServiceControlURL,
 		ListenerPort:                                  *ListenerPort,
 		Healthz:                                       *Healthz,
+		HealthCheckGrpcBackend:                        *HealthCheckGrpcBackend,
+		HealthCheckGrpcBackendService:                 *HealthCheckGrpcBackendService,
+		HealthCheckGrpcBackendInterval:                *HealthCheckGrpcBackendInternal,
 		SslSidestreamClientRootCertsPath:              *SslSidestreamClientRootCertsPath,
 		SslBackendClientCertPath:                      *SslBackendClientCertPath,
 		SslBackendClientRootCertsPath:                 *SslBackendClientRootCertsPath,

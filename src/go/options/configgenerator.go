@@ -49,9 +49,14 @@ type ConfigGeneratorOptions struct {
 	BackendAddress               string
 	EnableBackendAddressOverride bool
 
+	// Health check related
+	Healthz                        string
+	HealthCheckGrpcBackend         bool
+	HealthCheckGrpcBackendService  string
+	HealthCheckGrpcBackendInterval time.Duration
+
 	// Network related configurations.
 	ListenerAddress                  string
-	Healthz                          string
 	ServiceManagementURL             string
 	ServiceControlURL                string
 	ListenerPort                     int

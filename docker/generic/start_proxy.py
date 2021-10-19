@@ -243,6 +243,20 @@ environment variable or by passing "-k" flag to this script.
         don't use any paths conflicting with your normal requests.
         Default: not used.''')
 
+    parser.add_argument('--health_check_grpc_backend', action='store_true',
+        help='''If enabled, check the backend gRPC Health service when answering the health check calls enabled
+        by the flag "--healthz".''')
+
+    parser.add_argument('--health_check_grpc_backend_service', default=None,
+                        help='''Specify the service name when calling the backend gRPC Health service. It only applied when
+                        the flag "--health_check_grpc_backend" is used. Default is empty.''')
+    parser.add_argument('--health_check_grpc_backend_interval', default=None,
+                        help='''Specify the interval when calling backend gRPC Health service. It only applied when the
+                        flag "--health_check_grpc_backend" is used. Default is 1 second.
+                        The acceptable format is a sequence of decimal numbers, each with
+                        optional fraction and a unit suffix, such as "5s", "100ms" or "2m".
+                        Valid time units are "m" for minutes, "s" for seconds, and "ms" for milliseconds.''')
+
     parser.add_argument('--add_request_header', default=None, action='append', help='''
         Add a HTTP header to the request before sent to the upstream backend.
         If the header is already in the request, its value will be replaced with the new one.
@@ -1050,6 +1064,13 @@ def gen_proxy_config(args):
 
     if args.healthz:
       proxy_conf.extend(["--healthz", args.healthz])
+      if args.health_check_grpc_backend:
+          proxy_conf.append("--health_check_grpc_backend")
+          if args.health_check_grpc_backend_service:
+              proxy_conf.extend(["--health_check_grpc_backend_service", args.health_check_grpc_backend_service])
+          if args.health_check_grpc_backend_interval:
+              proxy_conf.extend(["--health_check_grpc_backend_interval", args.health_check_grpc_backend_interval])
+
 
     if args.enable_debug:
         proxy_conf.extend(["--v", "1"])
