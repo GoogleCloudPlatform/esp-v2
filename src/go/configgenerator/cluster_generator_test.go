@@ -53,10 +53,11 @@ func createH2TransportSocket(hostname string) *corepb.TransportSocket {
 
 func TestMakeServiceControlCluster(t *testing.T) {
 	testData := []struct {
-		desc              string
-		fakeServiceConfig *confpb.Service
-		wantedCluster     clusterpb.Cluster
-		BackendAddress    string
+		desc                  string
+		fakeServiceConfig     *confpb.Service
+		backendAddress        string
+		serviceControlUrlFlag string
+		wantedCluster         clusterpb.Cluster
 	}{
 		{
 			desc: "Success for gRPC backend",
@@ -71,7 +72,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 					Environment: testServiceControlEnv,
 				},
 			},
-			BackendAddress: "grpc://127.0.0.1:80",
+			backendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: clusterpb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
@@ -109,7 +110,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 					Environment: "http://127.0.0.1:8000",
 				},
 			},
-			BackendAddress: "http://127.0.0.1:80",
+			backendAddress: "http://127.0.0.1:80",
 			wantedCluster: clusterpb.Cluster{
 				Name:                 "service-control-cluster",
 				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
@@ -118,12 +119,37 @@ func TestMakeServiceControlCluster(t *testing.T) {
 				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 8000),
 			},
 		},
+		{
+			desc: "Service control URL flag take precedence",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+				Control: &confpb.Control{
+					Environment: "https://invalid:address",
+				},
+			},
+			serviceControlUrlFlag: testServiceControlEnv,
+			backendAddress:        "grpc://127.0.0.1:80",
+			wantedCluster: clusterpb.Cluster{
+				Name:                 "service-control-cluster",
+				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
+				LoadAssignment:       util.CreateLoadAssignment(testServiceControlEnv, 443),
+				TransportSocket:      createTransportSocket("servicecontrol.googleapis.com"),
+			},
+		},
 	}
 
 	for i, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
-			opts.BackendAddress = tc.BackendAddress
+			opts.ServiceControlURL = tc.serviceControlUrlFlag
+			opts.BackendAddress = tc.backendAddress
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
