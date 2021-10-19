@@ -129,7 +129,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 					},
 				},
 				Control: &confpb.Control{
-					Environment: "blade://invalid-address",
+					Environment: "https://invalid:address",
 				},
 			},
 			serviceControlUrlFlag: testServiceControlEnv,
