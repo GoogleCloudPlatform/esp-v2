@@ -10,6 +10,7 @@ build --copt=-fPIC
 
 # Show timestamps during compiling
 build --show_timestamps
+build --copt -Wno-unknown-warning-option
 
 # Compilation modes
 build:release -c opt
