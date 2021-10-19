@@ -25,6 +25,7 @@ import (
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 )
 
 // MakeClusters provides dynamic cluster settings for Envoy
@@ -285,6 +286,22 @@ func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, e
 	c, err := makeBackendCluster(&serviceInfo.Options, serviceInfo.LocalBackendCluster)
 	if err != nil {
 		return nil, err
+	}
+
+	if serviceInfo.Options.HealthCheckGrpcBackend {
+		c.HealthChecks = make([]*corepb.HealthCheck, 1)
+		intervalProto := ptypes.DurationProto(serviceInfo.Options.HealthCheckGrpcBackendInterval)
+		c.HealthChecks = append(c.HealthChecks, &corepb.HealthCheck{
+			// Set the timeout as Interval
+			Timeout:  intervalProto,
+			Interval: intervalProto,
+			HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
+				GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{
+					ServiceName: serviceInfo.Options.HealthCheckGrpcBackendService,
+				},
+			},
+		})
+
 	}
 
 	return c, nil
