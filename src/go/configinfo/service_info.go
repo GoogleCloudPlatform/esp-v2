@@ -173,6 +173,16 @@ func (s *ServiceInfo) buildLocalBackend() error {
 	if err != nil {
 		return fmt.Errorf("error parsing local backend protocol: %v", err)
 	}
+
+	if s.Options.HealthCheckGrpcBackend {
+		if s.Options.Healthz == "" {
+			return fmt.Errorf("invalid flag --health_check_grpc_backend, it is for HealthCheck, the flag --healthz should be set.")
+		}
+		if protocol != util.GRPC {
+			return fmt.Errorf("invalid flag --health_check_grpc_backend, backend protocol must be GRPC.")
+		}
+	}
+
 	if protocol == util.GRPC {
 		s.GrpcSupportRequired = true
 	}

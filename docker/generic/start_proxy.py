@@ -245,14 +245,14 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('--health_check_grpc_backend', action='store_true',
         help='''If enabled, check the backend gRPC Health service when answering the health check calls enabled
-        by the flag "--healthz".''')
+        by the flag "--healthz". It only applies to the backend specified by the flag "--backend".''')
 
     parser.add_argument('--health_check_grpc_backend_service', default=None,
                         help='''Specify the service name when calling the backend gRPC Health service. It only applied when
-                        the flag "--health_check_grpc_backend" is used. Default is empty.''')
+                        the flag "--health_check_grpc_backend" is used. It only applies to the backend specified by the flag "--backend". Default is empty.''')
     parser.add_argument('--health_check_grpc_backend_interval', default=None,
                         help='''Specify the interval when calling backend gRPC Health service. It only applied when the
-                        flag "--health_check_grpc_backend" is used. Default is 1 second.
+                        flag "--health_check_grpc_backend" is used. It only applies to the backend specified by the flag "--backend". Default is 1 second.
                         The acceptable format is a sequence of decimal numbers, each with
                         optional fraction and a unit suffix, such as "5s", "100ms" or "2m".
                         Valid time units are "m" for minutes, "s" for seconds, and "ms" for milliseconds.''')

@@ -183,5 +183,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		ScQuotaRetries:                    -1,
 		ScReportRetries:                   -1,
 		CorsMaxAge:                        480 * time.Hour,
+		HealthCheckGrpcBackendInterval:    1 * time.Second,
 	}
 }

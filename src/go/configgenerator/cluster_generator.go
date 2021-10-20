@@ -289,19 +289,19 @@ func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, e
 	}
 
 	if serviceInfo.Options.HealthCheckGrpcBackend {
-		c.HealthChecks = make([]*corepb.HealthCheck, 1)
 		intervalProto := ptypes.DurationProto(serviceInfo.Options.HealthCheckGrpcBackendInterval)
-		c.HealthChecks = append(c.HealthChecks, &corepb.HealthCheck{
-			// Set the timeout as Interval
-			Timeout:  intervalProto,
-			Interval: intervalProto,
-			HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
-				GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{
-					ServiceName: serviceInfo.Options.HealthCheckGrpcBackendService,
+		c.HealthChecks = []*corepb.HealthCheck{
+			&corepb.HealthCheck{
+				// Set the timeout as Interval
+				Timeout:  intervalProto,
+				Interval: intervalProto,
+				HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
+					GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{
+						ServiceName: serviceInfo.Options.HealthCheckGrpcBackendService,
+					},
 				},
 			},
-		})
-
+		}
 	}
 
 	return c, nil
