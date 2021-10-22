@@ -729,6 +729,34 @@ class TestStartProxy(unittest.TestCase):
               '--enable_operation_name_header',
               '--service_json_path', '/tmp/service_config.json',
               ]),
+            # passing the flag --health_check_grp_backend
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--health_check_grpc_backend'
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--health_check_grpc_backend',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run'
+              ]),
+            # passing the flags: --health_check_grp_backend, --health_check_grp_backend_interval and --health_check_grp_backend_service
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpcs://127.0.0.1:8000',
+              '--health_check_grpc_backend',
+              '--health_check_grpc_backend_interval=3s',
+              '--health_check_grpc_backend_service=/foo.bar'
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpcs://127.0.0.1:8000',
+              '--health_check_grpc_backend',
+              '--health_check_grpc_backend_service', '/foo.bar',
+              '--health_check_grpc_backend_interval', '3s',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run'
+              ]),
         ]
 
         i = 0
@@ -774,6 +802,14 @@ class TestStartProxy(unittest.TestCase):
             ['--access_log_format'],
             ['--dns=127.0.0.1', '--dns_resolver_address=127.0.0.1'],
             ['--ssl_client_cert_path=/tmp', '--ssl_backend_client_cert_path=/tmp'],
+            # The flag --backend default is using http, but the flag --health_check_grpc_backend requires grpc
+            ['--health_check_grpc_backend'],
+            # The flag --backend flag is using http, but the flag --health_check_grpc_backend requires grpc
+            ['--health_check_grpc_backend', '--backend=http://abc.com'],
+            # The flag --health_check_grpc_backend_interval requires the flag --health_check_grpc_backend
+            ['--health_check_grpc_backend_interval=3s'],
+            # The flag --health_check_grpc_backend_service requires the flag --health_check_grpc_backend
+            ['--health_check_grpc_backend_service=/foo.bar'],
             ['--ssl_client_root_certs_file=/tmp/server.crt', '--ssl_backend_client_root_certs_file=/tmp/server.crt']
           ]
 

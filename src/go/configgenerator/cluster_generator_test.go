@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/go-cmp/cmp"
 
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -181,14 +182,14 @@ func TestLocalBackendCluster(t *testing.T) {
 	}
 
 	testData := []struct {
-		desc                           string
-		backendAddress                 string
-		healthz                        string
-		healthCheckGrpcBackend         bool
-		healthCheckGrpcBackendService  string
-		healthCheckGrpcBackendInterval time.Duration
-		wantError                      string
-		wantedCluster                  clusterpb.Cluster
+		desc                                    string
+		backendAddress                          string
+		healthCheckGrpcBackend                  bool
+		healthCheckGrpcBackendService           string
+		healthCheckGrpcBackendInterval          time.Duration
+		healthCheckGrpcBackendNoTrafficInterval time.Duration
+		wantError                               string
+		wantedCluster                           clusterpb.Cluster
 	}{
 		{
 			desc:           "Success for http backend",
@@ -235,9 +236,8 @@ func TestLocalBackendCluster(t *testing.T) {
 			},
 		},
 		{
-			desc:                   "Success for grpc backend with default grpc health check",
+			desc:                   "Success for grpc backend with default grpc health check settings",
 			backendAddress:         "grpc://127.0.0.1:80",
-			healthz:                "healthz",
 			healthCheckGrpcBackend: true,
 			wantedCluster: clusterpb.Cluster{
 				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
@@ -247,8 +247,11 @@ func TestLocalBackendCluster(t *testing.T) {
 				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 				HealthChecks: []*corepb.HealthCheck{
 					&corepb.HealthCheck{
-						Timeout:  ptypes.DurationProto(1 * time.Second),
-						Interval: ptypes.DurationProto(1 * time.Second),
+						Timeout:            ptypes.DurationProto(1 * time.Second),
+						Interval:           ptypes.DurationProto(1 * time.Second),
+						NoTrafficInterval:  ptypes.DurationProto(60 * time.Second),
+						UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
+						HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
 						HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
 							GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{},
 						},
@@ -257,22 +260,26 @@ func TestLocalBackendCluster(t *testing.T) {
 			},
 		},
 		{
-			desc:                           "Success for grpc backend + grpc health check with custom interval and service",
-			backendAddress:                 "grpc://127.0.0.1:80",
-			healthz:                        "healthz",
-			healthCheckGrpcBackend:         true,
-			healthCheckGrpcBackendInterval: 10 * time.Second,
-			healthCheckGrpcBackendService:  "foo.bar.service",
+			desc:                                    "Success for grpc backend + grpc health check with custom interval and service",
+			backendAddress:                          "grpcs://mybackend.com:443",
+			healthCheckGrpcBackend:                  true,
+			healthCheckGrpcBackendInterval:          10 * time.Second,
+			healthCheckGrpcBackendNoTrafficInterval: 30 * time.Second,
+			healthCheckGrpcBackendService:           "foo.bar.service",
 			wantedCluster: clusterpb.Cluster{
 				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
 				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
 				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
-				LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
+				LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
+				TransportSocket:               createH2TransportSocket("mybackend.com"),
 				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 				HealthChecks: []*corepb.HealthCheck{
 					&corepb.HealthCheck{
-						Timeout:  ptypes.DurationProto(10 * time.Second),
-						Interval: ptypes.DurationProto(10 * time.Second),
+						Timeout:            ptypes.DurationProto(10 * time.Second),
+						Interval:           ptypes.DurationProto(10 * time.Second),
+						NoTrafficInterval:  ptypes.DurationProto(30 * time.Second),
+						UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
+						HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
 						HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
 							GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{
 								ServiceName: "foo.bar.service",
@@ -285,15 +292,8 @@ func TestLocalBackendCluster(t *testing.T) {
 		{
 			desc:                   "Negative case, HealthCheckGrpcBackend but backend protocol not grpc",
 			backendAddress:         "http://127.0.0.1:80",
-			healthz:                "healthz",
 			healthCheckGrpcBackend: true,
 			wantError:              "invalid flag --health_check_grpc_backend, backend protocol must be GRPC.",
-		},
-		{
-			desc:                   "Negative case, HealthCheckGrpcBackend but healthz is not set",
-			backendAddress:         "grpc://127.0.0.1:80",
-			healthCheckGrpcBackend: true,
-			wantError:              "invalid flag --health_check_grpc_backend, it is for HealthCheck, the flag --healthz should be set.",
 		},
 	}
 
@@ -301,10 +301,12 @@ func TestLocalBackendCluster(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = tc.backendAddress
-			opts.Healthz = tc.healthz
 			opts.HealthCheckGrpcBackend = tc.healthCheckGrpcBackend
 			if tc.healthCheckGrpcBackendInterval != 0 {
 				opts.HealthCheckGrpcBackendInterval = tc.healthCheckGrpcBackendInterval
+			}
+			if tc.healthCheckGrpcBackendNoTrafficInterval != 0 {
+				opts.HealthCheckGrpcBackendNoTrafficInterval = tc.healthCheckGrpcBackendNoTrafficInterval
 			}
 			if tc.healthCheckGrpcBackendService != "" {
 				opts.HealthCheckGrpcBackendService = tc.healthCheckGrpcBackendService

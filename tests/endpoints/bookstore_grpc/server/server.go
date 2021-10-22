@@ -63,9 +63,10 @@ type BookstoreServerV2Impl struct {
 // BookstoreServer represents two different version gRPC Bookstore servers
 // sharing same listener.
 type BookstoreServer struct {
-	bs1 *BookstoreServerV1Impl
-	bs2 *BookstoreServerV2Impl
-	lis net.Listener
+	bs1    *BookstoreServerV1Impl
+	bs2    *BookstoreServerV2Impl
+	health *health.Server
+	lis    net.Listener
 }
 
 func createDB() *database {
@@ -161,7 +162,8 @@ func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool, rootCe
 		bs2: &BookstoreServerV2Impl{
 			grpcServer: grpcServer,
 		},
-		lis: lis,
+		health: healthServer,
+		lis:    lis,
 	}
 
 	// Register gRPC health services and bookstore
@@ -171,6 +173,14 @@ func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool, rootCe
 
 	// Return server
 	return endpoint, nil
+}
+
+func (s *BookstoreServer) SetHealthState(healthy bool) {
+	if healthy {
+		s.health.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+	} else {
+		s.health.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+	}
 }
 
 func (s *BookstoreServer) StartServer() {

@@ -175,9 +175,6 @@ func (s *ServiceInfo) buildLocalBackend() error {
 	}
 
 	if s.Options.HealthCheckGrpcBackend {
-		if s.Options.Healthz == "" {
-			return fmt.Errorf("invalid flag --health_check_grpc_backend, it is for HealthCheck, the flag --healthz should be set.")
-		}
 		if protocol != util.GRPC {
 			return fmt.Errorf("invalid flag --health_check_grpc_backend, backend protocol must be GRPC.")
 		}

@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
+	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -293,8 +294,11 @@ func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, e
 		c.HealthChecks = []*corepb.HealthCheck{
 			&corepb.HealthCheck{
 				// Set the timeout as Interval
-				Timeout:  intervalProto,
-				Interval: intervalProto,
+				Timeout:            intervalProto,
+				Interval:           intervalProto,
+				NoTrafficInterval:  ptypes.DurationProto(serviceInfo.Options.HealthCheckGrpcBackendNoTrafficInterval),
+				UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
+				HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
 				HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
 					GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{
 						ServiceName: serviceInfo.Options.HealthCheckGrpcBackendService,

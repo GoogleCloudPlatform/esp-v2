@@ -241,18 +241,21 @@ environment variable or by passing "-k" flag to this script.
         For example, "-z healthz" makes ESPv2 return code 200 for location
         "/healthz", instead of forwarding the request to the backend. Please
         don't use any paths conflicting with your normal requests.
-        Default: not used.''')
+        Default: not used. If the flag "--heath_check_grpc_backend" is used, ESPv2
+        periodically checks the backend gRPC Health service, its result will
+        be reflected when answering the health check calls.''')
 
     parser.add_argument('--health_check_grpc_backend', action='store_true',
-        help='''If enabled, check the backend gRPC Health service when answering the health check calls enabled
-        by the flag "--healthz". It only applies to the backend specified by the flag "--backend".''')
+        help='''If enabled, periodically check gRPC Health service to the backend specified by the
+             flag "--backend". The backend must use gRPC protocol. The health check endpoint enabled by
+             the flag --healthz will reflect the backend health check result too.''')
 
     parser.add_argument('--health_check_grpc_backend_service', default=None,
                         help='''Specify the service name when calling the backend gRPC Health service. It only applied when
-                        the flag "--health_check_grpc_backend" is used. It only applies to the backend specified by the flag "--backend". Default is empty.''')
+                        the flag "--health_check_grpc_backend" is used. Default is empty.''')
     parser.add_argument('--health_check_grpc_backend_interval', default=None,
-                        help='''Specify the interval when calling backend gRPC Health service. It only applied when the
-                        flag "--health_check_grpc_backend" is used. It only applies to the backend specified by the flag "--backend". Default is 1 second.
+                        help='''Specify the checking interval and timeout when checking the backend gRPC Health service.
+                        It only applied when the flag "--health_check_grpc_backend" is used. Default is 1 second.
                         The acceptable format is a sequence of decimal numbers, each with
                         optional fraction and a unit suffix, such as "5s", "100ms" or "2m".
                         Valid time units are "m" for minutes, "s" for seconds, and "ms" for milliseconds.''')
@@ -1043,6 +1046,14 @@ def enforce_conflict_args(args):
         return "Flag --ssl_client_root_certs_file is renamed to " \
                "--ssl_backend_client_root_certs_file, only use the latter flag."
 
+    # health_check_grpc_backend flags
+    if args.health_check_grpc_backend and not args.backend.startswith("grpc"):
+        return "Flag --health_check_grpc_backend requires the flag --backend to use grpc scheme."
+    if not args.health_check_grpc_backend and args.health_check_grpc_backend_interval:
+        return "Flag --health_check_grpc_backend_interval requires the flag --health_check_grpc_backend to be used."
+    if not args.health_check_grpc_backend and args.health_check_grpc_backend_service:
+        return "Flag --health_check_grpc_backend_service requires the flag --health_check_grpc_backend to be used."
+
     return None
 
 def gen_proxy_config(args):
@@ -1064,12 +1075,16 @@ def gen_proxy_config(args):
 
     if args.healthz:
       proxy_conf.extend(["--healthz", args.healthz])
-      if args.health_check_grpc_backend:
-          proxy_conf.append("--health_check_grpc_backend")
-          if args.health_check_grpc_backend_service:
-              proxy_conf.extend(["--health_check_grpc_backend_service", args.health_check_grpc_backend_service])
-          if args.health_check_grpc_backend_interval:
-              proxy_conf.extend(["--health_check_grpc_backend_interval", args.health_check_grpc_backend_interval])
+
+    # The flag "--health_check_grpc_backend" can be independent of the flag "--healthz"
+    # If the flag "--healthz" is not used, ESPv2 still periodically checks the gRPC backend. If its status
+    # is not healthy, any requests routed to the backend will be replied with 503 right away.
+    if args.health_check_grpc_backend:
+        proxy_conf.append("--health_check_grpc_backend")
+        if args.health_check_grpc_backend_service:
+            proxy_conf.extend(["--health_check_grpc_backend_service", args.health_check_grpc_backend_service])
+        if args.health_check_grpc_backend_interval:
+            proxy_conf.extend(["--health_check_grpc_backend_interval", args.health_check_grpc_backend_interval])
 
 
     if args.enable_debug:
