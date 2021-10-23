@@ -134,6 +134,7 @@ type ConfigGeneratorOptions struct {
 	TranscodingPreserveProtoFieldNames      bool
 	TranscodingIgnoreQueryParameters        string
 	TranscodingIgnoreUnknownQueryParameters bool
+	TranscodingQueryParametersUnescapePlus  bool
 	TranscodingFilePath                     string
 }
 

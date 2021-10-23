@@ -159,6 +159,8 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
 	TranscodingPreserveProtoFieldNames      = flag.Bool("transcoding_preserve_proto_field_names", false, "Whether to preserve proto field names for grpc-json transcoding")
 	TranscodingIgnoreQueryParameters        = flag.String("transcoding_ignore_query_parameters", "", "A list of query parameters(separated by comma) to be ignored for transcoding method mapping in grpc-json transcoding.")
 	TranscodingIgnoreUnknownQueryParameters = flag.Bool("transcoding_ignore_unknown_query_parameters", false, "Whether to ignore query parameters that cannot be mapped to a corresponding protobuf field in grpc-json transcoding.")
+	TranscodingQueryParametersUnescapePlus  = flag.Bool("transcoding_query_parameters_unescape_plus", false, `If true, unescape "+" to space when extracting variables in
+           the query parameters in grpc-json transcoding. This is to support HTML 2.0<https://tools.ietf.org/html/rfc1866#section-8.2.1>`)
 
 	BackendRetryOns = flag.String("backend_retry_ons", "reset,connect-failure,refused-stream",
 		`The conditions under which ESPv2 does retry on the backends. One or more
@@ -267,6 +269,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		TranscodingPreserveProtoFieldNames:      *TranscodingPreserveProtoFieldNames,
 		TranscodingIgnoreQueryParameters:        *TranscodingIgnoreQueryParameters,
 		TranscodingIgnoreUnknownQueryParameters: *TranscodingIgnoreUnknownQueryParameters,
+		TranscodingQueryParametersUnescapePlus:  *TranscodingQueryParametersUnescapePlus,
 	}
 
 	glog.Infof("Config Generator options: %+v", opts)

@@ -186,6 +186,7 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) *hcmpb.HttpFilter {
 				ConvertGrpcStatus:            true,
 				IgnoredQueryParameters:       ignoredQueryParameterList,
 				IgnoreUnknownQueryParameters: serviceInfo.Options.TranscodingIgnoreUnknownQueryParameters,
+				QueryParamUnescapePlus:       serviceInfo.Options.TranscodingQueryParametersUnescapePlus,
 				PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
 					AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
 					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,

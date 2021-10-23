@@ -58,6 +58,7 @@ func TestTranscoderFilter(t *testing.T) {
 		transcodingPreserveProtoFieldNames      bool
 		transcodingIgnoreQueryParameters        string
 		transcodingIgnoreUnknownQueryParameters bool
+		transcodingQueryParametersUnescapePlus  bool
 		transcodingFilePath                     string
 		wantTranscoderFilter                    string
 	}{
@@ -212,6 +213,7 @@ func TestTranscoderFilter(t *testing.T) {
 			transcodingPreserveProtoFieldNames:      true,
 			transcodingIgnoreQueryParameters:        "parameter_foo,parameter_bar",
 			transcodingIgnoreUnknownQueryParameters: true,
+			transcodingQueryParametersUnescapePlus:  true,
 			wantTranscoderFilter: fmt.Sprintf(`
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
@@ -220,6 +222,7 @@ func TestTranscoderFilter(t *testing.T) {
       "autoMapping":true,
       "convertGrpcStatus":true,
       "ignoreUnknownQueryParameters":true,
+      "queryParamUnescapePlus":true,
       "ignoredQueryParameters":[
          "api_key",
          "key",
@@ -307,6 +310,7 @@ func TestTranscoderFilter(t *testing.T) {
 			opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
 			opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
 			opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
+			opts.TranscodingQueryParametersUnescapePlus = tc.transcodingQueryParametersUnescapePlus
 			opts.TranscodingFilePath = tc.transcodingFilePath
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {

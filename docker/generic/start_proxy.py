@@ -841,6 +841,13 @@ environment variable or by passing "-k" flag to this script.
         Otherwise use ignored_query_parameters. Defaults to false.
         ''')
 
+    parser.add_argument(
+        '--transcoding_query_parameters_unescape_plus', action='store_true',
+        help='''
+        If true, unescape "+" to space when extracting variables in the query parameters
+        in grpc-json transcoding. This is to support HTML 2.0<https://tools.ietf.org/html/rfc1866#section-8.2.1>.
+        ''')
+
     # Start Deprecated Flags Section
 
     parser.add_argument(
@@ -1269,6 +1276,9 @@ def gen_proxy_config(args):
 
     if args.transcoding_ignore_unknown_query_parameters:
         proxy_conf.append("--transcoding_ignore_unknown_query_parameters")
+
+    if args.transcoding_query_parameters_unescape_plus:
+        proxy_conf.append("--transcoding_query_parameters_unescape_plus")
 
     if args.on_serverless:
         proxy_conf.extend([

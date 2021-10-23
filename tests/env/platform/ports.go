@@ -151,6 +151,7 @@ const (
 	TestTracingSampleRate
 	TestTranscodingBackendUnavailableError
 	TestTranscodingBindings
+	TestTranscodingUnescapePlus
 	TestTranscodingErrors
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
