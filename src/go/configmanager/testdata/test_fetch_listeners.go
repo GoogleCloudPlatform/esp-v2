@@ -97,6 +97,7 @@ var (
                   "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
                   "autoMapping": true,
                   "convertGrpcStatus": true,
+                  "queryParamUnescapePlus": true,
                   "ignoredQueryParameters": [
                     "api_key",
                     "key"

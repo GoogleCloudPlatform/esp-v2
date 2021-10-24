@@ -51,16 +51,16 @@ var (
 
 func TestTranscoderFilter(t *testing.T) {
 	testData := []struct {
-		desc                                    string
-		fakeServiceConfig                       *confpb.Service
-		transcodingAlwaysPrintPrimitiveFields   bool
-		transcodingAlwaysPrintEnumsAsInts       bool
-		transcodingPreserveProtoFieldNames      bool
-		transcodingIgnoreQueryParameters        string
-		transcodingIgnoreUnknownQueryParameters bool
-		transcodingQueryParametersUnescapePlus  bool
-		transcodingFilePath                     string
-		wantTranscoderFilter                    string
+		desc                                          string
+		fakeServiceConfig                             *confpb.Service
+		transcodingAlwaysPrintPrimitiveFields         bool
+		transcodingAlwaysPrintEnumsAsInts             bool
+		transcodingPreserveProtoFieldNames            bool
+		transcodingIgnoreQueryParameters              string
+		transcodingIgnoreUnknownQueryParameters       bool
+		transcodingQueryParametersDisableUnescapePlus bool
+		transcodingFilePath                           string
+		wantTranscoderFilter                          string
 	}{
 		{
 			desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
@@ -96,6 +96,7 @@ func TestTranscoderFilter(t *testing.T) {
       "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
       "autoMapping":true,
       "convertGrpcStatus":true,
+      "queryParamUnescapePlus":true,
       "ignoredQueryParameters":[
          "access_token",
          "api_key",
@@ -176,6 +177,7 @@ func TestTranscoderFilter(t *testing.T) {
       "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
       "autoMapping":true,
       "convertGrpcStatus":true,
+      "queryParamUnescapePlus":true,
       "ignoredQueryParameters":[
          "jwt_query_param",
          "query_name_1",
@@ -208,12 +210,12 @@ func TestTranscoderFilter(t *testing.T) {
 					SourceFiles: []*anypb.Any{content},
 				},
 			},
-			transcodingAlwaysPrintPrimitiveFields:   true,
-			transcodingAlwaysPrintEnumsAsInts:       true,
-			transcodingPreserveProtoFieldNames:      true,
-			transcodingIgnoreQueryParameters:        "parameter_foo,parameter_bar",
-			transcodingIgnoreUnknownQueryParameters: true,
-			transcodingQueryParametersUnescapePlus:  true,
+			transcodingAlwaysPrintPrimitiveFields:         true,
+			transcodingAlwaysPrintEnumsAsInts:             true,
+			transcodingPreserveProtoFieldNames:            true,
+			transcodingIgnoreQueryParameters:              "parameter_foo,parameter_bar",
+			transcodingIgnoreUnknownQueryParameters:       true,
+			transcodingQueryParametersDisableUnescapePlus: true,
 			wantTranscoderFilter: fmt.Sprintf(`
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
@@ -222,7 +224,6 @@ func TestTranscoderFilter(t *testing.T) {
       "autoMapping":true,
       "convertGrpcStatus":true,
       "ignoreUnknownQueryParameters":true,
-      "queryParamUnescapePlus":true,
       "ignoredQueryParameters":[
          "api_key",
          "key",
@@ -268,6 +269,8 @@ func TestTranscoderFilter(t *testing.T) {
       "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
       "autoMapping":true,
       "convertGrpcStatus":true,
+      "queryParamUnescapePlus":true,
+      "queryParamUnescapePlus":true,
 			"ignoredQueryParameters": [
 				"api_key",
 				"key"
@@ -310,7 +313,7 @@ func TestTranscoderFilter(t *testing.T) {
 			opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
 			opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
 			opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
-			opts.TranscodingQueryParametersUnescapePlus = tc.transcodingQueryParametersUnescapePlus
+			opts.TranscodingQueryParametersDisableUnescapePlus = tc.transcodingQueryParametersDisableUnescapePlus
 			opts.TranscodingFilePath = tc.transcodingFilePath
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
