@@ -717,7 +717,7 @@ func TestMethods(t *testing.T) {
 			},
 		},
 		{
-			desc: "Succeed for HTTP, with Healthz",
+			desc: "Succeed for HTTP, with Healthz; skip discovery API",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -729,6 +729,14 @@ func TestMethods(t *testing.T) {
 							},
 							{
 								Name: "Echo_Auth_Jwt",
+							},
+						},
+					},
+					{
+						Name: "google.discovery.Discovery",
+						Methods: []*apipb.Method{
+							{
+								Name: "GetDiscovery",
 							},
 						},
 					},
@@ -747,6 +755,12 @@ func TestMethods(t *testing.T) {
 								Post: "/echo",
 							},
 							Body: "message",
+						},
+						{
+							Selector: "google.discovery.Discovery.GetDiscover",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/$discovery",
+							},
 						},
 					},
 				},
@@ -3323,7 +3337,7 @@ func TestProcessApisForGrpc(t *testing.T) {
 		wantError         string
 	}{
 		{
-			desc: "Process API with unary and streaming gRPC methods",
+			desc: "Process API with unary and streaming gRPC methods; skip discovery API",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{
@@ -3339,6 +3353,14 @@ func TestProcessApisForGrpc(t *testing.T) {
 							{
 								Name:              "streaming_response",
 								ResponseStreaming: true,
+							},
+						},
+					},
+					{
+						Name: "google.discovery.Discovery",
+						Methods: []*apipb.Method{
+							{
+								Name: "GetDiscovery",
 							},
 						},
 					},
