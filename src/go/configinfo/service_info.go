@@ -221,6 +221,10 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 
 func (s *ServiceInfo) processApis() error {
 	for _, api := range s.serviceConfig.GetApis() {
+		if isDiscoveryAPI(api.GetName()) {
+			glog.Warningf("Skip API %q because API discovery is not supported yet TODO(b/184393425).", api.GetName())
+			continue
+		}
 		s.ApiNames = append(s.ApiNames, api.Name)
 
 		for _, method := range api.GetMethods() {
@@ -255,6 +259,10 @@ func (s *ServiceInfo) addGrpcHttpRules() error {
 	}
 
 	for _, api := range s.serviceConfig.GetApis() {
+		if isDiscoveryAPI(api.GetName()) {
+			glog.Warningf("Skip API %q because API discovery is not supported yet TODO(b/184393425).", api.GetName())
+			continue
+		}
 		for _, method := range api.GetMethods() {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
 			mi, err := s.getMethod(selector)
@@ -395,6 +403,11 @@ func (s *ServiceInfo) processHttpRule() error {
 	addedRouteMatchWithOptionsSet := make(map[string]bool)
 
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
+		if s := rule.GetSelector(); isDiscoveryAPI(s) {
+			glog.Warningf("Skip http rule %q because API discovery is not supported yet TODO(b/184393425).", s)
+			continue
+
+		}
 		method, err := s.getMethod(rule.GetSelector())
 		if err != nil {
 			return fmt.Errorf("error processing http rule for operation (%v): %v", rule.Selector, err)
@@ -934,4 +947,8 @@ func parseRetriableStatusCodes(statusCodes string) ([]uint32, error) {
 		}
 	}
 	return codes, nil
+}
+
+func isDiscoveryAPI(s string) bool {
+	return strings.HasPrefix(s, "google.discovery")
 }
