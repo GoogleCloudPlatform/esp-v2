@@ -241,18 +241,22 @@ environment variable or by passing "-k" flag to this script.
         For example, "-z healthz" makes ESPv2 return code 200 for location
         "/healthz", instead of forwarding the request to the backend. Please
         don't use any paths conflicting with your normal requests.
-        Default: not used. If the flag "--heath_check_grpc_backend" is used, ESPv2
+        Default: not used.
+        If the flag "--heath_check_grpc_backend" is used, ESPv2
         periodically checks the backend gRPC Health service, its result will
         be reflected when answering the health check calls.''')
 
     parser.add_argument('--health_check_grpc_backend', action='store_true',
         help='''If enabled, periodically check gRPC Health service to the backend specified by the
-             flag "--backend". The backend must use gRPC protocol. The health check endpoint enabled by
-             the flag --healthz will reflect the backend health check result too.''')
+             flag "--backend". The backend must use gRPC protocol and implement the gRPC Health
+             Checking Protocol defined in https://github.com/grpc/grpc/blob/master/doc/health-checking.md.
+             The health check endpoint enabled by the flag --healthz will reflect the backend health
+             check result too.''')
 
     parser.add_argument('--health_check_grpc_backend_service', default=None,
-                        help='''Specify the service name when calling the backend gRPC Health service. It only applied when
-                        the flag "--health_check_grpc_backend" is used. Default is empty.''')
+                        help='''Specify the service name when calling the backend gRPC Health Checking Protocol. It only applied when
+                        the flag "--health_check_grpc_backend" is used. It is optional, if not set, default is empty.
+                        An empty service name is to query the gRPC server overall health status.''')
     parser.add_argument('--health_check_grpc_backend_interval', default=None,
                         help='''Specify the checking interval and timeout when checking the backend gRPC Health service.
                         It only applied when the flag "--health_check_grpc_backend" is used. Default is 1 second.

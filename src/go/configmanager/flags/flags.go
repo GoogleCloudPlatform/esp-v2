@@ -64,7 +64,7 @@ var (
                        Default is empty. It only applies when the flag "--health_check_grpc_backend" is used.`)
 	HealthCheckGrpcBackendInterval = flag.Duration("health_check_grpc_backend_interval", 1*time.Second, `Specify the checking interval to call the backend gRPC Health service. Default is 1 second.
                       It only applies when the flag "--health_check_grpc_backend" is used.`)
-	HealthCheckGrpcBackendNoTrafficInterval = flag.Duration("health_check_grpc_backend_no_traffic_interval", 60*time.Second, `Specify the checking interval to call the backend gRPC Health service 
+	HealthCheckGrpcBackendNoTrafficInterval = flag.Duration("health_check_grpc_backend_no_traffic_interval", 60*time.Second, `Specify the checking interval to call the backend gRPC Health service
                       when at start up or the backend did not have any traffic. Default is 60 seconds. It only applies when the flag "--health_check_grpc_backend" is used.`)
 
 	SslServerCertPath                = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
@@ -223,7 +223,8 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		Healthz:                                       *Healthz,
 		HealthCheckGrpcBackend:                        *HealthCheckGrpcBackend,
 		HealthCheckGrpcBackendService:                 *HealthCheckGrpcBackendService,
-		HealthCheckGrpcBackendInterval:                *HealthCheckGrpcBackendInternal,
+		HealthCheckGrpcBackendInterval:                *HealthCheckGrpcBackendInterval,
+		HealthCheckGrpcBackendNoTrafficInterval:       *HealthCheckGrpcBackendNoTrafficInterval,
 		SslSidestreamClientRootCertsPath:              *SslSidestreamClientRootCertsPath,
 		SslBackendClientCertPath:                      *SslBackendClientCertPath,
 		SslBackendClientRootCertsPath:                 *SslBackendClientRootCertsPath,
