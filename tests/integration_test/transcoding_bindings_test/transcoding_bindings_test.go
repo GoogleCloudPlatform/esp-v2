@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
@@ -34,20 +33,6 @@ func TestTranscodingBindings(t *testing.T) {
 	args := []string{"--service_config_id=" + configID,
 		"--rollout_strategy=fixed"}
 
-	type testType struct {
-		desc               string
-		clientProtocol     string
-		httpMethod         string
-		method             string
-		noBackend          bool
-		token              string
-		headers            map[string][]string
-		bodyBytes          []byte
-		wantResp           string
-		wantErr            string
-		wantGRPCWebTrailer client.GRPCWebTrailer
-	}
-
 	s := env.NewTestEnv(platform.TestTranscodingBindings, platform.GrpcBookstoreSidecar)
 	s.OverrideAuthentication(&confpb.Authentication{
 		Rules: []*confpb.AuthenticationRule{},
@@ -57,7 +42,19 @@ func TestTranscodingBindings(t *testing.T) {
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}
-	time.Sleep(time.Duration(5 * time.Second))
+
+	type testType struct {
+		desc               string
+		clientProtocol     string
+		httpMethod         string
+		method             string
+		token              string
+		headers            map[string][]string
+		bodyBytes          []byte
+		wantResp           string
+		wantErr            string
+		wantGRPCWebTrailer client.GRPCWebTrailer
+	}
 
 	tests := []testType{
 		// Binding shelf=100 in ListBooksRequest
@@ -134,6 +131,77 @@ func TestTranscodingBindings(t *testing.T) {
 			method:         "/v1/shelves?key=api-key",
 			bodyBytes:      []byte(`{"id":"300","theme":"Horror","any":{"@type":"type.googleapis.com/endpoints.examples.bookstore.ObjectOnlyForAny","id":"123","name":"name"}}`),
 			wantResp:       `{"id":"300","theme":"Horror","any":{"@type":"type.googleapis.com/endpoints.examples.bookstore.ObjectOnlyForAny","id":123,"name":"name"}}`,
+		},
+		// Binding shelf=100 and some fields in query parameters in CreateBookRequest
+		// query parameter + has been unescaped into space.
+		// HTTP template:
+		// POST /shelves/{shelf}/books
+		// body: book
+		{
+			desc:           "Succeeded, call CreateBookRequest with query parameters",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/books?key=api-key&book.author=Leo%20Tolstoy&book.title=War+and+Peace",
+			bodyBytes:      []byte(`{"id": 14}`),
+			wantResp:       `{"id":"14","author":"Leo Tolstoy","title":"War and Peace"}`,
+		},
+	}
+	for _, tc := range tests {
+		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+		resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
+		if tc.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErr)) {
+			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantErr, err)
+		} else {
+			if !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			}
+		}
+	}
+}
+
+func TestTranscodingUnescapePlus(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+	args := []string{"--service_config_id=" + configID,
+		"--rollout_strategy=fixed", "--transcoding_query_parameters_disable_unescape_plus"}
+
+	s := env.NewTestEnv(platform.TestTranscodingUnescapePlus, platform.GrpcBookstoreSidecar)
+	s.OverrideAuthentication(&confpb.Authentication{
+		Rules: []*confpb.AuthenticationRule{},
+	})
+
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	type testType struct {
+		desc               string
+		clientProtocol     string
+		httpMethod         string
+		method             string
+		token              string
+		headers            map[string][]string
+		bodyBytes          []byte
+		wantResp           string
+		wantErr            string
+		wantGRPCWebTrailer client.GRPCWebTrailer
+	}
+
+	tests := []testType{
+		// Binding shelf=100 and some fields in query parameters in CreateBookRequest
+		// query parameter + has NOT been unescaped into space.
+		// HTTP template:
+		// POST /shelves/{shelf}/books
+		// body: book
+		{
+			desc:           "Succeeded, call CreateBookRequest with query parameters",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/books?key=api-key&book.author=Leo%20Tolstoy&book.title=War+and+Peace",
+			bodyBytes:      []byte(`{"id": 14}`),
+			wantResp:       `{"id":"14","author":"Leo Tolstoy","title":"War+and+Peace"}`,
 		},
 	}
 	for _, tc := range tests {

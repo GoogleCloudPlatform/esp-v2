@@ -390,7 +390,7 @@ class TestStartProxy(unittest.TestCase):
               '--transcoding_always_print_enums_as_ints',
               '--transcoding_preserve_proto_field_names',
               ]),
-            # json-grpc transcoder ignore unknown parameters
+            # json-grpc transcoder ignore query parameters
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
               '--transcoding_ignore_query_parameters=foo,bar',
@@ -402,6 +402,7 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing',
               '--transcoding_ignore_query_parameters', 'foo,bar'
               ]),
+            # json-grpc transcoder ignore unknown parameters
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
               '--transcoding_ignore_unknown_query_parameters',
@@ -412,6 +413,18 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--disable_tracing',
               '--transcoding_ignore_unknown_query_parameters'
+              ]),
+            # json-grpc transcoding_query_parameters_disable_unescape_plus
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--transcoding_query_parameters_disable_unescape_plus',
+              '--disable_tracing',
+              ],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
+              '--transcoding_query_parameters_disable_unescape_plus'
               ]),
             # Connection buffer limit bytes
             (['--service=test_bookstore.gloud.run',
