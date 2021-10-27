@@ -175,11 +175,11 @@ func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool, rootCe
 	return endpoint, nil
 }
 
-func (s *BookstoreServer) SetHealthState(healthy bool) {
+func (s *BookstoreServer) SetHealthState(service string, healthy bool) {
 	if healthy {
-		s.health.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+		s.health.SetServingStatus(service, healthpb.HealthCheckResponse_SERVING)
 	} else {
-		s.health.SetServingStatus("", healthpb.HealthCheckResponse_NOT_SERVING)
+		s.health.SetServingStatus(service, healthpb.HealthCheckResponse_NOT_SERVING)
 	}
 }
 

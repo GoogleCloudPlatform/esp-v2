@@ -253,8 +253,8 @@ func (e *TestEnv) SetAllowCors() {
 }
 
 // SetBookstoreServerHealthState set the bookstore server health state
-func (e *TestEnv) SetBookstoreServerHealthState(healthy bool) {
-	e.bookstoreServer.SetHealthState(healthy)
+func (e *TestEnv) SetBookstoreServerHealthState(service string, healthy bool) {
+	e.bookstoreServer.SetHealthState(service, healthy)
 }
 
 func (e *TestEnv) EnableEchoServerRootPathHandler() {

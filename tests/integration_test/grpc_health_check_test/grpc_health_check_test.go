@@ -32,6 +32,8 @@ func TestHealthCheckGrpcBackend(t *testing.T) {
 	tests := []struct {
 		desc               string
 		healthCheckBackend bool
+		backendService     string
+		checkingService    string
 		periods            []HealthPeriod
 	}{
 		{
@@ -40,9 +42,23 @@ func TestHealthCheckGrpcBackend(t *testing.T) {
 			periods:            []HealthPeriod{{backend: true, expected: true}, {backend: false, expected: true}, {backend: true, expected: true}},
 		},
 		{
-			desc:               "health check grpc backend",
+			desc:               "health check grpc backend with empty service",
 			healthCheckBackend: true,
 			periods:            []HealthPeriod{{backend: true, expected: true}, {backend: false, expected: false}, {backend: true, expected: true}},
+		},
+		{
+			desc:               "health check grpc backend with non-empty service",
+			healthCheckBackend: true,
+			backendService:     "endpoints.examples.bookstore.Bookstore",
+			checkingService:    "endpoints.examples.bookstore.Bookstore",
+			periods:            []HealthPeriod{{backend: true, expected: true}, {backend: false, expected: false}, {backend: true, expected: true}},
+		},
+		{
+			desc:               "health check grpc backend with backend service != checking service",
+			healthCheckBackend: true,
+			backendService:     "endpoints.examples.bookstore.v2.Bookstore",
+			checkingService:    "endpoints.examples.bookstore.Bookstore",
+			periods:            []HealthPeriod{{backend: true, expected: false}},
 		},
 	}
 
@@ -56,6 +72,9 @@ func TestHealthCheckGrpcBackend(t *testing.T) {
 				// But the default no_traffic_interval is 60s, it is too long for this test.
 				// Here we need to change it to 1s.
 				args = append(args, "--health_check_grpc_backend", "--health_check_grpc_backend_no_traffic_interval=1s")
+				if tc.checkingService != "" {
+					args = append(args, "--health_check_grpc_backend_service", tc.checkingService)
+				}
 			}
 
 			s := env.NewTestEnv(platform.TestHealthCheckGrpcBackend, platform.GrpcBookstoreSidecar)
@@ -66,7 +85,7 @@ func TestHealthCheckGrpcBackend(t *testing.T) {
 			healthUrl := fmt.Sprintf("http://%v:%v/healthz", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 
 			for idx, period := range tc.periods {
-				s.SetBookstoreServerHealthState(period.backend)
+				s.SetBookstoreServerHealthState(tc.backendService, period.backend)
 
 				// Wait for 5 seconds for cluster to detect the changes,
 				time.Sleep(5 * time.Second)
