@@ -58,6 +58,15 @@ var (
 	ListenerPort = flag.Int("listener_port", 8080, "listener port")
 	Healthz      = flag.String("healthz", "", "path for health check of ESPv2 proxy itself")
 
+	// Health check grpc backend related flags.
+	HealthCheckGrpcBackend        = flag.Bool("health_check_grpc_backend", false, `If true, ESPv2 periodically checks the gRPC Health service for the backend specified by the flag "--backend_address".`)
+	HealthCheckGrpcBackendService = flag.String("health_check_grpc_backend_service", "", `Specify the service name in the HealthCheckRequest when calling the backend gRPC Health service.
+                       Default is empty. It only applies when the flag "--health_check_grpc_backend" is used.`)
+	HealthCheckGrpcBackendInterval = flag.Duration("health_check_grpc_backend_interval", 1*time.Second, `Specify the checking interval to call the backend gRPC Health service. Default is 1 second.
+                      It only applies when the flag "--health_check_grpc_backend" is used.`)
+	HealthCheckGrpcBackendNoTrafficInterval = flag.Duration("health_check_grpc_backend_no_traffic_interval", 60*time.Second, `Specify the checking interval to call the backend gRPC Health service
+                      when at start up or the backend did not have any traffic. Default is 60 seconds. It only applies when the flag "--health_check_grpc_backend" is used.`)
+
 	SslServerCertPath                = flag.String("ssl_server_cert_path", "", "Path to the certificate and key that ESPv2 uses to act as a HTTPS server")
 	SslServerCipherSuites            = flag.String("ssl_server_cipher_suites", "", "Cipher suites to use for downstream connections as a comma-separated list.")
 	SslServerRootCertsPath           = flag.String("ssl_server_root_cert_path", "", "The file path of root certificates that ESPv2 uses to verify downstream client certificate. If not specified, ESPv2 doesn't verify client certificates by default")
@@ -212,6 +221,10 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		ServiceControlURL:                             *ServiceControlURL,
 		ListenerPort:                                  *ListenerPort,
 		Healthz:                                       *Healthz,
+		HealthCheckGrpcBackend:                        *HealthCheckGrpcBackend,
+		HealthCheckGrpcBackendService:                 *HealthCheckGrpcBackendService,
+		HealthCheckGrpcBackendInterval:                *HealthCheckGrpcBackendInterval,
+		HealthCheckGrpcBackendNoTrafficInterval:       *HealthCheckGrpcBackendNoTrafficInterval,
 		SslSidestreamClientRootCertsPath:              *SslSidestreamClientRootCertsPath,
 		SslBackendClientCertPath:                      *SslBackendClientCertPath,
 		SslBackendClientRootCertsPath:                 *SslBackendClientRootCertsPath,

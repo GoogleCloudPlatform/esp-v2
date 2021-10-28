@@ -32,6 +32,7 @@ import (
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	envoytypepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -236,6 +237,13 @@ func makeHealthCheckFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, erro
 			},
 		},
 	}
+
+	if serviceInfo.Options.HealthCheckGrpcBackend {
+		hcFilterConfig.ClusterMinHealthyPercentages = map[string]*envoytypepb.Percent{
+			serviceInfo.LocalBackendCluster.ClusterName: &envoytypepb.Percent{Value: 100.0},
+		}
+	}
+
 	hcFilterConfigStruc, err := ptypes.MarshalAny(hcFilterConfig)
 	if err != nil {
 		return nil, err

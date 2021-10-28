@@ -77,6 +77,7 @@ const (
 	TestGRPCMinistress
 	TestGRPCStreaming
 	TestGRPCWeb
+	TestHealthCheckGrpcBackend
 	TestHSTS
 	TestHttp1Basic
 	TestHttp1JWT

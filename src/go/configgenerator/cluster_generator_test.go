@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/go-cmp/cmp"
 
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -167,7 +168,177 @@ func TestMakeServiceControlCluster(t *testing.T) {
 	}
 }
 
-func TestMakeBackendRoutingCluster(t *testing.T) {
+func TestLocalBackendCluster(t *testing.T) {
+	fakeServiceConfig := &confpb.Service{
+		Name: testProjectName,
+		Apis: []*apipb.Api{
+			{
+				Name: testApiName,
+			},
+		},
+		Control: &confpb.Control{
+			Environment: testServiceControlEnv,
+		},
+	}
+
+	testData := []struct {
+		desc                                    string
+		backendAddress                          string
+		healthCheckGrpcBackend                  bool
+		healthCheckGrpcBackendService           string
+		healthCheckGrpcBackendInterval          time.Duration
+		healthCheckGrpcBackendNoTrafficInterval time.Duration
+		wantError                               string
+		wantedCluster                           clusterpb.Cluster
+	}{
+		{
+			desc:           "Success for http backend",
+			backendAddress: "http://127.0.0.1:80",
+			wantedCluster: clusterpb.Cluster{
+				Name:                 util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
+				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
+			},
+		},
+		{
+			desc:           "Success for https backend",
+			backendAddress: "https://mybackend.com:443",
+			wantedCluster: clusterpb.Cluster{
+				Name:                 util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
+				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
+				TransportSocket:      createTransportSocket("mybackend.com"),
+			},
+		},
+		{
+			desc:           "Success for grpc backend",
+			backendAddress: "grpc://127.0.0.1:80",
+			wantedCluster: clusterpb.Cluster{
+				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
+				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
+				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+			},
+		},
+		{
+			desc:           "Success for grpcs backend",
+			backendAddress: "grpcs://mybackend.com:443",
+			wantedCluster: clusterpb.Cluster{
+				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
+				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
+				TransportSocket:               createH2TransportSocket("mybackend.com"),
+				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+			},
+		},
+		{
+			desc:                   "Success for grpc backend with default grpc health check settings",
+			backendAddress:         "grpc://127.0.0.1:80",
+			healthCheckGrpcBackend: true,
+			wantedCluster: clusterpb.Cluster{
+				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
+				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
+				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+				HealthChecks: []*corepb.HealthCheck{
+					&corepb.HealthCheck{
+						Timeout:            ptypes.DurationProto(1 * time.Second),
+						Interval:           ptypes.DurationProto(1 * time.Second),
+						NoTrafficInterval:  ptypes.DurationProto(60 * time.Second),
+						UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
+						HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
+						HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
+							GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:                                    "Success for grpc backend + grpc health check with custom interval and service",
+			backendAddress:                          "grpcs://mybackend.com:443",
+			healthCheckGrpcBackend:                  true,
+			healthCheckGrpcBackendInterval:          10 * time.Second,
+			healthCheckGrpcBackendNoTrafficInterval: 30 * time.Second,
+			healthCheckGrpcBackendService:           "foo.bar.service",
+			wantedCluster: clusterpb.Cluster{
+				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
+				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
+				TransportSocket:               createH2TransportSocket("mybackend.com"),
+				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+				HealthChecks: []*corepb.HealthCheck{
+					&corepb.HealthCheck{
+						Timeout:            ptypes.DurationProto(10 * time.Second),
+						Interval:           ptypes.DurationProto(10 * time.Second),
+						NoTrafficInterval:  ptypes.DurationProto(30 * time.Second),
+						UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
+						HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
+						HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
+							GrpcHealthCheck: &corepb.HealthCheck_GrpcHealthCheck{
+								ServiceName: "foo.bar.service",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:                   "Negative case, HealthCheckGrpcBackend but backend protocol not grpc",
+			backendAddress:         "http://127.0.0.1:80",
+			healthCheckGrpcBackend: true,
+			wantError:              "invalid flag --health_check_grpc_backend, backend protocol must be GRPC.",
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = tc.backendAddress
+			opts.HealthCheckGrpcBackend = tc.healthCheckGrpcBackend
+			if tc.healthCheckGrpcBackendInterval != 0 {
+				opts.HealthCheckGrpcBackendInterval = tc.healthCheckGrpcBackendInterval
+			}
+			if tc.healthCheckGrpcBackendNoTrafficInterval != 0 {
+				opts.HealthCheckGrpcBackendNoTrafficInterval = tc.healthCheckGrpcBackendNoTrafficInterval
+			}
+			if tc.healthCheckGrpcBackendService != "" {
+				opts.HealthCheckGrpcBackendService = tc.healthCheckGrpcBackendService
+			}
+
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+			if tc.wantError != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
+					t.Fatalf("Error mismatch \ngot : %v, \nwant: %v", err, tc.wantError)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error \ngot err %v", err)
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			cluster, err := makeLocalBackendCluster(fakeServiceInfo)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !proto.Equal(cluster, &tc.wantedCluster) {
+				t.Errorf("Test Desc: %s, makeLocalBackendCluster\ngot Clusters: %v,\nwant: %v", tc.desc, cluster, tc.wantedCluster)
+			}
+		})
+	}
+}
+
+func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 	testData := []struct {
 		desc                   string
 		fakeServiceConfig      *confpb.Service
