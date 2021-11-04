@@ -1,3 +1,9 @@
+# Release 2.32.0 04-11-2021
+
+- Support health check gRPC backend (#629)
+- Support unescape plus in grpc transcoding (#630)
+- Skip google discovery API during config generation. (#632)
+
 # Release 2.31.0 19-10-2021
 
 - Update Envoy to v1.20.0 (#625)
