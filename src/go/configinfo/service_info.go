@@ -522,7 +522,7 @@ func (s *ServiceInfo) processBackendRule() error {
 
 		if r.Address == "" || s.Options.EnableBackendAddressOverride {
 			// Processing a backend rule associated with the local backend.
-			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName()); err != nil {
+			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName(), 0); err != nil {
 				return fmt.Errorf("error processing local backend rule for operation (%v), %v", r.Selector, err)
 			}
 		} else {
@@ -556,7 +556,7 @@ func (s *ServiceInfo) processBackendRule() error {
 			}
 
 			backendClusterName := backendRoutingClustersMap[address]
-			if err := s.addBackendInfoToMethod(r, scheme, hostname, path, backendClusterName); err != nil {
+			if err := s.addBackendInfoToMethod(r, scheme, hostname, path, backendClusterName, port); err != nil {
 				return fmt.Errorf("error processing remote backend rule for operation (%v), %v", r.Selector, err)
 			}
 		}
@@ -565,7 +565,7 @@ func (s *ServiceInfo) processBackendRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string) error {
+func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string, port uint32) error {
 	method, err := s.getMethod(r.GetSelector())
 	if err != nil {
 		return err
@@ -618,6 +618,7 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		TranslationType: r.PathTranslation,
 		Deadline:        deadline,
 		IdleTimeout:     idleTimeout,
+		Port:            port,
 	}
 
 	jwtAud := s.determineBackendAuthJwtAud(r, scheme, hostname)
