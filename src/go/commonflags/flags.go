@@ -58,31 +58,34 @@ var (
 	ServiceControlIamServiceAccount = flag.String("service_control_iam_service_account", "", "The service account used to fetch access token for the Service Control from Google Cloud IAM")
 	ServiceControlIamDelegates      = flag.String("service_control_iam_delegates", "", "The sequence of service accounts in a delegation chain used to fetch access token for the Service Control from Google Cloud IAM. The multiple delegates should be separated by \",\" and the flag only applies when ServiceControlIamServiceAccount is not empty.")
 
-	BackendAuthIamServiceAccount = flag.String("backend_auth_iam_service_account", "", "The service account used to fetch identity token for the Backend Auth from Google Cloud IAM")
-	BackendAuthIamDelegates      = flag.String("backend_auth_iam_delegates", "", "The sequence of service accounts in a delegation chain used to fetch identity token for the Backend Auth from Google Cloud IAM. The multiple delegates should be separated by \",\" and the flag only applies when BackendAuthIamServiceAccount is not empty.")
+	BackendAuthIamServiceAccount      = flag.String("backend_auth_iam_service_account", "", "The service account used to fetch identity token for the Backend Auth from Google Cloud IAM")
+	BackendAuthIamDelegates           = flag.String("backend_auth_iam_delegates", "", "The sequence of service accounts in a delegation chain used to fetch identity token for the Backend Auth from Google Cloud IAM. The multiple delegates should be separated by \",\" and the flag only applies when BackendAuthIamServiceAccount is not empty.")
+	IncludeColumnInURLWildcardSegment = flag.Bool("include_column_in_url_wildcard_segment", false, `Whether Include column in the url wildcard segment route match. According to Google http url template spec[1], the literal column cannot be used in wildcard match and this flag is for backward compatibility.
+		[1]https://github.com/googleapis/googleapis/blob/165280d3deea4d225a079eb5c34717b214a5b732/google/api/http.proto#L226-L252`)
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
 	opts := options.CommonOptions{
-		AdminAddress:               *AdminAddress,
-		AdminPort:                  *AdminPort,
-		AdsNamedPipe:               *AdsNamedPipe,
-		DisableTracing:             *DisableTracing,
-		HttpRequestTimeout:         time.Duration(*HttpRequestTimeoutS) * time.Second,
-		Node:                       *Node,
-		NonGCP:                     *NonGCP,
-		GeneratedHeaderPrefix:      *GeneratedHeaderPrefix,
-		TracingProjectId:           *TracingProjectId,
-		TracingStackdriverAddress:  *TracingStackdriverAddress,
-		TracingSamplingRate:        *TracingSamplingRate,
-		TracingIncomingContext:     *TracingIncomingContext,
-		TracingOutgoingContext:     *TracingOutgoingContext,
-		TracingMaxNumAttributes:    *TracingMaxNumAttributes,
-		TracingMaxNumAnnotations:   *TracingMaxNumAnnotations,
-		TracingMaxNumMessageEvents: *TracingMaxNumMessageEvents,
-		TracingMaxNumLinks:         *TracingMaxNumLinks,
-		MetadataURL:                *MetadataURL,
-		IamURL:                     *IamURL,
+		AdminAddress:                      *AdminAddress,
+		AdminPort:                         *AdminPort,
+		AdsNamedPipe:                      *AdsNamedPipe,
+		DisableTracing:                    *DisableTracing,
+		HttpRequestTimeout:                time.Duration(*HttpRequestTimeoutS) * time.Second,
+		Node:                              *Node,
+		NonGCP:                            *NonGCP,
+		GeneratedHeaderPrefix:             *GeneratedHeaderPrefix,
+		TracingProjectId:                  *TracingProjectId,
+		TracingStackdriverAddress:         *TracingStackdriverAddress,
+		TracingSamplingRate:               *TracingSamplingRate,
+		TracingIncomingContext:            *TracingIncomingContext,
+		TracingOutgoingContext:            *TracingOutgoingContext,
+		TracingMaxNumAttributes:           *TracingMaxNumAttributes,
+		TracingMaxNumAnnotations:          *TracingMaxNumAnnotations,
+		TracingMaxNumMessageEvents:        *TracingMaxNumMessageEvents,
+		TracingMaxNumLinks:                *TracingMaxNumLinks,
+		MetadataURL:                       *MetadataURL,
+		IamURL:                            *IamURL,
+		IncludeColumnInURLWildcardSegment: *IncludeColumnInURLWildcardSegment,
 	}
 	if *BackendAuthIamServiceAccount != "" {
 		opts.BackendAuthCredentials = &options.IAMCredentialsOptions{

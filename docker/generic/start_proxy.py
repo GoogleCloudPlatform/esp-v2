@@ -869,6 +869,15 @@ environment variable or by passing "-k" flag to this script.
         in grpc-json transcoding. This is to support HTML 2.0<https://tools.ietf.org/html/rfc1866#section-8.2.1>.
         Set this flag to true to disable this feature.
         ''')
+    parser.add_argument(
+        '--include_column_in_url_wildcard_segment', action='store_true',
+        help='''
+        Whether Include column in the url wildcard segment route match. According
+        to Google http url template spec[1], the literal column cannot be used in
+        wildcard match and this flag is for backward compatibility.
+        
+        [1]https://github.com/googleapis/googleapis/blob/165280d3deea4d225a079eb5c34717b214a5b732/google/api/http.proto#L226-L252
+        ''')
 
     # Start Deprecated Flags Section
 
@@ -1320,6 +1329,9 @@ def gen_proxy_config(args):
 
     if args.transcoding_query_parameters_disable_unescape_plus:
         proxy_conf.append("--transcoding_query_parameters_disable_unescape_plus")
+
+    if args.include_column_in_url_wildcard_segment:
+        proxy_conf.append("--include_column_in_url_wildcard_segment")
 
     if args.on_serverless:
         proxy_conf.extend([

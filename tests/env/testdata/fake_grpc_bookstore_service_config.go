@@ -61,6 +61,21 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
 					},
 					{
+						Name:            "CreateBookWithTrailingSingleWildcard",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateBookRequest",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
+					},
+					{
+						Name:            "CreateBookWithTrailingDoubleWildcard",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateBookRequest",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
+					},
+					{
+						Name:            "CreateBookWithCustomVerb",
+						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.CreateBookRequest",
+						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
+					},
+					{
 						Name:            "GetBook",
 						RequestTypeUrl:  "type.googleapis.com/endpoints.examples.bookstore.GetBookRequest",
 						ResponseTypeUrl: "type.googleapis.com/endpoints.examples.bookstore.Book",
@@ -160,6 +175,27 @@ var (
 							Body: "book.title",
 						},
 					},
+				},
+				{
+					Selector: "endpoints.examples.bookstore.Bookstore.CreateBookWithTrailingSingleWildcard",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/v1/shelves/{shelf}/single/*",
+					},
+					Body: "book",
+				},
+				{
+					Selector: "endpoints.examples.bookstore.Bookstore.CreateBookWithTrailingDoubleWildcard",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/v1/shelves/{shelf}/double/**",
+					},
+					Body: "book",
+				},
+				{
+					Selector: "endpoints.examples.bookstore.Bookstore.CreateBookWithCustomVerb",
+					Pattern: &annotationspb.HttpRule_Post{
+						Post: "/v1/shelves/{shelf}:registeredCustomVerb",
+					},
+					Body: "book",
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetBook",

@@ -148,15 +148,15 @@ func (u *UriTemplate) IsExactMatch() bool {
 }
 
 // Generate regular expression of the current uri template.
-func (u *UriTemplate) Regex() string {
+func (u *UriTemplate) Regex(IncludeColumnInURLWildcardSegment bool) string {
 	regex := bytes.Buffer{}
 	for _, segment := range u.Segments {
 		regex.WriteByte('/')
 		switch segment {
 		case SingleWildCardKey:
-			regex.WriteString(singleWildcardReplacementRegex)
+			regex.WriteString(singleWildcardReplacementRegex(IncludeColumnInURLWildcardSegment))
 		case DoubleWildCardKey:
-			regex.WriteString(doubleWildcardReplacementRegex)
+			regex.WriteString(doubleWildcardReplacementRegex(IncludeColumnInURLWildcardSegment))
 		default:
 			regex.WriteString(segment)
 		}

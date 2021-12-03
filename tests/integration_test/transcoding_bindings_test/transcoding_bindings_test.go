@@ -19,9 +19,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
@@ -147,72 +149,114 @@ func TestTranscodingBindings(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
-		resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
-		if tc.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErr)) {
-			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantErr, err)
-		} else {
-			if !strings.Contains(resp, tc.wantResp) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+		t.Run(tc.desc, func(t *testing.T) {
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+			resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
+			if tc.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantErr, err)
+				}
+			} else {
+				if err := util.JsonEqual(tc.wantResp, resp); err != nil {
+					t.Error(err)
+				}
 			}
-		}
+		})
 	}
 }
 
-func TestTranscodingUnescapePlus(t *testing.T) {
-	t.Parallel()
-
-	configID := "test-config-id"
-	args := []string{"--service_config_id=" + configID,
-		"--rollout_strategy=fixed", "--transcoding_query_parameters_disable_unescape_plus"}
-
-	s := env.NewTestEnv(platform.TestTranscodingUnescapePlus, platform.GrpcBookstoreSidecar)
-	s.OverrideAuthentication(&confpb.Authentication{
-		Rules: []*confpb.AuthenticationRule{},
-	})
-
-	defer s.TearDown(t)
-	if err := s.Setup(args); err != nil {
-		t.Fatalf("fail to setup test env, %v", err)
-	}
-
+func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 	type testType struct {
-		desc               string
-		clientProtocol     string
-		httpMethod         string
-		method             string
-		token              string
-		headers            map[string][]string
-		bodyBytes          []byte
-		wantResp           string
-		wantErr            string
-		wantGRPCWebTrailer client.GRPCWebTrailer
+		desc                              string
+		clientProtocol                    string
+		httpMethod                        string
+		method                            string
+		noBackend                         bool
+		token                             string
+		IncludeColumnInURLWildcardSegment bool
+		headers                           map[string][]string
+		bodyBytes                         []byte
+		wantResp                          string
+		wantErr                           string
+		wantGRPCWebTrailer                client.GRPCWebTrailer
 	}
 
 	tests := []testType{
-		// Binding shelf=100 and some fields in query parameters in CreateBookRequest
-		// query parameter + has NOT been unescaped into space.
-		// HTTP template:
-		// POST /shelves/{shelf}/books
-		// body: book
+		// This test case is for backwards compatibility.
 		{
-			desc:           "Succeeded, call CreateBookRequest with query parameters",
+			desc:                              "Failed, registered custom verb is matched with trailing single wildcard in route but not in transcoder filter",
+			clientProtocol:                    "http",
+			httpMethod:                        "POST",
+			IncludeColumnInURLWildcardSegment: true,
+			method:                            "/v1/shelves/100/single/random:registeredCustomVerb?key=api-key",
+			bodyBytes:                         []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:                           `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
+		},
+		// This test case is for backwards compatibility.
+		{
+			desc:                              "Failed, registered custom verb is matched with trailing double wildcard in route but not in transcoder filter",
+			clientProtocol:                    "http",
+			httpMethod:                        "POST",
+			IncludeColumnInURLWildcardSegment: true,
+			method:                            "/v1/shelves/100/double/random:registeredCustomVerb?key=api-key",
+			bodyBytes:                         []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:                           `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
+		},
+		{
+			desc:           "Failed, registered custom verb is not matched with trailing single wildcard by either route regex or transcoder filter",
 			clientProtocol: "http",
 			httpMethod:     "POST",
-			method:         "/v1/shelves/100/books?key=api-key&book.author=Leo%20Tolstoy&book.title=War+and+Peace",
-			bodyBytes:      []byte(`{"id": 14}`),
-			wantResp:       `{"id":"14","author":"Leo Tolstoy","title":"War+and+Peace"}`,
+			method:         "/v1/shelves/100/single/random:registeredCustomVerb?key=api-key",
+			bodyBytes:      []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:        `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
+		},
+		{
+			desc:           "Failed, registered custom verb is not matched with trailing single wildcard by either route regex or transcoder filter",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/double/random:registeredCustomVerb?key=api-key",
+			bodyBytes:      []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:        `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
+		},
+		{
+			// TODO(b/208716168): it should returns 404 for this request. Right now, the url
+			// `/v1/shelves/100/books/random:unregisteredCustomVerb` is matched with `/v1/shelves/{shelf}/books/*`
+			// from API method  CreateBookWithTrailingSingleWildcard.
+			desc:           "Succeed, unregistered custom verb is matched in transcoder filter with trailing wildcard",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/single/random:unregisteredCustomVerb?key=api-key",
+			bodyBytes:      []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantResp:       `{"id":"5","author":"Leo Tolstoy","title":"War and Peace"}`,
 		},
 	}
 	for _, tc := range tests {
-		addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
-		resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
-		if tc.wantErr != "" && (err == nil || !strings.Contains(err.Error(), tc.wantErr)) {
-			t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantErr, err)
-		} else {
-			if !strings.Contains(resp, tc.wantResp) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+		t.Run(tc.desc, func(t *testing.T) {
+			s := env.NewTestEnv(platform.TestTranscodingBindings, platform.GrpcBookstoreSidecar)
+			s.OverrideAuthentication(&confpb.Authentication{
+				Rules: []*confpb.AuthenticationRule{},
+			})
+
+			defer s.TearDown(t)
+			args := utils.CommonArgs()
+			if tc.IncludeColumnInURLWildcardSegment {
+				args = append(args, "--include_column_in_url_wildcard_segment")
 			}
-		}
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+			resp, err := client.MakeHttpCallWithBody(addr, tc.httpMethod, tc.method, tc.token, tc.bodyBytes)
+			if tc.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantErr, err)
+				}
+			} else {
+				if err := util.JsonEqual(tc.wantResp, resp); err != nil {
+					t.Error(err)
+				}
+			}
+		})
 	}
 }
