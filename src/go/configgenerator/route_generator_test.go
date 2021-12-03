@@ -37,13 +37,13 @@ import (
 
 func TestMakeRouteConfig(t *testing.T) {
 	testData := []struct {
-		desc                              string
-		enableStrictTransportSecurity     bool
-		enableOperationNameHeader         bool
-		includeColonInWildcardPathSegment bool
-		fakeServiceConfig                 *confpb.Service
-		wantedError                       string
-		wantRouteConfig                   string
+		desc                            string
+		enableStrictTransportSecurity   bool
+		enableOperationNameHeader       bool
+		allowColonInWildcardPathSegment bool
+		fakeServiceConfig               *confpb.Service
+		wantedError                     string
+		wantRouteConfig                 string
 	}{
 		{
 			desc:                          "Enable Strict Transport Security",
@@ -447,8 +447,8 @@ func TestMakeRouteConfig(t *testing.T) {
 `,
 		},
 		{
-			desc:                              "Wildcard paths with including colon in wildcard segment",
-			includeColonInWildcardPathSegment: true,
+			desc:                            "Wildcard paths with allowing colon in wildcard segment",
+			allowColonInWildcardPathSegment: true,
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -2646,7 +2646,7 @@ func TestMakeRouteConfig(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.EnableHSTS = tc.enableStrictTransportSecurity
 			opts.EnableOperationNameHeader = tc.enableOperationNameHeader
-			opts.IncludeColonInWildcardPathSegment = tc.includeColonInWildcardPathSegment
+			opts.AllowColonInWildcardPathSegment = tc.allowColonInWildcardPathSegment
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)

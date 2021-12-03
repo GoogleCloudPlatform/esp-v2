@@ -51,7 +51,7 @@ type CommonOptions struct {
 	BackendAuthCredentials *IAMCredentialsOptions
 
 	// Whether to exclude colon in the url wildcard path segment.
-	IncludeColonInWildcardPathSegment bool
+	AllowColonInWildcardPathSegment bool
 }
 
 // IamTokenKind specifies which type of token to generate using the IAM Credentials API.

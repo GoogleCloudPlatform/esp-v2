@@ -870,7 +870,7 @@ environment variable or by passing "-k" flag to this script.
         Set this flag to true to disable this feature.
         ''')
     parser.add_argument(
-        '--include_colon_in_wildcard_path_segment', action='store_true',
+        '--allow_colon_in_wildcard_path_segment', action='store_true',
         help='''
         Whether exclude colon in the url wildcard path segment for route match. According
         to Google http url template spec[1], the literal colon cannot be used in
@@ -1330,8 +1330,8 @@ def gen_proxy_config(args):
     if args.transcoding_query_parameters_disable_unescape_plus:
         proxy_conf.append("--transcoding_query_parameters_disable_unescape_plus")
 
-    if args.include_colon_in_wildcard_path_segment:
-        proxy_conf.append("--include_colon_in_wildcard_path_segment")
+    if args.allow_colon_in_wildcard_path_segment:
+        proxy_conf.append("--allow_colon_in_wildcard_path_segment")
 
     if args.on_serverless:
         proxy_conf.extend([

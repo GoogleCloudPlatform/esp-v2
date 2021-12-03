@@ -240,7 +240,7 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 			defer s.TearDown(t)
 			args := utils.CommonArgs()
 			if tc.includeColonInUrlPathWildcardSegment {
-				args = append(args, "--include_colon_in_wildcard_path_segment")
+				args = append(args, "--allow_colon_in_wildcard_path_segment")
 			}
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)

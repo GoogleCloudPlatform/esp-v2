@@ -278,7 +278,7 @@ func TestUriTemplateRegex(t *testing.T) {
 			wantMatcher: `^/v1/a/b/[^\/:]+/route/shelves/[^\/:]+/books/[^:]*\/?:upload$`,
 		},
 		{
-			desc:                   "Path params with multiple field path segment bindings(including colon in wildcard)",
+			desc:                   "Path params with multiple field path segment bindings(allowing colon in wildcard)",
 			uri:                    "/v1/{test=a/b/*}/route/{resource_id=shelves/*/books/**}:upload",
 			includeColonInWildcard: true,
 			wantMatcher:            `^/v1/a/b/[^\/]+/route/shelves/[^\/]+/books/.*\/?:upload$`,

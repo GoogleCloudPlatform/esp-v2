@@ -13,18 +13,18 @@ const (
 )
 
 // Wildcard segment matching any char 1 or unlimited times, except '/' and ':'.
-// If includeColonInWildcardPathSegment=true, it matches any char except '/'.
-func singleWildcardReplacementRegex(includeColonInWildcardPathSegment bool) string {
-	if includeColonInWildcardPathSegment {
+// If allowColonInWildcardPathSegment=true, it matches any char except '/'.
+func singleWildcardReplacementRegex(allowColonInWildcardPathSegment bool) string {
+	if allowColonInWildcardPathSegment {
 		return `[^\/]+`
 	}
 	return `[^\/:]+`
 }
 
 // Wildcard segment matching any char 0 or unlimited times, except '/' and ':'.
-// If includeColonInWildcardPathSegment=true, it matches any char except '/'.
-func doubleWildcardReplacementRegex(includeColonInWildcardPathSegment bool) string {
-	if includeColonInWildcardPathSegment {
+// If allowColonInWildcardPathSegment=true, it matches any char except '/'.
+func doubleWildcardReplacementRegex(allowColonInWildcardPathSegment bool) string {
+	if allowColonInWildcardPathSegment {
 		return `.*`
 	}
 	return `[^:]*`
