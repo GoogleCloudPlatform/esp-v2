@@ -37,12 +37,13 @@ import (
 
 func TestMakeRouteConfig(t *testing.T) {
 	testData := []struct {
-		desc                          string
-		enableStrictTransportSecurity bool
-		enableOperationNameHeader     bool
-		fakeServiceConfig             *confpb.Service
-		wantedError                   string
-		wantRouteConfig               string
+		desc                                 string
+		enableStrictTransportSecurity        bool
+		enableOperationNameHeader            bool
+		excludeColonInUrlWildcardPathSegment bool
+		fakeServiceConfig                    *confpb.Service
+		wantedError                          string
+		wantRouteConfig                      string
 	}{
 		{
 			desc:                          "Enable Strict Transport Security",
@@ -411,6 +412,99 @@ func TestMakeRouteConfig(t *testing.T) {
             "safeRegex": {
               "googleRe2": {},
               "regex": "^/v1/[^\\/]+/test/.*\\/?$"
+            }
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Foo",
+          "route": {
+            "cluster": "backend-cluster-testapipb.com:443",
+            "hostRewriteLiteral": "testapipb.com",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}
+`,
+		},
+		{
+			desc:                                 "Wildcard paths with excluding colon in wildcard segment",
+			excludeColonInUrlWildcardPathSegment: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "bar.com",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
+									Path: "/v1/{book_name=*}/test/**",
+									Kind: "*",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Foo"
+          },
+          "match": {
+            "safeRegex": {
+              "googleRe2": {},
+              "regex": "^/v1/[^\\/:]+/test/[^:]*\\/?$"
             }
           },
           "name": "endpoints.examples.bookstore.Bookstore.Foo",
@@ -2552,6 +2646,7 @@ func TestMakeRouteConfig(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.EnableHSTS = tc.enableStrictTransportSecurity
 			opts.EnableOperationNameHeader = tc.enableOperationNameHeader
+			opts.ExcludeColonInUrlWildcardPathSegment = tc.excludeColonInUrlWildcardPathSegment
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
