@@ -60,7 +60,7 @@ var (
 
 	BackendAuthIamServiceAccount    = flag.String("backend_auth_iam_service_account", "", "The service account used to fetch identity token for the Backend Auth from Google Cloud IAM")
 	BackendAuthIamDelegates         = flag.String("backend_auth_iam_delegates", "", "The sequence of service accounts in a delegation chain used to fetch identity token for the Backend Auth from Google Cloud IAM. The multiple delegates should be separated by \",\" and the flag only applies when BackendAuthIamServiceAccount is not empty.")
-	AllowColonInWildcardPathSegment = flag.Bool("allow_colon_in_wildcard_path_segment", false, `Whether allowcolon in the url wildcard path segment for route match. According to Google http url template spec[1], the literal colon cannot be used in url wildcard path segment. This flag is for backward compatibility. 
+	AllowColonInWildcardPathSegment = flag.Bool("allow_colon_in_wildcard_path_segment", false, `Whether allow colon in the url wildcard path segment for route match. According to Google http url template spec[1], the literal colon cannot be used in url wildcard path segment. This flag is for backward compatibility. 
 		[1]https://github.com/googleapis/googleapis/blob/165280d3deea4d225a079eb5c34717b214a5b732/google/api/http.proto#L226-L252`)
 )
 
