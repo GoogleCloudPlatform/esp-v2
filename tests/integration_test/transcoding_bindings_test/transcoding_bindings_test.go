@@ -167,68 +167,67 @@ func TestTranscodingBindings(t *testing.T) {
 
 func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 	type testType struct {
-		desc                                  string
-		clientProtocol                        string
-		httpMethod                            string
-		method                                string
-		noBackend                             bool
-		token                                 string
-		ExcludeColumnInUrlPathWildcardSegment bool
-		headers                               map[string][]string
-		bodyBytes                             []byte
-		wantResp                              string
-		wantErr                               string
-		wantGRPCWebTrailer                    client.GRPCWebTrailer
+		desc                                 string
+		clientProtocol                       string
+		httpMethod                           string
+		method                               string
+		noBackend                            bool
+		token                                string
+		includeColonInUrlPathWildcardSegment bool
+		headers                              map[string][]string
+		bodyBytes                            []byte
+		wantResp                             string
+		wantErr                              string
+		wantGRPCWebTrailer                   client.GRPCWebTrailer
 	}
 
 	tests := []testType{
+		// The test case for backwards compatibility.
 		{
-			desc:                                  "Failed, registered custom verb is matched with trailing single wildcard in route but not in transcoder filter",
-			clientProtocol:                        "http",
-			httpMethod:                            "POST",
-			ExcludeColumnInUrlPathWildcardSegment: false,
-			method:                                "/v1/shelves/100/single/random:registeredCustomVerb?key=api-key",
-			bodyBytes:                             []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
-			wantErr:                               `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
+			desc:                                 "Failed, registered custom verb is matched with trailing single wildcard in route but not in transcoder filter",
+			clientProtocol:                       "http",
+			httpMethod:                           "POST",
+			includeColonInUrlPathWildcardSegment: true,
+			method:                               "/v1/shelves/100/single/random:registeredCustomVerb?key=api-key",
+			bodyBytes:                            []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:                              `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
+		},
+		// The test case for backwards compatibility.
+		{
+			desc:                                 "Failed, registered custom verb is matched with trailing double wildcard in route but not in transcoder filter",
+			clientProtocol:                       "http",
+			httpMethod:                           "POST",
+			includeColonInUrlPathWildcardSegment: true,
+			method:                               "/v1/shelves/100/double/random:registeredCustomVerb?key=api-key",
+			bodyBytes:                            []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:                              `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
 		},
 		{
-			desc:                                  "Failed, registered custom verb is matched with trailing double wildcard in route but not in transcoder filter",
-			clientProtocol:                        "http",
-			httpMethod:                            "POST",
-			ExcludeColumnInUrlPathWildcardSegment: false,
-			method:                                "/v1/shelves/100/double/random:registeredCustomVerb?key=api-key",
-			bodyBytes:                             []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
-			wantErr:                               `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
+			desc:           "Failed, registered custom verb is not matched with trailing single wildcard by either route regex or transcoder filter",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/single/random:registeredCustomVerb?key=api-key",
+			bodyBytes:      []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:        `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
 		},
 		{
-			desc:                                  "Failed, registered custom verb is not matched with trailing single wildcard by either route regex or transcoder filter",
-			clientProtocol:                        "http",
-			httpMethod:                            "POST",
-			ExcludeColumnInUrlPathWildcardSegment: true,
-			method:                                "/v1/shelves/100/single/random:registeredCustomVerb?key=api-key",
-			bodyBytes:                             []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
-			wantErr:                               `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
-		},
-		{
-			desc:                                  "Failed, registered custom verb is not matched with trailing single wildcard by either route regex or transcoder filter",
-			clientProtocol:                        "http",
-			httpMethod:                            "POST",
-			ExcludeColumnInUrlPathWildcardSegment: true,
-			method:                                "/v1/shelves/100/double/random:registeredCustomVerb?key=api-key",
-			bodyBytes:                             []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
-			wantErr:                               `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
+			desc:           "Failed, registered custom verb is not matched with trailing single wildcard by either route regex or transcoder filter",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/double/random:registeredCustomVerb?key=api-key",
+			bodyBytes:      []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:        `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
 		},
 		{
 			// TODO(b/208716168): it should returns 404 for this request. Right now, the url
 			// `/v1/shelves/100/books/random:unregisteredCustomVerb` is matched with `/v1/shelves/{shelf}/books/*`
 			// from API method  CreateBookWithTrailingSingleWildcard.
-			desc:                                  "Succeed, unregistered custom verb is matched in transcoder filter with trailing wildcard",
-			clientProtocol:                        "http",
-			httpMethod:                            "POST",
-			ExcludeColumnInUrlPathWildcardSegment: true,
-			method:                                "/v1/shelves/100/single/random:unregisteredCustomVerb?key=api-key",
-			bodyBytes:                             []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
-			wantResp:                              `{"id":"5","author":"Leo Tolstoy","title":"War and Peace"}`,
+			desc:           "Succeed, unregistered custom verb is matched in transcoder filter with trailing wildcard",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/v1/shelves/100/single/random:unregisteredCustomVerb?key=api-key",
+			bodyBytes:      []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantResp:       `{"id":"5","author":"Leo Tolstoy","title":"War and Peace"}`,
 		},
 	}
 	for _, tc := range tests {
@@ -240,8 +239,8 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 
 			defer s.TearDown(t)
 			args := utils.CommonArgs()
-			if tc.ExcludeColumnInUrlPathWildcardSegment {
-				args = append(args, "--exclude_colon_in_url_wildcard_path_segment")
+			if tc.includeColonInUrlPathWildcardSegment {
+				args = append(args, "--include_colon_in_wildcard_path_segment")
 			}
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)

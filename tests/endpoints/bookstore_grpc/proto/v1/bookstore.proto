@@ -91,7 +91,7 @@ service Bookstore {
   rpc CreateBookWithTrailingSingleWildcard(CreateBookRequest) returns (Book) {
     // Client example - create a new book in the first shelf:
     //   curl -d '{"author":"foo","title":"bar"}'
-    //   http://DOMAIN_NAME/v1/shelves/1/books
+    //   http://DOMAIN_NAME/v1/shelves/1/single/random
     option (google.api.http) = {
       post: "/v1/shelves/{shelf}/single/*"
       body: "book"
@@ -102,7 +102,7 @@ service Bookstore {
   rpc CreateBookWithTrailingDoubleWildcard(CreateBookRequest) returns (Book) {
     // Client example - create a new book in the first shelf:
     //   curl -d '{"author":"foo","title":"bar"}'
-    //   http://DOMAIN_NAME/v1/shelves/1/books
+    //   http://DOMAIN_NAME/v1/shelves/1/double/random
     option (google.api.http) = {
       post: "/v1/shelves/{shelf}/double/**"
       body: "book"
@@ -113,7 +113,7 @@ service Bookstore {
   rpc CreateBookWithCustomVerb(CreateBookRequest) returns (Book) {
     // Client example - create a new book in the first shelf:
     //   curl -d '{"author":"foo","title":"bar"}'
-    //   http://DOMAIN_NAME/v1/shelves/1/books
+    //   http://DOMAIN_NAME/v1/shelves/1:registeredCustomVerb
     option (google.api.http) = {
       post: "/v1/shelves/{shelf}:registeredCustomVerb"
       body: "book"

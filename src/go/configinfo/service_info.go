@@ -352,7 +352,7 @@ func (s *ServiceInfo) processEndpoints() {
 	}
 }
 
-func addHttpRule(method *MethodInfo, r *annotationspb.HttpRule, addedRouteMatchWithOptionsSet map[string]bool, ExcludeColonInUrlWildcardPathSegment bool) error {
+func addHttpRule(method *MethodInfo, r *annotationspb.HttpRule, addedRouteMatchWithOptionsSet map[string]bool, includeColonInWildcardPathSegment bool) error {
 	var path string
 	var uriTemplate *httppattern.UriTemplate
 	var parseError error
@@ -391,7 +391,7 @@ func addHttpRule(method *MethodInfo, r *annotationspb.HttpRule, addedRouteMatchW
 	}
 
 	if httpMethod == util.OPTIONS {
-		routeMatch := uriTemplate.Regex(ExcludeColonInUrlWildcardPathSegment)
+		routeMatch := uriTemplate.Regex(includeColonInWildcardPathSegment)
 		addedRouteMatchWithOptionsSet[routeMatch] = true
 	}
 
@@ -418,7 +418,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		if err != nil {
 			return fmt.Errorf("error processing http rule for operation (%v): %v", rule.Selector, err)
 		}
-		if err := addHttpRule(method, rule, addedRouteMatchWithOptionsSet, s.Options.ExcludeColonInUrlWildcardPathSegment); err != nil {
+		if err := addHttpRule(method, rule, addedRouteMatchWithOptionsSet, s.Options.IncludeColonInWildcardPathSegment); err != nil {
 			return err
 		}
 
@@ -427,7 +427,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		// when interpret the httprules from the descriptor. Therefore, no need to
 		// check for nested additional_bindings.
 		for _, additionalRule := range rule.AdditionalBindings {
-			if err := addHttpRule(method, additionalRule, addedRouteMatchWithOptionsSet, s.Options.ExcludeColonInUrlWildcardPathSegment); err != nil {
+			if err := addHttpRule(method, additionalRule, addedRouteMatchWithOptionsSet, s.Options.IncludeColonInWildcardPathSegment); err != nil {
 				return err
 			}
 		}
@@ -453,7 +453,7 @@ func (s *ServiceInfo) processHttpRule() error {
 						HttpMethod:  util.OPTIONS,
 						UriTemplate: uriTemplate,
 					}
-					routeMatch := httpRule.UriTemplate.Regex(s.Options.ExcludeColonInUrlWildcardPathSegment)
+					routeMatch := httpRule.UriTemplate.Regex(s.Options.IncludeColonInWildcardPathSegment)
 
 					if _, exist := addedRouteMatchWithOptionsSet[routeMatch]; !exist {
 						if err := s.addOptionMethod(method, newHttpRule); err != nil {

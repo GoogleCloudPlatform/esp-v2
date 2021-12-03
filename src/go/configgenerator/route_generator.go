@@ -348,7 +348,7 @@ func MakeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 		var routeMatchers, methodNotAllowedRouteMatchers []*routepb.RouteMatch
 
 		var err error
-		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule, seenUriTemplatesInRoute, serviceInfo.Options.ExcludeColonInUrlWildcardPathSegment); err != nil {
+		if routeMatchers, methodNotAllowedRouteMatchers, err = makeHttpRouteMatchers(httpRule, seenUriTemplatesInRoute, serviceInfo.Options.IncludeColonInWildcardPathSegment); err != nil {
 			return nil, nil, fmt.Errorf("error making HTTP route matcher for operation (%v): %v", operation, err)
 		}
 
@@ -494,7 +494,7 @@ func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 	}
 }
 
-func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRoute map[string]bool, ExcludeColonInUrlWildcardPathSegment bool) ([]*routepb.RouteMatch, []*routepb.RouteMatch, error) {
+func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRoute map[string]bool, includeColonInWildcardPathSegment bool) ([]*routepb.RouteMatch, []*routepb.RouteMatch, error) {
 	if httpRule == nil {
 		return nil, nil, fmt.Errorf("httpRule is nil")
 	}
@@ -528,11 +528,11 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRout
 						EngineType: &matcher.RegexMatcher_GoogleRe2{
 							GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
 						},
-						Regex: httpRule.UriTemplate.Regex(ExcludeColonInUrlWildcardPathSegment),
+						Regex: httpRule.UriTemplate.Regex(includeColonInWildcardPathSegment),
 					},
 				},
 			},
-			UriTemplate: httpRule.UriTemplate.Regex(ExcludeColonInUrlWildcardPathSegment),
+			UriTemplate: httpRule.UriTemplate.Regex(includeColonInWildcardPathSegment),
 		})
 
 	}
