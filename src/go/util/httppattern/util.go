@@ -12,20 +12,20 @@ const (
 	optionalTrailingSlashRegex = `\/?`
 )
 
-// Wildcard segment matching any char 1 or unlimited times, except '/' and ':'.
-// If IncludeColumnInURLWildcardSegment=true, it only excludes '/'.
-func singleWildcardReplacementRegex(IncludeColumnInURLWildcardSegment bool) string {
-	if IncludeColumnInURLWildcardSegment {
-		return `[^\/]+`
+// Wildcard segment matching any char 1 or unlimited times, except '/'.
+// If ExcludeColonInUrlWildcardPathSegment=true, it excludes '/' and ':'.
+func singleWildcardReplacementRegex(ExcludeColonInUrlWildcardPathSegment bool) string {
+	if ExcludeColonInUrlWildcardPathSegment {
+		return `[^\/:]+`
 	}
-	return `[^\/:]+`
+	return `[^\/]+`
 }
 
 // Wildcard segment matching any char 0 or unlimited times, except ':'.
-// If IncludeColumnInURLWildcardSegment=true, it matches any char.
-func doubleWildcardReplacementRegex(IncludeColumnInURLWildcardSegment bool) string {
-	if IncludeColumnInURLWildcardSegment {
-		return `.*`
+// If ExcludeColonInUrlWildcardPathSegment=true, it matches any char.
+func doubleWildcardReplacementRegex(ExcludeColonInUrlWildcardPathSegment bool) string {
+	if ExcludeColonInUrlWildcardPathSegment {
+		return `[^:]*`
 	}
-	return `[^:]*`
+	return `.*`
 }

@@ -426,17 +426,17 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing',
               '--transcoding_query_parameters_disable_unescape_plus'
               ]),
-            # route_match include_column_in_url_wildcard_segment
+            # route_match exclude_colon_in_url_wildcard_path_segment
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
-              '--include_column_in_url_wildcard_segment',
+              '--exclude_colon_in_url_wildcard_path_segment',
               '--disable_tracing',
               ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--disable_tracing',
-              '--include_column_in_url_wildcard_segment'
+              '--exclude_colon_in_url_wildcard_path_segment'
               ]),
             # Connection buffer limit bytes
             (['--service=test_bookstore.gloud.run',

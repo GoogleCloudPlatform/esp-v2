@@ -49,7 +49,7 @@ func DnsResolvers(dnsResolverAddresses string) ([]*corepb.Address, error) {
 func parseDnsResolverAddress(address string) (string, uint32, error) {
 	arr := strings.Split(address, ":")
 	if len(arr) == 0 || len(arr) > 2 {
-		return "", 0, fmt.Errorf("address has a more than one column: %s", address)
+		return "", 0, fmt.Errorf("address has a more than one colon: %s", address)
 	}
 
 	if len(arr) == 1 {
