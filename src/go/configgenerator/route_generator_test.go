@@ -447,7 +447,7 @@ func TestMakeRouteConfig(t *testing.T) {
 `,
 		},
 		{
-			desc:                              "Wildcard paths with excluding colon in wildcard segment",
+			desc:                              "Wildcard paths with including colon in wildcard segment",
 			includeColonInWildcardPathSegment: true,
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
