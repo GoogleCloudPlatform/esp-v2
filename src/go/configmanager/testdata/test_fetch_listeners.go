@@ -847,7 +847,7 @@ var (
                         ],
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/v1/shelves/[^\\/:]+\\/?$"
+                          "regex": "^/v1/shelves/[^\\/]+\\/?$"
                         }
                       },
                       "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
@@ -964,7 +964,7 @@ var (
                       "match": {
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/v1/shelves/[^\\/:]+\\/?$"
+                          "regex": "^/v1/shelves/[^\\/]+\\/?$"
                         }
                       }
                     },
@@ -1316,7 +1316,7 @@ var (
                         ],
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/v1/shelves/[^\\/:]+/books/[^\\/:]+\\/?$"
+                          "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       },
                       "name": "endpoints.examples.bookstore.Bookstore.DeleteBook",
@@ -1343,7 +1343,7 @@ var (
                         ],
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/v1/shelves/[^\\/:]+/books/[^\\/:]+\\/?$"
+                          "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       },
                      "name": "endpoints.examples.bookstore.Bookstore.GetBook",
@@ -1432,7 +1432,7 @@ var (
                       "match": {
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/v1/shelves/[^\\/:]+/books/[^\\/:]+\\/?$"
+                          "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       }
                     },
