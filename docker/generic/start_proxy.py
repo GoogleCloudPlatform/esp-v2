@@ -872,7 +872,7 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '--exclude_colon_in_url_wildcard_path_segment', action='store_true',
         help='''
-        Whether exclude colon in the url wildcard segment route match. According
+        Whether exclude colon in the url wildcard path segment for route match. According
         to Google http url template spec[1], the literal colon cannot be used in
         wildcard match.
         

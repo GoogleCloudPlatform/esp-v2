@@ -50,7 +50,7 @@ type CommonOptions struct {
 	// Configures the identity used when making requests to backends.
 	BackendAuthCredentials *IAMCredentialsOptions
 
-	// Whether to include colon in the url wildcard segment.
+	// Whether to exclude colon in the url wildcard path segment.
 	ExcludeColonInUrlWildcardPathSegment bool
 }
 
