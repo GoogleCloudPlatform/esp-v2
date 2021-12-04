@@ -182,7 +182,6 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 	}
 
 	tests := []testType{
-		// The test case for backwards compatibility.
 		{
 			desc:                               "Failed, registered custom verb is matched with trailing single wildcard in route but not in transcoder filter",
 			clientProtocol:                     "http",
@@ -192,7 +191,6 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 			bodyBytes:                          []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
 			wantErr:                            `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
 		},
-		// The test case for backwards compatibility.
 		{
 			desc:                               "Failed, registered custom verb is matched with trailing double wildcard in route but not in transcoder filter",
 			clientProtocol:                     "http",
