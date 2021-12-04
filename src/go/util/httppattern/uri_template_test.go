@@ -240,48 +240,48 @@ func TestUriTemplateRegex(t *testing.T) {
 		{
 			desc:        "Path params with fieldpath-only bindings",
 			uri:         "/shelves/{shelf_id}/books/{book.id}",
-			wantMatcher: `^/shelves/[^\/:]+/books/[^\/:]+\/?$`,
+			wantMatcher: `^/shelves/[^\/]+/books/[^\/]+\/?$`,
 		},
 		{
 			desc:        "Path params with fieldpath-only bindings and verb",
 			uri:         "/shelves/{shelf_id}/books/{book.id}:checkout",
-			wantMatcher: `^/shelves/[^\/:]+/books/[^\/:]+\/?:checkout$`,
+			wantMatcher: `^/shelves/[^\/]+/books/[^\/]+\/?:checkout$`,
 		},
 		{
 			desc:        "Path param with wildcard segments",
 			uri:         "/test/*/test/**",
-			wantMatcher: `^/test/[^\/:]+/test/[^:]*\/?$`,
+			wantMatcher: `^/test/[^\/]+/test/.*\/?$`,
 		},
 		{
 			desc:        "Path param with wildcard segments and verb",
 			uri:         "/test/*/test/**:upload",
-			wantMatcher: `^/test/[^\/:]+/test/[^:]*\/?:upload$`,
+			wantMatcher: `^/test/[^\/]+/test/.*\/?:upload$`,
 		},
 		{
 			desc:        "Path param with wildcard in segment binding",
 			uri:         "/test/{x=*}/test/{y=**}",
-			wantMatcher: `^/test/[^\/:]+/test/[^:]*\/?$`,
+			wantMatcher: `^/test/[^\/]+/test/.*\/?$`,
 		},
 		{
 			desc:        "Path param with mixed wildcards",
 			uri:         "/test/{name=*}/test/**",
-			wantMatcher: `^/test/[^\/:]+/test/[^:]*\/?$`,
+			wantMatcher: `^/test/[^\/]+/test/.*\/?$`,
 		},
 		{
 			desc:        "Path params with full segment binding",
 			uri:         "/v1/{name=books/*}",
-			wantMatcher: `^/v1/books/[^\/:]+\/?$`,
+			wantMatcher: `^/v1/books/[^\/]+\/?$`,
 		},
 		{
 			desc:        "Path params with multiple field path segment bindings",
 			uri:         "/v1/{test=a/b/*}/route/{resource_id=shelves/*/books/**}:upload",
-			wantMatcher: `^/v1/a/b/[^\/:]+/route/shelves/[^\/:]+/books/[^:]*\/?:upload$`,
+			wantMatcher: `^/v1/a/b/[^\/]+/route/shelves/[^\/]+/books/.*\/?:upload$`,
 		},
 		{
-			desc:                   "Path params with multiple field path segment bindings(allowing colon in wildcard)",
+			desc:                   "Path params with multiple field path segment bindings(disallowing colon in wildcard)",
 			uri:                    "/v1/{test=a/b/*}/route/{resource_id=shelves/*/books/**}:upload",
 			includeColonInWildcard: true,
-			wantMatcher:            `^/v1/a/b/[^\/]+/route/shelves/[^\/]+/books/.*\/?:upload$`,
+			wantMatcher:            `^/v1/a/b/[^\/:]+/route/shelves/[^\/:]+/books/[^:]*\/?:upload$`,
 		},
 	}
 

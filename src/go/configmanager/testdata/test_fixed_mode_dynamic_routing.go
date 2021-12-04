@@ -540,7 +540,7 @@ var (
                         ],
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/pet/[^\\/:]+\\/?$"
+                          "regex": "^/pet/[^\\/]+\\/?$"
                         }
                       },
                       "name": "1.echo_api_endpoints_cloudesf_testing_cloud_goog.dynamic_routing_GetPetById",
@@ -806,7 +806,7 @@ var (
                       "match": {
                         "safeRegex": {
                           "googleRe2": {},
-                          "regex": "^/pet/[^\\/:]+\\/?$"
+                          "regex": "^/pet/[^\\/]+\\/?$"
                         }
                       }
                     },
