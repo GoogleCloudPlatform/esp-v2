@@ -226,10 +226,11 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 
 func TestUriTemplateRegex(t *testing.T) {
 	testData := []struct {
-		desc        string
-		uri         string
-		wantMatcher string
-		wantError   string
+		desc                   string
+		uri                    string
+		includeColonInWildcard bool
+		wantMatcher            string
+		wantError              string
 	}{
 		{
 			desc:        "No path params",
@@ -276,6 +277,12 @@ func TestUriTemplateRegex(t *testing.T) {
 			uri:         "/v1/{test=a/b/*}/route/{resource_id=shelves/*/books/**}:upload",
 			wantMatcher: `^/v1/a/b/[^\/]+/route/shelves/[^\/]+/books/.*\/?:upload$`,
 		},
+		{
+			desc:                   "Path params with multiple field path segment bindings(disallowing colon in wildcard)",
+			uri:                    "/v1/{test=a/b/*}/route/{resource_id=shelves/*/books/**}:upload",
+			includeColonInWildcard: true,
+			wantMatcher:            `^/v1/a/b/[^\/:]+/route/shelves/[^\/:]+/books/[^:]*\/?:upload$`,
+		},
 	}
 
 	for _, tc := range testData {
@@ -285,7 +292,7 @@ func TestUriTemplateRegex(t *testing.T) {
 				t.Fatalf("fail to parse uri template %s", tc.uri)
 			}
 
-			if got := uriTemplate.Regex(); tc.wantMatcher != got {
+			if got := uriTemplate.Regex(tc.includeColonInWildcard); tc.wantMatcher != got {
 				t.Errorf("Test (%v): \n got %v \nwant %v", tc.desc, got, tc.wantMatcher)
 			}
 		})

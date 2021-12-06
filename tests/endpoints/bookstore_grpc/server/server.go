@@ -345,6 +345,21 @@ func (s *BookstoreServerV1Impl) CreateBook(ctx context.Context, req *bspbv1.Crea
 	return req.Book, nil
 }
 
+func (s *BookstoreServerV1Impl) CreateBookWithTrailingSingleWildcard(ctx context.Context, req *bspbv1.CreateBookRequest) (*bspbv1.Book, error) {
+	return s.CreateBook(ctx, req)
+
+}
+
+func (s *BookstoreServerV1Impl) CreateBookWithTrailingDoubleWildcard(ctx context.Context, req *bspbv1.CreateBookRequest) (*bspbv1.Book, error) {
+	return s.CreateBook(ctx, req)
+
+}
+
+func (s *BookstoreServerV1Impl) CreateBookWithCustomVerb(ctx context.Context, req *bspbv1.CreateBookRequest) (*bspbv1.Book, error) {
+	return s.CreateBook(ctx, req)
+
+}
+
 func (s *BookstoreServerV1Impl) GetBook(ctx context.Context, req *bspbv1.GetBookRequest) (*bspbv1.Book, error) {
 	if err := testDecorator(ctx); err != nil {
 		return nil, err

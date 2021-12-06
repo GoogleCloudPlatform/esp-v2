@@ -869,6 +869,15 @@ environment variable or by passing "-k" flag to this script.
         in grpc-json transcoding. This is to support HTML 2.0<https://tools.ietf.org/html/rfc1866#section-8.2.1>.
         Set this flag to true to disable this feature.
         ''')
+    parser.add_argument(
+        '--disallow_colon_in_wildcard_path_segment', action='store_true',
+        help='''
+        Whether disallow colon in the url wildcard path segment for route match. According
+        to Google http url template spec[1], the literal colon cannot be used in
+        url wildcard path segment. This flag isn't enabled for backward compatibility. 
+        
+        [1]https://github.com/googleapis/googleapis/blob/165280d3deea4d225a079eb5c34717b214a5b732/google/api/http.proto#L226-L252
+        ''')
 
     # Start Deprecated Flags Section
 
@@ -1320,6 +1329,9 @@ def gen_proxy_config(args):
 
     if args.transcoding_query_parameters_disable_unescape_plus:
         proxy_conf.append("--transcoding_query_parameters_disable_unescape_plus")
+
+    if args.disallow_colon_in_wildcard_path_segment:
+        proxy_conf.append("--disallow_colon_in_wildcard_path_segment")
 
     if args.on_serverless:
         proxy_conf.extend([

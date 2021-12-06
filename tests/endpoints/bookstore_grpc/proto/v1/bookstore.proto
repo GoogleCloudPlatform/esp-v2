@@ -86,6 +86,40 @@ service Bookstore {
       }
     };
   }
+
+  // Creates a new book with http template containing a single wildcard.
+  rpc CreateBookWithTrailingSingleWildcard(CreateBookRequest) returns (Book) {
+    // Client example - create a new book in the first shelf:
+    //   curl -d '{"author":"foo","title":"bar"}'
+    //   http://DOMAIN_NAME/v1/shelves/1/single/random
+    option (google.api.http) = {
+      post: "/v1/shelves/{shelf}/single/*"
+      body: "book"
+    };
+  }
+
+  // Creates a new book with http template containing a double wildcard.
+  rpc CreateBookWithTrailingDoubleWildcard(CreateBookRequest) returns (Book) {
+    // Client example - create a new book in the first shelf:
+    //   curl -d '{"author":"foo","title":"bar"}'
+    //   http://DOMAIN_NAME/v1/shelves/1/double/random
+    option (google.api.http) = {
+      post: "/v1/shelves/{shelf}/double/**"
+      body: "book"
+    };
+  }
+
+  // Creates a new book with http template containing custom verb.
+  rpc CreateBookWithCustomVerb(CreateBookRequest) returns (Book) {
+    // Client example - create a new book in the first shelf:
+    //   curl -d '{"author":"foo","title":"bar"}'
+    //   http://DOMAIN_NAME/v1/shelves/1:registeredCustomVerb
+    option (google.api.http) = {
+      post: "/v1/shelves/{shelf}:registeredCustomVerb"
+      body: "book"
+    };
+  }
+
   // Returns a specific book.
   rpc GetBook(GetBookRequest) returns (Book) {
     // Client example - get the first book from the second shelf:

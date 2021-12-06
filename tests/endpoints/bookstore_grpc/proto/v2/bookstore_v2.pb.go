@@ -122,7 +122,9 @@ func init() {
 	proto.RegisterType((*GetShelfRequest)(nil), "endpoints.examples.bookstore.v2.GetShelfRequest")
 }
 
-func init() { proto.RegisterFile("bookstore_v2.proto", fileDescriptor_a6a8713a8b188f49) }
+func init() {
+	proto.RegisterFile("bookstore_v2.proto", fileDescriptor_a6a8713a8b188f49)
+}
 
 var fileDescriptor_a6a8713a8b188f49 = []byte{
 	// 242 bytes of a gzipped FileDescriptorProto
@@ -146,11 +148,11 @@ var fileDescriptor_a6a8713a8b188f49 = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // BookstoreClient is the client API for Bookstore service.
 //
@@ -167,10 +169,10 @@ type BookstoreClient interface {
 }
 
 type bookstoreClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewBookstoreClient(cc *grpc.ClientConn) BookstoreClient {
+func NewBookstoreClient(cc grpc.ClientConnInterface) BookstoreClient {
 	return &bookstoreClient{cc}
 }
 

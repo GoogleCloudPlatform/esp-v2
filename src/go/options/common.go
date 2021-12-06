@@ -49,6 +49,9 @@ type CommonOptions struct {
 	ServiceControlCredentials *IAMCredentialsOptions
 	// Configures the identity used when making requests to backends.
 	BackendAuthCredentials *IAMCredentialsOptions
+
+	// Whether to disallow colon in the url wildcard path segment.
+	DisallowColonInWildcardPathSegment bool
 }
 
 // IamTokenKind specifies which type of token to generate using the IAM Credentials API.
