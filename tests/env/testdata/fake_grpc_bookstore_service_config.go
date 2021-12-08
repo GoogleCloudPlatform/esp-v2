@@ -172,7 +172,7 @@ var (
 							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 							},
-							Body: "book.title",
+							Body: "book",
 						},
 					},
 				},

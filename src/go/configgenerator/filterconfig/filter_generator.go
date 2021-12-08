@@ -33,8 +33,12 @@ import (
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoytypepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	descpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+
+	ahttp "google.golang.org/genproto/googleapis/api/annotations"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 // A wrapper of filter generation logic.
@@ -165,6 +169,60 @@ func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]*FilterGenerator, erro
 	return filterGenerators, nil
 }
 
+func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) []byte {
+	// To support specifying custom http rules in service config.
+	// api-compiler (or CLI: gcloud endpoints service deploy) has following behaviours:
+	// * If a "google.api.http" annotation is specified in a method in the proto,
+	//   service config yaml did not specify one, api-compiler will copy it out
+	//   to the normalized service config.
+	// * If a htpp.rule is specified in the service config, it will override
+	//   the one from the annotation, used it in the normalized service config.
+	// The normalized service config is used in this function. Its http rules will be
+	// copied into the method.options in the proto descriptor to be used by the
+	// envoy grpc_jsontranscoder.
+	ruleMap := make(map[string]*ahttp.HttpRule)
+	for _, rule := range serviceInfo.ServiceConfig().GetHttp().GetRules() {
+		ruleMap[rule.GetSelector()] = rule
+	}
+	apiMap := make(map[string]bool)
+	for _, apiName := range serviceInfo.ApiNames {
+		apiMap[apiName] = true
+	}
+
+	fds := &descpb.FileDescriptorSet{}
+	if err := proto.Unmarshal(descriptorBytes, fds); err != nil {
+		glog.Error("failed to unmarshal protodescriptor, error: %v", err)
+		return descriptorBytes
+	}
+
+	for _, file := range fds.GetFile() {
+		for _, service := range file.GetService() {
+			apiName := fmt.Sprintf("%s.%s", file.GetPackage(), service.GetName())
+
+			// Only modify the API in the serviceInfo.ApiNames.
+			if _, ok := apiMap[apiName]; !ok {
+				continue
+			}
+
+			for _, method := range service.GetMethod() {
+				sel := fmt.Sprintf("%s.%s", apiName, method.GetName())
+				if rule, ok := ruleMap[sel]; ok {
+					json, _ := util.ProtoToJson(rule)
+					glog.Info("Set http.rule: ", json)
+					proto.SetExtension(method.GetOptions(), ahttp.E_Http, rule)
+				}
+			}
+		}
+	}
+
+	newData, err := proto.Marshal(fds)
+	if err != nil {
+		glog.Error("failed to marshal protodescriptor, error: %v", err)
+		return descriptorBytes
+	}
+	return newData
+}
+
 func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) *hcmpb.HttpFilter {
 	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {
 		configFile := &smpb.ConfigFile{}
@@ -178,7 +236,8 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) *hcmpb.HttpFilter {
 			}
 			sort.Sort(sort.StringSlice(ignoredQueryParameterList))
 
-			configContent := configFile.GetFileContents()
+			configContent := updateProtoDescriptor(serviceInfo, configFile.GetFileContents())
+
 			transcodeConfig := &transcoderpb.GrpcJsonTranscoder{
 				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
 					ProtoDescriptorBin: configContent,
