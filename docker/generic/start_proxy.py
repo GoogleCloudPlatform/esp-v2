@@ -225,8 +225,7 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('--enable_strict_transport_security', action='store_true',
         help='''Enable HSTS (HTTP Strict Transport Security). "Strict-Transport-Security" response header
-        with value "max-age=31536000; includeSubdomains;" is added for all responses from local backend.
-        Not valid for remote backends.''')
+        with value "max-age=31536000; includeSubdomains;" is added for all responses.''')
 
     parser.add_argument('--generate_self_signed_cert', action='store_true',
         help='''Generate a self-signed certificate and key at start, then
