@@ -91,7 +91,6 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "grpc://127.0.0.1:8082"
 				opt.DisableTracing = true
-				opt.EnableHSTS = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.GrpcEchoServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.GrpcEchoEnvoyConfig),
