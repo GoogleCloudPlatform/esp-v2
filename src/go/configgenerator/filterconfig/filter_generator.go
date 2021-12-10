@@ -176,20 +176,21 @@ func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]*FilterGenerator, erro
 
 func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) ([]byte, error) {
 	// To support specifying custom http rules in service config.
-	// Envoy grpc_json_transcoder only uses the http_rules in the proto descriptor
+	// Envoy grpc_json_transcoder only uses the http.rules in the proto descriptor
 	// generated from "google.api.http" annotation in the proto file.
-	// For some shared grpc services, each OP service may need to define its own
-	// http_rules mapping. This function will copy the http_rules from OP service config
+	// For some shared grpc services, each service may want to define its own
+	// http.rules mapping. This function will copy the http.rules from the service config
 	// into proto descriptor.
 	//
 	// api-compiler has following behaviours:
 	// * If a "google.api.http" annotation is specified in a method in the proto,
-	//   service config yaml does'nt specify one, api-compiler will copy it out
+	//   and the service config yaml doesn't specify one, api-compiler will copy it out
 	//   to the normalized service config.
-	// * If a http.rule is specified in the service config, it will override
+	// * If a http.rule is specified in the service config, it will overwrite
 	//   the one from the proto annotation.
 	//
-	// So it should be ok to blindly copy http_rules from service config to proto descriptor.
+	// So it should be ok to blindly copy the http.rules from the service config to
+	// proto descriptor.
 	ruleMap := make(map[string]*ahpb.HttpRule)
 	for _, rule := range serviceInfo.ServiceConfig().GetHttp().GetRules() {
 		ruleMap[rule.GetSelector()] = rule
@@ -210,6 +211,7 @@ func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) 
 			apiName := fmt.Sprintf("%s.%s", file.GetPackage(), service.GetName())
 
 			// Only modify the API in the serviceInfo.ApiNames.
+			// These are the ones to enable grpc transcoding.
 			if _, ok := apiMap[apiName]; !ok {
 				continue
 			}
@@ -274,7 +276,8 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error
 			if serviceInfo.Options.TranscodingFilePathOutput != "" {
 				err = ioutil.WriteFile(serviceInfo.Options.TranscodingFilePathOutput, configContent, 0644)
 				if err != nil {
-					return nil, fmt.Errorf("failed to write proto descriptor to file: %v, error: %v", serviceInfo.Options.TranscodingFilePathOutput, err)
+					return nil, fmt.Errorf("failed to write proto descriptor to file: %v, error: %v",
+						serviceInfo.Options.TranscodingFilePathOutput, err)
 				}
 
 			}
