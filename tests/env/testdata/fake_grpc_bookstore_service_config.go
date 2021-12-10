@@ -140,7 +140,9 @@ var (
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.GetShelf",
 					Pattern: &annotationspb.HttpRule_Get{
-						Get: "/v1/shelves/{shelf=*}",
+						// This is a custom http rule that is different with the one
+						// from proto annotation which is "Get: "/v1/shelves/{shelf=*}"
+						Get: "/v1/custom/shelves/{shelf=*}",
 					},
 				},
 				{
@@ -153,6 +155,14 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.ListBooks",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves/{shelf}/books",
+					},
+					// Add extra additional_binding than the one from proto annotation.
+					AdditionalBindings: []*annotationspb.HttpRule{
+						{
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/custom/shelves/{shelf}/custom/books",
+							},
+						},
 					},
 				},
 				{

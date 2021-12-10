@@ -63,10 +63,10 @@ func TestTranscodingBindings(t *testing.T) {
 		// HTTP template:
 		// GET /shelves/{shelf}/books
 		{
-			desc:           "Succeeded, made a ListBookRequest",
+			desc:           "Succeeded, made a ListShelf with a custom http rule",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/shelves/100?key=api-key",
+			method:         "/v1/custom/shelves/100?key=api-key",
 			wantResp:       `{"id":"100","theme":"Kids"}`,
 		},
 		// Binding shelf=100 and book=<post body> in CreateBookRequest
@@ -120,10 +120,20 @@ func TestTranscodingBindings(t *testing.T) {
 		// HTTP template:
 		// GET /shelves/{shelf}/books
 		{
-			desc:           "Succeeded, check the result after all the requests",
+			desc:           "Succeeded, ListBooks request",
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100/books?key=api-key",
+			wantResp:       `{"books":[{"id":"1001","title":"Alphabet"},{"id":"4","author":"Leo Tolstoy","title":"War and Peace"},{"id":"5","author":"Mark","title":"The Adventures of Huckleberry Finn"},{"id":"6","author":"Foo/Bar/Baz","title":"The Adventures of Huckleberry Finn"}]}`,
+		},
+		// Binding shelf=100 in ListBooksRequest by additional binding from service config
+		// HTTP template:
+		// GET /v1/custom/shelves/{shelf}/custom/books
+		{
+			desc:           "Succeeded, ListBooks request by using custom additional_binding",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/custom/shelves/100/custom/books?key=api-key",
 			wantResp:       `{"books":[{"id":"1001","title":"Alphabet"},{"id":"4","author":"Leo Tolstoy","title":"War and Peace"},{"id":"5","author":"Mark","title":"The Adventures of Huckleberry Finn"},{"id":"6","author":"Foo/Bar/Baz","title":"The Adventures of Huckleberry Finn"}]}`,
 		},
 		{
