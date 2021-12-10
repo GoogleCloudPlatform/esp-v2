@@ -303,7 +303,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 // Default --cors_allow_origin=* from start_proxy.py for basic.
 // Tests preflight requests. These are actual OPTIONS requests.
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#preflighted_requests
-func TestProxyHandlesCorsPreflightWithDefaultAllorOrigin(t *testing.T) {
+func TestProxyHandlesCorsPreflightWithDefaultAllowOrigin(t *testing.T) {
 	t.Parallel()
 
 	serviceName := "test-echo"
@@ -324,7 +324,7 @@ func TestProxyHandlesCorsPreflightWithDefaultAllorOrigin(t *testing.T) {
 		"--cors_expose_headers=" + corsExposeHeadersValue, "--cors_allow_credentials",
 		"--cors_max_age=2h"}
 
-	s := env.NewTestEnv(platform.TestProxyHandlesCorsPreflightRequestsBasic, platform.EchoSidecar)
+	s := env.NewTestEnv(platform.TestProxyHandlesCorsPreflightWithDefaultAllowOrigin, platform.EchoSidecar)
 	defer s.TearDown(t)
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)

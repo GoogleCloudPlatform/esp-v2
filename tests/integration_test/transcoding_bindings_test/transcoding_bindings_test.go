@@ -66,7 +66,7 @@ func TestTranscodingBindings(t *testing.T) {
 			desc:           "Succeeded, made a ListShelf with a custom http rule",
 			clientProtocol: "http",
 			httpMethod:     "GET",
-			method:         "/v1/custom/shelves/100?key=api-key",
+			method:         "/v1/shelves/100?key=api-key",
 			wantResp:       `{"id":"100","theme":"Kids"}`,
 		},
 		// Binding shelf=100 and book=<post body> in CreateBookRequest

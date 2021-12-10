@@ -98,6 +98,7 @@ const (
 	TestProxyHandleCorsSimpleRequestsBasic
 	TestProxyHandleCorsSimpleRequestsRegex
 	TestProxyHandlesCorsPreflightRequestsBasic
+	TestProxyHandlesCorsPreflightWithDefaultAllowOrigin
 	TestReportGCPAttributes
 	TestReportGCPAttributesPerPlatform
 	TestReportTraceId
