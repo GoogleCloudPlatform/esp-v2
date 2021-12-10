@@ -37,7 +37,7 @@ import (
 	descpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 
-	ahttp "google.golang.org/genproto/googleapis/api/annotations"
+	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -190,7 +190,7 @@ func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) 
 	//   the one from the proto annotation.
 	//
 	// So it should be ok to blindly copy http_rules from service config to proto descriptor.
-	ruleMap := make(map[string]*ahttp.HttpRule)
+	ruleMap := make(map[string]*ahpb.HttpRule)
 	for _, rule := range serviceInfo.ServiceConfig().GetHttp().GetRules() {
 		ruleMap[rule.GetSelector()] = rule
 	}
@@ -219,7 +219,7 @@ func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) 
 				if rule, ok := ruleMap[sel]; ok {
 					json, _ := util.ProtoToJson(rule)
 					glog.Info("Set http.rule: ", json)
-					proto.SetExtension(method.GetOptions(), ahttp.E_Http, rule)
+					proto.SetExtension(method.GetOptions(), ahpb.E_Http, rule)
 				}
 			}
 		}
