@@ -23,20 +23,23 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
+	descpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/ptypes"
 
 	anypb "github.com/golang/protobuf/ptypes/any"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
-	fakeProtoDescriptor = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
+	rawDescriptor, _    = proto.Marshal(&descpb.FileDescriptorSet{})
+	fakeProtoDescriptor = base64.StdEncoding.EncodeToString(rawDescriptor)
 
 	sourceFile = &smpb.ConfigFile{
 		FilePath:     "api_descriptor.pb",
-		FileContents: []byte("rawDescriptor"),
+		FileContents: rawDescriptor,
 		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
 	content, _ = ptypes.MarshalAny(sourceFile)
@@ -313,13 +316,13 @@ func TestTranscoderFilter(t *testing.T) {
 			opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
 			opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
 			opts.TranscodingQueryParametersDisableUnescapePlus = tc.transcodingQueryParametersDisableUnescapePlus
-			opts.TranscodingFilePath = tc.transcodingFilePath
+			opts.TranscodingFilePathHost = tc.transcodingFilePath
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			filterConfig := makeTranscoderFilter(fakeServiceInfo)
+			filterConfig, err := makeTranscoderFilter(fakeServiceInfo)
 			if filterConfig == nil && tc.wantTranscoderFilter == "" {
 				// Expected no filter config generated
 				return

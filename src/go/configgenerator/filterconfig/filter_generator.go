@@ -201,7 +201,7 @@ func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) 
 
 	fds := &descpb.FileDescriptorSet{}
 	if err := proto.Unmarshal(descriptorBytes, fds); err != nil {
-		glog.Error("failed to unmarshal protodescriptor, error: %v", err)
+		glog.Error("failed to unmarshal protodescriptor, error: ", err)
 		return nil, fmt.Errorf("failed to unmarshal proto descriptor, error: %v", err)
 	}
 
@@ -227,7 +227,7 @@ func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) 
 
 	newData, err := proto.Marshal(fds)
 	if err != nil {
-		glog.Error("failed to marshal proto descriptor, error: %v", err)
+		glog.Error("failed to marshal proto descriptor, error: ", err)
 		return nil, fmt.Errorf("failed to marshal proto descriptor, error: %v", err)
 	}
 	return newData, nil

@@ -17,6 +17,9 @@ package testdata
 import (
 	"encoding/base64"
 	"fmt"
+
+	descpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -35,7 +38,8 @@ const (
 )
 
 var (
-	fakeProtoDescriptor    = base64.StdEncoding.EncodeToString([]byte("rawDescriptor"))
+	rawDescriptor, _       = proto.Marshal(&descpb.FileDescriptorSet{})
+	fakeProtoDescriptor    = base64.StdEncoding.EncodeToString(rawDescriptor)
 	testBackendClusterName = fmt.Sprintf("backend-cluster-%s_local", TestFetchListenersProjectName)
 )
 
