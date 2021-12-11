@@ -38,6 +38,7 @@ import (
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
+	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -174,7 +175,7 @@ func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]*FilterGenerator, erro
 	return filterGenerators, nil
 }
 
-func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) ([]byte, error) {
+func updateProtoDescriptor(service *confpb.Service, apiNames []string, descriptorBytes []byte) ([]byte, error) {
 	// To support specifying custom http rules in service config.
 	// Envoy grpc_json_transcoder only uses the http.rules in the proto descriptor
 	// generated from "google.api.http" annotation in the proto file.
@@ -192,11 +193,11 @@ func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) 
 	// So it should be ok to blindly copy the http.rules from the service config to
 	// proto descriptor.
 	ruleMap := make(map[string]*ahpb.HttpRule)
-	for _, rule := range serviceInfo.ServiceConfig().GetHttp().GetRules() {
+	for _, rule := range service.GetHttp().GetRules() {
 		ruleMap[rule.GetSelector()] = rule
 	}
 	apiMap := make(map[string]bool)
-	for _, apiName := range serviceInfo.ApiNames {
+	for _, apiName := range apiNames {
 		apiMap[apiName] = true
 	}
 
@@ -221,6 +222,9 @@ func updateProtoDescriptor(serviceInfo *ci.ServiceInfo, descriptorBytes []byte) 
 				if rule, ok := ruleMap[sel]; ok {
 					json, _ := util.ProtoToJson(rule)
 					glog.Info("Set http.rule: ", json)
+					if method.GetOptions() == nil {
+						method.Options = &descpb.MethodOptions{}
+					}
 					proto.SetExtension(method.GetOptions(), ahpb.E_Http, rule)
 				}
 			}
@@ -248,7 +252,8 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error
 			}
 			sort.Sort(sort.StringSlice(ignoredQueryParameterList))
 
-			configContent, err := updateProtoDescriptor(serviceInfo, configFile.GetFileContents())
+			configContent, err := updateProtoDescriptor(serviceInfo.ServiceConfig(), serviceInfo.ApiNames,
+				configFile.GetFileContents())
 			if err != nil {
 				return nil, err
 			}
