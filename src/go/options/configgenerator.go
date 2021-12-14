@@ -143,6 +143,7 @@ type ConfigGeneratorOptions struct {
 	TranscodingQueryParametersDisableUnescapePlus bool
 	TranscodingFilePathHost                       string
 	TranscodingFilePathOutput                     string
+	APIAllowList                                  []string
 }
 
 // DefaultConfigGeneratorOptions returns ConfigGeneratorOptions with default values.
@@ -187,5 +188,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		CorsMaxAge:                              480 * time.Hour,
 		HealthCheckGrpcBackendInterval:          1 * time.Second,
 		HealthCheckGrpcBackendNoTrafficInterval: 60 * time.Second,
+		APIAllowList:                            []string{},
 	}
 }

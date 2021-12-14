@@ -60,6 +60,7 @@ type backendInfo struct {
 	Path            string
 	Hostname        string
 	TranslationType confpb.BackendRule_PathTranslation
+	Port            uint32
 
 	// Audience to use when creating a JWT for backend auth.
 	// If empty, backend auth should be disabled for the method.

@@ -228,8 +228,8 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 
 func (s *ServiceInfo) processApis() error {
 	for _, api := range s.serviceConfig.GetApis() {
-		if isDiscoveryAPI(api.GetName()) {
-			glog.Warningf("Skip API %q because API discovery is not supported yet TODO(b/184393425).", api.GetName())
+		if !s.isAPIAllowed(api.GetName()) {
+			glog.Warningf("Skip API %q because it is not allowed.", api.GetName())
 			continue
 		}
 		s.ApiNames = append(s.ApiNames, api.Name)
@@ -266,8 +266,8 @@ func (s *ServiceInfo) addGrpcHttpRules() error {
 	}
 
 	for _, api := range s.serviceConfig.GetApis() {
-		if isDiscoveryAPI(api.GetName()) {
-			glog.Warningf("Skip API %q because API discovery is not supported yet TODO(b/184393425).", api.GetName())
+		if !s.isAPIAllowed(api.GetName()) {
+			glog.Warningf("Skip API %q because it is not allowed.", api.GetName())
 			continue
 		}
 		for _, method := range api.GetMethods() {
@@ -326,6 +326,10 @@ func (s *ServiceInfo) processAccessToken() {
 
 func (s *ServiceInfo) processQuota() error {
 	for _, metricRule := range s.ServiceConfig().GetQuota().GetMetricRules() {
+		if !s.isAPIAllowed(metricRule.GetSelector()) {
+			glog.Warningf("Skip metric rule %q because it is not allowed.", metricRule.GetSelector())
+			continue
+		}
 		var metricCosts []*scpb.MetricCost
 		for name, cost := range metricRule.GetMetricCosts() {
 			metricCosts = append(metricCosts, &scpb.MetricCost{
@@ -410,8 +414,8 @@ func (s *ServiceInfo) processHttpRule() error {
 	addedRouteMatchWithOptionsSet := make(map[string]bool)
 
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
-		if s := rule.GetSelector(); isDiscoveryAPI(s) {
-			glog.Warningf("Skip http rule %q because API discovery is not supported yet TODO(b/184393425).", s)
+		if !s.isAPIAllowed(rule.GetSelector()) {
+			glog.Warningf("Skip http rule %q because it is not allowed.", rule.GetSelector())
 			continue
 		}
 		method, err := s.getMethod(rule.GetSelector())
@@ -518,10 +522,13 @@ func (s *ServiceInfo) processBackendRule() error {
 	backendRoutingClustersMap := make(map[string]string)
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
-
+		if !s.isAPIAllowed(r.GetSelector()) {
+			glog.Warningf("Skip backend rule %q because it is not allowed.", r.GetSelector())
+			continue
+		}
 		if r.Address == "" || s.Options.EnableBackendAddressOverride {
 			// Processing a backend rule associated with the local backend.
-			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName()); err != nil {
+			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName(), 0); err != nil {
 				return fmt.Errorf("error processing local backend rule for operation (%v), %v", r.Selector, err)
 			}
 		} else {
@@ -555,7 +562,7 @@ func (s *ServiceInfo) processBackendRule() error {
 			}
 
 			backendClusterName := backendRoutingClustersMap[address]
-			if err := s.addBackendInfoToMethod(r, scheme, hostname, path, backendClusterName); err != nil {
+			if err := s.addBackendInfoToMethod(r, scheme, hostname, path, backendClusterName, port); err != nil {
 				return fmt.Errorf("error processing remote backend rule for operation (%v), %v", r.Selector, err)
 			}
 		}
@@ -564,7 +571,7 @@ func (s *ServiceInfo) processBackendRule() error {
 	return nil
 }
 
-func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string) error {
+func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string, port uint32) error {
 	method, err := s.getMethod(r.GetSelector())
 	if err != nil {
 		return err
@@ -617,6 +624,7 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		TranslationType: r.PathTranslation,
 		Deadline:        deadline,
 		IdleTimeout:     idleTimeout,
+		Port:            port,
 	}
 
 	jwtAud := s.determineBackendAuthJwtAud(r, scheme, hostname)
@@ -709,6 +717,10 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 
 func (s *ServiceInfo) processUsageRule() error {
 	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
+		if !s.isAPIAllowed(r.GetSelector()) {
+			glog.Warningf("Skip usage rule %q because it is not allowed.", r.GetSelector())
+			continue
+		}
 		method, err := s.getMethod(r.GetSelector())
 		if err != nil {
 			return fmt.Errorf("error processing usage rule for operation (%v): %v", r.Selector, err)
@@ -757,6 +769,10 @@ func (s *ServiceInfo) processTranscodingIgnoredQueryParams() error {
 
 func (s *ServiceInfo) processApiKeyLocations() error {
 	for _, rule := range s.ServiceConfig().GetSystemParameters().GetRules() {
+		if !s.isAPIAllowed(rule.GetSelector()) {
+			glog.Warningf("Skip system parameter rule %q because it is not allowed.", rule.GetSelector())
+			continue
+		}
 		apiKeyLocationParameters := []*confpb.SystemParameter{}
 
 		for _, parameter := range rule.GetParameters() {
@@ -912,6 +928,10 @@ func (s *ServiceInfo) LocalBackendClusterName() string {
 func (s *ServiceInfo) processAuthRequirement() error {
 	auth := s.serviceConfig.GetAuthentication()
 	for _, rule := range auth.GetRules() {
+		if !s.isAPIAllowed(rule.GetSelector()) {
+			glog.Warningf("Skip auth requirement rule %q because it is not allowed.", rule.GetSelector())
+			continue
+		}
 		if len(rule.GetRequirements()) > 0 {
 			mi, err := s.getMethod(rule.GetSelector())
 			if err != nil {
@@ -921,6 +941,23 @@ func (s *ServiceInfo) processAuthRequirement() error {
 		}
 	}
 	return nil
+}
+
+func (s *ServiceInfo) isAPIAllowed(str string) bool {
+	// TODO(b/184393425): API discovery is not supported yet.
+	if strings.HasPrefix(str, "google.discovery") {
+		return false
+	}
+	if len(s.Options.APIAllowList) == 0 {
+		// API allowlist is empty. We'll treat all the APIs as allowed.
+		return true
+	}
+	for _, apiAllowed := range s.Options.APIAllowList {
+		if strings.HasPrefix(str, apiAllowed) {
+			return true
+		}
+	}
+	return false
 }
 
 // If the backend address's scheme is grpc/grpcs, it should be changed it http or https.
@@ -955,6 +992,3 @@ func parseRetriableStatusCodes(statusCodes string) ([]uint32, error) {
 	return codes, nil
 }
 
-func isDiscoveryAPI(s string) bool {
-	return strings.HasPrefix(s, "google.discovery")
-}
