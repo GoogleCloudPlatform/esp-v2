@@ -53,7 +53,8 @@ service Bookstore {
     // Client example - returns the first shelf:
     //   curl http://DOMAIN_NAME/v1/shelves/1
     option (google.api.http) = {
-      get: "/v1/shelves/{shelf}"
+      // this http.rule will be overwritten by the one from service config
+      get: "/v399/abcdefg_shelves/{shelf}"
     };
   }
   // Deletes a shelf, including all books that are stored on the shelf.

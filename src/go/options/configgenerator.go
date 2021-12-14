@@ -141,7 +141,8 @@ type ConfigGeneratorOptions struct {
 	TranscodingIgnoreQueryParameters              string
 	TranscodingIgnoreUnknownQueryParameters       bool
 	TranscodingQueryParametersDisableUnescapePlus bool
-	TranscodingFilePath                           string
+	TranscodingFilePathHost                       string
+	TranscodingFilePathOutput                     string
 }
 
 // DefaultConfigGeneratorOptions returns ConfigGeneratorOptions with default values.

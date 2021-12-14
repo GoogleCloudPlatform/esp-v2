@@ -154,6 +154,14 @@ var (
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves/{shelf}/books",
 					},
+					// Add extra additional_binding than the one from proto annotation.
+					AdditionalBindings: []*annotationspb.HttpRule{
+						{
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/custom/shelves/{shelf}/custom/books",
+							},
+						},
+					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteBook",
@@ -172,7 +180,7 @@ var (
 							Pattern: &annotationspb.HttpRule_Post{
 								Post: "/v1/shelves/{shelf}/books/{book.id}/{book.author}",
 							},
-							Body: "book.title",
+							Body: "book",
 						},
 					},
 				},
