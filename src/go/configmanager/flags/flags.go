@@ -283,6 +283,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		TranscodingIgnoreQueryParameters:              *TranscodingIgnoreQueryParameters,
 		TranscodingIgnoreUnknownQueryParameters:       *TranscodingIgnoreUnknownQueryParameters,
 		TranscodingQueryParametersDisableUnescapePlus: *TranscodingQueryParametersDisableUnescapePlus,
+		APIAllowList:                                  []string{},
 	}
 
 	glog.Infof("Config Generator options: %+v", opts)
