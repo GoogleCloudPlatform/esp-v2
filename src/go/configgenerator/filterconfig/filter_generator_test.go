@@ -322,7 +322,7 @@ func TestTranscoderFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			filterConfig, err := makeTranscoderFilter(fakeServiceInfo)
+			filterConfig, _ := makeTranscoderFilter(fakeServiceInfo)
 			if filterConfig == nil && tc.wantTranscoderFilter == "" {
 				// Expected no filter config generated
 				return
