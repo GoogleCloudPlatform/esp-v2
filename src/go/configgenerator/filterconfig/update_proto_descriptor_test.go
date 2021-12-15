@@ -36,14 +36,14 @@ func TestUpdateProtoDescriptor(t *testing.T) {
 		wantError string
 	}{
 		{
-			// input Descriptor is invalid data, it results in error.
+			// The input Descriptor is an invalid data, it results in error.
 			desc:      "Failed to unmarshal error",
 			service:   "",
 			inDesc:    "invalid proto descriptor",
 			wantError: "failed to unmarshal",
 		},
 		{
-			// ApiNames has different Full service name, protoDescriptor is not modified.
+			// ApiNames is a wrong service name, protoDescriptor is not modified.
 			desc: "Wrong apiName, not override",
 			service: `
 http: {
@@ -87,7 +87,7 @@ file: {
 }`,
 		},
 		{
-			// ProtoDescriptor doesnt have MethodOptions, the http rule is copied
+			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied
 			desc: "Not method options",
 			service: `
 http: {
@@ -127,7 +127,7 @@ file: {
 }`,
 		},
 		{
-			// ProtoDescriptor has an empty MethodOptions. the http rule is copied
+			// ProtoDescriptor has an empty MethodOptions, the http rule is copied
 			desc: "Empty method options",
 			service: `
 http: {
@@ -169,7 +169,7 @@ file: {
 }`,
 		},
 		{
-			// ProtoDescriptor has a different annotation, the http rule is coped
+			// ProtoDescriptor has a different annotation, the http rule is copied
 			desc: "Basic overwritten case",
 			service: `
 http: {
@@ -214,7 +214,7 @@ file: {
 }`,
 		},
 		{
-			// The the http rule has a different service name. It is not coped
+			// The http rule has a different service name. It is not copied
 			desc: "Empty http rule as it has different service name",
 			service: `
 http: {
@@ -285,7 +285,7 @@ file: {
 
 			if tc.wantDesc != "" {
 				got := &descpb.FileDescriptorSet{}
-				// Not need to check error since it just Marshaled from updateProtoDescriptor()
+				// Not need to check error, gotByteDesc is just marshaled from the updateProtoDescriptor()
 				proto.Unmarshal(gotByteDesc, got)
 				want := &descpb.FileDescriptorSet{}
 				if err := prototext.Unmarshal([]byte(tc.wantDesc), want); err != nil {
@@ -293,7 +293,7 @@ file: {
 				}
 
 				if diff := utils.ProtoDiff(want, got); diff != "" {
-					t.Errorf("Result is the same: diff (-want +got):\n%v", diff)
+					t.Errorf("Result is not the same: diff (-want +got):\n%v", diff)
 				}
 			}
 		})
