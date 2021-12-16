@@ -141,8 +141,6 @@ type ConfigGeneratorOptions struct {
 	TranscodingIgnoreQueryParameters              string
 	TranscodingIgnoreUnknownQueryParameters       bool
 	TranscodingQueryParametersDisableUnescapePlus bool
-	TranscodingFilePathHost                       string
-	TranscodingFilePathOutput                     string
 	APIAllowList                                  []string
 }
 

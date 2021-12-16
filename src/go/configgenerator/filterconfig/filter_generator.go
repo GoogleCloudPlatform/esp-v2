@@ -16,7 +16,6 @@ package filterconfig
 
 import (
 	"fmt"
-	"io/ioutil"
 	"sort"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -272,19 +271,6 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error
 					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
 					PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
 				},
-			}
-			if serviceInfo.Options.TranscodingFilePathHost != "" {
-				transcodeConfig.DescriptorSet = &transcoderpb.GrpcJsonTranscoder_ProtoDescriptor{
-					ProtoDescriptor: serviceInfo.Options.TranscodingFilePathHost,
-				}
-			}
-			if serviceInfo.Options.TranscodingFilePathOutput != "" {
-				err = ioutil.WriteFile(serviceInfo.Options.TranscodingFilePathOutput, configContent, 0644)
-				if err != nil {
-					return nil, fmt.Errorf("failed to write proto descriptor to file: %v, error: %v",
-						serviceInfo.Options.TranscodingFilePathOutput, err)
-				}
-
 			}
 
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
