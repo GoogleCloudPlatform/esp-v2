@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Janitor script triggered by prow to cleanup ESPv2 on serverless resources.
-# This includes:
-# - Cloud run services
-# - Cloud functions
-# - Endpoints services
+# Janitor script triggered by prow to cleanup orphan resources used for ESPv2 testing.
 
 # Fail on any error.
 set -eo pipefail
@@ -112,3 +108,33 @@ for service in $ENDPOINTS_SERVICES ; do
 
 done
 echo "Done cleaning up Endpoints Services"
+
+# Load balancer target pools
+# Source: https://gist.github.com/prasvats/b2a4e33ad12b40191dd9d7e222d1abde/
+
+targetPools=()
+
+# Function to get list of all unused target pools and store in file.
+function get_unused_target_pool(){
+for i in $(gcloud compute target-pools list --format='value(name)'); do
+  echo "-------------------------------------------"
+  echo $i
+  echo "Query Forwarding Rule"
+  forwardingitem=$(gcloud compute forwarding-rules list --filter=TARGET="https://www.googleapis.com/compute/v1/projects/cloudesf-testing/regions/us-central1/targetPools/$i" --format='value(name)')
+  if [[ -z "$forwardingitem" ]]; then
+   targetPools+=("${i}")
+  fi
+  echo "-------------------------------------------"
+done
+}
+
+# Function to read data from file and delete it.
+function delete_unused_target_pool(){
+    for item in "${targetPools[@]}"; do 
+        gcloud compute target-pools delete $item --region $REGION --quiet
+    done
+}
+
+get_unused_target_pool
+delete_unused_target_pool
+echo "Done cleaning up LBs"
