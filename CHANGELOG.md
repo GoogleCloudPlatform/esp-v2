@@ -1,3 +1,10 @@
+# Release 2.33.0 06-01-2022
+
+- Support http.rules in the service config for gRPC transcoding (#640)
+- Update help text for flag `--enable_strict_transport_security` (#642)
+- Disallow colon in url wildcard path segment for route match (#639)
+- Update docker base image to use alpine:3.15 (#638)
+
 # Release 2.32.0 04-11-2021
 
 - Support health check gRPC backend (#629)
