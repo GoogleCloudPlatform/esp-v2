@@ -5,8 +5,6 @@
 - Disallow colon in url wildcard path segment for route match (#639)
 - Update docker base image to use alpine:3.15 (#638)
 
-TODO: Edit the section above before submitting! DIRECTORY /usr/local/google/home/nareddyt/workspace/go/src/github.com/GoogleCloudPlatform/esp-v2
-===============================================
 # Release 2.32.0 04-11-2021
 
 - Support health check gRPC backend (#629)
