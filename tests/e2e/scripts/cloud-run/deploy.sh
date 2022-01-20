@@ -353,6 +353,7 @@ function setup() {
       #         Anthos has 2 more proxies than Cloud Run(Fully managed).
     proxy_args="${proxy_args}++--envoy_xff_num_trusted_hops=5"
   fi
+  proxy_args="${proxy_args}++--enable_debug"
 
   deployProxy "gcr.io/${PROJECT_ID}/endpoints-runtime-serverless:custom-${ENDPOINTS_SERVICE_NAME}-${endpoints_service_config_id}"  "${proxy_args}"
 }

@@ -390,13 +390,14 @@ TEST(ServiceControlUtils, FillLatency) {
     if (test.end_time > zero) {
       mock_stream_info.end_time_ = test.end_time;
     }
+    auto& timing = mock_stream_info.upstream_info_->upstreamTiming();
     if (test.first_upstream_tx_byte_sent > zero) {
-      mock_stream_info.first_upstream_tx_byte_sent_ =
-          test.first_upstream_tx_byte_sent;
+      timing.first_upstream_tx_byte_sent_ =
+          Envoy::MonotonicTime(test.first_upstream_tx_byte_sent);
     }
     if (test.last_upstream_rx_byte_received > zero) {
-      mock_stream_info.last_upstream_rx_byte_received_ =
-          test.last_upstream_rx_byte_received;
+      timing.last_upstream_rx_byte_received_ =
+          Envoy::MonotonicTime(test.last_upstream_rx_byte_received);
     }
 
     LatencyInfo info;
