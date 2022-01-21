@@ -78,6 +78,56 @@ func TestUriTemplateParse(t *testing.T) {
 `,
 		},
 		{
+			desc:        "ParseTest2a ",
+			UriTemplate: "/a/{var=b}",
+			wantUriTemplate: `
+{
+   "Origin":"/a/{var=b}",
+   "Segments":[
+      "a",
+      "b"
+   ],
+   "Variables":[
+     {
+       "EndSegment":2,
+       "FieldPath":[
+         "var"
+       ],
+       "HasDoubleWildCard":false,
+       "StartSegment":1
+     }
+   ],
+   "Verb":""
+}
+`,
+		},
+		{
+			desc:        "ParseTest2b",
+			UriTemplate: "/a/{var=b/c/d}",
+			wantUriTemplate: `
+{
+   "Origin":"/a/{var=b/c/d}",
+   "Segments":[
+      "a",
+      "b",
+      "c",
+      "d"
+   ],
+   "Variables":[
+      {
+        "EndSegment":4,
+        "FieldPath":[
+	   "var"
+        ],
+        "HasDoubleWildCard":false,
+        "StartSegment":1
+      }
+   ],
+   "Verb":""
+}
+`,
+		},
+		{
 			desc:        "ParseTest3a",
 			UriTemplate: "/**",
 			wantUriTemplate: `

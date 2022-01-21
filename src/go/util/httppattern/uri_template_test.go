@@ -211,12 +211,24 @@ func TestReplaceVariableFieldInUriTemplate(t *testing.T) {
 			allowTrailingBackslash: true,
 			wantUriTemplate:        "/a/{BAR=c/**}/:verb",
 		},
+		{
+			desc:            "test ExactMatchString with variable without wildcard",
+			uriTemplate:     "/a/{x=b}",
+			wantUriTemplate: "/a/b",
+		},
+		{
+			desc:            "test ExactMatchString with variable without wildcard with multiple segments",
+			uriTemplate:     "/a/{x=b/c/d}",
+			wantUriTemplate: "/a/b/c/d",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			uriTemplate, _ := ParseUriTemplate(tc.uriTemplate)
-			uriTemplate.ReplaceVariableField(tc.varReplace)
+			if tc.varReplace != nil {
+				uriTemplate.ReplaceVariableField(tc.varReplace)
+			}
 			if getUriTemplate := uriTemplate.ExactMatchString(tc.allowTrailingBackslash); getUriTemplate != tc.wantUriTemplate {
 				t.Errorf("fail to replace variable field, wante uriTemplate: %s, get uriTemplate: %s", tc.wantUriTemplate, getUriTemplate)
 			}
