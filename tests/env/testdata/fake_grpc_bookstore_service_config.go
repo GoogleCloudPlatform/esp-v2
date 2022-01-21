@@ -142,6 +142,14 @@ var (
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves/{shelf=*}",
 					},
+					// Add a additional binding to test a fixed variable
+					AdditionalBindings: []*annotationspb.HttpRule{
+						{
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/v1/fixedshelves/{shelf=100}",
+							},
+						},
+					},
 				},
 				{
 					Selector: "endpoints.examples.bookstore.Bookstore.DeleteShelf",
