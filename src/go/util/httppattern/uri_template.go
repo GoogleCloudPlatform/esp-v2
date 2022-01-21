@@ -175,11 +175,20 @@ func (u *UriTemplate) Regex(disallowColonInWildcardPathSegment bool) string {
 //    Variable = "{" FieldPath [ "=" Segments ] "}" ;
 func generateVariableBindingSyntax(segments []string, v *variable) string {
 	pathVar := bytes.Buffer{}
+	hasWildcard := false
 	for i := v.StartSegment; i < v.EndSegment; i += 1 {
 		pathVar.WriteString(segments[i])
 		if i != v.EndSegment-1 {
 			pathVar.WriteString("/")
 		}
+		if segments[i] == SingleWildCardKey || segments[i] == DoubleWildCardKey {
+			hasWildcard = true
+		}
+	}
+
+	// If a variable doesn't have any wildcard, just return its paths
+	if !hasWildcard {
+		return fmt.Sprintf("/%s", pathVar.String())
 	}
 
 	varName := bytes.Buffer{}

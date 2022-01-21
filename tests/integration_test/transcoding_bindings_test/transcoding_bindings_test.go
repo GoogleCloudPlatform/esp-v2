@@ -69,6 +69,15 @@ func TestTranscodingBindings(t *testing.T) {
 			method:         "/v1/shelves/100?key=api-key",
 			wantResp:       `{"id":"100","theme":"Kids"}`,
 		},
+		// HTTP template:
+		// GET /v1/fixedshelves/{shelf=100}
+		{
+			desc:           "Succeeded, made a ListShelf with a variable without wildcard",
+			clientProtocol: "http",
+			httpMethod:     "GET",
+			method:         "/v1/fixedshelves/100?key=api-key",
+			wantResp:       `{"id":"100","theme":"Kids"}`,
+		},
 		// Binding shelf=100 and book=<post body> in CreateBookRequest
 		// HTTP template:
 		// POST /shelves/{shelf}/books
