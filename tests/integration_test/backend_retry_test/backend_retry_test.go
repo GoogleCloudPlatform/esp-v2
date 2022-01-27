@@ -16,6 +16,7 @@ package backend_retry_test
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -315,6 +316,8 @@ func TestBackendRetry(t *testing.T) {
 			time.Sleep(time.Second * 5)
 			gotSpanNames, _ := s.FakeStackdriverServer.RetrieveSpanNames()
 			realWantSpanNames := tc.wantSpanNames
+			sort.Strings(gotSpanNames)
+			sort.Strings(realWantSpanNames)
 			if tc.backendTypeUsed == remoteBackend {
 				realWantSpanNames = replaceBackendPort(tc.wantSpanNames, strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort)))
 			}
@@ -447,6 +450,8 @@ func TestBackendPerTryTimeout(t *testing.T) {
 			time.Sleep(time.Second * 5)
 			gotSpanNames, _ := s.FakeStackdriverServer.RetrieveSpanNames()
 			realWantSpanNames := replaceBackendPort(tc.wantSpanNames, strconv.Itoa(int(s.Ports().DynamicRoutingBackendPort)))
+			sort.Strings(gotSpanNames)
+			sort.Strings(realWantSpanNames)
 			if !reflect.DeepEqual(gotSpanNames, realWantSpanNames) {
 				t.Errorf("Test (%s) failed, got span names: %+q, want span names: %+q", tc.desc, gotSpanNames, realWantSpanNames)
 			}

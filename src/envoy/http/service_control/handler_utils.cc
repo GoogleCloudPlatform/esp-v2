@@ -28,6 +28,7 @@
 #include "source/common/grpc/common.h"
 #include "source/common/http/header_utility.h"
 #include "source/common/http/utility.h"
+#include "source/common/stream_info/utility.h"
 #include "source/extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
@@ -179,8 +180,9 @@ void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
         convertNsToMs(stream_info.requestComplete().value());
   }
 
-  auto start = stream_info.firstUpstreamTxByteSent();
-  auto end = stream_info.lastUpstreamRxByteReceived();
+  Envoy::StreamInfo::TimingUtility timing(stream_info);
+  auto start = timing.firstUpstreamTxByteSent();
+  auto end = timing.lastUpstreamRxByteReceived();
   if (start && end) {
     ENVOY_BUG(end.value() >= start.value(), "End time < start time");
     latency.backend_time_ms = convertNsToMs(end.value() - start.value());

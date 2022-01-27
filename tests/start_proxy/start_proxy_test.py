@@ -781,7 +781,6 @@ class TestStartProxy(unittest.TestCase):
     def test_gen_proxy_config_error(self):
         testcases = [
             ['--unknown_flag'],
-            ['--rollout_strategy=mangaed'],
             ['--rollout_strategy=managed','--v=2019-11-09r0'],
             ['--service=test_bookstore.gloud.run',
              '--service_json_path=/tmp/service.json'],

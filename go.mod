@@ -15,8 +15,10 @@ require (
 	github.com/gorilla/mux v1.6.3-0.20181030152528-3d80bc801bb0
 	github.com/gorilla/websocket v1.4.2
 	github.com/miekg/dns v1.1.29
-	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
+	golang.org/x/tools v0.1.8 // indirect
 	google.golang.org/api v0.46.0
 	google.golang.org/genproto v0.0.0-20210518161634-ec7691c0a37d
 	google.golang.org/grpc v1.37.1

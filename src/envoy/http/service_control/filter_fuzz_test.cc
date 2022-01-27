@@ -133,8 +133,9 @@ DEFINE_PROTO_FUZZER(
 
   try {
     // Fuzz the stream info.
+    NiceMock<Envoy::MockTimeSystem> time_src;
     std::unique_ptr<TestStreamInfo> stream_info =
-        Envoy::Fuzz::fromStreamInfo(input.stream_info());
+        Envoy::Fuzz::fromStreamInfo(input.stream_info(), time_src);
     EXPECT_CALL(mock_decoder_callbacks, streamInfo())
         .WillRepeatedly(ReturnRef(*stream_info));
 

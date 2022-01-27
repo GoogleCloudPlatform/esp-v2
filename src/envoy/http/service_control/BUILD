@@ -152,6 +152,7 @@ envoy_cc_library(
         "@envoy//source/common/config:metadata_lib",
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/stream_info:utility_lib",
         "@envoy//source/extensions/filters/http:well_known_names",
     ],
 )
