@@ -271,6 +271,7 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error
 					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
 					PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
 				},
+				MatchUnregisteredCustomVerb: serviceInfo.Options.TranscodingMatchUnregisteredCustomVerb,
 			}
 
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)

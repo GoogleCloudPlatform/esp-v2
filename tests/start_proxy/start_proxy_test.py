@@ -442,6 +442,18 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing',
               '--disallow_colon_in_wildcard_path_segment'
               ]),
+            # transcoder transcoding_match_unregistered_custom_verb
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--transcoding_match_unregistered_custom_verb',
+              '--disable_tracing',
+              ],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--disable_tracing',
+              '--transcoding_match_unregistered_custom_verb'
+              ]),
             # Connection buffer limit bytes
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',

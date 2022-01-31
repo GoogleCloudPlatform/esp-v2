@@ -881,6 +881,20 @@ environment variable or by passing "-k" flag to this script.
         [1]https://github.com/googleapis/googleapis/blob/165280d3deea4d225a079eb5c34717b214a5b732/google/api/http.proto#L226-L252
         ''')
     parser.add_argument(
+        '--transcoding_match_unregistered_custom_verb', action='store_true',
+        help='''
+        If true, try to match the custom verb even if it is unregistered. By default,
+        only match when it is registered. According to the http template[1], the
+        custom verb is **":" LITERAL** at the end of http template.
+        
+          For a request with */foo/bar:baz* and *:baz* is not registered in any
+          url_template, here is the behavior change
+            - if the field is not set, *:baz* will not be treated as custom verb,so it will match **/foo/{x=*}**.
+            - if the field is set, *:baz* is treated as custom verb,  so it will NOT match **/foo/{x=*}** since the template doesn't use any custom verb.
+        
+          [1](https://github.com/googleapis/googleapis/blob/master/google/api/http.proto#L226-L231)
+        ''')
+    parser.add_argument(
         '--ads_named_pipe', action=None,
         help='''
         Unix domain socket to use internally for xDs between config manager and 
@@ -1338,6 +1352,9 @@ def gen_proxy_config(args):
 
     if args.transcoding_query_parameters_disable_unescape_plus:
         proxy_conf.append("--transcoding_query_parameters_disable_unescape_plus")
+
+    if args.transcoding_match_unregistered_custom_verb:
+        proxy_conf.append("--transcoding_match_unregistered_custom_verb")
 
     if args.disallow_colon_in_wildcard_path_segment:
         proxy_conf.append("--disallow_colon_in_wildcard_path_segment")
