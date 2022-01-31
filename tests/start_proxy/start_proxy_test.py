@@ -34,6 +34,10 @@ class TestStartProxy(unittest.TestCase):
              ['bin/bootstrap', '--logtostderr', '--admin_port', '8001',
               '--http_request_timeout_s', '1',
               '/tmp/bootstrap.json']),
+            (["--ads_named_pipe=@espv2-named-pipe-9", "--disable_tracing", "--admin_port=8001"],
+             ['bin/bootstrap', '--logtostderr', '--admin_port', '8001',
+              '--ads_named_pipe', '@espv2-named-pipe-9',
+              '/tmp/bootstrap.json']),
             ([], ['bin/bootstrap',
                   '--logtostderr', '--admin_port', '0',
                   '/tmp/bootstrap.json']),
@@ -752,6 +756,18 @@ class TestStartProxy(unittest.TestCase):
               '--health_check_grpc_backend',
               '--v', '0',
               '--service', 'test_bookstore.gloud.run'
+              ]),
+            # passing the flag --ads_named_pipe
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--ads_named_pipe=@espv2-named-pipe-9'
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--ads_named_pipe', '@espv2-named-pipe-9'
               ]),
             # passing the flags: --health_check_grp_backend, --health_check_grp_backend_interval and --health_check_grp_backend_service
             (['--service=test_bookstore.gloud.run',
