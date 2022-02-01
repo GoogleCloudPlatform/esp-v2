@@ -1,3 +1,9 @@
+# Release 2.34.0 01-02-2022
+
+- Expose flag `--ads_named_pipe` (#658)
+- Update Envoy to v1.21.0 (#653)
+- Support url templates with variables without wildcard (#654)
+
 # Release 2.33.0 06-01-2022
 
 - Support http.rules in the service config for gRPC transcoding (#640)
