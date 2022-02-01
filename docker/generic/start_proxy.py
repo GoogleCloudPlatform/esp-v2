@@ -61,11 +61,14 @@ def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
 
     cmd.extend(["--admin_port", str(args.status_port)])
+
     if args.http_request_timeout_s:
         cmd.extend(
             ["--http_request_timeout_s",
              str(args.http_request_timeout_s)])
 
+    if args.ads_named_pipe:
+        cmd.extend(["--ads_named_pipe", args.ads_named_pipe])
 
     bootstrap_file = DEFAULT_CONFIG_DIR + BOOTSTRAP_CONFIG
     cmd.append(bootstrap_file)
@@ -877,6 +880,13 @@ environment variable or by passing "-k" flag to this script.
         
         [1]https://github.com/googleapis/googleapis/blob/165280d3deea4d225a079eb5c34717b214a5b732/google/api/http.proto#L226-L252
         ''')
+    parser.add_argument(
+        '--ads_named_pipe', action=None,
+        help='''
+        Unix domain socket to use internally for xDs between config manager and 
+        envoy. Only change if running multiple ESPv2 instances on the same host.
+        '''
+    )
 
     # Start Deprecated Flags Section
 
@@ -1389,6 +1399,9 @@ def gen_proxy_config(args):
 
     if args.enable_backend_address_override:
         proxy_conf.append("--enable_backend_address_override")
+
+    if args.ads_named_pipe:
+        proxy_conf.extend(["--ads_named_pipe", args.ads_named_pipe])
 
     return proxy_conf
 
