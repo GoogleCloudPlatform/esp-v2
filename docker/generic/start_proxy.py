@@ -1339,7 +1339,6 @@ def gen_proxy_config(args):
     if args.transcoding_query_parameters_disable_unescape_plus:
         proxy_conf.append("--transcoding_query_parameters_disable_unescape_plus")
 
-
     if args.disallow_colon_in_wildcard_path_segment:
         proxy_conf.append("--disallow_colon_in_wildcard_path_segment")
 
