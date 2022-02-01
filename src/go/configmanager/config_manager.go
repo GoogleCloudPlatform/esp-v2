@@ -251,7 +251,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 	if err != nil {
 		return fmt.Errorf("fail to make a snapshot, %s", err)
 	}
-	return m.cache.SetSnapshot(context.Background(), m.envoyConfigOptions.Node, *snapshot)
+	return m.cache.SetSnapshot(context.Background(), m.envoyConfigOptions.Node, snapshot)
 }
 
 func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
@@ -283,7 +283,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 		return nil, err
 	}
 	m.Infof("Envoy Dynamic Configuration is cached for service: %v", m.serviceName)
-	return &snapshot, nil
+	return snapshot, nil
 }
 
 func (m *ConfigManager) curConfigId() string {

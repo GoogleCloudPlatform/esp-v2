@@ -186,18 +186,19 @@ func TestTranscodingBindings(t *testing.T) {
 
 func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 	type testType struct {
-		desc                               string
-		clientProtocol                     string
-		httpMethod                         string
-		method                             string
-		noBackend                          bool
-		token                              string
-		disallowColonInWildcardPathSegment bool
-		headers                            map[string][]string
-		bodyBytes                          []byte
-		wantResp                           string
-		wantErr                            string
-		wantGRPCWebTrailer                 client.GRPCWebTrailer
+		desc                                   string
+		clientProtocol                         string
+		httpMethod                             string
+		method                                 string
+		noBackend                              bool
+		token                                  string
+		disallowColonInWildcardPathSegment     bool
+		transcodingMatchUnregisteredCustomVerb bool
+		headers                                map[string][]string
+		bodyBytes                              []byte
+		wantResp                               string
+		wantErr                                string
+		wantGRPCWebTrailer                     client.GRPCWebTrailer
 	}
 
 	tests := []testType{
@@ -238,7 +239,6 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 			wantErr:                            `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
 		},
 		{
-			// TODO(b/208716168): it should returns 404 for this request. Right now, the url
 			// `/v1/shelves/100/books/random:unregisteredCustomVerb` is matched with `/v1/shelves/{shelf}/books/*`
 			// from API method  CreateBookWithTrailingSingleWildcard.
 			desc:                               "Succeed, unregistered custom verb is matched in transcoder filter with trailing wildcard",
@@ -248,6 +248,18 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 			method:                             "/v1/shelves/100/single/random:unregisteredCustomVerb?key=api-key",
 			bodyBytes:                          []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
 			wantResp:                           `{"id":"5","author":"Leo Tolstoy","title":"War and Peace"}`,
+		},
+		{
+			// `/v1/shelves/100/books/random:unregisteredCustomVerb` is not matched with `/v1/shelves/{shelf}/books/*`
+			// from API method  CreateBookWithTrailingSingleWildcard.
+			desc:                                   "Failed, unregistered custom verb isn't matched in transcoder filter with trailing wildcard",
+			clientProtocol:                         "http",
+			httpMethod:                             "POST",
+			disallowColonInWildcardPathSegment:     true,
+			transcodingMatchUnregisteredCustomVerb: true,
+			method:                                 "/v1/shelves/100/single/random:unregisteredCustomVerb?key=api-key",
+			bodyBytes:                              []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
+			wantErr:                                `404 Not Found, {"code":404,"message":"The current request is not defined by this API."}`,
 		},
 	}
 	for _, tc := range tests {
@@ -262,6 +274,10 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 			if tc.disallowColonInWildcardPathSegment {
 				args = append(args, "--disallow_colon_in_wildcard_path_segment")
 			}
+			if tc.transcodingMatchUnregisteredCustomVerb {
+				args = append(args, "--transcoding_match_unregistered_custom_verb")
+			}
+
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}

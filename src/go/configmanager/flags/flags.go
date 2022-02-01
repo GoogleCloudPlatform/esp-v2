@@ -170,6 +170,14 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
 	TranscodingIgnoreUnknownQueryParameters       = flag.Bool("transcoding_ignore_unknown_query_parameters", false, "Whether to ignore query parameters that cannot be mapped to a corresponding protobuf field in grpc-json transcoding.")
 	TranscodingQueryParametersDisableUnescapePlus = flag.Bool("transcoding_query_parameters_disable_unescape_plus", false, `By default, unescape "+" to space when extracting variables in
            the query parameters in grpc-json transcoding. This is to support HTML 2.0<https://tools.ietf.org/html/rfc1866#section-8.2.1>. Set this flag to true to disable this feature.`)
+	TranscodingMatchUnregisteredCustomVerb = flag.Bool("transcoding_match_unregistered_custom_verb", false, `If true, try to match the custom verb even if it is unregistered. By default, only match when it is registered.
+  According to the http template[1], the custom verb is **":" LITERAL** at the end of http template.
+	
+	For a request with */foo/bar:baz* and *:baz* is not registered in any url_template, here is the behavior change
+		- if the field is not set, *:baz* will not be treated as custom verb, so it will match **/foo/{x=*}**.
+		- if the field is set, *:baz* is treated as custom verb,  so it will NOT match **/foo/{x=*}** since the template doesn't use any custom verb.
+
+	[1](https://github.com/googleapis/googleapis/blob/master/google/api/http.proto#L226-L231)`)
 
 	BackendRetryOns = flag.String("backend_retry_ons", "reset,connect-failure,refused-stream",
 		`The conditions under which ESPv2 does retry on the backends. One or more
@@ -283,6 +291,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		TranscodingIgnoreQueryParameters:              *TranscodingIgnoreQueryParameters,
 		TranscodingIgnoreUnknownQueryParameters:       *TranscodingIgnoreUnknownQueryParameters,
 		TranscodingQueryParametersDisableUnescapePlus: *TranscodingQueryParametersDisableUnescapePlus,
+		TranscodingMatchUnregisteredCustomVerb:        *TranscodingMatchUnregisteredCustomVerb,
 		APIAllowList:                                  []string{},
 	}
 
