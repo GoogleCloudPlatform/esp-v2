@@ -17,10 +17,10 @@ import sys
 
 import os, inspect
 
-currentdir = os.path.dirname(
-    os.path.abspath(inspect.getfile(inspect.currentframe())))
-sys.path.insert(0, currentdir + "/../../docker/generic")
-from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config, gen_envoy_args
+# currentdir = os.path.dirname(
+#     os.path.abspath(inspect.getfile(inspect.currentframe())))
+# sys.path.insert(0, currentdir + "/../../docker/generic")
+from docker.generic.start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config, gen_envoy_args
 
 
 class TestStartProxy(unittest.TestCase):
@@ -865,6 +865,15 @@ class TestStartProxy(unittest.TestCase):
                "--log-format-escaped",
                "-l debug",
                "--component-log-level upstream:info,main:info"]
+          ),
+          # Added config-yaml flag
+          (
+              ["--config_yaml=node: {id: 'node1'}"],
+              ["bin/envoy", "-c", "/tmp/bootstrap.json",
+               "--disable-hot-restart",
+               "--log-format %L%m%d %T.%e %t %@] [%t][%n]%v",
+               "--log-format-escaped",
+               "--config-yaml node: {id: 'node1'}"]
           )
       ]
 
