@@ -888,10 +888,10 @@ environment variable or by passing "-k" flag to this script.
         '''
     )
     parser.add_argument(
-        '--config_yaml',
+        '--envoy_extra_config_yaml',
         default=None,
         help='''
-            Specify an additional bootstrap configuration for Envoy in the form of a YAML string.
+            Specify extra bootstrap configuration for Envoy in the form of a YAML string.
             Values will override and merge with any bootstrap configuration loaded with '--config-path'.
             This will not override any value which has been set dynamically.
 
@@ -1429,8 +1429,8 @@ def gen_envoy_args(args):
         cmd.append("-l debug")
         cmd.append("--component-log-level upstream:info,main:info")
 
-    if args.config_yaml:
-        cmd.append("--config-yaml {}".format(args.config_yaml))
+    if args.envoy_extra_config_yaml:
+        cmd.append("--config-yaml {}".format(args.envoy_extra_config_yaml))
 
     return cmd
 
