@@ -106,7 +106,7 @@ case "${PRESUBMIT_TEST_CASE}" in
     make integration-test-tsan
     ;;
   *)
-    make integration-test
+    make integration-debug
     ;;
 esac
 

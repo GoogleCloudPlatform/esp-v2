@@ -191,11 +191,8 @@ integration-test: build  build-envoy build-grpc-interop build-grpc-echo integrat
 
 integration-debug: build build-envoy-debug build-grpc-interop build-grpc-echo
 	@echo "--> running integration tests and showing debug logs"
-	@go test -timeout 20m ./tests/endpoints/...
-	@go test -v -timeout 20m ./tests/env/... --logtostderr
-	@go test -v -timeout 20m ./tests/utils/... --logtostderr
 	# debug-components can be set as "all", "configmanager", or "envoy".
-	@go test -v -timeout 20m ./tests/integration_test/... --debug_components=envoy --logtostderr
+	@go test -v -timeout 20m ./tests/integration_test/managed_service_config_test/... --debug_components=all --logtostderr
 
 integration-test-asan: build-msan build-envoy-asan build-grpc-interop build-grpc-echo integration-test-run-sequential
 
