@@ -887,6 +887,17 @@ environment variable or by passing "-k" flag to this script.
         envoy. Only change if running multiple ESPv2 instances on the same host.
         '''
     )
+    parser.add_argument(
+        '--envoy_extra_config_yaml',
+        default=None,
+        help='''
+            Specify extra bootstrap configuration for Envoy in the form of a YAML string.
+            Values will override and merge with any bootstrap configuration loaded with '--config-path'.
+            This will not override any value which has been set dynamically.
+
+            For more details see:
+            https://www.envoyproxy.io/docs/envoy/latest/operations/cli
+            ''')
 
     # Start Deprecated Flags Section
 
@@ -1417,6 +1428,9 @@ def gen_envoy_args(args):
         # Enable debug logging, but not for everything... too noisy otherwise.
         cmd.append("-l debug")
         cmd.append("--component-log-level upstream:info,main:info")
+
+    if args.envoy_extra_config_yaml:
+        cmd.append("--config-yaml {}".format(args.envoy_extra_config_yaml))
 
     return cmd
 

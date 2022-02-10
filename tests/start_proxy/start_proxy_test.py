@@ -865,6 +865,15 @@ class TestStartProxy(unittest.TestCase):
                "--log-format-escaped",
                "-l debug",
                "--component-log-level upstream:info,main:info"]
+          ),
+          # Added config-yaml flag
+          (
+              ["--envoy_extra_config_yaml=node: {id: 'node1'}"],
+              ["bin/envoy", "-c", "/tmp/bootstrap.json",
+               "--disable-hot-restart",
+               "--log-format %L%m%d %T.%e %t %@] [%t][%n]%v",
+               "--log-format-escaped",
+               "--config-yaml node: {id: 'node1'}"]
           )
       ]
 
