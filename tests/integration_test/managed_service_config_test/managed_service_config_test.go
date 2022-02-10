@@ -33,6 +33,7 @@ import (
 )
 
 func TestManagedServiceConfig(t *testing.T) {
+	t.Skip("temp debug")
 	t.Parallel()
 
 	args := []string{"--rollout_strategy=managed", "--check_rollout_interval=500ms"}
