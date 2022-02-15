@@ -17,6 +17,7 @@ package httppattern
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -158,7 +159,10 @@ func (u *UriTemplate) Regex(disallowColonInWildcardPathSegment bool) string {
 		case DoubleWildCardKey:
 			regex.WriteString(doubleWildcardReplacementRegex(disallowColonInWildcardPathSegment))
 		default:
-			regex.WriteString(segment)
+			// Segment provided by user may have regex special characters.
+			// Escape them to prevent incorrect path matching.
+			escapedSegment := regexp.QuoteMeta(segment)
+			regex.WriteString(escapedSegment)
 		}
 	}
 	regex.WriteString(optionalTrailingSlashRegex)

@@ -295,6 +295,11 @@ func TestUriTemplateRegex(t *testing.T) {
 			includeColonInWildcard: true,
 			wantMatcher:            `^/v1/a/b/[^\/:]+/route/shelves/[^\/:]+/books/[^:]*\/?:upload$`,
 		},
+		{
+			desc:        "Paths with special characters are escaped",
+			uri:         "/$discovery",
+			wantMatcher: `^/\$discovery\/?$`,
+		},
 	}
 
 	for _, tc := range testData {
