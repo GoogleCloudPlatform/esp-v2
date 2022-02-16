@@ -143,6 +143,7 @@ type ConfigGeneratorOptions struct {
 	TranscodingQueryParametersDisableUnescapePlus bool
 	TranscodingMatchUnregisteredCustomVerb        bool
 	APIAllowList                                  []string
+	AllowDiscoveryAPIs                            bool
 }
 
 // DefaultConfigGeneratorOptions returns ConfigGeneratorOptions with default values.
@@ -188,5 +189,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		HealthCheckGrpcBackendInterval:          1 * time.Second,
 		HealthCheckGrpcBackendNoTrafficInterval: 60 * time.Second,
 		APIAllowList:                            []string{},
+		AllowDiscoveryAPIs:                      false,
 	}
 }
