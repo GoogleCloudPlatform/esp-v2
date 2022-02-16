@@ -292,7 +292,10 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		TranscodingIgnoreUnknownQueryParameters:       *TranscodingIgnoreUnknownQueryParameters,
 		TranscodingQueryParametersDisableUnescapePlus: *TranscodingQueryParametersDisableUnescapePlus,
 		TranscodingMatchUnregisteredCustomVerb:        *TranscodingMatchUnregisteredCustomVerb,
-		APIAllowList:                                  []string{},
+
+		// These options are not for ESPv2 users. They are overridden internally.
+		APIAllowList:       []string{},
+		AllowDiscoveryAPIs: false,
 	}
 
 	glog.Infof("Config Generator options: %+v", opts)

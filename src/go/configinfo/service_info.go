@@ -945,7 +945,7 @@ func (s *ServiceInfo) processAuthRequirement() error {
 
 func (s *ServiceInfo) isAPIAllowed(str string) bool {
 	// TODO(b/184393425): API discovery is not supported yet.
-	if strings.HasPrefix(str, "google.discovery") {
+	if strings.HasPrefix(str, "google.discovery") && !s.Options.AllowDiscoveryAPIs {
 		return false
 	}
 	if len(s.Options.APIAllowList) == 0 {
