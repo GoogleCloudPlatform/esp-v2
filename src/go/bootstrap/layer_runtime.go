@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//  adding some dummy changes to trigger a cloud-run e2e test
 package bootstrap
 
 import (
@@ -34,12 +33,6 @@ func CreateLayeredRuntime() *bootstrappb.LayeredRuntime {
 							"re2.max_program_size.error_level": {
 								Kind: &structpb.Value_NumberValue{
 									NumberValue: 1000,
-								},
-							},
-							// b/191411628: disable envoy preserve_downstream_scheme
-							"envoy.reloadable_features.preserve_downstream_scheme": {
-								Kind: &structpb.Value_BoolValue{
-									BoolValue: false,
 								},
 							},
 						},
