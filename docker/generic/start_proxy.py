@@ -1356,6 +1356,7 @@ def gen_proxy_config(args):
     if args.on_serverless:
         proxy_conf.extend([
             "--compute_platform_override", SERVERLESS_PLATFORM])
+        proxy_conf.append("--server_less")
 
     if args.backend_dns_lookup_family:
         proxy_conf.extend(

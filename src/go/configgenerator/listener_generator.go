@@ -107,6 +107,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManager got err: %s", err)
 	}
+	httpConMgr.SchemeHeaderTransformation = makeSchemeHeaderOverride(serviceInfo)
 
 	jsonStr, _ := util.ProtoToJson(httpConMgr)
 	glog.Infof("adding Http Connection Manager config: %v", jsonStr)
@@ -163,6 +164,33 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 	}
 
 	return listener, nil
+}
+
+// To fix b/221072669: a hack to work around b/221308324 where
+// Cloud Run always set :scheme header to http when using http2 protocol for grpc.
+// Override scheme header to https when following conditions meet:
+// * Deployed in serverless platform.
+// * Backend uses grpc
+// * All remote backends are using TLS
+func makeSchemeHeaderOverride(serviceInfo *sc.ServiceInfo) *corepb.SchemeHeaderTransformation {
+	if !serviceInfo.Options.ServerLess || !serviceInfo.GrpcSupportRequired {
+		return nil
+	}
+	allTLS := true
+	for _, v := range serviceInfo.RemoteBackendClusters {
+		if !v.UseTLS {
+			allTLS = false
+		}
+	}
+	if allTLS && len(serviceInfo.RemoteBackendClusters) > 0 {
+		glog.Infof("add config to override scheme header as https.")
+		return &corepb.SchemeHeaderTransformation{
+			Transformation: &corepb.SchemeHeaderTransformation_SchemeToOverwrite{
+				SchemeToOverwrite: "https",
+			},
+		}
+	}
+	return nil
 }
 
 func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteConfiguration) (*hcmpb.HttpConnectionManager, error) {
