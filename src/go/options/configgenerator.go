@@ -134,7 +134,6 @@ type ConfigGeneratorOptions struct {
 	ScReportRetries           int
 
 	ComputePlatformOverride string
-	ServerLess              bool
 
 	TranscodingAlwaysPrintPrimitiveFields         bool
 	TranscodingAlwaysPrintEnumsAsInts             bool

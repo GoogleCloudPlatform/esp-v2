@@ -364,8 +364,7 @@ class TestStartProxy(unittest.TestCase):
               '--envoy_xff_num_trusted_hops', '0',
               '--service_json_path', '/tmp/service.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
-              '--server_less',
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # grpc backend with fixed version and tracing
             (['--service=test_bookstore.gloud.run', '--version=2019-11-09r0',
@@ -613,8 +612,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080',
               '--service_json_path', '/tmp/service_config.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
-              '--server_less',
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # Serverless with override for xff_num_trusted_hops.
             (['--on_serverless',
@@ -630,8 +628,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080',
               '--service_json_path', '/tmp/service_config.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
-              '--server_less',
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # Single header flag: --add_request_header
             (['--rollout_strategy=fixed',

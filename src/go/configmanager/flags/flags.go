@@ -156,7 +156,6 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
 	ScReportRetries = flag.Int("service_control_report_retries", -1, `Set the retry times for service control Report request. Must be >= 0 and the default is 5 if not set.`)
 
 	ComputePlatformOverride = flag.String("compute_platform_override", "", "the overridden platform where the proxy is running at")
-	ServerLess              = flag.Bool("server_less", false, "Specify this flag if it is deployed in serverless platform, e.g. GCP Cloud Run")
 
 	// Flags for testing purpose. They are not exposed to the user via start_proxy.py
 	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", false, "skip jwt authn filter, for test purpose")
@@ -214,7 +213,6 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		AccessLog:                                     *AccessLog,
 		AccessLogFormat:                               *AccessLogFormat,
 		ComputePlatformOverride:                       *ComputePlatformOverride,
-		ServerLess:                                    *ServerLess,
 		CorsAllowCredentials:                          *CorsAllowCredentials,
 		CorsAllowHeaders:                              *CorsAllowHeaders,
 		CorsAllowMethods:                              *CorsAllowMethods,

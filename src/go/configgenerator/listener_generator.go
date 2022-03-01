@@ -173,7 +173,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 // * Backend uses grpc
 // * All remote backends are using TLS
 func makeSchemeHeaderOverride(serviceInfo *sc.ServiceInfo) *corepb.SchemeHeaderTransformation {
-	if !serviceInfo.Options.ServerLess || !serviceInfo.GrpcSupportRequired {
+	if serviceInfo.Options.ComputePlatformOverride != util.ServerlessPlatform || !serviceInfo.GrpcSupportRequired {
 		return nil
 	}
 	allTLS := true

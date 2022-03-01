@@ -628,7 +628,9 @@ func TestMakeSchemeHeaderOverride(t *testing.T) {
 	for _, tc := range testdata {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
-			opts.ServerLess = tc.serverLess
+			if tc.serverLess {
+				opts.ComputePlatformOverride = util.ServerlessPlatform
+			}
 			si, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
