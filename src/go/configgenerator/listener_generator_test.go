@@ -584,7 +584,7 @@ func TestMakeSchemeHeaderOverride(t *testing.T) {
 			},
 		},
 		{
-			desc:       "no scheme override, not all grpc backends use ssl",
+			desc:       "https scheme override, one of grpc backends uses ssl",
 			serverLess: true,
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
@@ -622,6 +622,7 @@ func TestMakeSchemeHeaderOverride(t *testing.T) {
 					},
 				},
 			},
+			want: `{"schemeToOverwrite": "https"}`,
 		},
 	}
 

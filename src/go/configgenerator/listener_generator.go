@@ -171,18 +171,18 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 // Override scheme header to https when following conditions meet:
 // * Deployed in serverless platform.
 // * Backend uses grpc
-// * All remote backends are using TLS
+// * Any remote backends is using TLS
 func makeSchemeHeaderOverride(serviceInfo *sc.ServiceInfo) *corepb.SchemeHeaderTransformation {
 	if serviceInfo.Options.ComputePlatformOverride != util.ServerlessPlatform || !serviceInfo.GrpcSupportRequired {
 		return nil
 	}
-	allTLS := true
+	useTLS := false
 	for _, v := range serviceInfo.RemoteBackendClusters {
-		if !v.UseTLS {
-			allTLS = false
+		if v.UseTLS {
+			useTLS = true
 		}
 	}
-	if allTLS && len(serviceInfo.RemoteBackendClusters) > 0 {
+	if useTLS {
 		glog.Infof("add config to override scheme header as https.")
 		return &corepb.SchemeHeaderTransformation{
 			Transformation: &corepb.SchemeHeaderTransformation_SchemeToOverwrite{
