@@ -54,6 +54,7 @@ DEFAULT_ROLLOUT_STRATEGY = "fixed"
 GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 
 # Flag defaults when running on serverless.
+# SERVERLESS_PLATFORM has to match the one in src/go/util/util.go
 SERVERLESS_PLATFORM = "Cloud Run(ESPv2)"
 SERVERLESS_XFF_NUM_TRUSTED_HOPS = 0
 

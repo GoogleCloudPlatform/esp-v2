@@ -35,12 +35,6 @@ func CreateLayeredRuntime() *bootstrappb.LayeredRuntime {
 									NumberValue: 1000,
 								},
 							},
-							// b/191411628: disable envoy preserve_downstream_scheme
-							"envoy.reloadable_features.preserve_downstream_scheme": {
-								Kind: &structpb.Value_BoolValue{
-									BoolValue: false,
-								},
-							},
 						},
 					},
 				},

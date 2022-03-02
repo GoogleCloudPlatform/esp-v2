@@ -116,7 +116,8 @@ function grpc_test_pass_through() {
 
     local count=0
     while :; do
-      cat "${tmp_file}" | "${ROOT}/bin/grpc_echo_client"
+      echo "starting grpc pass through stress run: ${count}"
+      cat "${tmp_file}" | tee "${ROOT}/bin/grpc_echo_client"
       local status=$?
       if [[ "$status" == "0" ]]; then
         break

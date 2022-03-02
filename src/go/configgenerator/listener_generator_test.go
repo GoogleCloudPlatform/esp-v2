@@ -413,3 +413,246 @@ func TestMakeHttpConMgr(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeSchemeHeaderOverride(t *testing.T) {
+	testdata := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		serverLess        bool
+		want              string
+	}{
+		{
+			desc:       "https scheme override, grpcs backend and server_less",
+			serverLess: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "grpcs://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+			want: `{"schemeToOverwrite": "https"}`,
+		},
+		{
+			desc: "no scheme override, grpcs backend but not server_less",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "grpcs://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:       "no scheme override, not remote backend",
+			serverLess: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:       "no scheme override, backend is grpc",
+			serverLess: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "grpc://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:       "no scheme override, backend is https",
+			serverLess: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "https://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:       "no scheme override, backend is http",
+			serverLess: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "http://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:       "https scheme override, one of grpc backends uses ssl",
+			serverLess: true,
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: "1.cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:         "grpcs://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Foo",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+						{
+							Address:         "grpc://mybackend.com",
+							Selector:        "1.cloudesf_testing_cloud_goog.Bar",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+							Authentication: &confpb.BackendRule_JwtAudience{
+								JwtAudience: "mybackend.com",
+							},
+						},
+					},
+				},
+			},
+			want: `{"schemeToOverwrite": "https"}`,
+		},
+	}
+
+	for _, tc := range testdata {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			if tc.serverLess {
+				opts.ComputePlatformOverride = util.ServerlessPlatform
+			}
+			si, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			sho := makeSchemeHeaderOverride(si)
+			if sho == nil {
+				if tc.want != "" {
+					t.Fatalf("failed, got nil, want: %v", tc.want)
+				}
+			} else {
+				marshaler := &jsonpb.Marshaler{}
+				got, err := marshaler.MarshalToString(sho)
+				if err != nil {
+					t.Fatalf("failed to marshal to json with error: %v", err)
+				}
+
+				if err := util.JsonEqual(tc.want, got); err != nil {
+					t.Errorf("failed, diff:\n %v ", err)
+				}
+			}
+		})
+	}
+}

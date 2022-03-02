@@ -129,6 +129,10 @@ const (
 
 	// The suffix that forms the operation name header.
 	OperationHeaderSuffix = "Api-Operation-Name"
+
+	// The serverless platform for the flag --compute_platform_override
+	// It is copied from SERVERLESS_PLATFORM at "docker/start_proxy.py"
+	ServerlessPlatform = "Cloud Run(ESPv2)"
 )
 
 type BackendProtocol int32
