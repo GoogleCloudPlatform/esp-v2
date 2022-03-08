@@ -33,3 +33,11 @@ def googleapis_repositories(bind = True):
             name = "service_proto_cc_proto",
             actual = "@com_github_googleapis_googleapis//google/api:service_cc_proto",
         )
+        native.bind(
+            name = "service_proto_py_proto",
+            actual = "@com_github_googleapis_googleapis//google/api:service_py_proto",
+        )
+        native.bind(
+            name = "service_proto_py_proto_genproto",
+            actual = "@com_github_googleapis_googleapis//google/api:service_py_proto_genproto",
+        )
