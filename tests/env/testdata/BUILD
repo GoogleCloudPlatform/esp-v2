@@ -1,4 +1,6 @@
-package()
+package(
+    default_visibility = [],
+)
 
 # To generate localhost.crt and localhost.key
 # openssl req -newkey rsa:2048 \
