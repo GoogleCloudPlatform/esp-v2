@@ -5,7 +5,6 @@
 - Correctly escape user-provided regex paths (#664)
 - Expose the `--config-yaml` envoy flag  (#662)
 
-===============================================
 # Release 2.34.0 01-02-2022
 
 - Expose flag `--ads_named_pipe` (#658)
