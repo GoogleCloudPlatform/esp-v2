@@ -1,3 +1,12 @@
+# Release 2.35.0 22-03-2022
+
+- Update Envoy to v1.21.1 and Bazel to v5.0.0 (#670)
+- Remove envoy runtime flag preserve_downstream_scheme (#667)
+- Add option to allow discovery APIs (#665)
+- Correctly escape user-provided regex paths (#664)
+- Expose the `--config-yaml` envoy flag  (#662)
+
+===============================================
 # Release 2.34.0 01-02-2022
 
 - Expose flag `--ads_named_pipe` (#658)
