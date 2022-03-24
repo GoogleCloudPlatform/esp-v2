@@ -203,6 +203,8 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
         addition to the status codes enabled for retry through other retry
         policies set in "--backend_retry_ons".
         The format is a comma-delimited String, like "501, 503`)
+
+	EnableResponseCompression = flag.Bool("enable_response_compression", false, `Enable gzip,br compression for response data. The default is disabled.`)
 )
 
 func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
@@ -292,6 +294,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		TranscodingIgnoreUnknownQueryParameters:       *TranscodingIgnoreUnknownQueryParameters,
 		TranscodingQueryParametersDisableUnescapePlus: *TranscodingQueryParametersDisableUnescapePlus,
 		TranscodingMatchUnregisteredCustomVerb:        *TranscodingMatchUnregisteredCustomVerb,
+		EnableResponseCompression:                     *EnableResponseCompression,
 
 		// These options are not for ESPv2 users. They are overridden internally.
 		APIAllowList:       []string{},

@@ -90,6 +90,16 @@ func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]*FilterGenerator, erro
 			},
 		})
 	}
+	if serviceInfo.Options.EnableResponseCompression {
+		filterGenerators = append(filterGenerators, &FilterGenerator{
+			FilterName:    util.EnvoyGzipCompressor,
+			FilterGenFunc: gzipCompressorGenFunc,
+		})
+		filterGenerators = append(filterGenerators, &FilterGenerator{
+			FilterName:    util.EnvoyBrotliCompressor,
+			FilterGenFunc: brotliCompressorGenFunc,
+		})
+	}
 
 	// Add JWT Authn filter if needed.
 	if !serviceInfo.Options.SkipJwtAuthnFilter {

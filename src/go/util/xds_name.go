@@ -43,6 +43,10 @@ const (
 	AccessFileLogger = "envoy.access_loggers.file"
 	// Upstream protocol options
 	UpstreamProtocolOptions = "envoy.extensions.upstreams.http.v3.HttpProtocolOptions"
+	// Envoy compressor filter name
+	EnvoyCompressorFilter = "envoy.filters.http.compressor"
+	EnvoyBrotliCompressor = "brotli_compressor"
+	EnvoyGzipCompressor   = "gzip_compressor"
 
 	// ESPv2 custom http filters.
 
