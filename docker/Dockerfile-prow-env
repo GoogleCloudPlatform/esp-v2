@@ -24,7 +24,7 @@ RUN apt-get update -y
 RUN apt-get -y install \
     wget make cmake python python-pip pkg-config coreutils \
     zlib1g-dev curl libtool automake zip time rsync ninja-build \
-    git bash-completion jq default-jdk python3-distutils libicu-dev
+    git bash-completion jq default-jdk python3-distutils libicu-dev libbrotli-dev
 
 
 # install nodejs, which is needed for integration tests

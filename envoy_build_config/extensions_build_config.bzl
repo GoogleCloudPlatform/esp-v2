@@ -11,6 +11,9 @@
 EXTENSIONS = {
     # All extensions explicitly referenced by config generator and our tests.
     "envoy.access_loggers.file": "//source/extensions/access_loggers/file:config",
+    "envoy.compression.gzip.compressor": "//source/extensions/compression/gzip/compressor:config",
+    "envoy.compression.brotli.compressor": "//source/extensions/compression/brotli/compressor:config",
+    "envoy.filters.http.compressor": "//source/extensions/filters/http/compressor:config",
     "envoy.filters.http.cors": "//source/extensions/filters/http/cors:config",
     "envoy.filters.http.grpc_json_transcoder": "//source/extensions/filters/http/grpc_json_transcoder:config",
     "envoy.filters.http.grpc_web": "//source/extensions/filters/http/grpc_web:config",
