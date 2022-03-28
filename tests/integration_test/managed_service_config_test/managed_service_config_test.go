@@ -139,7 +139,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 		m:                  s.MockServiceManagementServer,
 		rejectWith429Times: 1,
 	}
-	// Since the first service fetch failed and retry, increase setup time to 3 seconds.
+	// Since the first service fetch failed and retry, increase setup wait time.
 	s.SetSetupWaitTime(5 * time.Second)
 
 	if err := s.Setup(args); err != nil {
