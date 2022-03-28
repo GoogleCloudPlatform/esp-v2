@@ -82,6 +82,22 @@ func TestCompressionTranscoded(t *testing.T) {
 			wantResp:   `{"books":[{"id":"1001","title":"Alphabet"}]}`,
 			wantDecode: "gzip",
 		},
+		{
+			desc:       "accept-encode is gzip;q=0.1,br;q=0.9. choose br",
+			httpMethod: "GET",
+			method:     "/v1/shelves/100/books?key=api-key",
+			headers:    http.Header{"accept-encoding": []string{"gzip;q=0.1,br;q=0.9"}},
+			wantResp:   `{"books":[{"id":"1001","title":"Alphabet"}]}`,
+			wantDecode: "br",
+		},
+		{
+			desc:       "accept-encode is gzip;q=0.9,br;q=0.1. choose br",
+			httpMethod: "GET",
+			method:     "/v1/shelves/100/books?key=api-key",
+			headers:    http.Header{"accept-encoding": []string{"gzip;q=0.9,br;q=0.1"}},
+			wantResp:   `{"books":[{"id":"1001","title":"Alphabet"}]}`,
+			wantDecode: "gzip",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
