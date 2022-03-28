@@ -140,7 +140,8 @@ func TestRetryCallServiceManagement(t *testing.T) {
 		rejectWith429Times: 1,
 	}
 	// Since the first service fetch failed and retry, increase setup wait time.
-	s.SetSetupWaitTime(5 * time.Second)
+	// config_manager retry_interval is 10 seconds.
+	s.SetSetupWaitTime(15 * time.Second)
 
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
