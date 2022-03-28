@@ -59,7 +59,7 @@ func TestCompressionTranscoded(t *testing.T) {
 
 	tests := []testType{
 		{
-			desc:       "accept-encode is gzip",
+			desc:       "accept-encode is [gzip]",
 			httpMethod: "GET",
 			method:     "/v1/shelves/100/books?key=api-key",
 			headers:    http.Header{"accept-encoding": []string{"gzip"}},
@@ -67,7 +67,7 @@ func TestCompressionTranscoded(t *testing.T) {
 			wantDecode: "gzip",
 		},
 		{
-			desc:       "accept-encode is br",
+			desc:       "accept-encode is [br]",
 			httpMethod: "GET",
 			method:     "/v1/shelves/100/books?key=api-key",
 			headers:    http.Header{"accept-encoding": []string{"br"}},
@@ -75,7 +75,7 @@ func TestCompressionTranscoded(t *testing.T) {
 			wantDecode: "br",
 		},
 		{
-			desc:       "accept-encode is gzip,br. choose gzip",
+			desc:       "accept-encode is [gzip,br]. choose gzip",
 			httpMethod: "GET",
 			method:     "/v1/shelves/100/books?key=api-key",
 			headers:    http.Header{"accept-encoding": []string{"gzip,br"}},
@@ -83,7 +83,7 @@ func TestCompressionTranscoded(t *testing.T) {
 			wantDecode: "gzip",
 		},
 		{
-			desc:       "accept-encode is gzip;q=0.1,br;q=0.9. choose br",
+			desc:       "accept-encode is [gzip;q=0.1,br;q=0.9]. choose br",
 			httpMethod: "GET",
 			method:     "/v1/shelves/100/books?key=api-key",
 			headers:    http.Header{"accept-encoding": []string{"gzip;q=0.1,br;q=0.9"}},
@@ -91,7 +91,7 @@ func TestCompressionTranscoded(t *testing.T) {
 			wantDecode: "br",
 		},
 		{
-			desc:       "accept-encode is gzip;q=0.9,br;q=0.1. choose gzip",
+			desc:       "accept-encode is [gzip;q=0.9,br;q=0.1]. choose gzip",
 			httpMethod: "GET",
 			method:     "/v1/shelves/100/books?key=api-key",
 			headers:    http.Header{"accept-encoding": []string{"gzip;q=0.9,br;q=0.1"}},
