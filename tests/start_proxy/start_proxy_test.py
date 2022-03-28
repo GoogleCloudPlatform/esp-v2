@@ -745,6 +745,16 @@ class TestStartProxy(unittest.TestCase):
               '--enable_operation_name_header',
               '--service_json_path', '/tmp/service_config.json',
               ]),
+            # response_compression.
+            (['--rollout_strategy=fixed',
+              '--service_json_path=/tmp/service_config.json',
+              '--enable_response_compression'
+              ],
+             ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--enable_response_compression',
+              '--service_json_path', '/tmp/service_config.json',
+              ]),
             # passing the flag --health_check_grp_backend
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
