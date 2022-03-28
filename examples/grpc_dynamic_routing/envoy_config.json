@@ -224,7 +224,7 @@
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor",
                         "compressorLibrary": {
-                          "name": "gzip_compressor",
+                          "name": "envoy.compression.gzip.compressor",
                           "typedConfig": {
                             "@type": "type.googleapis.com/envoy.extensions.compression.gzip.compressor.v3.Gzip"
                           }
@@ -236,7 +236,7 @@
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor",
                         "compressorLibrary": {
-                          "name": "brotli_compressor",
+                          "name": "envoy.compression.brotli.compressor",
                           "typedConfig": {
                             "@type": "type.googleapis.com/envoy.extensions.compression.brotli.compressor.v3.Brotli"
                           }
