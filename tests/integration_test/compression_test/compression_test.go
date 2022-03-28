@@ -91,7 +91,7 @@ func TestCompressionTranscoded(t *testing.T) {
 			wantDecode: "br",
 		},
 		{
-			desc:       "accept-encode is gzip;q=0.9,br;q=0.1. choose br",
+			desc:       "accept-encode is gzip;q=0.9,br;q=0.1. choose gzip",
 			httpMethod: "GET",
 			method:     "/v1/shelves/100/books?key=api-key",
 			headers:    http.Header{"accept-encoding": []string{"gzip;q=0.9,br;q=0.1"}},
