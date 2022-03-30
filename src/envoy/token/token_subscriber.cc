@@ -132,6 +132,11 @@ void TokenSubscriber::refresh() {
   if (thread_local_cluster) {
     active_request_ = thread_local_cluster->httpAsyncClient().send(
         std::move(message), *this, options);
+  } else {
+    // This code doesn't handle the wrong cluster name case.
+    // Assume it is due to the cluster is not ready.
+    ENVOY_LOG(warn, "{}: the cluster {} is not ready.", debug_name_, token_cluster_);
+    handleFailResponse();
   }
 }
 
