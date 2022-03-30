@@ -34,6 +34,7 @@ import (
 
 const (
 	// Additional wait time after `TestEnv.Setup`
+	setupWaitTime = 1 * time.Second
 	initRolloutId = "test-rollout-id"
 )
 
@@ -79,7 +80,6 @@ type TestEnv struct {
 	skipHealthChecks                bool
 	skipEnvoyHealthChecks           bool
 	StatsVerifier                   *components.StatsVerifier
-	setupWaitTime                   time.Duration
 
 	// Only implemented for a subset of backends.
 	backendMTLSCertFile         string
@@ -107,18 +107,12 @@ func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
 		healthRegistry:              components.NewHealthRegistry(),
 		FakeJwtService:              components.NewFakeJwtService(),
 		FakeStackdriverServer:       components.NewFakeStackdriver(),
-		setupWaitTime:               1 * time.Second,
 	}
 }
 
 // SetEnvoyDrainTimeInSec
 func (e *TestEnv) SetEnvoyDrainTimeInSec(envoyDrainTimeInSec int) {
 	e.envoyDrainTimeInSec = envoyDrainTimeInSec
-}
-
-// SetSetupWaitTime set the whole setup wait time
-func (e *TestEnv) SetSetupWaitTime(setupWaitTime time.Duration) {
-	e.setupWaitTime = setupWaitTime
 }
 
 // OverrideMockMetadata overrides mock metadata values given path to response map.
@@ -528,7 +522,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		}
 	}
 
-	time.Sleep(e.setupWaitTime)
+	time.Sleep(setupWaitTime)
 
 	// Run health checks
 	if !e.skipHealthChecks {
