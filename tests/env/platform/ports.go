@@ -48,6 +48,7 @@ const (
 	TestBackendPerTryTimeout
 	TestBackendRetry
 	TestCancellationReport
+	TestCompressionTranscoded
 	TestDeadlinesForDynamicRouting
 	TestDeadlinesForGrpcCatchAllBackend
 	TestDeadlinesForGrpcDynamicRouting

@@ -16,6 +16,7 @@ package client
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -31,6 +32,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/google/brotli/go/cbrotli"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -72,7 +74,8 @@ func addAllHeaders(req *http.Request, header http.Header) {
 // For HTTP, add client.TestHeaderKey to header force the backend to return non-OK status.
 func MakeCall(clientProtocol, addr, httpMethod, method, token string, header http.Header) (string, error) {
 	if strings.EqualFold(clientProtocol, "http") {
-		return makeHTTPCall(addr, httpMethod, method, token, header)
+		body, _, err := MakeHttpCallWithDecode(addr, httpMethod, method, token, header)
+		return body, err
 	}
 
 	if strings.EqualFold(clientProtocol, "http2") {
@@ -89,7 +92,16 @@ func MakeCall(clientProtocol, addr, httpMethod, method, token string, header htt
 	return "", fmt.Errorf("unsupported client protocol %s", clientProtocol)
 }
 
-var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Header) (string, error) {
+func getContentEncoding(header http.Header) string {
+	if val, ok := header["Content-Encoding"]; ok {
+		if len(val) > 0 {
+			return val[0]
+		}
+	}
+	return ""
+}
+
+var MakeHttpCallWithDecode = func(addr, httpMethod, method, token string, header http.Header) (string, string, error) {
 	var cli http.Client
 	req, _ := http.NewRequest(httpMethod, fmt.Sprintf("http://%s%s", addr, method), nil)
 
@@ -101,20 +113,33 @@ var makeHTTPCall = func(addr, httpMethod, method, token string, header http.Head
 
 	resp, err := cli.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("http got error: %v", err)
+		return "", "", fmt.Errorf("http got error: %v", err)
 	}
 	defer resp.Body.Close()
 
-	content, err := ioutil.ReadAll(resp.Body)
+	encoding := getContentEncoding(resp.Header)
+
+	var content []byte
+	if encoding == "gzip" {
+		gzipR, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return "", "", err
+		}
+		content, err = ioutil.ReadAll(gzipR)
+	} else if encoding == "br" {
+		content, err = ioutil.ReadAll(cbrotli.NewReader(resp.Body))
+	} else {
+		content, err = ioutil.ReadAll(resp.Body)
+	}
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(content))
+		return "", "", fmt.Errorf("http response status is not 200 OK: %s, %s", resp.Status, utils.RpcStatusDeterministicJsonFormat(content))
 	}
 
-	return string(content), nil
+	return string(content), encoding, nil
 }
 
 //TODO(b/162626126): cleanup duplicate call methods.

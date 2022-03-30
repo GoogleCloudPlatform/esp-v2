@@ -900,6 +900,11 @@ environment variable or by passing "-k" flag to this script.
             https://www.envoyproxy.io/docs/envoy/latest/operations/cli
             ''')
 
+    parser.add_argument('--enable_response_compression', action='store_true',
+        help='''Enable both gzip and brotli compression for response data with
+        default envoy compression settings. Please see envoy document for detail.
+        https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/compressor_filter.''')
+
     # Start Deprecated Flags Section
 
     parser.add_argument(
@@ -1213,6 +1218,8 @@ def gen_proxy_config(args):
 
     if args.enable_operation_name_header:
         proxy_conf.append("--enable_operation_name_header")
+    if args.enable_response_compression:
+        proxy_conf.append("--enable_response_compression")
 
     # Generate self-signed cert if needed
     if args.generate_self_signed_cert:

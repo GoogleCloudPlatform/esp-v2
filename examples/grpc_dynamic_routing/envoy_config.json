@@ -220,6 +220,30 @@
                   },
                   "httpFilters": [
                     {
+                      "name": "envoy.filters.http.compressor",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor",
+                        "compressorLibrary": {
+                          "name": "envoy.compression.gzip.compressor",
+                          "typedConfig": {
+                            "@type": "type.googleapis.com/envoy.extensions.compression.gzip.compressor.v3.Gzip"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "name": "envoy.filters.http.compressor",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor",
+                        "compressorLibrary": {
+                          "name": "envoy.compression.brotli.compressor",
+                          "typedConfig": {
+                            "@type": "type.googleapis.com/envoy.extensions.compression.brotli.compressor.v3.Brotli"
+                          }
+                        }
+                      }
+                    },
+                    {
                       "name": "envoy.filters.http.jwt_authn",
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",

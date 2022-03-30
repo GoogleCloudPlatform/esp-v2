@@ -30,6 +30,9 @@ import (
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	accessfilepb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	accessgrpcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
+	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
+	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
+	comppb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/compressor/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
 	gspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_stats/v3"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
@@ -78,6 +81,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(wrapperspb.UInt32Value), nil
 	case "type.googleapis.com/google.api.Service":
 		return new(confpb.Service), nil
+	case "type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor":
+		return new(comppb.Compressor), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig":
 		return new(gspb.FilterConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder":
@@ -110,6 +115,10 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(accessgrpcpb.TcpGrpcAccessLogConfig), nil
 	case "type.googleapis.com/envoy.extensions.access_loggers.grpc.v3.CommonGrpcAccessLogConfig":
 		return new(accessgrpcpb.CommonGrpcAccessLogConfig), nil
+	case "type.googleapis.com/envoy.extensions.compression.brotli.compressor.v3.Brotli":
+		return new(brpb.Brotli), nil
+	case "type.googleapis.com/envoy.extensions.compression.gzip.compressor.v3.Gzip":
+		return new(gzippb.Gzip), nil
 	case "type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions":
 		return new(httppb.HttpProtocolOptions), nil
 	case "type.googleapis.com/envoy.config.listener.v3.Listener":

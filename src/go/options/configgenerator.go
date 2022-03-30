@@ -133,7 +133,8 @@ type ConfigGeneratorOptions struct {
 	ScQuotaRetries            int
 	ScReportRetries           int
 
-	ComputePlatformOverride string
+	ComputePlatformOverride   string
+	EnableResponseCompression bool
 
 	TranscodingAlwaysPrintPrimitiveFields         bool
 	TranscodingAlwaysPrintEnumsAsInts             bool
