@@ -114,8 +114,7 @@ environment variable or by passing "-k" flag to this script.
         '--version',
         default="",
         help=''' Set the service config ID of the Endpoints service.
-        If omitted and -c not specified, ESPv2 contacts the metadata
-        service to fetch the service config ID.  ''')
+        It is required if the "fixed" rollout strategy is used.''')
 
     parser.add_argument(
         '--service_json_path',
