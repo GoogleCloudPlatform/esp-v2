@@ -1010,12 +1010,14 @@ environment variable or by passing "-k" flag to this script.
 # Check whether there are conflict flags. If so, return the error string.
 # Otherwise returns None. This function also changes some default flag value.
 def enforce_conflict_args(args):
-    if args.rollout_strategy:
-        if args.rollout_strategy != DEFAULT_ROLLOUT_STRATEGY:
-          if args.version:
-            return "Flag --version cannot be used together with -R or --rollout_strategy."
-          if args.service_json_path:
+    if args.rollout_strategy == "managed":
+        if args.version:
+            return "Flag --version cannot be used if --rollout_strategy=managed."
+        if args.service_json_path:
             return "Flag -R or --rollout_strategy must be fixed with --service_json_path."
+    else:
+        if not args.version and not args.service_json_path:
+            return "Flag --version is required if --rollout_strategy=fixed."
 
     if args.service_json_path:
         if args.service:
@@ -1239,6 +1241,9 @@ def gen_proxy_config(args):
     if args.service:
         proxy_conf.extend(["--service", args.service])
 
+    if args.version:
+        proxy_conf.extend(["--service_config_id", args.version])
+
     if args.http_request_timeout_s:
         proxy_conf.extend( ["--http_request_timeout_s", str(args.http_request_timeout_s)])
 
@@ -1281,9 +1286,6 @@ def gen_proxy_config(args):
     #  NOTE: It is true by default in configmangager's flags.
     if args.service_control_network_fail_policy == "close":
         proxy_conf.extend(["--service_control_network_fail_open=false"])
-
-    if args.version:
-        proxy_conf.extend(["--service_config_id", args.version])
 
     if args.service_json_path:
         proxy_conf.extend(["--service_json_path", args.service_json_path])
