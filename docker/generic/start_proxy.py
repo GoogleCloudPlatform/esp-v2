@@ -105,8 +105,8 @@ environment variable or by passing "-k" flag to this script.
         '-s',
         '--service',
         default="",
-        help=''' Set the name of the Endpoints service.  If omitted and -c not
-        specified, ESPv2 contacts the metadata service to fetch the service
+        help=''' Set the name of the Endpoints service. If omitted,
+        ESPv2 contacts the metadata service to fetch the service
         name.  ''')
 
     parser.add_argument(
