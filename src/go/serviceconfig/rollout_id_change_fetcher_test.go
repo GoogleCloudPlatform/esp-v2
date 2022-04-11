@@ -42,9 +42,9 @@ func TestFetchLatestRolloutId(t *testing.T) {
 	accessToken := func() (string, time.Duration, error) { return "token", time.Duration(60), nil }
 
 	cif := NewRolloutIdChangeDetector(&http.Client{}, serviceControlServer.GetURL(), "service-name", accessToken)
-
+	util.CallGoogleapisMu.RLock()
 	callGoogleapis := util.CallGoogleapis
-
+	util.CallGoogleapisMu.RUnlock()
 	testCases := []struct {
 		desc           string
 		callGoogleapis getCallGoogleapisFunc
@@ -65,7 +65,9 @@ func TestFetchLatestRolloutId(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		util.CallGoogleapisMu.RLock()
 		util.CallGoogleapis = tc.callGoogleapis
+		util.CallGoogleapisMu.RUnlock()
 		rolloutId, err := cif.fetchLatestRolloutId()
 		if tc.wantRolloutId != "" && tc.wantRolloutId != rolloutId {
 			t.Errorf("Test(%s): fail in fetchLatestRolloutId, want rolloutId %s, get rolloutId %s", tc.desc, tc.wantRolloutId, rolloutId)
@@ -79,7 +81,9 @@ func TestFetchLatestRolloutId(t *testing.T) {
 	}
 
 	// Recover util.CallGoogleapis.
+	util.CallGoogleapisMu.RLock()
 	util.CallGoogleapis = callGoogleapis
+	util.CallGoogleapisMu.RUnlock()
 }
 
 func TestSetDetectRolloutIdChangeTimer(t *testing.T) {

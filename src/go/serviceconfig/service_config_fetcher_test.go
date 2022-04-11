@@ -109,10 +109,16 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 		_test := func(desc string, callGoogleapisOverridden bool, configId string, wantServiceConfig *confpb.Service, wantError string) {
 			if callGoogleapisOverridden {
 				oldCallGoogleapis := util.CallGoogleapis
+				util.CallGoogleapisMu.Lock()
 				util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, retryConfigs map[int]util.RetryConfig, output proto.Message) error {
 					return fmt.Errorf("error-from-CallGoogleapis")
 				}
-				defer func() { util.CallGoogleapis = oldCallGoogleapis }()
+				util.CallGoogleapisMu.Unlock()
+				defer func() {
+					util.CallGoogleapisMu.Lock()
+					util.CallGoogleapis = oldCallGoogleapis
+					util.CallGoogleapisMu.Unlock()
+				}()
 			}
 
 			getConfig, err := scf.FetchConfig(configId)
@@ -198,11 +204,17 @@ func TestServiceConfigFetcherLoadConfigIdFromRollouts(t *testing.T) {
 	for _, tc := range testCase {
 		_test := func(desc string, callGoogleapisOverridden bool, serviceRollouts []*smpb.Rollout, wantConfigId string, wantError string) {
 			if callGoogleapisOverridden {
+				util.CallGoogleapisMu.Lock()
 				oldCallGoogleapis := util.CallGoogleapis
 				util.CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc util.GetAccessTokenFunc, retryConfigs map[int]util.RetryConfig, output proto.Message) error {
 					return fmt.Errorf("error-from-CallGoogleapis")
 				}
-				defer func() { util.CallGoogleapis = oldCallGoogleapis }()
+				util.CallGoogleapisMu.Unlock()
+				defer func() {
+					util.CallGoogleapisMu.Lock()
+					util.CallGoogleapis = oldCallGoogleapis
+					util.CallGoogleapisMu.Unlock()
+				}()
 			}
 
 			if serviceRollouts != nil {

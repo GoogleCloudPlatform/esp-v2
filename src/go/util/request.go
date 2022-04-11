@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -50,6 +51,9 @@ func callWithAccessToken(client *http.Client, path, method, token string) ([]byt
 
 	return body, http.StatusOK, nil
 }
+
+// CallGoogleapisMu guards the access to CallGoogleapis. This is used in the test to fake CallGoogleapis.
+var CallGoogleapisMu sync.RWMutex
 
 // Method to call servicecontrol for latest service rolloutId and servicecontrol for service rollout and service config.
 var CallGoogleapis = func(client *http.Client, path, method string, getTokenFunc GetAccessTokenFunc, retryConfigs map[int]RetryConfig, output proto.Message) error {
