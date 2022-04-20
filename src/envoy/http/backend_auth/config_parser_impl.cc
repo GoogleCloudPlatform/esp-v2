@@ -85,7 +85,8 @@ AudienceContext::AudienceContext(
     }
       return;
     default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
+      PANIC(absl::StrCat("invalid id token case: ",
+                         filter_config.id_token_info_case()));
   }
 }
 
@@ -114,7 +115,9 @@ FilterConfigParserImpl::FilterConfigParserImpl(
         break;
       }
       default:
-        NOT_REACHED_GCOVR_EXCL_LINE;
+        PANIC(
+            absl::StrCat("invalid token type: ",
+                         config.iam_token().access_token().token_type_case()));
     }
   }
 

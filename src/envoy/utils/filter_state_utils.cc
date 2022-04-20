@@ -41,7 +41,7 @@ absl::string_view getStringFilterState(
     return Envoy::EMPTY_STRING;
   }
 
-  return filter_state.getDataReadOnly<StringAccessor>(data_name).asString();
+  return filter_state.getDataReadOnly<StringAccessor>(data_name)->asString();
 }
 
 }  // namespace utils
