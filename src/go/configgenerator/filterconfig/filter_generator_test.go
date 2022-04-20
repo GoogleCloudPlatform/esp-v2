@@ -60,6 +60,7 @@ func TestTranscoderFilter(t *testing.T) {
 		transcodingIgnoreQueryParameters              string
 		transcodingIgnoreUnknownQueryParameters       bool
 		transcodingQueryParametersDisableUnescapePlus bool
+		transcodingStrictRequestValidation            bool
 		wantTranscoderFilter                          string
 	}{
 		{
@@ -244,6 +245,50 @@ func TestTranscoderFilter(t *testing.T) {
       `, fakeProtoDescriptor, testApiName),
 		},
 		{
+			desc: "Success. Generate transcoder filter with strict request validation",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+			},
+			transcodingStrictRequestValidation: true,
+			wantTranscoderFilter: fmt.Sprintf(`
+{
+   "name":"envoy.filters.http.grpc_json_transcoder",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
+      "autoMapping":true,
+      "convertGrpcStatus":true,
+      "queryParamUnescapePlus":true,
+      "ignoredQueryParameters":[
+         "api_key",
+         "key"
+      ],
+      "printOptions":{},
+      "protoDescriptorBin":"%s",
+      "requestValidationOptions":{
+         "rejectUnknownMethod":true,
+         "rejectUnknownQueryParameters":true
+      },
+      "services":[
+         "%s"
+      ]
+   }
+}
+      `, fakeProtoDescriptor, testApiName),
+		},
+		{
 			desc: "Not generate transcoder filter without protofile",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
@@ -272,6 +317,7 @@ func TestTranscoderFilter(t *testing.T) {
 			opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
 			opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
 			opts.TranscodingQueryParametersDisableUnescapePlus = tc.transcodingQueryParametersDisableUnescapePlus
+			opts.TranscodingStrictRequestValidation = tc.transcodingStrictRequestValidation
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)

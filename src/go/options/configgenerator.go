@@ -143,6 +143,7 @@ type ConfigGeneratorOptions struct {
 	TranscodingIgnoreUnknownQueryParameters       bool
 	TranscodingQueryParametersDisableUnescapePlus bool
 	TranscodingMatchUnregisteredCustomVerb        bool
+	TranscodingStrictRequestValidation            bool
 	APIAllowList                                  []string
 	AllowDiscoveryAPIs                            bool
 }

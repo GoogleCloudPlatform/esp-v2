@@ -283,6 +283,12 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error
 				},
 				MatchUnregisteredCustomVerb: serviceInfo.Options.TranscodingMatchUnregisteredCustomVerb,
 			}
+			if serviceInfo.Options.TranscodingStrictRequestValidation {
+				transcodeConfig.RequestValidationOptions = &transcoderpb.GrpcJsonTranscoder_RequestValidationOptions{
+					RejectUnknownMethod:          true,
+					RejectUnknownQueryParameters: true,
+				}
+			}
 
 			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
 
