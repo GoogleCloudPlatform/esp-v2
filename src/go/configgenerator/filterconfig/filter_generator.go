@@ -28,6 +28,7 @@ import (
 	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/grpc_metadata_scrubber"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
 	grpcwebpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_web/v3"
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
@@ -70,8 +71,13 @@ func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]*FilterGenerator, erro
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.CORS,
 			FilterGenFunc: func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+				a, err := ptypes.MarshalAny(&corspb.Cors{})
+				if err != nil {
+					return nil, nil, err
+				}
 				corsFilter := &hcmpb.HttpFilter{
-					Name: util.CORS,
+					Name:       util.CORS,
+					ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
 				}
 				return corsFilter, nil, nil
 			},

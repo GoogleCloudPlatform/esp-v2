@@ -34,6 +34,7 @@ import (
 	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
 	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
 	comppb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/compressor/v3"
+	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
 	gspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_stats/v3"
 	grpcwebpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_web/v3"
@@ -85,6 +86,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(confpb.Service), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.compressor.v3.Compressor":
 		return new(comppb.Compressor), nil
+	case "type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors":
+		return new(corspb.Cors), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.grpc_stats.v3.FilterConfig":
 		return new(gspb.FilterConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder":
