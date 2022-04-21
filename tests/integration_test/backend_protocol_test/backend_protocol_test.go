@@ -59,7 +59,7 @@ func TestBackendHttpProtocol(t *testing.T) {
 			desc:           "Failure when backend is http/1 only and envoy is configured for http/2 backend",
 			backendIsHttp2: false,
 			configHttp2:    true,
-			httpCallError:  `upstream connect error or disconnect/reset before headers. reset reason: protocol error`,
+			httpCallError:  `upstream connect error or disconnect/reset before headers. retried and the latest reset reason:`,
 		},
 	}
 	for _, tc := range testData {

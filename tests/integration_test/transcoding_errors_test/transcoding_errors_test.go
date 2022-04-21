@@ -59,7 +59,7 @@ func TestTranscodingBackendUnavailableError(t *testing.T) {
 		clientProtocol: "http",
 		httpMethod:     "GET",
 		method:         "/v1/shelves/200/books/2001?key=api-key",
-		wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure, transport failure reason: delayed connect error: 111"}`,
+		wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: connection failure, transport failure reason: delayed connect error: 111"}`,
 	}
 
 	addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
@@ -147,7 +147,7 @@ theme" : "Children"}EXTRA
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100?key=api-key&badQueryParam=test",
-			wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: remote reset"}`,
+			wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: remote reset"}`,
 		},
 	}
 	for _, tc := range tests {
