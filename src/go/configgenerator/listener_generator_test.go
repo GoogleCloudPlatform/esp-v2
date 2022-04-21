@@ -66,7 +66,10 @@ func TestMakeListeners(t *testing.T) {
             "commonHttpProtocolOptions": {},
             "httpFilters": [
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",

@@ -22,6 +22,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/backend_auth"
+	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/grpc_metadata_scrubber"
 	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/path_rewrite"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/service_control"
 
@@ -35,6 +36,7 @@ import (
 	comppb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/compressor/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
 	gspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_stats/v3"
+	grpcwebpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_web/v3"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
@@ -87,12 +89,16 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(gspb.FilterConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder":
 		return new(transcoderpb.GrpcJsonTranscoder), nil
+	case "type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb":
+		return new(grpcwebpb.GrpcWeb), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication":
 		return new(jwtpb.JwtAuthentication), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig":
 		return new(jwtpb.PerRouteConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
+	case "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.FilterConfig":
+		return new(prpb.FilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.PerRouteFilterConfig":
 		return new(prpb.PerRouteFilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v10.http.service_control.PerRouteFilterConfig":
@@ -103,6 +109,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(bapb.PerRouteFilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.FilterConfig":
 		return new(bapb.FilterConfig), nil
+	case "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig":
+		return new(gmspb.FilterConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router":
 		return new(routerpb.Router), nil
 	case "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext":

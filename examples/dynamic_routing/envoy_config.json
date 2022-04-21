@@ -226,10 +226,16 @@
                       }
                     },
                     {
-                      "name": "com.google.espv2.filters.http.path_rewrite"
+                      "name": "com.google.espv2.filters.http.path_rewrite",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.FilterConfig"
+                      }
                     },
                     {
-                      "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                      "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                      }
                     },
                     {
                       "name": "envoy.filters.http.router",

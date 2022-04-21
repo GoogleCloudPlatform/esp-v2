@@ -25,9 +25,11 @@ import (
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/common"
+	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/grpc_metadata_scrubber"
 
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
+	grpcwebpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_web/v3"
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
 	routerpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
@@ -130,8 +132,13 @@ func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]*FilterGenerator, erro
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.GRPCWeb,
 			FilterGenFunc: func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+				a, err := ptypes.MarshalAny(&grpcwebpb.GrpcWeb{})
+				if err != nil {
+					return nil, nil, err
+				}
 				return &hcmpb.HttpFilter{
-					Name: util.GRPCWeb,
+					Name:       util.GRPCWeb,
+					ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
 				}, nil, nil
 			},
 		})
@@ -166,8 +173,13 @@ func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]*FilterGenerator, erro
 		filterGenerators = append(filterGenerators, &FilterGenerator{
 			FilterName: util.GrpcMetadataScrubber,
 			FilterGenFunc: func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+				a, err := ptypes.MarshalAny(&gmspb.FilterConfig{})
+				if err != nil {
+					return nil, nil, err
+				}
 				return &hcmpb.HttpFilter{
-					Name: util.GrpcMetadataScrubber,
+					Name:       util.GrpcMetadataScrubber,
+					ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
 				}, nil, nil
 			},
 		})
