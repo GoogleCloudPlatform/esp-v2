@@ -135,7 +135,8 @@ void TokenSubscriber::refresh() {
   } else {
     // This code doesn't handle the wrong cluster name case.
     // Assume it is due to the cluster is not ready.
-    ENVOY_LOG(warn, "{}: the cluster {} is not ready.", debug_name_, token_cluster_);
+    ENVOY_LOG(warn, "{}: the cluster {} is not ready.", debug_name_,
+              token_cluster_);
     handleFailResponse();
   }
 }
@@ -172,7 +173,7 @@ void TokenSubscriber::processResponse(
           token_info_->parseAccessToken(response->bodyAsString(), &result);
       break;
     default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
+      PANIC(absl::StrCat("invalid token type: ", token_type_));
   }
 
   // Determine status.

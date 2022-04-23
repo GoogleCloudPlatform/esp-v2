@@ -93,7 +93,10 @@ var (
             },
             "httpFilters": [
               {
-                "name": "envoy.filters.http.grpc_web"
+                "name": "envoy.filters.http.grpc_web",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb"
+                }
               },
               {
                 "name": "envoy.filters.http.grpc_json_transcoder",
@@ -114,7 +117,10 @@ var (
                 }
               },
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",
@@ -360,10 +366,16 @@ var (
                 }
               },
               {
-                "name": "envoy.filters.http.grpc_web"
+                "name": "envoy.filters.http.grpc_web",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb"
+                }
               },
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",
@@ -636,10 +648,16 @@ var (
                 }
               },
               {
-                "name": "envoy.filters.http.grpc_web"
+                "name": "envoy.filters.http.grpc_web",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb"
+                }
               },
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",
@@ -1177,10 +1195,16 @@ var (
                 }
               },
               {
-                "name": "envoy.filters.http.grpc_web"
+                "name": "envoy.filters.http.grpc_web",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb"
+                }
               },
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",
@@ -1621,10 +1645,16 @@ var (
                 }
               },
               {
-                "name": "envoy.filters.http.grpc_web"
+                "name": "envoy.filters.http.grpc_web",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb"
+                }
               },
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",
@@ -2133,7 +2163,10 @@ var (
                 }
               },
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",
@@ -2459,7 +2492,10 @@ var (
                 }
               },
               {
-                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber"
+                "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                }
               },
               {
                 "name": "envoy.filters.http.router",

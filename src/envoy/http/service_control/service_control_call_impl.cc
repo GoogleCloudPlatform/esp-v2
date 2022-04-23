@@ -127,7 +127,8 @@ ServiceControlCallImpl::ServiceControlCallImpl(
       createIamTokenSub();
       break;
     default:
-      NOT_REACHED_GCOVR_EXCL_LINE;
+      PANIC(absl::StrCat("invalid access_token_case: ",
+                         filter_config_.access_token_case()));
   }
 
   if (config.has_service_config()) {

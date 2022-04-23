@@ -276,7 +276,7 @@ func TestBackendAddressOverride(t *testing.T) {
 		{
 			desc:      "Without backend address override, ESPv2 fails to connect to the invalid backend.rule.address.",
 			confArgs:  utils.CommonArgs(),
-			wantError: `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure, transport failure reason: delayed connect error: 111"}`,
+			wantError: `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: connection failure, transport failure reason: delayed connect error: 111`,
 		},
 		{
 			desc: "With backend address override, ESPv2 connects to the local backend flag.",

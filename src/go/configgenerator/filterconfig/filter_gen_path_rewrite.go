@@ -45,8 +45,13 @@ var prFilterGenFunc = func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodI
 	if !needed {
 		return nil, nil, nil
 	}
+	a, err := ptypes.MarshalAny(&prpb.FilterConfig{})
+	if err != nil {
+		return nil, nil, err
+	}
 	return &hcmpb.HttpFilter{
-		Name: util.PathRewrite,
+		Name:       util.PathRewrite,
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
 	}, perRouteConfigRequiredMethods, nil
 }
 

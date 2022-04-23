@@ -84,7 +84,7 @@ func TestBackendRetry(t *testing.T) {
 			backendTypeUsed:     localBackend,
 			// It could be `connection termination` or `connection failure` in the end
 			//so don't specify it here.
-			wantError: `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure`,
+			wantError: `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: connection failure`,
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -111,7 +111,7 @@ func TestBackendRetry(t *testing.T) {
 			backendRetryOnsFlag: defaultBackendRetryOns,
 			backendRetryNumFlag: defaultBackendRetryNum,
 			backendTypeUsed:     localBackend,
-			wantError:           `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. reset reason: connection failure`,
+			wantError:           `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: connection failure`,
 			wantSpanNames: []string{
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
 				"router backend-cluster-echo-api.endpoints.cloudesf-testing.cloud.goog_local egress",
