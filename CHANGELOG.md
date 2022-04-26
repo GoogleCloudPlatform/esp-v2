@@ -1,3 +1,8 @@
+# Release 2.36.0 25-04-2022
+
+- Upgraded Envoy to 1.22.0 (#684)
+- Added response gzip,brotli compression (#675)
+
 # Release 2.35.0 22-03-2022
 
 - Update Envoy to v1.21.1 (#670)
