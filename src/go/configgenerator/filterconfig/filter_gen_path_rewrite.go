@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/path_rewrite"
+	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/path_rewrite"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"

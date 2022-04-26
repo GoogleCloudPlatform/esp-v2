@@ -202,7 +202,7 @@
                     {
                       "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.FilterConfig",
                         "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                         "imdsToken": {
                           "cluster": "metadata-cluster",
@@ -218,13 +218,13 @@
                     {
                       "name": "com.google.espv2.filters.http.path_rewrite",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.FilterConfig"
                       }
                     },
                     {
                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig"
                       }
                     },
                     {
@@ -289,11 +289,11 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves"
                               },
                               "com.google.espv2.filters.http.path_rewrite": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
                                 "constantPath": {
                                   "path": "/shelves",
                                   "urlTemplate": "/libraries/{library_id=*}/shelves/{shelfId=*}"
@@ -332,11 +332,11 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-edf123456-uc.a.run.app/shelves"
                               },
                               "com.google.espv2.filters.http.path_rewrite": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.path_rewrite.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
                                 "constantPath": {
                                   "path": "/shelves",
                                   "urlTemplate": "/libraries/{library_id=*}/shelves/{shelfId=*}"
@@ -375,7 +375,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-abc9876-uc.a.run.app"
                               }
                             }
@@ -411,7 +411,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-abc9876-uc.a.run.app"
                               }
                             }
@@ -447,7 +447,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-abc9876-uc.a.run.app"
                               }
                             }
@@ -483,7 +483,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-abc9876-uc.a.run.app"
                               }
                             }
@@ -519,7 +519,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-abc9876-uc.a.run.app"
                               }
                             }
@@ -555,7 +555,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.backend_auth": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v10.http.backend_auth.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
                                 "jwtAudience": "https://http-bookstore-abc9876-uc.a.run.app"
                               }
                             }

@@ -4,8 +4,8 @@ This folder stores filter config proto files for ESPv2 http filters.
 ## Config versioning:
 
 ESPv2 config is versioned. The current version is stored in `api/VERSION` file.
-The folder names under `api/` contain version, e.g. `api/envoy/v10/http/backend_auth`.
-The proto package names contain version too, e.g. `espv2.api.envoy.v10.http.common.Pattern`.
+The folder names under `api/` contain version, e.g. `api/envoy/v11/http/backend_auth`.
+The proto package names contain version too, e.g. `espv2.api.envoy.v11.http.common.Pattern`.
 
 ## Versioning Rules:
 When making changes to the config proto files, make sure:
@@ -19,7 +19,12 @@ increase the config version.
 ## Steps to increase config version
 If a breaking change is required, use following steps to increase config version.
 * Increase `api/VERSION` to a newer version, e.g. from `v6` to `v7`.
-* Rename folder name from `api/envoy/v6/http` to `api/envoy/v10/http`.
-* Replace package names from `api.envoy.v6.http` to `api.envoy.v10.http` for all proto files under folder `api/`.
+* Rename folder name from `api/envoy/v6/http` to `api/envoy/v11/http`.
+* Replace package names from `api.envoy.v6.http` to `api.envoy.v11.http` for all proto files under folder `api/`.
 
-Above steps can be achieved by running script `api/scripts/update_version.sh`.
+Above steps can be automated by running:
+* api/scripts/update_version.sh
+* api/scripts/go_proto_gen.sh
+
+and use "make test" and "make integration-test" to verify the results.
+

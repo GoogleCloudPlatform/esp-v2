@@ -27,7 +27,7 @@ const (
 	InvalidChar = byte(0)
 )
 
-// Pattern Corresponds espv2.api.envoy.v10.http.common.Pattern and it holds the
+// Pattern Corresponds espv2.api.envoy.v11.http.common.Pattern and it holds the
 // syntax parsing result for uri template.
 type Pattern struct {
 	HttpMethod string

@@ -68,7 +68,7 @@ func TestMakeListeners(t *testing.T) {
               {
                 "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/espv2.api.envoy.v10.http.grpc_metadata_scrubber.FilterConfig"
+                  "@type": "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig"
                 }
               },
               {

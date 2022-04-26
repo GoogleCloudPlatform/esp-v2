@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v10/http/common/base.pb.h"
+#include "api/envoy/v11/http/common/base.pb.h"
 #include "src/envoy/token/iam_token_info.h"
 #include "src/envoy/token/imds_token_info.h"
 #include "src/envoy/token/token_subscriber.h"
@@ -30,14 +30,14 @@ class TokenSubscriberFactory {
   virtual TokenSubscriberPtr createImdsTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
       const std::string& token_url, std::chrono::seconds fetch_timeout,
-      ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior
+      ::espv2::api::envoy::v11::http::common::DependencyErrorBehavior
           error_behavior,
       UpdateTokenCallback callback) const PURE;
 
   virtual TokenSubscriberPtr createIamTokenSubscriber(
       const TokenType& token_type, const std::string& token_cluster,
       const std::string& token_url, std::chrono::seconds fetch_timeout,
-      ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior
+      ::espv2::api::envoy::v11::http::common::DependencyErrorBehavior
           error_behavior,
       UpdateTokenCallback callback,
       const ::google::protobuf::RepeatedPtrField<std::string>& delegates,

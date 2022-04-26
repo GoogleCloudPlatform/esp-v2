@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v10/http/service_control/config.pb.h"
-#include "api/envoy/v10/http/service_control/config.pb.validate.h"
+#include "api/envoy/v11/http/service_control/config.pb.h"
+#include "api/envoy/v11/http/service_control/config.pb.validate.h"
 #include "envoy/registry/registry.h"
 #include "source/extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/service_control/filter.h"
@@ -29,15 +29,15 @@ namespace service_control {
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v10::http::service_control::FilterConfig,
-          ::espv2::api::envoy::v10::http::service_control::
+          ::espv2::api::envoy::v11::http::service_control::FilterConfig,
+          ::espv2::api::envoy::v11::http::service_control::
               PerRouteFilterConfig> {
  public:
   FilterFactory() : FactoryBase(kFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v10::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::v11::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
@@ -56,7 +56,7 @@ class FilterFactory
 
   Envoy::Router::RouteSpecificFilterConfigConstSharedPtr
   createRouteSpecificFilterConfigTyped(
-      const ::espv2::api::envoy::v10::http::service_control::
+      const ::espv2::api::envoy::v11::http::service_control::
           PerRouteFilterConfig& per_route,
       Envoy::Server::Configuration::ServerFactoryContext&,
       Envoy::ProtobufMessage::ValidationVisitor&) override {

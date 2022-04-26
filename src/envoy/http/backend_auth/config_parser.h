@@ -17,7 +17,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
-#include "api/envoy/v10/http/backend_auth/config.pb.h"
+#include "api/envoy/v11/http/backend_auth/config.pb.h"
 #include "envoy/thread_local/thread_local.h"
 #include "src/envoy/token/token_subscriber_factory.h"
 
@@ -46,7 +46,7 @@ using FilterConfigParserPtr = std::unique_ptr<FilterConfigParser>;
 class PerRouteFilterConfig : public Envoy::Router::RouteSpecificFilterConfig {
  public:
   PerRouteFilterConfig(
-      const ::espv2::api::envoy::v10::http::backend_auth::PerRouteFilterConfig&
+      const ::espv2::api::envoy::v11::http::backend_auth::PerRouteFilterConfig&
           per_route)
       : jwt_audience_(per_route.jwt_audience()) {}
 

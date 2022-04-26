@@ -15,7 +15,7 @@
 #include "src/envoy/token/token_subscriber.h"
 
 #include "absl/strings/str_cat.h"
-#include "api/envoy/v10/http/common/base.pb.h"
+#include "api/envoy/v11/http/common/base.pb.h"
 #include "envoy/http/async_client.h"
 #include "envoy/http/header_map.h"
 #include "source/common/common/assert.h"
@@ -27,7 +27,7 @@ namespace espv2 {
 namespace envoy {
 namespace token {
 
-using ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior;
+using ::espv2::api::envoy::v11::http::common::DependencyErrorBehavior;
 
 // Delay after a failed fetch.
 constexpr std::chrono::seconds kFailedRequestRetryTime(2);

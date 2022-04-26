@@ -38,7 +38,7 @@ class ConfigParserImplTest : public ::testing::Test {
     Envoy::TestUtility::validate(proto_config_);
   }
 
-  ::espv2::api::envoy::v10::http::path_rewrite::PerRouteFilterConfig
+  ::espv2::api::envoy::v11::http::path_rewrite::PerRouteFilterConfig
       proto_config_;
   std::unique_ptr<ConfigParserImpl> obj_;
   std::string new_path_;

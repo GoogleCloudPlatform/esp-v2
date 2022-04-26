@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v10/http/path_rewrite/config.pb.h"
-#include "api/envoy/v10/http/path_rewrite/config.pb.validate.h"
+#include "api/envoy/v11/http/path_rewrite/config.pb.h"
+#include "api/envoy/v11/http/path_rewrite/config.pb.validate.h"
 #include "envoy/registry/registry.h"
 #include "source/extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/path_rewrite/config_parser_impl.h"
@@ -29,14 +29,14 @@ namespace path_rewrite {
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v10::http::path_rewrite::FilterConfig,
-          ::espv2::api::envoy::v10::http::path_rewrite::PerRouteFilterConfig> {
+          ::espv2::api::envoy::v11::http::path_rewrite::FilterConfig,
+          ::espv2::api::envoy::v11::http::path_rewrite::PerRouteFilterConfig> {
  public:
   FilterFactory() : FactoryBase(kFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v10::http::path_rewrite::FilterConfig&,
+      const ::espv2::api::envoy::v11::http::path_rewrite::FilterConfig&,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
     auto filter_config =
@@ -51,7 +51,7 @@ class FilterFactory
 
   Envoy::Router::RouteSpecificFilterConfigConstSharedPtr
   createRouteSpecificFilterConfigTyped(
-      const ::espv2::api::envoy::v10::http::path_rewrite::PerRouteFilterConfig&
+      const ::espv2::api::envoy::v11::http::path_rewrite::PerRouteFilterConfig&
           per_route,
       Envoy::Server::Configuration::ServerFactoryContext&,
       Envoy::ProtobufMessage::ValidationVisitor&) override {

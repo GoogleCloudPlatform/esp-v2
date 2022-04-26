@@ -24,22 +24,22 @@ rm -rf vendor/github.com/census-instrumentation/opencensus-proto/gen-go
 
 #TODO(bochun): probably we can programatically generate these.
 # HTTP filter common
-bazel build //api/envoy/v10/http/common:base_go_proto
-mkdir -p src/go/proto/api/envoy/v10/http/common
-cp -f bazel-bin/api/envoy/v10/http/common/base_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/common/* src/go/proto/api/envoy/v10/http/common
+bazel build //api/envoy/v11/http/common:base_go_proto
+mkdir -p src/go/proto/api/envoy/v11/http/common
+cp -f bazel-bin/api/envoy/v11/http/common/base_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/common/* src/go/proto/api/envoy/v11/http/common
 # HTTP filter service_control
-bazel build //api/envoy/v10/http/service_control:config_go_proto
-mkdir -p src/go/proto/api/envoy/v10/http/service_control
-cp -f bazel-bin/api/envoy/v10/http/service_control/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/service_control/* src/go/proto/api/envoy/v10/http/service_control
+bazel build //api/envoy/v11/http/service_control:config_go_proto
+mkdir -p src/go/proto/api/envoy/v11/http/service_control
+cp -f bazel-bin/api/envoy/v11/http/service_control/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/service_control/* src/go/proto/api/envoy/v11/http/service_control
 # HTTP filter path_rewrite
-bazel build //api/envoy/v10/http/path_rewrite:config_go_proto
-mkdir -p src/go/proto/api/envoy/v10/http/path_rewrite
-cp -f bazel-bin/api/envoy/v10/http/path_rewrite/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/path_rewrite/* src/go/proto/api/envoy/v10/http/path_rewrite
+bazel build //api/envoy/v11/http/path_rewrite:config_go_proto
+mkdir -p src/go/proto/api/envoy/v11/http/path_rewrite
+cp -f bazel-bin/api/envoy/v11/http/path_rewrite/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/path_rewrite/* src/go/proto/api/envoy/v11/http/path_rewrite
 # HTTP filter backend_auth
-bazel build //api/envoy/v10/http/backend_auth:config_go_proto
-mkdir -p src/go/proto/api/envoy/v10/http/backend_auth
-cp -f bazel-bin/api/envoy/v10/http/backend_auth/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/backend_auth/* src/go/proto/api/envoy/v10/http/backend_auth
+bazel build //api/envoy/v11/http/backend_auth:config_go_proto
+mkdir -p src/go/proto/api/envoy/v11/http/backend_auth
+cp -f bazel-bin/api/envoy/v11/http/backend_auth/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/backend_auth/* src/go/proto/api/envoy/v11/http/backend_auth
 # HTTP filter grpc_metadata_scrubber
-bazel build //api/envoy/v10/http/grpc_metadata_scrubber:config_go_proto
-mkdir -p src/go/proto/api/envoy/v10/http/grpc_metadata_scrubber
-cp -f bazel-bin/api/envoy/v10/http/grpc_metadata_scrubber/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v10/http/grpc_metadata_scrubber/* src/go/proto/api/envoy/v10/http/grpc_metadata_scrubber
+bazel build //api/envoy/v11/http/grpc_metadata_scrubber:config_go_proto
+mkdir -p src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber
+cp -f bazel-bin/api/envoy/v11/http/grpc_metadata_scrubber/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber/* src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber

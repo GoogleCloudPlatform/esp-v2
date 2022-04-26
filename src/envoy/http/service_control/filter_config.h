@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v10/http/service_control/config.pb.h"
+#include "api/envoy/v11/http/service_control/config.pb.h"
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/filter_config.h"
 #include "source/common/common/logger.h"
@@ -33,7 +33,7 @@ class ServiceControlFilterConfig
     : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ServiceControlFilterConfig(
-      const ::espv2::api::envoy::v10::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::v11::http::service_control::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context)
@@ -41,7 +41,7 @@ class ServiceControlFilterConfig
             ServiceControlFilterStats::create(stats_prefix, context.scope())),
         proto_config_(
             std::make_shared<
-                ::espv2::api::envoy::v10::http::service_control::FilterConfig>(
+                ::espv2::api::envoy::v11::http::service_control::FilterConfig>(
                 proto_config)),
         call_factory_(proto_config_, stats_prefix, context),
         config_parser_(*proto_config_, call_factory_),
