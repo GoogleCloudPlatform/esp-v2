@@ -16,7 +16,6 @@ package flags
 
 import (
 	"flag"
-	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -24,13 +23,14 @@ import (
 )
 
 var (
-	AdsConnectTimeout = flag.Duration("ads_connect_timeout", 10*time.Second, "ads connect timeout in seconds")
+	defaults = options.DefaultAdsBootstrapperOptions()
+
+	AdsConnectTimeout = flag.Duration("ads_connect_timeout", defaults.AdsConnectTimeout, "ads connect timeout in seconds")
 )
 
 func DefaultBootstrapperOptionsFromFlags() options.AdsBootstrapperOptions {
-	common_option := commonflags.DefaultCommonOptionsFromFlags()
 	opts := options.AdsBootstrapperOptions{
-		CommonOptions:     common_option,
+		CommonOptions:     commonflags.DefaultCommonOptionsFromFlags(),
 		AdsConnectTimeout: *AdsConnectTimeout,
 	}
 
