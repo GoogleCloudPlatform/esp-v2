@@ -1,9 +1,6 @@
 # Release 2.36.0 25-04-2022
 
 - Upgraded Envoy to 1.22.0 (#684)
-- Fixed a test-only race condition by protecting critical sections (#683)
-- Updated flag --service help text (#681)
-- Updated outdated flag --version help text (#680)
 - Added response gzip,brotli compression (#675)
 
 # Release 2.35.0 22-03-2022
