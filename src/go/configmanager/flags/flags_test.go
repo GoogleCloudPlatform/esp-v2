@@ -26,7 +26,7 @@ func TestDefaultEnvoyConfigOptions(t *testing.T) {
 	actualOptions := EnvoyConfigOptionsFromFlags()
 
 	if !reflect.DeepEqual(defaultOptions, actualOptions) {
-		t.Errorf("DefaultConfigGeneratorOptions does not match envoyConfigOptionsFromFlags:\nhave: %v\nwant: %v",
+		t.Errorf("DefaultConfigGeneratorOptions does not match envoyConfigOptionsFromFlags:\nhave: %+v\nwant: %+v",
 			defaultOptions, actualOptions)
 	}
 }

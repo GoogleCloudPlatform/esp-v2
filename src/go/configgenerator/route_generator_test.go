@@ -4011,9 +4011,9 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			wantedError: "cors_allow_origin cannot be empty when cors_preset=basic",
 		},
 		{
-			desc:        "Incorrect configured  Cors",
-			params:      []string{"", "", "", "GET", "", "", "2m"},
-			wantedError: "cors_preset must be set in order to enable CORS support",
+			desc:           "No CORS even when other options are set",
+			params:         []string{"", "", "", "GET", "", "", "2m"},
+			wantCorsPolicy: nil,
 		},
 		{
 			desc:        "Incorrect configured regex Cors",

@@ -208,10 +208,7 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 			SafeRegexMatch: regexMatcher,
 		}
 	case "":
-		if serviceInfo.Options.CorsAllowMethods != "" || serviceInfo.Options.CorsAllowHeaders != "" ||
-			serviceInfo.Options.CorsExposeHeaders != "" || serviceInfo.Options.CorsAllowCredentials {
-			return nil, nil, fmt.Errorf("cors_preset must be set in order to enable CORS support")
-		}
+		glog.Infof("CORS support is disabled")
 	default:
 		return nil, nil, fmt.Errorf(`cors_preset must be either "basic" or "cors_with_regex"`)
 	}
