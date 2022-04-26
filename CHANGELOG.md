@@ -1,6 +1,5 @@
 # Release 2.36.0 25-04-2022
 
-- Updated release version to 2.36.0 (#686)
 - Upgrade Envoy to 1.22.0 (#684)
 - Added option to enable strict request validation in transcoder (#685)
 - Fixed a test-only race condition by protecting critical sections. (#683)
