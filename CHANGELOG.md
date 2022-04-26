@@ -2,7 +2,7 @@
 
 - Upgraded Envoy to 1.22.0 (#684)
 - Added option to enable strict request validation in transcoder (#685)
-- Fixed a test-only race condition by protecting critical sections. (#683)
+- Fixed a test-only race condition by protecting critical sections (#683)
 - Updated flag --service help text (#681)
 - Updated outdated flag --version help text (#680)
 - Added response gzip,brotli compression (#675)
