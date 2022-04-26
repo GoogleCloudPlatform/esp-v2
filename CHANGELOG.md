@@ -6,9 +6,6 @@
 - Updated flag --service help text (#681)
 - Updated outdated flag --version help text (#680)
 - Added response gzip,brotli compression (#675)
-- Reverted "Fix service manage timeout (#676)" (#678)
-- Fixed service_management_config integration test (#677)
-- Fixed service manage timeout (#676)
 
 # Release 2.35.0 22-03-2022
 
