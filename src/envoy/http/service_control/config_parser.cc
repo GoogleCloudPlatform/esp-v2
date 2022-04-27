@@ -16,7 +16,7 @@
 
 #include "source/common/protobuf/utility.h"
 
-using ::espv2::api::envoy::v10::http::service_control::FilterConfig;
+using ::espv2::api::envoy::v11::http::service_control::FilterConfig;
 
 namespace espv2 {
 namespace envoy {

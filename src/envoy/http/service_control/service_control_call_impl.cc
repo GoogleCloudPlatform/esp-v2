@@ -24,10 +24,10 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
-using ::espv2::api::envoy::v10::http::common::AccessToken;
-using ::espv2::api::envoy::v10::http::common::DependencyErrorBehavior;
-using ::espv2::api::envoy::v10::http::service_control::FilterConfig;
-using ::espv2::api::envoy::v10::http::service_control::Service;
+using ::espv2::api::envoy::v11::http::common::AccessToken;
+using ::espv2::api::envoy::v11::http::common::DependencyErrorBehavior;
+using ::espv2::api::envoy::v11::http::service_control::FilterConfig;
+using ::espv2::api::envoy::v11::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LogsMetricsLoader;
 using ::espv2::api_proxy::service_control::RequestBuilder;
 using ::google::protobuf::util::TimeUtil;

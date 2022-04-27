@@ -40,7 +40,7 @@ using Envoy::Http::TestResponseHeaderMapImpl;
 using Envoy::Http::TestResponseTrailerMapImpl;
 using Envoy::Router::MockRoute;
 using Envoy::StreamInfo::MockStreamInfo;
-using ::espv2::api::envoy::v10::http::service_control::FilterConfig;
+using ::espv2::api::envoy::v11::http::service_control::FilterConfig;
 using ::espv2::api_proxy::service_control::CheckRequestInfo;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaRequestInfo;
@@ -197,7 +197,7 @@ class HandlerTest : public ::testing::Test {
   }
 
   void setPerRouteOperation(const std::string& operation) {
-    ::espv2::api::envoy::v10::http::service_control::PerRouteFilterConfig
+    ::espv2::api::envoy::v11::http::service_control::PerRouteFilterConfig
         per_route_cfg;
     per_route_cfg.set_operation_name(operation);
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);

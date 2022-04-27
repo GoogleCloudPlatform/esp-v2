@@ -46,7 +46,7 @@ using ::testing::MockFunction;
 using ::testing::Return;
 
 using ::Envoy::Http::ResponseMessageImpl;
-using ::espv2::api::envoy::v10::http::common::HttpUri;
+using ::espv2::api::envoy::v11::http::common::HttpUri;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::protobuf::util::OkStatus;
