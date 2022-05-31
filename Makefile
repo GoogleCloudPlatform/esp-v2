@@ -69,23 +69,23 @@ build-race: format
 
 build-envoy-asan:
 	@echo "--> building envoy (compilation_mode=fastbuild)"
-	@CC=clang-10 CXX=clang++-10 bazel build --config=clang-asan //src/envoy:envoy
+	bazel build --config=clang-asan //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-envoy-tsan:
 	@echo "--> building envoy (compilation_mode=fastbuild)"
-	@CC=clang-10 CXX=clang++-10 bazel build --config=clang-tsan  //src/envoy:envoy
+	bazel build --config=clang-tsan  //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 
 build-envoy:
 	@echo "--> building envoy (compilation_mode=release)"
-	@CC=clang-10 CXX=clang++-10 bazel build --config=clang-release //src/envoy:envoy
+	bazel build --config=clang-release //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-envoy-debug:
 	@echo "--> building envoy (compilation_mode=debug)"
-	@CC=clang-10 CXX=clang++-10 bazel build --config=debug //src/envoy:envoy
+	bazel build --config=debug //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-grpc-echo:
@@ -158,15 +158,15 @@ test-debug: format
 
 test-envoy: clang-format
 	@echo "--> running envoy's unit tests"
-	@CC=clang-10 CXX=clang++-10  bazel test //src/...
+	bazel test //src/...
 
 test-envoy-asan: clang-format
 	@echo "--> running envoy's unit tests (asan)"
-	@CC=clang-10 CXX=clang++-10 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-10) bazel test --config=clang-asan  --test_output=errors //src/...
+	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-13) bazel test --config=clang-asan  --test_output=errors //src/...
 
 test-envoy-tsan: clang-format
 	@echo "--> running envoy's unit tests (tsan)"
-	@CC=clang-10 CXX=clang++-10 ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-10) bazel test --config=clang-tsan  --test_output=errors  //src/...
+	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-13) bazel test --config=clang-tsan  --test_output=errors  //src/...
 
 .PHONY: integration-test-run-sequential integration-test-run-parallel integration-test integration-test-asan integration-test-tsan integration-debug
 integration-test-run-sequential:
@@ -294,8 +294,8 @@ format: tools.goimports tools.buildifier
 
 .PHONY: clang-format shell-format
 clang-format:
-	@echo "--> formatting code with 'clang-format-10' tool"
-	@echo $(CPP_PROTO_FILES) | xargs clang-format-10 -i
+	@echo "--> formatting code with 'clang-format' tool"
+	@echo $(CPP_PROTO_FILES) | xargs clang-format -i
 
 shell-format: tools.beautysh
 	@echo "--> formatting shell scripts with 'beautysh' tool"

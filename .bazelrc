@@ -8,9 +8,10 @@ build --cxxopt='-std=c++17'
 # Ref: github.com/envoyproxy/envoy#8792
 build --copt=-fPIC
 
-# Show timestamps during compiling
+# Other flags for the C++ compiler
 build --show_timestamps
 build --copt -Wno-unknown-warning-option
+build --copt -Wno-error=vla-parameter
 
 # Compilation modes
 build:release -c opt
@@ -25,9 +26,9 @@ build --action_env=BAZEL_LINKOPTS=-lm
 # We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
 
-# Pass PATH, CC and CXX variables from the environment.
-build --action_env=CC
-build --action_env=CXX
+# Pass PATH variable from the environment. CC and CXX are always clang (no gcc).
+build --action_env=CC=clang
+build --action_env=CXX=clang++
 build --action_env=PATH
 
 # Disable ICU linking for googleurl.
