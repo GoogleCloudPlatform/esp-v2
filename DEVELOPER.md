@@ -43,10 +43,16 @@ sudo apt-get install -y llvm-13-dev libclang-13-dev clang-13 \
     clang-tools-13 clang-format-13 xz-utils lld-13
 ```
 
+## Install build tools
+
+```
+sudo apt install -y cmake ninja-build protobuf-compiler
+```
+
 ## Install other tools
 
 ```
-sudo apt-get install jq nodejs npm
+sudo apt-get install jq nodejs npm python-is-python3
 ```
 
 ## Download Source Code
