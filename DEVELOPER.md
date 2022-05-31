@@ -17,7 +17,7 @@ export GOBIN=$GOPATH/bin
 export PATH=$GOBIN:$PATH
 ```
 
-## Installing Bazelisk as Bazel
+## Install Bazelisk as Bazel
 
 It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel` to avoid Bazel compatibility issues. Follow the instructions on the linked website to install it.
 
