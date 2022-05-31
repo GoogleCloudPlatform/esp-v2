@@ -46,7 +46,8 @@ sudo apt-get install -y llvm-13-dev libclang-13-dev clang-13 \
 ## Install build tools
 
 ```
-sudo apt install -y cmake ninja-build protobuf-compiler brotli
+sudo apt install -y cmake ninja-build protobuf-compiler brotli \
+    libicu-dev libbrotli-dev
 ```
 
 ## Install other tools
