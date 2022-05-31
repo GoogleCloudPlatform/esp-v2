@@ -5,48 +5,9 @@ built using bazel with clang and Config Manager written in go is built using go 
 
 See the [architecture overview](doc/architecture.md) before getting started.
 
-## Installing Bazelisk as Bazel
-
-It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel`, to avoid Bazel compatibility issues.
-On Linux, run the following commands:
-
-```
-sudo wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.8/bazelisk-linux-amd64
-sudo chmod +x /usr/local/bin/bazel
-```
-
-## Install Envoy dependencies
-
-To get started building Envoy locally, following the instructions from [Envoy](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
-
-## Install Clang-10
-
-Add the package sources with the following commands.
-If these commands fail, reference [the official clang installation instructions](https://apt.llvm.org/) for your OS.
-
-```
-# Commands require sudo. Force password prompt early to cache credentials.
-sudo echo "hello"
-
-wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main" | sudo tee -a /etc/apt/sources.list >/dev/null
-```
-
-Install the following packages:
-
-```
-sudo apt-get update
-sudo apt-get install -y llvm-10-dev libclang-10-dev clang-10 \
-    clang-tools-10 clang-format-10 xz-utils lld-10
-```
-
 ## Install Golang
 
-If these commands fail, reference [the official golang installation instructions](https://golang.org/doc/install) for your OS.
-
-```
-sudo apt-get install golang-1.15
-```
+Reference [the official golang installation instructions](https://golang.org/doc/install) for your OS. The latest go version should work.
 
 Add the following setting in .profile, then source it:
 
@@ -56,10 +17,36 @@ export GOBIN=$GOPATH/bin
 export PATH=$GOBIN:$PATH
 ```
 
+## Installing Bazelisk as Bazel
+
+It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel` to avoid Bazel compatibility issues. Follow the instructions on the linked website to install it.
+
+If using Intellij, change the blaze plugin to use `bazelisk` instead of `bazel` for any commands:
+
+1) Search for the `Bazel binary location` item in the Intellij Settings
+2) Change it to the output of `which bazelisk`
+
+## Install Envoy dependencies
+
+To get started building Envoy locally, following the instructions from [Envoy](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
+
+## Install Clang-13
+
+Add the package sources with the following commands.
+If these commands fail, reference [the official clang installation instructions](https://apt.llvm.org/) for your OS.
+
+Install the following packages:
+
+```
+sudo apt-get update
+sudo apt-get install -y llvm-13-dev libclang-13-dev clang-13 \
+    clang-tools-13 clang-format-13 xz-utils lld-13
+```
+
 ## Install other tools
 
 ```
-sudo apt-get install jq
+sudo apt-get install jq nodejs npm
 ```
 
 ## Download Source Code
