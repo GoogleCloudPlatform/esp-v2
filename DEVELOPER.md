@@ -5,6 +5,9 @@ built using bazel with clang and Config Manager written in go is built using go 
 
 See the [architecture overview](doc/architecture.md) before getting started.
 
+We recommend starting this setup using only the command line at first.
+Later, we will walk through how to use Intellij and CLion IDEs for the project.
+
 ## Install Golang
 
 Reference [the official golang installation instructions](https://golang.org/doc/install) for your OS. The latest go version should work.
@@ -20,11 +23,6 @@ export PATH=$GOBIN:$PATH
 ## Install Bazelisk as Bazel
 
 It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) installed as `bazel` to avoid Bazel compatibility issues. Follow the instructions on the linked website to install it.
-
-If using Intellij, change the blaze plugin to use `bazelisk` instead of `bazel` for any commands:
-
-1) Search for the `Bazel binary location` item in the Intellij Settings
-2) Change it to the output of `which bazelisk`
 
 ## Install Envoy dependencies
 
@@ -107,3 +105,17 @@ To run integration tests:
 ```
 make integration-test-run-parallel
 ```
+
+## Enable IDE Integration
+
+For the C++ code, we will use CLion with the Blaze / Bazel plugin.
+Import the project as a Bazel project. CLion should automatically pick up the targets and run configurations.
+
+For the golang code, we will use Intellij Ultimate edition.
+Import the project as a Git project (do NOT use the Bazel plugin).
+Intellij will automatically pick up the run configurations.
+
+For both CLion and Intellij, change the blaze plugin to use `bazelisk` instead of `bazel` for any commands:
+
+1) Search for the `Bazel binary location` item in the Intellij Settings
+2) Change it to the output of `which bazelisk`
