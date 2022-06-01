@@ -15,14 +15,19 @@
 # limitations under the License.
 
 # Fail on any error.
-set -eo pipefail
+set -eox pipefail
 
 rm -rf src/go/proto
 rm -rf vendor/github.com/envoyproxy/data-plane-api/api
 rm -rf vendor/gogoproto
 rm -rf vendor/github.com/census-instrumentation/opencensus-proto/gen-go
 
-#TODO(bochun): probably we can programatically generate these.
+BAZEL_CMD="bazelisk"
+if ! command -v "${BAZEL_CMD}" &> /dev/null
+then
+    BAZEL_CMD="bazel"
+fi
+
 # HTTP filter common
 bazelisk build //api/envoy/v11/http/common:base_go_proto
 mkdir -p src/go/proto/api/envoy/v11/http/common
