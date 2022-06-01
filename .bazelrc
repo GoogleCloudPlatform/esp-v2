@@ -27,8 +27,8 @@ build --action_env=BAZEL_LINKOPTS=-lm
 build --define absl=1
 
 # Pass PATH variable from the environment. CC and CXX are always clang (no gcc).
-build --action_env=CC=clang
-build --action_env=CXX=clang++
+build --action_env=CC=clang-13
+build --action_env=CXX=clang++-13
 build --action_env=PATH
 
 # Disable ICU linking for googleurl.

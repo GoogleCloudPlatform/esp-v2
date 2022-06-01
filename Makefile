@@ -295,7 +295,7 @@ format: tools.goimports tools.buildifier
 .PHONY: clang-format shell-format
 clang-format:
 	@echo "--> formatting code with 'clang-format' tool"
-	@echo $(CPP_PROTO_FILES) | xargs clang-format -i
+	@echo $(CPP_PROTO_FILES) | xargs clang-format-13 -i
 
 shell-format: tools.beautysh
 	@echo "--> formatting shell scripts with 'beautysh' tool"
