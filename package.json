@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "bookstore": "file:tests/endpoints/bookstore"
-  }
-}
