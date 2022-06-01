@@ -23,8 +23,7 @@ rm -rf vendor/gogoproto
 rm -rf vendor/github.com/census-instrumentation/opencensus-proto/gen-go
 
 BAZEL_CMD="bazelisk"
-if ! command -v "${BAZEL_CMD}" &> /dev/null
-then
+if ! [ -x "$(command -v ${BAZEL_CMD})" ]; then
     BAZEL_CMD="bazel"
 fi
 
