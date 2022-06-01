@@ -232,25 +232,25 @@ tools: tools.goimports tools.golint tools.govet tools.buildifier
 tools.goimports:
 	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing goimports"; \
-		go get golang.org/x/tools/cmd/goimports; \
+		go install golang.org/x/tools/cmd/goimports@latest; \
 	fi
 
 tools.govet:
 	@go tool vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
 		echo "--> installing govet"; \
-		go get golang.org/x/tools/cmd/vet; \
+		go install golang.org/x/tools/cmd/vet@latest; \
 	fi
 
 tools.golint:
 	@command -v golint >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing golint"; \
-		go get -u golang.org/x/lint/golint; \
+		go install golang.org/x/lint/golint@latest; \
 	fi
 
 tools.buildifier:
 	@command -v buildifier >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing buildifier"; \
-		go get github.com/bazelbuild/buildtools/buildifier; \
+		go install github.com/bazelbuild/buildtools/buildifier@latest; \
 	fi
 
 tools.beautysh:
