@@ -1010,7 +1010,7 @@ Status RequestBuilder::FillAllocateQuotaRequest(
   // allocate_operation.quota_mode
   operation->set_quota_mode(
       ::google::api::servicecontrol::v1::QuotaOperation_QuotaMode::
-          QuotaOperation_QuotaMode_BEST_EFFORT);
+          QuotaOperation_QuotaMode_NORMAL);
 
   // allocate_operation.labels
   auto* labels = operation->mutable_labels();
