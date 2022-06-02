@@ -45,13 +45,6 @@ You need install `jq` by
 sudo apt-get install jq
 ```
 
-You may also have to install the
-`gcloud beta` components for Cloud Run. You only need to do this once:
-
-```shell script
-gcloud components install beta --quiet
-```
-
 No other changes are needed. Run the script from the root of the repo:
 
 ```shell script

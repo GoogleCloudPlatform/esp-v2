@@ -66,10 +66,9 @@ fi
 
 GCLOUD_BETA="gcloud"
 USE_HTTP2=""
-# For grpc echo test, need to use gcloud beta with --use-http2 flag
+# For grpc echo test, need to use gcloud with --use-http2 flag
 # in order to support bidirectional streaming.
 if [[ ${BACKEND_PLATFORM} == "cloud-run" ]] && [[ ${BACKEND} == "echo" ]]; then
-  GCLOUD_BETA="gcloud beta"
   USE_HTTP2="--use-http2"
 fi
 
@@ -192,7 +191,7 @@ function setup() {
     # Cloud Run version depends on the cluster version and the auto-assigned version may not work.
     # For details, refer to https://cloud.google.com/run/docs/gke/cluster-versions.
     # b/142752619: The cluster version should be >= 1.15 to be compatible with istio.
-    gcloud beta container clusters create ${CLUSTER_NAME} \
+    gcloud container clusters create ${CLUSTER_NAME} \
       --addons=HorizontalPodAutoscaling,HttpLoadBalancing,CloudRun \
       --machine-type=e2-standard-4 \
       --cluster-version=${CLUSTER_VERSION} \
@@ -438,7 +437,7 @@ function tearDown() {
       ;;
     "anthos-cloud-run")
       # Delete the whole Anthos cluster
-      gcloud beta container clusters delete ${CLUSTER_NAME} --quiet --region ${CLUSTER_ZONE}
+      gcloud container clusters delete ${CLUSTER_NAME} --quiet --region ${CLUSTER_ZONE}
       ;;
 
     "cloud-function")

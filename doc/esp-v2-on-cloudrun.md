@@ -39,7 +39,7 @@ following command, with the name that you want to use for the service, as well
 as the project ID created above.
 
 ```
-gcloud beta run deploy CLOUD_RUN_SERVICE_NAME \
+gcloud run deploy CLOUD_RUN_SERVICE_NAME \
     --image="gcr.io/endpoints-release/bookstore:1" \
     --allow-unauthenticated \
     --platform managed \
@@ -69,7 +69,7 @@ Note the `-serverless` suffix in this image, which denotes this is specifically
 for use on Cloud Run.
 
 ```
-gcloud beta run deploy ESPv2_SERVICE_NAME \
+gcloud run deploy ESPv2_SERVICE_NAME \
     --image="gcr.io/endpoints-release/endpoints-runtime-serverless:2" \
     --allow-unauthenticated \
     --platform managed \
@@ -165,7 +165,7 @@ gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_NAME-ENDPOINTS_SERV
 Replace ESPv2_SERVICE_NAME with the name of your Cloud Run service.
 
 ```
-gcloud beta run deploy ESPv2_SERVICE_NAME \
+gcloud run deploy ESPv2_SERVICE_NAME \
   --image="gcr.io/YOUR_PROJECT_ID/apiproxy-serverless:ENDPOINTS_SERVICE_NAME-ENDPOINTS_SERVICE_CONFIG_ID" \
   --allow-unauthenticated \
   --platform managed \

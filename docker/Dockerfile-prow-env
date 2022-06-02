@@ -31,46 +31,32 @@ RUN apt-get -y install \
 RUN sh -c 'curl -sL https://deb.nodesource.com/setup_12.x | bash -'
 RUN apt-get install -y nodejs
 
-# install bazel
-RUN INSTALLER="bazel-0.28.1-installer-linux-x86_64.sh"; \
-    DOWNLOAD_URL="https://github.com/bazelbuild/bazel/releases/download/0.28.1/${INSTALLER}"; \
-    wget -q "${DOWNLOAD_URL}" && \
-    chmod +x "${INSTALLER}" && "./${INSTALLER}" && rm "${INSTALLER}"
-
 # install Bazelisk
-RUN wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v0.0.8/bazelisk-linux-amd64 && \
-    chmod +x /usr/local/bin/bazel
-
-# install clang-8 and associated tools (old envoy)
-RUN wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
-    echo "deb https://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install -y llvm-8 llvm-8-dev libclang-8-dev clang-8 \
-        lld lld-8 clang-tools-7 clang-format-7 libc++-dev xz-utils
+RUN wget -O /usr/local/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-linux-amd64 && \
+    chmod +x /usr/local/bin/bazelisk
 
 # install clang-10 and associated tools (new envoy)
 RUN wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
-    echo "deb https://apt.llvm.org/buster/ llvm-toolchain-buster-10 main" >> /etc/apt/sources.list && \
+    echo "deb https://apt.llvm.org/buster/ llvm-toolchain-buster-13 main" >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y llvm-10 llvm-10-dev libclang-10-dev clang-10 \
-        lld-10 clang-tools-10 clang-format-10 libc++-dev xz-utils
+    apt-get install -y llvm-13 llvm-13-dev libclang-13-dev clang-13 \
+        lld-13 clang-tools-13 clang-format-13 libc++-dev xz-utils
 
-ENV CC clang-10
-ENV CXX clang++-10
-
+ENV CC clang-13
+ENV CXX clang++-13
 
 # install golang and setup Go standard envs
 ENV GOPATH /go
 ENV PATH /usr/local/go/bin:$PATH
 ENV PATH $GOPATH/bin:$PATH
 
-ENV GO_TARBALL "go1.15.6.linux-amd64.tar.gz"
+ENV GO_TARBALL "go1.18.2.linux-amd64.tar.gz"
 RUN wget -q "https://golang.org/dl/${GO_TARBALL}" && \
     tar xzf "${GO_TARBALL}" -C /usr/local && \
     rm "${GO_TARBALL}"
 
 # Install buildifier
-RUN go get github.com/bazelbuild/buildtools/buildifier
+RUN go install github.com/bazelbuild/buildtools/buildifier@latest
 
 # install gcloud package
 RUN curl https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz > /tmp/google-cloud-sdk.tar.gz
@@ -78,6 +64,3 @@ RUN mkdir -p /usr/local/gcloud \
   && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
   && /usr/local/gcloud/google-cloud-sdk/install.sh
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
-
-# For Cloud Run
-RUN gcloud components install beta --quiet
