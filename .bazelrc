@@ -8,9 +8,10 @@ build --cxxopt='-std=c++17'
 # Ref: github.com/envoyproxy/envoy#8792
 build --copt=-fPIC
 
-# Show timestamps during compiling
+# Other flags for the C++ compiler
 build --show_timestamps
 build --copt -Wno-unknown-warning-option
+build --copt -Wno-error=vla-parameter
 
 # Compilation modes
 build:release -c opt
@@ -25,9 +26,9 @@ build --action_env=BAZEL_LINKOPTS=-lm
 # We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
 
-# Pass PATH, CC and CXX variables from the environment.
-build --action_env=CC
-build --action_env=CXX
+# Pass PATH variable from the environment. CC and CXX are always clang (no gcc).
+build --action_env=CC=clang-13
+build --action_env=CXX=clang++-13
 build --action_env=PATH
 
 # Disable ICU linking for googleurl.
@@ -41,7 +42,7 @@ build:sanitizer --test_tag_filters=-no_san
 
 # Common flags for Clang
 build:clang --action_env=BAZEL_COMPILER=clang
-build:clang --linkopt=-fuse-ld=lld-10
+build:clang --linkopt=-fuse-ld=lld-13
 
 # Compile with the Scudo allocator
 # https://llvm.org/docs/ScudoHardenedAllocator.html
@@ -79,7 +80,7 @@ build:asan --test_env=ASAN_SYMBOLIZER_PATH
 
 build:clang-asan --config=asan
 build:clang-asan --action_env=ENVOY_UBSAN_VPTR=1
-build:clang-asan --linkopt -fuse-ld=lld-10
+build:clang-asan --linkopt -fuse-ld=lld-13
 build:clang-asan --copt -fno-sanitize=vptr,function
 build:clang-asan --linkopt -fno-sanitize=vptr,function
 build:clang-asan --copt -fno-optimize-sibling-calls
@@ -96,8 +97,8 @@ build:clang-tsan --copt -DEVENT__DISABLE_DEBUG_MODE
 # Fuzz builds
 build:asan-fuzzer --config=clang-asan
 build:asan-fuzzer -c opt
-build:asan-fuzzer --action_env=CC=clang-10
-build:asan-fuzzer --action_env=CXX=clang++-10
+build:asan-fuzzer --action_env=CC=clang-13
+build:asan-fuzzer --action_env=CXX=clang++-13
 build:asan-fuzzer --nocache_test_results
 build:asan-fuzzer --define=FUZZING_ENGINE=libfuzzer
 build:asan-fuzzer --copt=-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -109,8 +110,8 @@ build:asan-fuzzer --test_env=UBSAN_OPTIONS=print_stacktrace=1
 coverage --config=coverage
 build:coverage --action_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
 build:coverage --action_env=GCOV=llvm-profdata
-build:coverage --action_env=CC=clang-10
-build:coverage --action_env=CXX=clang++-10
+build:coverage --action_env=CC=clang-13
+build:coverage --action_env=CXX=clang++-13
 build:coverage --copt=-DNDEBUG
 build:coverage --test_timeout=900
 build:coverage --define=ENVOY_CONFIG_COVERAGE=1

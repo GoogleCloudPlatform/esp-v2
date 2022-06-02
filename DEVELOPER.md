@@ -119,3 +119,12 @@ For both CLion and Intellij, change the blaze plugin to use `bazelisk` instead o
 
 1) Search for the `Bazel binary location` item in the Intellij Settings
 2) Change it to the output of `which bazelisk`
+
+## Install e2e Testing Tools (optional)
+
+You will need the following tools to run manual e2e tests:
+
+1) Docker Engine
+2) `gcloud`
+
+Alternatively, you can rely on ESPv2 Prow CI/CD to run e2e tests.
