@@ -19,7 +19,7 @@ echo "Cleaning up resources before ${LIMIT_DATE}"
 
 ### GKE Cluster ###
 GKE_SERVICES=$(gcloud container clusters list --format="value(NAME)" \
-  --filter="name ~ e2e-cloud-run AND creationTime  < ${LIMIT_DATE}" )
+  --filter="name ~ ^e2e- AND creationTime  < ${LIMIT_DATE}" )
 
 for service in ${GKE_SERVICES};
 do
