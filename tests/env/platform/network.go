@@ -19,6 +19,11 @@ func GetLoopbackAddress() string {
 	return "127.0.0.1"
 }
 
+// Returns the loopback IPv6 address. Need to embrace it with brackets to be used with URLs, e.g. [::1].
+func GetLoopbackIPv6Address() string {
+	return "::1"
+}
+
 // Returns the loopback hostname. Not safe to use in URLs.
 func GetLoopbackHost() string {
 	return "127.0.0.1"

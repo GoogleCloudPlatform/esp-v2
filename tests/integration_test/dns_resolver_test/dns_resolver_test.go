@@ -72,8 +72,8 @@ func TestDnsResolver(t *testing.T) {
 			s := env.NewTestEnv(platform.TestDnsResolver, platform.EchoSidecar)
 
 			// Setup dns resolver.
-			dnsRecords := map[string]string{
-				toFqdnWithRoot(tc.backendHost): platform.GetLoopbackAddress(),
+			dnsRecords := map[string][]string{
+				toFqdnWithRoot(tc.backendHost): []string{platform.GetLoopbackAddress(), platform.GetLoopbackIPv6Address()},
 			}
 			dnsResolver := comp.NewDnsResolver(s.Ports().DnsResolverPort, dnsRecords)
 			defer dnsResolver.Shutdown()
@@ -92,7 +92,7 @@ func TestDnsResolver(t *testing.T) {
 			// If testing failure case, remove records after dns health check passes.
 			if tc.isResolveFailed {
 				delete(dnsRecords, toFqdnWithRoot(tc.backendHost))
-				dnsRecords[toFqdnWithRoot("invalid."+tc.backendHost)] = platform.GetLoopbackAddress()
+				dnsRecords[toFqdnWithRoot("invalid."+tc.backendHost)] = []string{platform.GetLoopbackAddress(), platform.GetLoopbackIPv6Address()}
 			}
 
 			// Setup the whole test framework.

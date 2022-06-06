@@ -24,7 +24,7 @@ import (
 )
 
 type handler struct {
-	records map[string]string
+	records map[string][]string
 }
 
 const healthCheckInterval = time.Millisecond * 200
@@ -33,28 +33,38 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	msg := dns.Msg{}
 	msg.SetReply(r)
 	glog.Infof("dns query:\n%+v", r)
-	switch r.Question[0].Qtype {
-	case dns.TypeA:
-		msg.Authoritative = true
-		domain := msg.Question[0].Name
-
-		address, ok := h.records[domain]
-		if ok {
-			msg.Answer = append(msg.Answer, &dns.A{
-				Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
-				A:   net.ParseIP(address),
-			})
-			glog.Infof("dns answer: %+v", msg.Answer)
-		} else {
-			msg.Rcode = dns.RcodeNameError
-			glog.Infof("dns return code: %v", dns.RcodeToString[msg.Rcode])
+	msg.Authoritative = true
+	domain := msg.Question[0].Name
+	addresses, ok := h.records[domain]
+	if ok {
+		for _, address := range addresses {
+			ip := net.ParseIP(address)
+			if ip.To4() == nil {
+				// address is IPv6
+				if r.Question[0].Qtype != dns.TypeA {
+					msg.Answer = append(msg.Answer, &dns.AAAA{
+						Hdr:  dns.RR_Header{Name: domain, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 60},
+						AAAA: ip,
+					})
+				}
+			} else {
+				if r.Question[0].Qtype != dns.TypeAAAA {
+					msg.Answer = append(msg.Answer, &dns.A{
+						Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
+						A:   ip,
+					})
+				}
+			}
 		}
+	} else {
+		msg.Rcode = dns.RcodeNameError
+		glog.Infof("dns return code: %v", dns.RcodeToString[msg.Rcode])
 	}
 
 	_ = w.WriteMsg(&msg)
 }
 
-func NewDnsResolver(port uint16, records map[string]string) *dns.Server {
+func NewDnsResolver(port uint16, records map[string][]string) *dns.Server {
 	return &dns.Server{
 		Addr: fmt.Sprintf(":%v", port),
 		Net:  "udp",
@@ -67,7 +77,7 @@ func NewDnsResolver(port uint16, records map[string]string) *dns.Server {
 func QueryDnsResolver(dnsResolverAddress, target string) ([]*net.IP, error) {
 	c := dns.Client{}
 	m := dns.Msg{}
-	m.SetQuestion(target+".", dns.TypeA)
+	m.SetQuestion(target+".", dns.TypeANY)
 	r, _, err := c.Exchange(&m, dnsResolverAddress)
 	if err != nil {
 		return nil, err
@@ -79,8 +89,13 @@ func QueryDnsResolver(dnsResolverAddress, target string) ([]*net.IP, error) {
 
 	var ret []*net.IP
 	for _, ans := range r.Answer {
-		Arecord := ans.(*dns.A)
-		ret = append(ret, &Arecord.A)
+		Arecord, ok := ans.(*dns.A)
+		if ok {
+			ret = append(ret, &Arecord.A)
+		} else {
+			AAAArecord := ans.(*dns.AAAA)
+			ret = append(ret, &AAAArecord.AAAA)
+		}
 	}
 
 	return ret, nil
