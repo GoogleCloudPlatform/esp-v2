@@ -116,7 +116,7 @@ func TestProxyHandleCorsSimpleRequestsRegex(t *testing.T) {
 
 	serviceName := "test-echo"
 	configId := "test-config-id"
-	corsAllowOriginRegex := "^https?://.+\\.google\\.com$"
+	corsAllowOriginRegex := "^https?://(www\\.)?example\\.com$"
 	corsExposeHeadersValue := "Content-Length,Content-Range"
 
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configId,
@@ -140,9 +140,33 @@ func TestProxyHandleCorsSimpleRequestsRegex(t *testing.T) {
 		wantMaxAge        string
 	}{
 		{
+			desc:              "CORS origin http://www.example.com",
+			origin:            "http://www.example.com",
+			wantAllowOrigin:   "http://www.example.com",
+			wantExposeHeaders: corsExposeHeadersValue,
+		},
+		{
+			desc:              "CORS origin http://example.com",
+			origin:            "http://example.com",
+			wantAllowOrigin:   "http://example.com",
+			wantExposeHeaders: corsExposeHeadersValue,
+		},
+		{
+			desc:              "CORS origin https://www.example.com",
+			origin:            "https://www.example.com",
+			wantAllowOrigin:   "https://www.example.com",
+			wantExposeHeaders: corsExposeHeadersValue,
+		},
+		{
+			desc:              "CORS origin https://example.com",
+			origin:            "https://example.com",
+			wantAllowOrigin:   "https://example.com",
+			wantExposeHeaders: corsExposeHeadersValue,
+		},
+		{
 			desc:              "CORS simple request origin matches, so there are CORS headers in response.",
-			origin:            "http://gcpproxy.cloud.google.com",
-			wantAllowOrigin:   "http://gcpproxy.cloud.google.com",
+			origin:            "http://www.example.com",
+			wantAllowOrigin:   "http://www.example.com",
 			wantExposeHeaders: corsExposeHeadersValue,
 		},
 		{
