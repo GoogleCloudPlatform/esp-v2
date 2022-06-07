@@ -36,7 +36,7 @@ func GetAnyAddress() string {
 
 // Returns the DNS family that should be resolved.
 func GetDnsFamily() string {
-	return "v4only"
+	return "v4preferred"
 }
 
 // Returns the IP protocol these addresses are for.

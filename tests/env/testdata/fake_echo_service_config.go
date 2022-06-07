@@ -64,6 +64,9 @@ var (
 						ResponseTypeUrl: "type.googleapis.com/SimpleCorsMessage",
 					},
 					{
+						Name: "IPVersion",
+					},
+					{
 						Name:            "Auth_info_firebase",
 						RequestTypeUrl:  "type.googleapis.com/google.protobuf.Empty",
 						ResponseTypeUrl: "type.googleapis.com/AuthInfoResponse",
@@ -218,6 +221,12 @@ var (
 					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Simplegetcors",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/simplegetcors",
+					},
+				},
+				{
+					Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.IPVersion",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/ipversion",
 					},
 				},
 				{

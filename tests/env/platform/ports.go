@@ -63,6 +63,7 @@ const (
 	TestDynamicRoutingEscapeSlashes
 	TestDynamicRoutingPathPreprocessing
 	TestDynamicRoutingWithAllowCors
+	TestEnvoyDnsLookupPolicy
 	TestFrontendAndBackendAuthHeaders
 	TestGeneratedHeaders
 	TestGRPC

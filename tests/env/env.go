@@ -89,6 +89,7 @@ type TestEnv struct {
 	backendRejectRequestNum     int
 	backendRejectRequestStatus  int
 	disableHttp2ForHttpsBackend bool
+	useIPv6Address              bool
 }
 
 func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
@@ -302,6 +303,10 @@ func (e *TestEnv) DisableHttp2ForHttpsBackend() {
 	e.disableHttp2ForHttpsBackend = true
 }
 
+func (e *TestEnv) SetUseIPv6Address(b bool) {
+	e.useIPv6Address = b
+}
+
 // Setup setups Envoy, Config Manager, and Backend server for test.
 func (e *TestEnv) Setup(confArgs []string) error {
 	var envoyArgs []string
@@ -457,6 +462,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 				BackendAlwaysRespondRST:    e.backendAlwaysRespondRST,
 				BackendRejectRequestNum:    e.backendRejectRequestNum,
 				BackendRejectRequestStatus: e.backendRejectRequestStatus,
+				UseIPv6Address:             e.useIPv6Address,
 			})
 
 			if err != nil {
