@@ -39,7 +39,7 @@ const (
 )
 
 var (
-	debugComponents = flag.String("debug_components", "", `display debug logs for components, can be "all", "envoy", "configmanager", "bootstrap"`)
+	debugComponents = flag.String("debug_components", "envoy", `display debug logs for components, can be "all", "envoy", "configmanager", "bootstrap"`)
 )
 
 type TestEnv struct {
