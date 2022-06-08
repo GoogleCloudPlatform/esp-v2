@@ -40,7 +40,8 @@ var (
 		]
 		}
 	]
-	}
+	},
+	"dnsLookupFamily":"V4_PREFERRED"
 }`,
 		`{
                 "@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
@@ -79,7 +80,8 @@ var (
 				}
 			}
 		},
-		"type":"LOGICAL_DNS"
+		"type":"LOGICAL_DNS",
+		"dnsLookupFamily":"V4_PREFERRED"
 	}`, `
 {
                 "@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
@@ -118,7 +120,8 @@ var (
 				}
 			}
 		},
-		"type":"LOGICAL_DNS"
+		"type":"LOGICAL_DNS",
+		"dnsLookupFamily":"V4_PREFERRED"
 		}`,
 		`{
                         "@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
@@ -157,7 +160,8 @@ var (
 					}
 				}
 			},
-			"type":"LOGICAL_DNS"
+			"type":"LOGICAL_DNS",
+			"dnsLookupFamily":"V4_PREFERRED"
 		}`,
 		`	{
                         "@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
@@ -196,7 +200,8 @@ var (
 					}
 				}
 			},
-			"type":"LOGICAL_DNS"
+			"type":"LOGICAL_DNS",
+			"dnsLookupFamily":"V4_PREFERRED"
 		}`,
 		`{
 			"@type":"type.googleapis.com/envoy.config.cluster.v3.Cluster",
