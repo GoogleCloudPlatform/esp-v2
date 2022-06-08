@@ -199,6 +199,7 @@ func TestLocalBackendCluster(t *testing.T) {
 				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
+				DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 			},
 		},
 		{
@@ -210,6 +211,7 @@ func TestLocalBackendCluster(t *testing.T) {
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 				TransportSocket:      createTransportSocket("mybackend.com"),
+				DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 			},
 		},
 		{
@@ -221,6 +223,7 @@ func TestLocalBackendCluster(t *testing.T) {
 				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
 				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+				DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 			},
 		},
 		{
@@ -233,6 +236,7 @@ func TestLocalBackendCluster(t *testing.T) {
 				LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
 				TransportSocket:               createH2TransportSocket("mybackend.com"),
 				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+				DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 			},
 		},
 		{
@@ -257,6 +261,7 @@ func TestLocalBackendCluster(t *testing.T) {
 						},
 					},
 				},
+				DnsLookupFamily: clusterpb.Cluster_V4_PREFERRED,
 			},
 		},
 		{
@@ -287,6 +292,7 @@ func TestLocalBackendCluster(t *testing.T) {
 						},
 					},
 				},
+				DnsLookupFamily: clusterpb.Cluster_V4_PREFERRED,
 			},
 		},
 		{
@@ -394,6 +400,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:      createTransportSocket("mybackend.com"),
+					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
@@ -431,6 +438,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
+					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
@@ -471,6 +479,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
+					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 				{
 					Name:                 "backend-cluster-mybackend_https.com:443",
@@ -478,6 +487,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
 					TransportSocket:      createTransportSocket("mybackend_https.com"),
+					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
@@ -520,6 +530,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:               createH2TransportSocket("mybackend.com"),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
@@ -554,6 +565,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 80),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
@@ -595,6 +607,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend_http.com", 80),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 				{
 					Name:                          "backend-cluster-mybackend_https.com:443",
@@ -603,6 +616,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 					LoadAssignment:                util.CreateLoadAssignment("mybackend_https.com", 443),
 					TransportSocket:               createH2TransportSocket("mybackend_https.com"),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
