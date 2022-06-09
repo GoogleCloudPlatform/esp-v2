@@ -145,13 +145,16 @@ func TestEnvoyDnsLookupPolicy(t *testing.T) {
 		wantError       string
 	}{
 		// test cases for dns lookup policy 'auto'
-		{
-			desc:            "dns resolver contains both IPv4 and IPv6 and dns lookup policy is 'auto'",
-			dnsLookupPolicy: "auto",
-			domainAddresses: []string{platform.GetLoopbackAddress(), platform.GetLoopbackIPv6Address()},
-			isIPv6Backend:   true,
-			wantResp:        v6Response,
-		},
+		// TODO(dafudeng): uncomment the following test once GCP supports IPv6
+		/*
+			{
+				desc:            "dns resolver contains both IPv4 and IPv6 and dns lookup policy is 'auto'",
+				dnsLookupPolicy: "auto",
+				domainAddresses: []string{platform.GetLoopbackAddress(), platform.GetLoopbackIPv6Address()},
+				isIPv6Backend:   true,
+				wantResp:        v6Response,
+			},
+		*/
 		{
 			desc:            "dns resolver contains IPv4 only and dns lookup policy is 'auto'",
 			dnsLookupPolicy: "auto",
@@ -175,6 +178,8 @@ func TestEnvoyDnsLookupPolicy(t *testing.T) {
 			wantError:       `503 Service Unavailable, {"message":"no healthy upstream","code":503}`,
 		},
 		// test cases for dns lookup policy 'v6only'
+		// TODO(dafudeng): uncomment the following test once GCP supports IPv6
+		/*
 		{
 			desc:            "dns resolver contains both IPv4 and IPv6 and dns lookup policy is 'v6only'",
 			dnsLookupPolicy: "v6only",
@@ -182,6 +187,7 @@ func TestEnvoyDnsLookupPolicy(t *testing.T) {
 			isIPv6Backend:   true,
 			wantResp:        v6Response,
 		},
+		*/
 		{
 			desc:            "dns resolver contains IPv4 only and dns lookup policy is 'v6only'",
 			dnsLookupPolicy: "v6only",
@@ -197,6 +203,8 @@ func TestEnvoyDnsLookupPolicy(t *testing.T) {
 			isIPv6Backend:   false,
 			wantResp:        v4Response,
 		},
+		// TODO(dafudeng): uncomment the following test once GCP supports IPv6
+		/*
 		{
 			desc:            "dns resolver contains IPv6 only and dns lookup policy is 'v4preferred'",
 			dnsLookupPolicy: "v4preferred",
@@ -204,6 +212,7 @@ func TestEnvoyDnsLookupPolicy(t *testing.T) {
 			isIPv6Backend:   true,
 			wantResp:        v6Response,
 		},
+		 */
 	}
 
 	for _, tc := range testCase {

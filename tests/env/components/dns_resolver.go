@@ -40,7 +40,7 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		for _, address := range addresses {
 			ip := net.ParseIP(address)
 			if ip.To4() == nil {
-				// address is IPv6
+				// address is IPv6, append dns if type queried is either TypeAAAA or TypeANY (not TypeA)
 				if r.Question[0].Qtype != dns.TypeA {
 					msg.Answer = append(msg.Answer, &dns.AAAA{
 						Hdr:  dns.RR_Header{Name: domain, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 60},
@@ -48,6 +48,7 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 					})
 				}
 			} else {
+				// address is IPv4, append dns if type queried is either TypeA or TypeANY (not TypeAAAA)
 				if r.Question[0].Qtype != dns.TypeAAAA {
 					msg.Answer = append(msg.Answer, &dns.A{
 						Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
