@@ -39,22 +39,18 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	if ok {
 		for _, address := range addresses {
 			ip := net.ParseIP(address)
-			if ip.To4() == nil {
-				// address is IPv6, append dns if type queried is either TypeAAAA or TypeANY (not TypeA)
-				if r.Question[0].Qtype != dns.TypeA {
-					msg.Answer = append(msg.Answer, &dns.AAAA{
-						Hdr:  dns.RR_Header{Name: domain, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 60},
-						AAAA: ip,
-					})
-				}
-			} else {
-				// address is IPv4, append dns if type queried is either TypeA or TypeANY (not TypeAAAA)
-				if r.Question[0].Qtype != dns.TypeAAAA {
-					msg.Answer = append(msg.Answer, &dns.A{
-						Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
-						A:   ip,
-					})
-				}
+			if ip.To4() == nil && (r.Question[0].Qtype == dns.TypeAAAA || r.Question[0].Qtype == dns.TypeANY) {
+				// address is IPv6, dns type queried is either TypeAAAA or TypeANY
+				msg.Answer = append(msg.Answer, &dns.AAAA{
+					Hdr:  dns.RR_Header{Name: domain, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 60},
+					AAAA: ip,
+				})
+			} else if ip.To4() != nil && (r.Question[0].Qtype == dns.TypeA || r.Question[0].Qtype == dns.TypeANY) {
+				// address is IPv4, dns type queried is either TypeA or TypeANY
+				msg.Answer = append(msg.Answer, &dns.A{
+					Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
+					A:   ip,
+				})
 			}
 		}
 	} else {

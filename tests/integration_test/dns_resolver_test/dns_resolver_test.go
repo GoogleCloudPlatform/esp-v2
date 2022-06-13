@@ -180,13 +180,13 @@ func TestEnvoyDnsLookupPolicy(t *testing.T) {
 		// test cases for dns lookup policy 'v6only'
 		// TODO(dafudeng): uncomment the following test once GCP supports IPv6
 		/*
-		{
-			desc:            "dns resolver contains both IPv4 and IPv6 and dns lookup policy is 'v6only'",
-			dnsLookupPolicy: "v6only",
-			domainAddresses: []string{platform.GetLoopbackAddress(), platform.GetLoopbackIPv6Address()},
-			isIPv6Backend:   true,
-			wantResp:        v6Response,
-		},
+			{
+				desc:            "dns resolver contains both IPv4 and IPv6 and dns lookup policy is 'v6only'",
+				dnsLookupPolicy: "v6only",
+				domainAddresses: []string{platform.GetLoopbackAddress(), platform.GetLoopbackIPv6Address()},
+				isIPv6Backend:   true,
+				wantResp:        v6Response,
+			},
 		*/
 		{
 			desc:            "dns resolver contains IPv4 only and dns lookup policy is 'v6only'",
@@ -205,14 +205,14 @@ func TestEnvoyDnsLookupPolicy(t *testing.T) {
 		},
 		// TODO(dafudeng): uncomment the following test once GCP supports IPv6
 		/*
-		{
-			desc:            "dns resolver contains IPv6 only and dns lookup policy is 'v4preferred'",
-			dnsLookupPolicy: "v4preferred",
-			domainAddresses: []string{platform.GetLoopbackIPv6Address()},
-			isIPv6Backend:   true,
-			wantResp:        v6Response,
-		},
-		 */
+			{
+				desc:            "dns resolver contains IPv6 only and dns lookup policy is 'v4preferred'",
+				dnsLookupPolicy: "v4preferred",
+				domainAddresses: []string{platform.GetLoopbackIPv6Address()},
+				isIPv6Backend:   true,
+				wantResp:        v6Response,
+			},
+		*/
 	}
 
 	for _, tc := range testCase {
