@@ -60,7 +60,6 @@ class TestStartProxy(unittest.TestCase):
               '--service_config_id', '2019-11-09r0',
               '--http_request_timeout_s', '10',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # backend with DNS address, no version.
             (['--service=echo.gloud.run', '--backend=http://echo:8080',
@@ -107,8 +106,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata', '--underscores_in_headers',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # enable_jwks_async_fetch
             (['-R=managed','--disable_jwks_async_fetch',
@@ -123,8 +121,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata', '--underscores_in_headers',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # jwks_fetch retry backoff
             (['-R=managed','--disable_jwks_async_fetch',
@@ -147,8 +144,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata', '--underscores_in_headers',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # service_control_network_fail_policy=open
             (['-R=managed','--enable_strict_transport_security',
@@ -162,8 +158,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata', '--underscores_in_headers',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # service_control_network_fail_policy=close
             (['-R=managed','--enable_strict_transport_security',
@@ -178,8 +173,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_report_timeout_ms', '300',
               '--service_control_network_fail_open=false',
               '--check_metadata', '--underscores_in_headers',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # ssl_server_cert_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -187,8 +181,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_server_cert_path',
-              '/etc/endpoint/ssl', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             # ssl_server_root_cert_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -196,8 +189,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_server_root_cert_path',
-              '/etc/endpoint/ssl/root.cert', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/endpoint/ssl/root.cert', '--disable_tracing'
               ]),
             # legacy ssl_port specified
             (['-R=managed','--ssl_port=9000', '--disable_tracing'],
@@ -205,7 +197,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--ssl_server_cert_path', '/etc/nginx/ssl',
               '--listener_port', '9000', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # ssl_backend_client_cert_path specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -213,16 +204,14 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_cert_path',
-              '/etc/endpoint/ssl', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
               '--ssl_client_cert_path=/etc/endpoint/ssl'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_cert_path',
-              '/etc/endpoint/ssl', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/endpoint/ssl', '--disable_tracing'
               ]),
             # ssl_backend_client_root_certs_file specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -230,16 +219,14 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
-              '/etc/endpoints/ssl/ca-certificates.crt', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/endpoints/ssl/ca-certificates.crt', '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
               '--ssl_client_root_certs_file=/etc/endpoints/ssl/ca-certificates.crt' ],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
-              '/etc/endpoints/ssl/ca-certificates.crt', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/endpoints/ssl/ca-certificates.crt', '--disable_tracing'
               ]),
             # legacy enable_grpc_backend_ssl specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -247,8 +234,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
-              '/etc/nginx/trusted-ca-certificates.crt', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/nginx/trusted-ca-certificates.crt', '--disable_tracing'
               ]),
             # legacy tls_mutual_auth specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -256,8 +242,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_cert_path',
-              '/etc/nginx/ssl', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/etc/nginx/ssl', '--disable_tracing'
               ]),
             # ssl_minimum_protocol and ssl_maximum_protocol specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -266,8 +251,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_minimum_protocol',
-              'TLSv1.1','--ssl_maximum_protocol','TLSv1.3', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              'TLSv1.1','--ssl_maximum_protocol','TLSv1.3', '--disable_tracing'
               ]),
             # ssl_server_cipher_suites and ssl_backend_client_cipher_suites specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -278,8 +262,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080',
               '--ssl_server_cipher_suites', 'AES128-SHA,AES256-GCM-SHA384',
               '--ssl_backend_client_cipher_suites', 'AES256-SHA',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # legacy --ssl_protocols specified
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -287,24 +270,21 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_minimum_protocol',
-              'TLSv1.2','--ssl_maximum_protocol','TLSv1.3', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              'TLSv1.2','--ssl_maximum_protocol','TLSv1.3', '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
               '--ssl_protocols=TLSv1.2'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_minimum_protocol',
-              'TLSv1.2','--ssl_maximum_protocol','TLSv1.2', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              'TLSv1.2','--ssl_maximum_protocol','TLSv1.2', '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
               '--generate_self_signed_cert'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_server_cert_path',
-              '/tmp/ssl/endpoints', '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '/tmp/ssl/endpoints', '--disable_tracing'
               ]),
             # http2_port specified.
             (['-R=managed',
@@ -318,8 +298,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # listener_port specified.
             (['-R=managed',
@@ -333,8 +312,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--check_metadata',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # Cors: test default CORS flag values
             (['--service=test_bookstore.gloud.run',
@@ -346,7 +324,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--cors_preset', 'basic',
               '--cors_allow_origin', '*', '--cors_allow_origin_regex', '',
               '--cors_allow_methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
@@ -371,7 +348,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--cors_preset', 'cors_with_regex',
               '--cors_allow_origin', '*',
               '--cors_allow_origin_regex', '^https?://.+.google.com$',
@@ -392,8 +368,7 @@ class TestStartProxy(unittest.TestCase):
               '--envoy_xff_num_trusted_hops', '0',
               '--service_json_path', '/tmp/service.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # grpc backend with fixed version and tracing
             (['--service=test_bookstore.gloud.run', '--version=2019-11-09r0',
@@ -406,7 +381,6 @@ class TestStartProxy(unittest.TestCase):
               '--service_config_id', '2019-11-09r0',
               '--http_request_timeout_s', '10',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # json-grpc transcoder json print options
             (['--service=test_bookstore.gloud.run',
@@ -424,7 +398,6 @@ class TestStartProxy(unittest.TestCase):
               '--transcoding_always_print_primitive_fields',
               '--transcoding_always_print_enums_as_ints',
               '--transcoding_preserve_proto_field_names',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # json-grpc transcoder ignore query parameters
             (['--service=test_bookstore.gloud.run',
@@ -438,8 +411,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--transcoding_ignore_query_parameters', 'foo,bar',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--transcoding_ignore_query_parameters', 'foo,bar'
               ]),
             # json-grpc transcoder ignore unknown parameters
             (['--service=test_bookstore.gloud.run',
@@ -453,8 +425,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--transcoding_ignore_unknown_query_parameters',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--transcoding_ignore_unknown_query_parameters'
               ]),
             # json-grpc transcoding_query_parameters_disable_unescape_plus
             (['--service=test_bookstore.gloud.run',
@@ -468,8 +439,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--transcoding_query_parameters_disable_unescape_plus',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--transcoding_query_parameters_disable_unescape_plus'
               ]),
             # route_match disallow_colon_in_wildcard_path_segment
             (['--service=test_bookstore.gloud.run',
@@ -483,8 +453,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--disallow_colon_in_wildcard_path_segment',
-              '--backend_dns_lookup_family', 'v4preferred',
+              '--disallow_colon_in_wildcard_path_segment'
               ]),
             # Connection buffer limit bytes
             (['--service=test_bookstore.gloud.run',
@@ -498,7 +467,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--connection_buffer_limit_bytes', '1024'
               ]),
             # --enable_debug, with default http schema
@@ -515,7 +483,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--suppress_envoy_headers=false'
               ]),
             (['--service=test_bookstore.gloud.run',
@@ -533,7 +500,6 @@ class TestStartProxy(unittest.TestCase):
               '--access_log', '/foo/bar',
               '--access_log_format', '%START_TIME%',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred',
               ]),
             # Tracing disabled on non-gcp
             (['--service=test_bookstore.gloud.run',
@@ -544,7 +510,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
             # Tracing enabled when manually specifying project id on non-gcp.
@@ -557,7 +522,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--tracing_project_id', 'test_project_1234',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
             # Tracing params preserved.
@@ -579,7 +543,6 @@ class TestStartProxy(unittest.TestCase):
               '--tracing_outgoing_context', 'fake-outgoing-context',
               '--tracing_stackdriver_address', 'localhost:9990',
               '--tracing_sample_rate', '1',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # --disable_cloud_trace_auto_sampling overrides --tracing_sample_rate
             (['--service=test_bookstore.gloud.run',
@@ -595,7 +558,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--tracing_sample_rate', '0',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # --disable_tracing overrides all other tracing flags
             (['--service=test_bookstore.gloud.run',
@@ -611,7 +573,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # backend retry setting
             (['-R=managed',
@@ -621,8 +582,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
               '--backend_retry_ons', '5xx',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             (['-R=managed',
               '--http2_port=8079', '--backend_retry_num=10',
@@ -631,8 +591,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
               '--backend_retry_num', '10',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             (['-R=managed',
               '--http2_port=8079', '--backend_per_try_timeout=10s',
@@ -641,8 +600,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
               '--backend_per_try_timeout', '10s',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             (['-R=managed',
               '--http2_port=8079', '--backend_retry_on_status_codes=500,501',
@@ -651,8 +609,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
               '--backend_retry_on_status_codes', '500,501',
-              '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--disable_tracing'
               ]),
             # Service account key does not assume non-gcp
             # and does not disable tracing.
@@ -669,7 +626,6 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--disable_tracing',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--service_account_key', '/tmp/service_account_key',
               ]),
             # Serverless sets compute platform and xff_num_trusted_hops.
@@ -685,8 +641,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080',
               '--service_json_path', '/tmp/service_config.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # Serverless with override for xff_num_trusted_hops.
             (['--on_serverless',
@@ -702,8 +657,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080',
               '--service_json_path', '/tmp/service_config.json',
               '--disable_tracing',
-              '--compute_platform_override', 'Cloud Run(ESPv2)',
-              '--backend_dns_lookup_family', 'v4preferred'
+              '--compute_platform_override', 'Cloud Run(ESPv2)'
               ]),
             # Single header flag: --add_request_header
             (['--rollout_strategy=fixed',
@@ -714,7 +668,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_request_headers', 'k1=v1',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Double header flags: --add_request_header
             (['--rollout_strategy=fixed',
@@ -726,7 +679,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_request_headers', 'k1=v1;k2=v2',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Single header flag: --append_request_header
             (['--rollout_strategy=fixed',
@@ -737,7 +689,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_request_headers', 'k1=v1',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Double header flags: --append_request_header
             (['--rollout_strategy=fixed',
@@ -749,7 +700,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_request_headers', 'k1=v1;k2=v2',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Single header flag: --add_response_header
             (['--rollout_strategy=fixed',
@@ -760,7 +710,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_response_headers', 'k1=v1',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Double header flags: --add_response_header
             (['--rollout_strategy=fixed',
@@ -772,7 +721,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_response_headers', 'k1=v1;k2=v2',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Single header flag: --append_response_header
             (['--rollout_strategy=fixed',
@@ -783,7 +731,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_response_headers', 'k1=v1',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Double header flags: --append_response_header
             (['--rollout_strategy=fixed',
@@ -795,7 +742,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_response_headers', 'k1=v1;k2=v2',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Path security options.
             (['--rollout_strategy=fixed',
@@ -808,7 +754,6 @@ class TestStartProxy(unittest.TestCase):
               '--service_json_path', '/tmp/service_config.json',
               '--normalize_path=false',
               '--merge_slashes_in_path=false',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             (['--rollout_strategy=fixed',
               '--service_json_path=/tmp/service_config.json',
@@ -818,7 +763,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--service_json_path', '/tmp/service_config.json',
               '--disallow_escaped_slashes_in_path',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # Operation name header.
             (['--rollout_strategy=fixed',
@@ -829,7 +773,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--enable_operation_name_header',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # response_compression.
             (['--rollout_strategy=fixed',
@@ -840,7 +783,6 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--enable_response_compression',
               '--service_json_path', '/tmp/service_config.json',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # passing the flag --health_check_grp_backend
             (['--service=test_bookstore.gloud.run',
@@ -855,7 +797,6 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
             # passing the flag --ads_named_pipe
             (['--service=test_bookstore.gloud.run',
@@ -869,7 +810,6 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--backend_dns_lookup_family', 'v4preferred',
               '--ads_named_pipe', '@espv2-named-pipe-9'
               ]),
             # passing the flags: --health_check_grp_backend, --health_check_grp_backend_interval and --health_check_grp_backend_service
@@ -889,7 +829,6 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--backend_dns_lookup_family', 'v4preferred'
               ]),
         ]
 

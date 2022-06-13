@@ -811,7 +811,7 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument(
         '--backend_dns_lookup_family',
-        default='v4preferred',
+        default=None,
         choices=['auto', 'v4only', 'v6only', 'v4preferred', 'all'],
         help='''
         Define the dns lookup family for all backends. The options are "auto",

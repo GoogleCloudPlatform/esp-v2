@@ -75,7 +75,7 @@ func NewEchoHTTPServer(port uint16, useWrongCert bool, flags *EchoHTTPServerFlag
 	}
 
 	if flags.UseIPv6Address {
-		serverArgs = append(serverArgs, "--use_ipv6_address=true")
+		serverArgs = append(serverArgs, "--use_ipv6_address")
 	}
 
 	cmd := exec.Command(platform.GetFilePath(platform.Echo), serverArgs...)

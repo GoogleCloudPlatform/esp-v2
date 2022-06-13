@@ -40,7 +40,7 @@ var (
 	CorsPreset           = flag.String("cors_preset", defaults.CorsPreset, `enable CORS support, must be either "basic" or "cors_with_regex"`)
 
 	// Backend routing configurations.
-	BackendDnsLookupFamily = flag.String("backend_dns_lookup_family", defaults.BackendDnsLookupFamily, `Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".`)
+	BackendDnsLookupFamily = flag.String("backend_dns_lookup_family", defaults.BackendDnsLookupFamily, `Define the dns lookup family for all backends. The options are "auto", "v4only", "v6only", "v4preferred" and "all". The default is "v4preferred". "auto" is a legacy name, it behaves as "v6preferred".`)
 
 	// Envoy specific configurations.
 	ClusterConnectTimeout = flag.Duration("cluster_connect_timeout", defaults.ClusterConnectTimeout, "cluster connect timeout in seconds")
