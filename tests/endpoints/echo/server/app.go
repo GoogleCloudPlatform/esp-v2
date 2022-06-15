@@ -46,6 +46,7 @@ var (
 	alwaysRespondRST      = flag.Bool("always_respond_rst", false, "If true, the backend will respond RST all the time")
 	rejectRequestNum      = flag.Int("reject_request_num", 0, "The first N requests that the backend will reject")
 	rejectRequestStatus   = flag.Int("reject_request_status", 0, `The http status code when the backend uses to reject the first N requests defined by reject_request_num`)
+	useIPv6Address        = flag.Bool("use_ipv6_address", false, "Set to true to bind server to an IPv6 address. It's false be default, binding to IPv4 address.")
 	webSocketUpgrader     = websocket.Upgrader{}
 )
 
@@ -102,6 +103,8 @@ func main() {
 		Handler(corsHandler(authInfoHandler))
 	r.Path("/auth/info/auth0").Methods("GET").
 		HandlerFunc(authInfoHandler)
+	r.Path("/ipversion").Methods("GET").
+		HandlerFunc(getIPVersionHandler)
 	r.PathPrefix("/bearertoken/").Methods("GET", "OPTIONS").
 		HandlerFunc(bearerTokenHandler)
 	r.PathPrefix("/dynamicrouting").Methods("OPTIONS", "GET", "POST").
@@ -325,6 +328,15 @@ func simpleGetCors(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// serverAddressHandler
+func getIPVersionHandler(w http.ResponseWriter, r *http.Request) {
+	if *useIPv6Address {
+		w.Write([]byte("IPv6"))
+	} else {
+		w.Write([]byte("IPv4"))
+	}
+}
+
 func (h corsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Origin") != "" {
 		fmt.Printf("Origin: %s", r.Header.Get("Origin"))
@@ -401,7 +413,12 @@ func errorf(w http.ResponseWriter, code int, format string, a ...interface{}) {
 }
 
 func createServer() (*http.Server, error) {
-	addr := fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port)
+	var addr string
+	if *useIPv6Address {
+		addr = fmt.Sprintf("[%v]:%d", platform.GetLoopbackIPv6Address(), *port)
+	} else {
+		addr = fmt.Sprintf("%v:%d", platform.GetLoopbackAddress(), *port)
+	}
 	server := &http.Server{
 		Addr: addr,
 	}

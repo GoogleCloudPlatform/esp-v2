@@ -277,8 +277,12 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		c.DnsLookupFamily = clusterpb.Cluster_V4_ONLY
 	case "v6only":
 		c.DnsLookupFamily = clusterpb.Cluster_V6_ONLY
+	case "v4preferred":
+		c.DnsLookupFamily = clusterpb.Cluster_V4_PREFERRED
+	case "all":
+		c.DnsLookupFamily = clusterpb.Cluster_ALL
 	default:
-		return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only or v6only are valid.", opt.BackendDnsLookupFamily)
+		return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only, v6only, v4preferred, and all are valid.", opt.BackendDnsLookupFamily)
 	}
 	return c, nil
 }

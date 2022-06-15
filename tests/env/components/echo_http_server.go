@@ -35,6 +35,7 @@ type EchoHTTPServerFlags struct {
 	BackendAlwaysRespondRST    bool
 	BackendRejectRequestNum    int
 	BackendRejectRequestStatus int
+	UseIPv6Address             bool
 }
 
 func NewEchoHTTPServer(port uint16, useWrongCert bool, flags *EchoHTTPServerFlags) (*EchoHTTPServer, error) {
@@ -72,6 +73,11 @@ func NewEchoHTTPServer(port uint16, useWrongCert bool, flags *EchoHTTPServerFlag
 	if flags.BackendAlwaysRespondRST {
 		serverArgs = append(serverArgs, "--always_respond_rst")
 	}
+
+	if flags.UseIPv6Address {
+		serverArgs = append(serverArgs, "--use_ipv6_address")
+	}
+
 	cmd := exec.Command(platform.GetFilePath(platform.Echo), serverArgs...)
 
 	cmd.Stderr = os.Stderr

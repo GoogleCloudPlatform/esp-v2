@@ -812,9 +812,11 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '--backend_dns_lookup_family',
         default=None,
-        choices=['auto', 'v4only', 'v6only'],
+        choices=['auto', 'v4only', 'v6only', 'v4preferred', 'all'],
         help='''
-        Define the dns lookup family for all backends. The options are "auto", "v4only" and "v6only". The default is "auto".
+        Define the dns lookup family for all backends. The options are "auto",
+        "v4only", "v6only", "v4preferred", and "all". The default is
+        "v4preferred". "auto" is a legacy name, it behaves as "v6preferred".
         ''')
     parser.add_argument('--enable_debug', action='store_true', default=False,
         help='''

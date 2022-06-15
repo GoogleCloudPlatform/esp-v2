@@ -18,7 +18,7 @@ func CommonArgs() []string {
 	return []string{
 		"--service_config_id=test-config-id",
 		"--rollout_strategy=fixed",
-		"--backend_dns_lookup_family=v4only",
+		"--backend_dns_lookup_family=v4preferred",
 		"--suppress_envoy_headers",
 	}
 

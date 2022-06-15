@@ -155,7 +155,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 
 	return ConfigGeneratorOptions{
 		CommonOptions:                           DefaultCommonOptions(),
-		BackendDnsLookupFamily:                  "auto",
+		BackendDnsLookupFamily:                  "v4preferred",
 		BackendAddress:                          fmt.Sprintf("http://%s:8082", util.LoopbackIPv4Addr),
 		EnableBackendAddressOverride:            false,
 		ClusterConnectTimeout:                   20 * time.Second,
