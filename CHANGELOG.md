@@ -1,3 +1,9 @@
+# Release 2.37.0 16-06-2022
+
+- Added two new options to flag backend_dns_lookup_family and changed its default to "v4preferred"  (#705)
+- Update base alpine image to 3.16 (#703)
+- Update service-control-client to 05/31/2022 (#697)
+
 # Release 2.36.0 25-04-2022
 
 - Upgraded Envoy to 1.22.0 (#684)
