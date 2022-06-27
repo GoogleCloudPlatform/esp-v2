@@ -228,8 +228,8 @@ func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
 
 func (s *ServiceInfo) processApis() error {
 	for _, api := range s.serviceConfig.GetApis() {
-		if !s.isAPIAllowed(api.GetName()) {
-			glog.Warningf("Skip API %q because it is not allowed.", api.GetName())
+		if s.isDiscoveryAPI(api.GetName()) {
+			glog.Warningf("Skip API %q because discovery API is not supported.", api.GetName())
 			continue
 		}
 		s.ApiNames = append(s.ApiNames, api.Name)
@@ -266,8 +266,8 @@ func (s *ServiceInfo) addGrpcHttpRules() error {
 	}
 
 	for _, api := range s.serviceConfig.GetApis() {
-		if !s.isAPIAllowed(api.GetName()) {
-			glog.Warningf("Skip API %q because it is not allowed.", api.GetName())
+		if s.isDiscoveryAPI(api.GetName()) {
+			glog.Warningf("Skip API%q because discovery API is not supported.", api.GetName())
 			continue
 		}
 		for _, method := range api.GetMethods() {
@@ -326,8 +326,9 @@ func (s *ServiceInfo) processAccessToken() {
 
 func (s *ServiceInfo) processQuota() error {
 	for _, metricRule := range s.ServiceConfig().GetQuota().GetMetricRules() {
-		if !s.isAPIAllowed(metricRule.GetSelector()) {
-			glog.Warningf("Skip metric rule %q because it is not allowed.", metricRule.GetSelector())
+		selector := metricRule.GetSelector()
+		if s.isDiscoveryAPI(selector) {
+			glog.Warningf("Skip quota metric rule %q because discovery API is not supported.", selector)
 			continue
 		}
 		var metricCosts []*scpb.MetricCost
@@ -414,8 +415,9 @@ func (s *ServiceInfo) processHttpRule() error {
 	addedRouteMatchWithOptionsSet := make(map[string]bool)
 
 	for _, rule := range s.ServiceConfig().GetHttp().GetRules() {
-		if !s.isAPIAllowed(rule.GetSelector()) {
-			glog.Warningf("Skip http rule %q because it is not allowed.", rule.GetSelector())
+		selector := rule.GetSelector()
+		if s.isDiscoveryAPI(selector) {
+			glog.Warningf("Skip http rule %q because discovery API is not supported.", selector)
 			continue
 		}
 		method, err := s.getMethod(rule.GetSelector())
@@ -522,8 +524,9 @@ func (s *ServiceInfo) processBackendRule() error {
 	backendRoutingClustersMap := make(map[string]string)
 
 	for _, r := range s.ServiceConfig().Backend.GetRules() {
-		if !s.isAPIAllowed(r.GetSelector()) {
-			glog.Warningf("Skip backend rule %q because it is not allowed.", r.GetSelector())
+		selector := r.Selector
+		if s.isDiscoveryAPI(selector) {
+			glog.Warningf("Skip backend rule %q because discovery API is not supported.", selector)
 			continue
 		}
 		if r.Address == "" || s.Options.EnableBackendAddressOverride {
@@ -717,8 +720,9 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 
 func (s *ServiceInfo) processUsageRule() error {
 	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
-		if !s.isAPIAllowed(r.GetSelector()) {
-			glog.Warningf("Skip usage rule %q because it is not allowed.", r.GetSelector())
+		selector := r.GetSelector()
+		if s.isDiscoveryAPI(selector) {
+			glog.Warningf("Skip usage rule %q because discovery API is not supported.", selector)
 			continue
 		}
 		method, err := s.getMethod(r.GetSelector())
@@ -769,8 +773,9 @@ func (s *ServiceInfo) processTranscodingIgnoredQueryParams() error {
 
 func (s *ServiceInfo) processApiKeyLocations() error {
 	for _, rule := range s.ServiceConfig().GetSystemParameters().GetRules() {
-		if !s.isAPIAllowed(rule.GetSelector()) {
-			glog.Warningf("Skip system parameter rule %q because it is not allowed.", rule.GetSelector())
+		selector := rule.GetSelector()
+		if s.isDiscoveryAPI(selector) {
+			glog.Warningf("Skip SystemParameterRule %q because discovery API is not supported.", selector)
 			continue
 		}
 		apiKeyLocationParameters := []*confpb.SystemParameter{}
@@ -925,11 +930,16 @@ func (s *ServiceInfo) LocalBackendClusterName() string {
 	return util.BackendClusterName(fmt.Sprintf("%s_local", s.Name))
 }
 
+func (s *ServiceInfo) isDiscoveryAPI(operation string) bool {
+	return strings.HasPrefix(operation, "google.discovery") && !s.Options.AllowDiscoveryAPIs
+}
+
 func (s *ServiceInfo) processAuthRequirement() error {
 	auth := s.serviceConfig.GetAuthentication()
 	for _, rule := range auth.GetRules() {
-		if !s.isAPIAllowed(rule.GetSelector()) {
-			glog.Warningf("Skip auth requirement rule %q because it is not allowed.", rule.GetSelector())
+		selector := rule.GetSelector()
+		if s.isDiscoveryAPI(selector) {
+			glog.Warningf("Skip Auth rule %q because discovery API is not supported.", selector)
 			continue
 		}
 		if len(rule.GetRequirements()) > 0 {
@@ -941,23 +951,6 @@ func (s *ServiceInfo) processAuthRequirement() error {
 		}
 	}
 	return nil
-}
-
-func (s *ServiceInfo) isAPIAllowed(str string) bool {
-	// TODO(b/184393425): API discovery is not supported yet.
-	if strings.HasPrefix(str, "google.discovery") && !s.Options.AllowDiscoveryAPIs {
-		return false
-	}
-	if len(s.Options.APIAllowList) == 0 {
-		// API allowlist is empty. We'll treat all the APIs as allowed.
-		return true
-	}
-	for _, apiAllowed := range s.Options.APIAllowList {
-		if strings.HasPrefix(str, apiAllowed) {
-			return true
-		}
-	}
-	return false
 }
 
 // If the backend address's scheme is grpc/grpcs, it should be changed it http or https.
