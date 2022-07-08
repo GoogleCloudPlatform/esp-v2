@@ -14,8 +14,8 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-SERVICE_CONTROL_CLIENT_GIT_SHA = "be6c7753c6795d1e6799a6f761eb4a5299c3547c"
-SERVICE_CONTROL_CLIENT_SHA256 = "d35fdbcfb9292efe920edb38d346a3a037d2b5fbcabef72f425784d30bf97182"
+SERVICE_CONTROL_CLIENT_GIT_SHA = "6946ca3f364aadb95b6c1887c16d5b0d157197b9"
+SERVICE_CONTROL_CLIENT_SHA256 = "a73068dae4b275ef1bc3f1da3626d9b8a751ac5664643c81b0dfa0ade134f9d1"
 
 def service_control_client_repositories(bind = True):
     http_archive(
