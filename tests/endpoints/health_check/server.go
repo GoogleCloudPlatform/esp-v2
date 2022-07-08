@@ -70,11 +70,11 @@ func NewServer() (*Server, error) {
 // HealthyTime is the amount of time it takes for the service to be considered healthy.
 //
 // Example: startTime = 2 sec, healthyTime = 3 sec
+//
 //	Tick 0: Server not running
 //	Tick 1: Server not running
 //	Tick 2: Server running but unhealthy
 //	Tick 3: Server running and healthy
-//
 func (s *Server) StartServer(startTime time.Duration, healthyTime time.Duration) {
 
 	// Start a timer in the background to set the healthy status

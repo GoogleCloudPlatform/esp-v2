@@ -142,7 +142,7 @@ var MakeHttpCallWithDecode = func(addr, httpMethod, method, token string, header
 	return string(content), encoding, nil
 }
 
-//TODO(b/162626126): cleanup duplicate call methods.
+// TODO(b/162626126): cleanup duplicate call methods.
 func makeHTTP2Call(addr, httpMethod, method, token string, header http.Header) (string, error) {
 	cli := http.Client{
 		// Skip TLS dial

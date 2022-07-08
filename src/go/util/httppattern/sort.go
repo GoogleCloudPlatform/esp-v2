@@ -27,6 +27,7 @@ type MethodSlice []*Method
 // It will raise errors:
 //   - methods with duplicate http pattern
 //   - invalid uri template
+//
 // The time complexity is O(W * L), where W is the size of slice
 // and L is the size of uri template segments
 func Sort(methods *MethodSlice) error {

@@ -382,6 +382,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 
 	confArgs = append(confArgs, fmt.Sprintf("--listener_port=%v", e.ports.ListenerPort))
 	confArgs = append(confArgs, fmt.Sprintf("--service=%v", e.fakeServiceConfig.Name))
+	confArgs = append(confArgs, fmt.Sprintf("--token_agent_port=%v", e.ports.TokenAgentPort))
 
 	// Tracing configuration.
 	if e.enableTracing {

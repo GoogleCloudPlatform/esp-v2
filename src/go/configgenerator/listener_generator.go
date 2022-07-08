@@ -66,8 +66,8 @@ func AddPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen *filterco
 }
 
 // GetFilterConfigAndAddPerRouteConfigGen does two things
-//   * Return all http filter configs in a list
-//   * In place add the perRouteConfigGen function to all methods defined in serviceInfo
+//   - Return all http filter configs in a list
+//   - In place add the perRouteConfigGen function to all methods defined in serviceInfo
 func GetFilterConfigAndAddPerRouteConfigGen(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.FilterGenerator) ([]*hcmpb.HttpFilter, error) {
 	httpFilters := []*hcmpb.HttpFilter{}
 
