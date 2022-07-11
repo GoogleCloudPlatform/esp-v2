@@ -100,10 +100,11 @@ func generateAccessToken(keyData []byte) (string, time.Duration, error) {
 // It follows the following scheme:
 // Request: GET /local/access_token.
 // Response: access token response is a JSON payload in the format:
-// {
-//   "access_token": "string",
-//   "expires_in": uint
-// }
+//
+//	{
+//	  "access_token": "string",
+//	  "expires_in": uint
+//	}
 func MakeTokenAgentHandler(serviceAccountKey string) http.Handler {
 	r := mux.NewRouter()
 

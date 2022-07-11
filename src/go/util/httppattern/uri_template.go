@@ -176,7 +176,8 @@ func (u *UriTemplate) Regex(disallowColonInWildcardPathSegment bool) string {
 
 // `generateVariableBindingSyntax` tries to recover the following syntax with
 // replacement of fieldPathName.
-//    Variable = "{" FieldPath [ "=" Segments ] "}" ;
+//
+//	Variable = "{" FieldPath [ "=" Segments ] "}" ;
 func generateVariableBindingSyntax(segments []string, v *variable) string {
 	pathVar := bytes.Buffer{}
 	hasWildcard := false

@@ -58,9 +58,9 @@ type FilterGenerator struct {
 
 // The function type to generate filter config.
 // Return
-//  - the filter config
-//  - the methods needed to add per route config
-//  - the error
+//   - the filter config
+//   - the methods needed to add per route config
+//   - the error
 type FilterGenFunc func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error)
 
 // MakeFilterGenerators provide of a slice of FilterGenerator in sequence.
