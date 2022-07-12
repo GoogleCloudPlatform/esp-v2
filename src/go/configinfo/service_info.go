@@ -719,6 +719,17 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 }
 
 func (s *ServiceInfo) processUsageRule() error {
+
+	// TODO(dafudeng) b/238652680
+	// hard code to allow health check, if defined, to bypass service control,
+	// need to refactor this.
+	if method, err := s.getMethod("grpc.health.v1.Health.Check"); err == nil {
+		method.SkipServiceControl = true
+	}
+	if method, err := s.getMethod("grpc.health.v1.Health.Watch"); err == nil {
+		method.SkipServiceControl = true
+	}
+
 	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
 		selector := r.GetSelector()
 		if s.isDiscoveryAPI(selector) {

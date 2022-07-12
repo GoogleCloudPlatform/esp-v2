@@ -3776,6 +3776,117 @@ func TestProcessAccessToken(t *testing.T) {
 
 }
 
+func TestProcessUsageRule(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		wantMethods       map[string]*MethodInfo
+	}{
+		{
+			desc: "Make health check methods skip service control by default",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "grpc.health.v1.Health",
+						Methods: []*apipb.Method{
+							{
+								Name: "Check",
+							},
+							{
+								Name: "Watch",
+							},
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*MethodInfo{
+				"grpc.health.v1.Health.Check": &MethodInfo{
+					ShortName: "Check",
+					ApiName:   "grpc.health.v1.Health",
+					HttpRule: []*httppattern.Pattern{
+						{
+							HttpMethod:  util.POST,
+							UriTemplate: parseUriTemplate("/grpc.health.v1.Health/Check"),
+						},
+					},
+					SkipServiceControl: true,
+				},
+				"grpc.health.v1.Health.Watch": &MethodInfo{
+					ShortName: "Watch",
+					ApiName:   "grpc.health.v1.Health",
+					HttpRule: []*httppattern.Pattern{
+						{
+							HttpMethod:  util.POST,
+							UriTemplate: parseUriTemplate("/grpc.health.v1.Health/Watch"),
+						},
+					},
+					SkipServiceControl: true,
+				},
+			},
+		},
+		{
+			desc: "Attach usage rules to methods",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "grpc.health.v1.Health",
+						Methods: []*apipb.Method{
+							{
+								Name: "Check",
+							},
+						},
+					},
+				},
+				Usage: &confpb.Usage{
+					Rules: []*confpb.UsageRule{
+						{
+							Selector:           "grpc.health.v1.Health.Check",
+							SkipServiceControl: false,
+						},
+					},
+				},
+			},
+			wantMethods: map[string]*MethodInfo{
+				"grpc.health.v1.Health.Check": &MethodInfo{
+					ShortName: "Check",
+					ApiName:   "grpc.health.v1.Health",
+					HttpRule: []*httppattern.Pattern{
+						{
+							HttpMethod:  util.POST,
+							UriTemplate: parseUriTemplate("/grpc.health.v1.Health/Check"),
+						},
+					},
+					SkipServiceControl: false,
+				},
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = "grpc://127.0.0.1:80"
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(serviceInfo.Methods) != len(tc.wantMethods) {
+				t.Fatalf("Num methods mismatch \ngot : %v, want: %v", serviceInfo.Methods, tc.wantMethods)
+			}
+			for key, gotMethod := range serviceInfo.Methods {
+				wantMethod := tc.wantMethods[key]
+
+				// We're not testing backend info here.
+				gotMethod.BackendInfo = nil
+
+				if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
+					t.Errorf("Method mistmatch \ngot : %+v,\nwant: %+v", gotMethod, wantMethod)
+				}
+			}
+		})
+	}
+}
+
 func parseUriTemplate(input string) *httppattern.UriTemplate {
 	u, _ := httppattern.ParseUriTemplate(input)
 	return u
