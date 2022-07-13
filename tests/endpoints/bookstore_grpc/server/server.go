@@ -34,7 +34,6 @@ import (
 
 	bspbv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
 	bspbv2 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v2"
-	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
@@ -167,7 +166,7 @@ func NewBookstoreServer(port uint16, enableTLS, useUnAuthorizedCert bool, rootCe
 	}
 
 	// Register gRPC health services and bookstore
-	healthgrpc.RegisterHealthServer(grpcServer, healthServer)
+	healthpb.RegisterHealthServer(grpcServer, healthServer)
 	bspbv1.RegisterBookstoreServer(grpcServer, endpoint.bs1)
 	bspbv2.RegisterBookstoreServer(grpcServer, endpoint.bs2)
 

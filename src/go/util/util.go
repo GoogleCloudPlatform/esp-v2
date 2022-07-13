@@ -155,3 +155,8 @@ func MaybeTruncateSpanName(spanName string) string {
 	newSpanName := spanName[:SpanNameMaxByteNum-3] + "..."
 	return newSpanName
 }
+
+var HardCodedSkipServiceControlMethods = []string{
+	"grpc.health.v1.Health.Check",
+	"grpc.health.v1.Health.Watch",
+}

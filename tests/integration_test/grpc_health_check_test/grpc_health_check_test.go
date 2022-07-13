@@ -82,6 +82,7 @@ func TestHealthCheckGrpcBackend(t *testing.T) {
 			if err := s.Setup(args); err != nil {
 				t.Fatalf("fail to setup test env, %v", err)
 			}
+
 			healthUrl := fmt.Sprintf("http://%v:%v/healthz", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 
 			for idx, period := range tc.periods {
