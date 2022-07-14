@@ -1344,8 +1344,9 @@ def gen_proxy_config(args):
         elif args.tracing_sample_rate:
             proxy_conf.extend(["--tracing_sample_rate",
                                str(args.tracing_sample_rate)])
-        if args.enable_debug:
-            proxy_conf.append("--tracing_enable_verbose_annotations")
+        # TODO(nareddyt): Enable if we find it's helpful for gRPC streaming.
+        # if args.enable_debug:
+        #     proxy_conf.append("--tracing_enable_verbose_annotations")
 
     if args.transcoding_always_print_primitive_fields:
         proxy_conf.append("--transcoding_always_print_primitive_fields")
