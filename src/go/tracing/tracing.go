@@ -144,5 +144,6 @@ func CreateTracing(opts options.CommonOptions) (*hcmpb.HttpConnectionManager_Tra
 			Name:       "envoy.tracers.opencensus",
 			ConfigType: &tracepb.Tracing_Http_TypedConfig{TypedConfig: typedConfig},
 		},
+		Verbose: opts.TracingEnableVerboseTiming,
 	}, nil
 }

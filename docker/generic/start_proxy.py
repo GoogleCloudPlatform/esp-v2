@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # Copyright 2019 Google LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -1341,6 +1344,8 @@ def gen_proxy_config(args):
         elif args.tracing_sample_rate:
             proxy_conf.extend(["--tracing_sample_rate",
                                str(args.tracing_sample_rate)])
+        if args.enable_debug:
+            proxy_conf.append("--tracing_enable_verbose_timing")
 
     if args.transcoding_always_print_primitive_fields:
         proxy_conf.append("--transcoding_always_print_primitive_fields")

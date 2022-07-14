@@ -44,6 +44,7 @@ var (
 	TracingMaxNumAnnotations   = flag.Int64("tracing_max_num_annotations", defaults.TracingMaxNumAnnotations, "Sets the maximum number of annotations that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of annotations published will be much less.")
 	TracingMaxNumMessageEvents = flag.Int64("tracing_max_num_message_events", defaults.TracingMaxNumMessageEvents, "Sets the maximum number of message events that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of message events published will be much less.")
 	TracingMaxNumLinks         = flag.Int64("tracing_max_num_links", defaults.TracingMaxNumLinks, "Sets the maximum number of links that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of links published will be much less.")
+	TracingEnableVerboseTiming = flag.Bool("tracing_enable_verbose_timing", defaults.TracingEnableVerboseTiming, "If enabled, spans are annotated with timing events on when the request/response started/ended")
 
 	//Suspected Envoy has listener initialization bug: if a http filter needs to use
 	//a cluster with DSN lookup for initialization, e.g. fetching a remote access
@@ -83,6 +84,7 @@ func DefaultCommonOptionsFromFlags() options.CommonOptions {
 		TracingMaxNumAnnotations:           *TracingMaxNumAnnotations,
 		TracingMaxNumMessageEvents:         *TracingMaxNumMessageEvents,
 		TracingMaxNumLinks:                 *TracingMaxNumLinks,
+		TracingEnableVerboseTiming:         *TracingEnableVerboseTiming,
 		MetadataURL:                        *MetadataURL,
 		IamURL:                             *IamURL,
 		DisallowColonInWildcardPathSegment: *DisallowColonInWildcardPathSegment,

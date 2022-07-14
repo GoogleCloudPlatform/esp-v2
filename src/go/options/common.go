@@ -39,6 +39,7 @@ type CommonOptions struct {
 	TracingMaxNumAnnotations   int64
 	TracingMaxNumMessageEvents int64
 	TracingMaxNumLinks         int64
+	TracingEnableVerboseTiming bool
 
 	// Flags for metadata
 	NonGCP             bool
