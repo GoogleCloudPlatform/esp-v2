@@ -558,7 +558,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--tracing_sample_rate', '1',
-              '--tracing_enable_verbose_timing',
+              '--tracing_enable_verbose_annotations',
               '--suppress_envoy_headers=false',
               ]),
             # --disable_cloud_trace_auto_sampling overrides --tracing_sample_rate

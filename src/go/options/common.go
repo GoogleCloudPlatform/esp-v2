@@ -29,17 +29,17 @@ type CommonOptions struct {
 	GeneratedHeaderPrefix string
 
 	// Flags for tracing
-	DisableTracing             bool
-	TracingProjectId           string
-	TracingStackdriverAddress  string
-	TracingSamplingRate        float64
-	TracingIncomingContext     string
-	TracingOutgoingContext     string
-	TracingMaxNumAttributes    int64
-	TracingMaxNumAnnotations   int64
-	TracingMaxNumMessageEvents int64
-	TracingMaxNumLinks         int64
-	TracingEnableVerboseTiming bool
+	DisableTracing                  bool
+	TracingProjectId                string
+	TracingStackdriverAddress       string
+	TracingSamplingRate             float64
+	TracingIncomingContext          string
+	TracingOutgoingContext          string
+	TracingMaxNumAttributes         int64
+	TracingMaxNumAnnotations        int64
+	TracingMaxNumMessageEvents      int64
+	TracingMaxNumLinks              int64
+	TracingEnableVerboseAnnotations bool
 
 	// Flags for metadata
 	NonGCP             bool
