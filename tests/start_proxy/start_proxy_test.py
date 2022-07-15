@@ -544,6 +544,23 @@ class TestStartProxy(unittest.TestCase):
               '--tracing_stackdriver_address', 'localhost:9990',
               '--tracing_sample_rate', '1',
               ]),
+            # Enable debug affects tracing.
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--tracing_sample_rate=1',
+              '--version=2019-11-09r0',
+              '--enable_debug',
+              ],
+             ['bin/configmanager', '--logtostderr',
+              '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000',
+              '--v', '1',
+              '--service', 'test_bookstore.gloud.run',
+              '--service_config_id', '2019-11-09r0',
+              '--tracing_sample_rate', '1',
+              # '--tracing_enable_verbose_annotations',
+              '--suppress_envoy_headers=false',
+              ]),
             # --disable_cloud_trace_auto_sampling overrides --tracing_sample_rate
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',
@@ -837,7 +854,7 @@ class TestStartProxy(unittest.TestCase):
             print("==== checking flags [{}]".format(', '.join(flags)))
             gotArgs = gen_proxy_config(self.parser.parse_args(flags))
             self.assertEqual(gotArgs, wantedArgs,
-                             msg="Fail for input #{} [{}] : got != want".format(i, ', '.join(flags)))
+                             msg="Fail for input #{}: \ngot  {} \nwant {}".format(i, gotArgs, wantedArgs))
             i += 1
 
     def test_gen_proxy_config_error(self):
