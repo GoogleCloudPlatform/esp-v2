@@ -49,6 +49,7 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	visibilitypb "google.golang.org/genproto/googleapis/api/visibility"
 )
 
 // Helper to convert Json string to protobuf.Any.
@@ -64,6 +65,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(smpb.ConfigFile), nil
 	case "type.googleapis.com/google.api.HttpRule":
 		return new(annotationspb.HttpRule), nil
+	case "type.googleapis.com/google.api.VisibilityRule":
+		return new(visibilitypb.VisibilityRule), nil
 	case "type.googleapis.com/google.protobuf.BoolValue":
 		return new(wrapperspb.BoolValue), nil
 	case "type.googleapis.com/google.protobuf.StringValue":
