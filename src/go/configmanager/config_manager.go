@@ -219,7 +219,7 @@ func (m *ConfigManager) readAndApplyServiceConfig(servicePath string) error {
 
 	serviceConfig, err := util.UnmarshalServiceConfig(bytes.NewReader(config))
 	if err != nil {
-		return fmt.Errorf("fail to unmarshal service config: %v, error: %s", config, err)
+		return fmt.Errorf("fail to unmarshal service config with error: %s", err)
 	}
 
 	m.serviceName = serviceConfig.GetName()
