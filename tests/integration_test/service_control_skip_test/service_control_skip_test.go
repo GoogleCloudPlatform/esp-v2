@@ -16,6 +16,8 @@ package service_control_skip_test
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -88,5 +90,70 @@ func TestServiceControlSkipUsage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Test (%s): failed, %s", tc.desc, err.Error())
 		}
+	}
+}
+
+func TestHealthCheckSkipServiceControl(t *testing.T) {
+	testData := []struct {
+		desc                  string
+		method                string
+		enforceServiceControl bool
+		wantResp              string
+		wantScRequestCount    int
+	}{
+		{
+			desc:                  "health check should bypass service control by default",
+			enforceServiceControl: false,
+			wantResp:              "SERVING",
+			wantScRequestCount:    0,
+		},
+		{
+			desc:                  "service control on health check can be enforced setting SkipServiceControl to be false",
+			enforceServiceControl: true,
+			wantResp:              "UNAUTHENTICATED", // SkipServiceControl is overridden to be false, unauthenticated calls will be rejected
+			wantScRequestCount:    1,
+		},
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			configId := "test-config-id"
+			args := []string{"--service_config_id=" + configId,
+				"--rollout_strategy=fixed", "--suppress_envoy_headers"}
+			s := env.NewTestEnv(platform.TestServiceControlSkipUsage, platform.GrpcBookstoreSidecar)
+			if tc.enforceServiceControl {
+				s.AppendUsageRules(
+					[]*confpb.UsageRule{
+						{
+							Selector:           "grpc.health.v1.Health.Check",
+							SkipServiceControl: false,
+						},
+					},
+				)
+			}
+			defer s.TearDown(t)
+			if err := s.Setup(args); err != nil {
+				t.Fatalf("fail to setup test env, %v", err)
+			}
+			s.ServiceControlServer.ResetRequestCount()
+
+			url := fmt.Sprintf("http://%v:%v/health/check", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+			resp, err := http.Get(url)
+			if err != nil {
+				t.Fatalf("failed to health check url, %v", err)
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("failed to read body from response: %v", err)
+			}
+
+			if !strings.Contains(string(body), tc.wantResp) {
+				t.Errorf("failed to obtain expected message, expected: %s, got: %s", tc.wantResp, string(body))
+			}
+			err = s.ServiceControlServer.VerifyRequestCount(tc.wantScRequestCount)
+			if err != nil {
+				t.Fatalf("%s", err.Error())
+			}
+		})
 	}
 }

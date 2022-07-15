@@ -719,6 +719,16 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 }
 
 func (s *ServiceInfo) processUsageRule() error {
+	// Hard code to allow health check, if defined, to bypass service control, if
+	// user desires to enable service control for one of these allow-listed
+	// methods, they can specify "skip_service_control: false" in their service
+	// config and ESPv2 honors it.
+	for _, methodName := range util.HardCodedSkipServiceControlMethods {
+		if method, err := s.getMethod(methodName); err == nil {
+			method.SkipServiceControl = true
+		}
+	}
+
 	for _, r := range s.ServiceConfig().GetUsage().GetRules() {
 		selector := r.GetSelector()
 		if s.isDiscoveryAPI(selector) {

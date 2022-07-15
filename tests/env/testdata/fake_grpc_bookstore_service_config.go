@@ -115,6 +115,17 @@ var (
 				},
 				Version: "1.0.0",
 			},
+			{
+				Name: "grpc.health.v1.Health",
+				Methods: []*apipb.Method{
+					{
+						Name: "Check",
+					},
+					{
+						Name: "Watch",
+					},
+				},
+			},
 		},
 		Http: &annotationspb.Http{
 			Rules: []*annotationspb.HttpRule{
@@ -217,6 +228,18 @@ var (
 					Selector: "endpoints.examples.bookstore.Bookstore.GetBook",
 					Pattern: &annotationspb.HttpRule_Get{
 						Get: "/v1/shelves/{shelf=*}/books/{book}",
+					},
+				},
+				{
+					Selector: "grpc.health.v1.Health.Check",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/health/check",
+					},
+				},
+				{
+					Selector: "grpc.health.v1.Health.Watch",
+					Pattern: &annotationspb.HttpRule_Get{
+						Get: "/health/watch",
 					},
 				},
 			},
