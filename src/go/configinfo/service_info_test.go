@@ -3825,7 +3825,7 @@ func TestProcessUsageRule(t *testing.T) {
 			},
 		},
 		{
-			desc: "Attach usage rules to methods",
+			desc: "User overrides hardcoded skip service control with usage rule",
 			fakeServiceConfig: &confpb.Service{
 				Apis: []*apipb.Api{
 					{

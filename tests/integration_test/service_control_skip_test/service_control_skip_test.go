@@ -110,7 +110,7 @@ func TestHealthCheckSkipServiceControl(t *testing.T) {
 		{
 			desc:                  "service control on health check can be enforced setting SkipServiceControl to be false",
 			enforceServiceControl: true,
-			wantResp:              "UNAUTHENTICATED",
+			wantResp:              "UNAUTHENTICATED", // SkipServiceControl is overridden to be false, unauthenticated calls will be rejected
 			wantScRequestCount:    1,
 		},
 	}

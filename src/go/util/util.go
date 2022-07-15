@@ -156,6 +156,8 @@ func MaybeTruncateSpanName(spanName string) string {
 	return newSpanName
 }
 
+// HardCodedSkipServiceControlMethods is a list of methods that should skip
+// service control by default.
 var HardCodedSkipServiceControlMethods = []string{
 	"grpc.health.v1.Health.Check",
 	"grpc.health.v1.Health.Watch",
