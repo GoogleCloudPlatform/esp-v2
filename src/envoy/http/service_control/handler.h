@@ -66,7 +66,7 @@ class ServiceControlHandlerFactory {
 
   virtual ServiceControlHandlerPtr createHandler(
       const Envoy::Http::RequestHeaderMap& headers,
-      const Envoy::StreamInfo::StreamInfo& stream_info,
+      Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
       ServiceControlFilterStats& filter_stats) const PURE;
 };
 

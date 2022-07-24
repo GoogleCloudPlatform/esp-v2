@@ -5,6 +5,9 @@ bin/
 *.pyc
 node_modules/
 src/go/proto/
+# IDE
+.clwb/
+.ijwb/
 
 # C++ coverage
 generated/

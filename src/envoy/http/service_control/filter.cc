@@ -69,8 +69,7 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
     return Envoy::Http::FilterHeadersStatus::Continue;
   }
 
-  handler_ =
-      factory_.createHandler(headers, decoder_callbacks_->streamInfo(), stats_);
+  handler_ = factory_.createHandler(headers, decoder_callbacks_, stats_);
   handler_->fillFilterState(*decoder_callbacks_->streamInfo().filterState());
   state_ = Calling;
   stopped_ = false;
@@ -144,11 +143,12 @@ void ServiceControlFilter::log(
     const Envoy::Http::RequestHeaderMap* request_headers,
     const Envoy::Http::ResponseHeaderMap* response_headers,
     const Envoy::Http::ResponseTrailerMap* response_trailers,
-    const Envoy::StreamInfo::StreamInfo& stream_info) {
+    const Envoy::StreamInfo::StreamInfo&) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;
-    handler_ = factory_.createHandler(*request_headers, stream_info, stats_);
+    handler_ =
+        factory_.createHandler(*request_headers, decoder_callbacks_, stats_);
   }
 
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();

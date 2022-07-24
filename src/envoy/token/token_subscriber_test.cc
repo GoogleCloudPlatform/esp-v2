@@ -18,7 +18,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "source/common/http/message_impl.h"
-#include "source/common/tracing/http_tracer_impl.h"
 #include "src/envoy/token/mocks.h"
 #include "test/mocks/init/mocks.h"
 #include "test/mocks/server/mocks.h"

@@ -210,7 +210,7 @@ void fillLatency(const Envoy::StreamInfo::StreamInfo& stream_info,
   // overhead latency and over-reporting backend latency.
   if (!start && stream_info.responseCodeDetails() &&
       (stream_info.responseCodeDetails().value() ==
-           Envoy::StreamInfo::ResponseCodeDetails::get().UpstreamTimeout ||
+           Envoy::StreamInfo::ResponseCodeDetails::get().ResponseTimeout ||
        stream_info.responseCodeDetails().value() ==
            Envoy::StreamInfo::ResponseCodeDetails::get()
                .UpstreamPerTryTimeout)) {
