@@ -143,19 +143,19 @@ void TokenSubscriber::refresh() {
 
 void TokenSubscriber::processResponse(
     Envoy::Http::ResponseMessagePtr&& response) {
-  try {
-    const uint64_t status_code =
-        Envoy::Http::Utility::getResponseStatus(response->headers());
-
-    if (status_code != Envoy::enumToInt(Envoy::Http::Code::OK)) {
-      ENVOY_LOG(error, "{}: failed: {}", debug_name_, status_code);
-      handleFailResponse();
-      return;
-    }
-  } catch (const Envoy::EnvoyException& e) {
+  auto status =
+      Envoy::Http::Utility::getResponseStatusOrNullopt(response->headers());
+  if (!status.has_value()) {
     // This occurs if the status header is missing.
     // Catch the exception to prevent unwinding and skipping cleanup.
-    ENVOY_LOG(error, "{}: failed: {}", debug_name_, e.what());
+    ENVOY_LOG(error, "{}: failed: No status in headers", debug_name_);
+    handleFailResponse();
+    return;
+  }
+
+  const uint64_t status_code = status.value();
+  if (status_code != Envoy::enumToInt(Envoy::Http::Code::OK)) {
+    ENVOY_LOG(error, "{}: failed: {}", debug_name_, status_code);
     handleFailResponse();
     return;
   }

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
 #include "gmock/gmock.h"
 #include "src/envoy/http/service_control/handler.h"
@@ -49,7 +50,7 @@ class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
  public:
   MOCK_METHOD(ServiceControlHandlerPtr, createHandler,
               (const Envoy::Http::RequestHeaderMap& headers,
-               const Envoy::StreamInfo::StreamInfo& stream_info,
+               Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
                ServiceControlFilterStats& filter_stats),
               (const, override));
 };

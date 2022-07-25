@@ -20,6 +20,7 @@
 #include "envoy/buffer/buffer.h"
 #include "envoy/common/random_generator.h"
 #include "envoy/common/time.h"
+#include "envoy/http/filter.h"
 #include "envoy/http/header_map.h"
 #include "envoy/http/query_params.h"
 #include "envoy/runtime/runtime.h"
@@ -42,12 +43,11 @@ class ServiceControlHandlerImpl
     : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter>,
       public ServiceControlHandler {
  public:
-  ServiceControlHandlerImpl(const Envoy::Http::RequestHeaderMap& headers,
-                            const Envoy::StreamInfo::StreamInfo& stream_info,
-                            const std::string& uuid,
-                            const FilterConfigParser& cfg_parser,
-                            Envoy::TimeSource& timeSource,
-                            ServiceControlFilterStats& filter_stats);
+  ServiceControlHandlerImpl(
+      const Envoy::Http::RequestHeaderMap& headers,
+      Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
+      const std::string& uuid, const FilterConfigParser& cfg_parser,
+      Envoy::TimeSource& timeSource, ServiceControlFilterStats& filter_stats);
   ~ServiceControlHandlerImpl() override;
 
   void callCheck(Envoy::Http::RequestHeaderMap& headers,
@@ -64,8 +64,7 @@ class ServiceControlHandlerImpl
   void onDestroy() override;
 
  private:
-  absl::string_view getOperationFromPerRoute(
-      const Envoy::StreamInfo::StreamInfo& stream_info);
+  absl::string_view getOperationFromPerRoute();
 
   void callQuota();
 
@@ -105,6 +104,8 @@ class ServiceControlHandlerImpl
 
   // The metadata for the request
   const Envoy::StreamInfo::StreamInfo& stream_info_;
+
+  Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
 
   // timeSource
   Envoy::TimeSource& time_source_;
@@ -152,10 +153,10 @@ class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
 
   ServiceControlHandlerPtr createHandler(
       const Envoy::Http::RequestHeaderMap& headers,
-      const Envoy::StreamInfo::StreamInfo& stream_info,
+      Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
       ServiceControlFilterStats& filter_stats) const override {
     return std::make_unique<ServiceControlHandlerImpl>(
-        headers, stream_info, random_.uuid(), cfg_parser_, time_source_,
+        headers, decoder_callbacks, random_.uuid(), cfg_parser_, time_source_,
         filter_stats);
   }
 

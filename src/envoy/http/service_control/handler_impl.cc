@@ -63,11 +63,12 @@ constexpr char JwtPayloadAudiencePath[] = "aud";
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     const Envoy::Http::RequestHeaderMap& headers,
-    const Envoy::StreamInfo::StreamInfo& stream_info, const std::string& uuid,
-    const FilterConfigParser& cfg_parser, Envoy::TimeSource& time_source,
-    ServiceControlFilterStats& filter_stats)
+    Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
+    const std::string& uuid, const FilterConfigParser& cfg_parser,
+    Envoy::TimeSource& time_source, ServiceControlFilterStats& filter_stats)
     : cfg_parser_(cfg_parser),
-      stream_info_(stream_info),
+      stream_info_(decoder_callbacks->streamInfo()),
+      decoder_callbacks_(decoder_callbacks),
       time_source_(time_source),
       uuid_(uuid),
       request_header_size_(headers.byteSize()),
@@ -82,7 +83,7 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   http_method_ = std::string(utils::readHeaderEntry(headers.Method()));
   path_ = std::string(utils::readHeaderEntry(headers.Path()));
 
-  const auto operation = getOperationFromPerRoute(stream_info_);
+  const auto operation = getOperationFromPerRoute();
   if (!operation.empty()) {
     require_ctx_ = cfg_parser_.find_requirement(operation);
     if (!require_ctx_) {
@@ -107,17 +108,10 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
 
-absl::string_view ServiceControlHandlerImpl::getOperationFromPerRoute(
-    const Envoy::StreamInfo::StreamInfo& stream_info) {
-  if (stream_info_.route() == nullptr ||
-      stream_info_.route()->routeEntry() == nullptr) {
-    ENVOY_LOG(debug, "No route entry");
-    return Envoy::EMPTY_STRING;
-  }
-
+absl::string_view ServiceControlHandlerImpl::getOperationFromPerRoute() {
   const auto* per_route =
       ::Envoy::Http::Utility::resolveMostSpecificPerFilterConfig<
-          PerRouteFilterConfig>(kFilterName, stream_info.route());
+          PerRouteFilterConfig>(decoder_callbacks_);
   if (per_route == nullptr) {
     ENVOY_LOG(debug, "no per-route config");
     return Envoy::EMPTY_STRING;
