@@ -1,3 +1,7 @@
+# Release 2.38.0 26-07-2022
+
+- Upgrade envoy to v1.23.0. (#720)
+
 # Release 2.37.0 16-06-2022
 
 - Added two new options to flag backend_dns_lookup_family and changed its default to "v4preferred"  (#705)
