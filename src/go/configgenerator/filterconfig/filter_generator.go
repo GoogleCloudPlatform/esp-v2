@@ -303,8 +303,9 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error
 			}
 			if serviceInfo.Options.TranscodingStrictRequestValidation {
 				transcodeConfig.RequestValidationOptions = &transcoderpb.GrpcJsonTranscoder_RequestValidationOptions{
-					RejectUnknownMethod:          true,
-					RejectUnknownQueryParameters: true,
+					RejectUnknownMethod:              true,
+					RejectUnknownQueryParameters:     true,
+					RejectBindingBodyFieldCollisions: serviceInfo.Options.TranscodingRejectCollision,
 				}
 			}
 
