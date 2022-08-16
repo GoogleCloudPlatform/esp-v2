@@ -87,7 +87,7 @@ file: {
 }`,
 		},
 		{
-			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied with default rule added in its additional bindings
+			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied with the default binding added in its additional bindings
 			desc: "Not method options",
 			service: `
 http: {
@@ -121,7 +121,7 @@ file: {
           selector: "package.name.Service.Method"
 	        post: "/v2/{name=*}"
           additional_bindings: {
-            put: "/package.name.Service/Method"
+            post: "/package.name.Service/Method"
             body: "*"
           }
 	      }
@@ -131,7 +131,7 @@ file: {
 }`,
 		},
 		{
-			// ProtoDescriptor has an empty MethodOptions, the http rule is copied with default rule added in its additional bindings
+			// ProtoDescriptor has an empty MethodOptions, the http rule is copied with the default binding added in its additional bindings
 			desc: "Empty method options",
 			service: `
 http: {
@@ -167,7 +167,7 @@ file: {
           selector: "package.name.Service.Method"
 	        post: "/v2/{name=*}"
           additional_bindings: {
-            put: "/package.name.Service/Method"
+            post: "/package.name.Service/Method"
             body: "*"
           }
 	      }
@@ -177,7 +177,7 @@ file: {
 }`,
 		},
 		{
-			// ProtoDescriptor has a different annotation, the http rule is copied with default rule added in its additional bindings
+			// ProtoDescriptor has a different annotation, the http rule is copied with the default binding added in its additional bindings
 			desc: "Basic overwritten case",
 			service: `
 http: {
@@ -216,7 +216,7 @@ file: {
           selector: "package.name.Service.Method"
 	        post: "/v2/{name=*}"
           additional_bindings: {
-            put: "/package.name.Service/Method"
+            post: "/package.name.Service/Method"
             body: "*"
           }
 	      }
@@ -226,7 +226,7 @@ file: {
 }`,
 		},
 		{
-			// The http rule has a different service name. It is not copied
+			// The http rule has a different service name. It is not copied but the default binding is added if it is absent
 			desc: "Empty http rule as it has different service name",
 			service: `
 http: {
@@ -263,6 +263,10 @@ file: {
       options: {
         [google.api.http]: {
 	        post: "/v1/abc/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
 	      }
       }
     }

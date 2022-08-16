@@ -252,16 +252,16 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 					if method.GetOptions() == nil {
 						method.Options = &descpb.MethodOptions{}
 					}
-
-					// If an http rule is specified for a rpc endpoint then the rpc's default http path will be
-					// disabled according to the logic in the envoy's json transcoder filter. To still enable
-					// the default http path, which is the designed behavior, the default http path needs to be
-					// added to the http rule's additional bindings.
-					defaultPath := fmt.Sprintf("/%s/%s", apiName, method.GetName())
-					defaultRule := &ahpb.HttpRule{Pattern: &ahpb.HttpRule_Put{defaultPath}, Body: "*"}
-					rule.AdditionalBindings = append(rule.AdditionalBindings, defaultRule)
-
 					proto.SetExtension(method.GetOptions(), ahpb.E_Http, rule)
+				}
+
+				// If an http rule is specified for a rpc endpoint then the rpc's default http binding will be
+				// disabled according to the logic in the envoy's json transcoder filter. To still enable
+				// the default http binding, which is the designed behavior, the default http binding needs to be
+				// added to the http rule's additional bindings.
+				if httpRule := proto.GetExtension(method.GetOptions(), ahpb.E_Http).(*ahpb.HttpRule); httpRule != nil {
+					defaultPath := fmt.Sprintf("/%s/%s", apiName, method.GetName())
+					preserveDefaultHttpBinding(httpRule, defaultPath)
 				}
 			}
 		}
@@ -273,6 +273,19 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 		return nil, fmt.Errorf("failed to marshal proto descriptor, error: %v", err)
 	}
 	return newData, nil
+}
+
+func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
+	defaultBindingExisted := false
+	defaultBinding := &ahpb.HttpRule{Pattern: &ahpb.HttpRule_Post{defaultPath}, Body: "*"}
+	for _, addtionalBinding := range httpRule.AdditionalBindings {
+		if addtionalBinding == defaultBinding {
+			defaultBindingExisted = true
+		}
+	}
+	if !defaultBindingExisted {
+		httpRule.AdditionalBindings = append(httpRule.AdditionalBindings, defaultBinding)
+	}
 }
 
 func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
