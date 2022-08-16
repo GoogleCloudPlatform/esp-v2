@@ -252,6 +252,15 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 					if method.GetOptions() == nil {
 						method.Options = &descpb.MethodOptions{}
 					}
+
+					// If an http rule is specified for a rpc endpoint then the rpc's default http path will be
+					// disabled according to the logic in the envoy's json transcoder filter. To still enable
+					// the default http path, which is the designed behavior, the default http path needs to be
+					// added to the http rule's additional bindings.
+					defaultPath := fmt.Sprintf("/%s/%s", apiName, method.GetName())
+					defaultRule := &ahpb.HttpRule{Pattern: &ahpb.HttpRule_Put{defaultPath}, Body: "*"}
+					rule.AdditionalBindings = append(rule.AdditionalBindings, defaultRule)
+
 					proto.SetExtension(method.GetOptions(), ahpb.E_Http, rule)
 				}
 			}

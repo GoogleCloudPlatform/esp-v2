@@ -63,8 +63,8 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/{name=*}"
-	}
+	        post: "/v1/{name=*}"
+	      }
       }
     }
   }
@@ -79,15 +79,15 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/{name=*}"
-	}
+	        post: "/v1/{name=*}"
+	      }
       }
     }
   }
 }`,
 		},
 		{
-			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied
+			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied with default rule added in its additional bindings
 			desc: "Not method options",
 			service: `
 http: {
@@ -119,15 +119,19 @@ file: {
       options: {
         [google.api.http]: {
           selector: "package.name.Service.Method"
-	  post: "/v2/{name=*}"
-	}
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            put: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
       }
     }
   }
 }`,
 		},
 		{
-			// ProtoDescriptor has an empty MethodOptions, the http rule is copied
+			// ProtoDescriptor has an empty MethodOptions, the http rule is copied with default rule added in its additional bindings
 			desc: "Empty method options",
 			service: `
 http: {
@@ -161,15 +165,19 @@ file: {
       options: {
         [google.api.http]: {
           selector: "package.name.Service.Method"
-	  post: "/v2/{name=*}"
-	}
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            put: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
       }
     }
   }
 }`,
 		},
 		{
-			// ProtoDescriptor has a different annotation, the http rule is copied
+			// ProtoDescriptor has a different annotation, the http rule is copied with default rule added in its additional bindings
 			desc: "Basic overwritten case",
 			service: `
 http: {
@@ -189,8 +197,8 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/abc/{name=*}"
-	}
+	        post: "/v1/abc/{name=*}"
+	      }
       }
     }
   }
@@ -206,8 +214,12 @@ file: {
       options: {
         [google.api.http]: {
           selector: "package.name.Service.Method"
-	  post: "/v2/{name=*}"
-	}
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            put: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
       }
     }
   }
@@ -234,8 +246,8 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/abc/{name=*}"
-	}
+	        post: "/v1/abc/{name=*}"
+	      }
       }
     }
   }
@@ -250,8 +262,8 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/abc/{name=*}"
-	}
+	        post: "/v1/abc/{name=*}"
+	      }
       }
     }
   }
