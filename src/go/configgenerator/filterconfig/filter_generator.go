@@ -276,13 +276,26 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 }
 
 func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
-	defaultBindingExisted := false
 	defaultBinding := &ahpb.HttpRule{Pattern: &ahpb.HttpRule_Post{defaultPath}, Body: "*"}
+
+	// Check existence of the default binding in httpRule's additional_bindings to avoid duplication.
+	defaultBindingExisted := false
 	for _, addtionalBinding := range httpRule.AdditionalBindings {
-		if addtionalBinding == defaultBinding {
+		if proto.Equal(addtionalBinding, defaultBinding) {
 			defaultBindingExisted = true
+			break
 		}
 	}
+	// check if httpRule is the same as default binding, ignore the difference in fields selector and
+	// additional_bindings.
+	defaultBinding.Selector = httpRule.GetSelector()
+	defaultBinding.AdditionalBindings = httpRule.GetAdditionalBindings()
+	if proto.Equal(httpRule, defaultBinding) {
+		defaultBindingExisted = true
+	}
+	defaultBinding.Selector = ""
+	defaultBinding.AdditionalBindings = nil
+
 	if !defaultBindingExisted {
 		httpRule.AdditionalBindings = append(httpRule.AdditionalBindings, defaultBinding)
 	}
