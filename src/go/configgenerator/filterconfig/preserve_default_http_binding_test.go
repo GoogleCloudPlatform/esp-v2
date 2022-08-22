@@ -25,18 +25,18 @@ import (
 
 func TestPreserveDefaultHttpBinding(t *testing.T) {
 	testData := []struct {
-		desc         string
-		originalDesc string
-		wantDesc     string
+		desc             string
+		originalHttpRule string
+		wantHttpRule     string
 	}{
 		{
 			// Add the default http binding if it's not present.
 			desc: "default http binding is not present",
-			originalDesc: `
+			originalHttpRule: `
 				selector: "package.name.Service.Method"
 				post: "/v1/Service/Method"
 			`,
-			wantDesc: `
+			wantHttpRule: `
 				selector: "package.name.Service.Method"
 				post: "/v1/Service/Method"
 				additional_bindings: {
@@ -49,7 +49,7 @@ func TestPreserveDefaultHttpBinding(t *testing.T) {
 			// Do not add the default binding if it's identitical to the primary
 			// binding. Difference in selector and additional_bindings is ignored.
 			desc: "default http binding is not present",
-			originalDesc: `
+			originalHttpRule: `
 				selector: "package.name.Service.Method"
 				post: "/package.name.Service/Method"
 				body: "*"
@@ -57,7 +57,7 @@ func TestPreserveDefaultHttpBinding(t *testing.T) {
 					post: "/v1/Service/Method"
 				}
 			`,
-			wantDesc: `
+			wantHttpRule: `
 				selector: "package.name.Service.Method"
 				post: "/package.name.Service/Method"
 				body: "*"
@@ -70,7 +70,7 @@ func TestPreserveDefaultHttpBinding(t *testing.T) {
 			// Do not add the default binding if it's identitical to any existing
 			// additional binding.
 			desc: "default http binding is not present",
-			originalDesc: `
+			originalHttpRule: `
 				selector: "package.name.Service.Method"
 				post: "/package.name.Service/Method"
 				body: "*"
@@ -78,7 +78,7 @@ func TestPreserveDefaultHttpBinding(t *testing.T) {
 					post: "/v1/Service/Method"
 				}
 			`,
-			wantDesc: `
+			wantHttpRule: `
 				selector: "package.name.Service.Method"
 				post: "/package.name.Service/Method"
 				body: "*"
@@ -91,14 +91,14 @@ func TestPreserveDefaultHttpBinding(t *testing.T) {
 
 	for _, tc := range testData {
 		got := &ahpb.HttpRule{}
-		if err := prototext.Unmarshal([]byte(tc.originalDesc), got); err != nil {
-			fmt.Println("failed to unmarshal originalDesc: ", err)
+		if err := prototext.Unmarshal([]byte(tc.originalHttpRule), got); err != nil {
+			fmt.Println("failed to unmarshal originalHttpRule: ", err)
 		}
 
 		preserveDefaultHttpBinding(got, "/package.name.Service/Method")
 		want := &ahpb.HttpRule{}
-		if err := prototext.Unmarshal([]byte(tc.wantDesc), want); err != nil {
-			fmt.Println("failed to unmarshal wantDesc: ", err)
+		if err := prototext.Unmarshal([]byte(tc.wantHttpRule), want); err != nil {
+			fmt.Println("failed to unmarshal wantHttpRule: ", err)
 		}
 
 		if diff := utils.ProtoDiff(want, got); diff != "" {

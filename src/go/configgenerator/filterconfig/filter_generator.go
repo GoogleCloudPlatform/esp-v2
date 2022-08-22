@@ -279,11 +279,9 @@ func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
 	defaultBinding := &ahpb.HttpRule{Pattern: &ahpb.HttpRule_Post{defaultPath}, Body: "*"}
 
 	// Check existence of the default binding in httpRule's additional_bindings to avoid duplication.
-	defaultBindingExisted := false
 	for _, addtionalBinding := range httpRule.AdditionalBindings {
 		if proto.Equal(addtionalBinding, defaultBinding) {
-			defaultBindingExisted = true
-			break
+			return
 		}
 	}
 	// check if httpRule is the same as default binding, ignore the difference in fields selector and
@@ -291,14 +289,12 @@ func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
 	defaultBinding.Selector = httpRule.GetSelector()
 	defaultBinding.AdditionalBindings = httpRule.GetAdditionalBindings()
 	if proto.Equal(httpRule, defaultBinding) {
-		defaultBindingExisted = true
+		return
 	}
 	defaultBinding.Selector = ""
 	defaultBinding.AdditionalBindings = nil
 
-	if !defaultBindingExisted {
-		httpRule.AdditionalBindings = append(httpRule.AdditionalBindings, defaultBinding)
-	}
+	httpRule.AdditionalBindings = append(httpRule.AdditionalBindings, defaultBinding)
 }
 
 func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
