@@ -273,6 +273,37 @@ file: {
   }
 }`,
 		},
+		{
+			// The default http rule will not be added if no http rule is specified, the default binding
+			// will be done in Envoy's json transcoder.
+			desc:     "Default http rule will not be added if no http rule is specified",
+			service:  "",
+			apiNames: []string{"package.name.Service"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {}
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {}
+    }
+  }
+}`,
+		},
 	}
 
 	for _, tc := range testData {

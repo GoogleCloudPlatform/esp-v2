@@ -166,6 +166,19 @@ func TestTranscodingBindings(t *testing.T) {
 			bodyBytes:      []byte(`{"id": 14}`),
 			wantResp:       `{"id":"14","author":"Leo Tolstoy","title":"War and Peace"}`,
 		},
+		// The default http binding is still viable after a customized binding is specified.
+		// Default binding:
+		// pattern: /service/method
+		// http method: POST
+		// body: fields of request message
+		{
+			desc:           "Succeed, call CreateBookRequest with default http binding",
+			clientProtocol: "http",
+			httpMethod:     "POST",
+			method:         "/endpoints.examples.bookstore.Bookstore/CreateBook?key=api-key",
+			bodyBytes:      []byte(`{"shelf":100,"book":{"id": 14, "author": "Leo Tolstoy", "title": "War and Peace"}}`),
+			wantResp:       `{"id":"14","author":"Leo Tolstoy","title":"War and Peace"}`,
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
