@@ -63,8 +63,8 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/{name=*}"
-	}
+	        post: "/v1/{name=*}"
+	      }
       }
     }
   }
@@ -79,15 +79,15 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/{name=*}"
-	}
+	        post: "/v1/{name=*}"
+	      }
       }
     }
   }
 }`,
 		},
 		{
-			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied
+			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied with the default binding added in its additional bindings
 			desc: "Not method options",
 			service: `
 http: {
@@ -119,15 +119,19 @@ file: {
       options: {
         [google.api.http]: {
           selector: "package.name.Service.Method"
-	  post: "/v2/{name=*}"
-	}
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
       }
     }
   }
 }`,
 		},
 		{
-			// ProtoDescriptor has an empty MethodOptions, the http rule is copied
+			// ProtoDescriptor has an empty MethodOptions, the http rule is copied with the default binding added in its additional bindings
 			desc: "Empty method options",
 			service: `
 http: {
@@ -161,15 +165,19 @@ file: {
       options: {
         [google.api.http]: {
           selector: "package.name.Service.Method"
-	  post: "/v2/{name=*}"
-	}
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
       }
     }
   }
 }`,
 		},
 		{
-			// ProtoDescriptor has a different annotation, the http rule is copied
+			// ProtoDescriptor has a different annotation, the http rule is copied with the default binding added in its additional bindings
 			desc: "Basic overwritten case",
 			service: `
 http: {
@@ -189,8 +197,8 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/abc/{name=*}"
-	}
+	        post: "/v1/abc/{name=*}"
+	      }
       }
     }
   }
@@ -206,15 +214,19 @@ file: {
       options: {
         [google.api.http]: {
           selector: "package.name.Service.Method"
-	  post: "/v2/{name=*}"
-	}
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
       }
     }
   }
 }`,
 		},
 		{
-			// The http rule has a different service name. It is not copied
+			// The http rule has a different service name. It is not copied but the default binding is added if it is absent
 			desc: "Empty http rule as it has different service name",
 			service: `
 http: {
@@ -234,8 +246,8 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/abc/{name=*}"
-	}
+	        post: "/v1/abc/{name=*}"
+	      }
       }
     }
   }
@@ -250,9 +262,44 @@ file: {
       name: "Method"
       options: {
         [google.api.http]: {
-	  post: "/v1/abc/{name=*}"
-	}
+	        post: "/v1/abc/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
       }
+    }
+  }
+}`,
+		},
+		{
+			// The default http rule will not be added if no http rule is specified, the default binding
+			// will be done in Envoy's json transcoder.
+			desc:     "Default http rule will not be added if no http rule is specified",
+			service:  "",
+			apiNames: []string{"package.name.Service"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {}
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {}
     }
   }
 }`,

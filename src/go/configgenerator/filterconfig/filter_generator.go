@@ -254,6 +254,15 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 					}
 					proto.SetExtension(method.GetOptions(), ahpb.E_Http, rule)
 				}
+
+				// If an http rule is specified for a rpc endpoint then the rpc's default http binding will be
+				// disabled according to the logic in the envoy's json transcoder filter. To still enable
+				// the default http binding, which is the designed behavior, the default http binding needs to be
+				// added to the http rule's additional bindings.
+				if httpRule := proto.GetExtension(method.GetOptions(), ahpb.E_Http).(*ahpb.HttpRule); httpRule != nil {
+					defaultPath := fmt.Sprintf("/%s/%s", apiName, method.GetName())
+					preserveDefaultHttpBinding(httpRule, defaultPath)
+				}
 			}
 		}
 	}
@@ -264,6 +273,28 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 		return nil, fmt.Errorf("failed to marshal proto descriptor, error: %v", err)
 	}
 	return newData, nil
+}
+
+func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
+	defaultBinding := &ahpb.HttpRule{Pattern: &ahpb.HttpRule_Post{defaultPath}, Body: "*"}
+
+	// Check existence of the default binding in httpRule's additional_bindings to avoid duplication.
+	for _, addtionalBinding := range httpRule.AdditionalBindings {
+		if proto.Equal(addtionalBinding, defaultBinding) {
+			return
+		}
+	}
+	// check if httpRule is the same as default binding, ignore the difference in fields selector and
+	// additional_bindings.
+	defaultBinding.Selector = httpRule.GetSelector()
+	defaultBinding.AdditionalBindings = httpRule.GetAdditionalBindings()
+	if proto.Equal(httpRule, defaultBinding) {
+		return
+	}
+	defaultBinding.Selector = ""
+	defaultBinding.AdditionalBindings = nil
+
+	httpRule.AdditionalBindings = append(httpRule.AdditionalBindings, defaultBinding)
 }
 
 func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
