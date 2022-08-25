@@ -43,7 +43,7 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 		return nil, err
 	}
 
-	listener, err := MakeListener(serviceInfo, filterGenerators)
+	listener, err := MakeListener(serviceInfo, filterGenerators, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func GetFilterConfigAndAddPerRouteConfigGen(serviceInfo *sc.ServiceInfo, filterG
 }
 
 // MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.FilterGenerator) (*listenerpb.Listener, error) {
+func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.FilterGenerator, localReplyConfig *hcmpb.LocalReplyConfig) (*listenerpb.Listener, error) {
 	httpFilters, err := GetFilterConfigAndAddPerRouteConfigGen(serviceInfo, filterGenerators)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []*filterconfig.
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
 
-	httpConMgr, err := makeHttpConMgr(&serviceInfo.Options, route)
+	httpConMgr, err := makeHTTPConMgr(&serviceInfo.Options, route, localReplyConfig)
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManager got err: %s", err)
 	}
@@ -193,7 +193,7 @@ func makeSchemeHeaderOverride(serviceInfo *sc.ServiceInfo) *corepb.SchemeHeaderT
 	return nil
 }
 
-func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteConfiguration) (*hcmpb.HttpConnectionManager, error) {
+func makeHTTPConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteConfiguration, localReplyConfig *hcmpb.LocalReplyConfig) (*hcmpb.HttpConnectionManager, error) {
 	httpConMgr := &hcmpb.HttpConnectionManager{
 		UpgradeConfigs: []*hcmpb.HttpConnectionManager_UpgradeConfig{
 			{
@@ -207,6 +207,15 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 		},
 		UseRemoteAddress:  &wrapperspb.BoolValue{Value: opts.EnvoyUseRemoteAddress},
 		XffNumTrustedHops: uint32(opts.EnvoyXffNumTrustedHops),
+
+		// Security options for `path` header.
+		NormalizePath: &wrapperspb.BoolValue{Value: opts.NormalizePath},
+		MergeSlashes:  opts.MergeSlashesInPath,
+	}
+
+	if localReplyConfig != nil {
+		httpConMgr.LocalReplyConfig = localReplyConfig
+	} else {
 		// Converting the error message for requests rejected by Envoy to JSON format:
 		//
 		//    {
@@ -214,7 +223,7 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 		//       "message": "the error message",
 		//    }
 		//
-		LocalReplyConfig: &hcmpb.LocalReplyConfig{
+		httpConMgr.LocalReplyConfig = &hcmpb.LocalReplyConfig{
 			BodyFormat: &corepb.SubstitutionFormatString{
 				Format: &corepb.SubstitutionFormatString_JsonFormat{
 					JsonFormat: &structpb.Struct{
@@ -229,10 +238,7 @@ func makeHttpConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 					},
 				},
 			},
-		},
-		// Security options for `path` header.
-		NormalizePath: &wrapperspb.BoolValue{Value: opts.NormalizePath},
-		MergeSlashes:  opts.MergeSlashesInPath,
+		}
 	}
 
 	// https://github.com/envoyproxy/envoy/security/advisories/GHSA-4987-27fx-x6cf

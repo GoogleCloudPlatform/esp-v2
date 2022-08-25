@@ -197,7 +197,7 @@ func TestMakeListeners(t *testing.T) {
 	}
 }
 
-func TestMakeHttpConMgr(t *testing.T) {
+func TestmakeHTTPConMgr(t *testing.T) {
 	testdata := []struct {
 		desc            string
 		opts            options.ConfigGeneratorOptions
@@ -400,7 +400,7 @@ func TestMakeHttpConMgr(t *testing.T) {
 
 	for _, tc := range testdata {
 		routeConfig := routepb.RouteConfiguration{}
-		hcm, err := makeHttpConMgr(&tc.opts, &routeConfig)
+		hcm, err := makeHTTPConMgr(&tc.opts, &routeConfig)
 		if err != nil {
 			t.Fatalf("Test (%v) failed with error: %v", tc.desc, err)
 		}
