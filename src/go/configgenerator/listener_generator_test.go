@@ -20,7 +20,10 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
 )
@@ -157,8 +160,7 @@ func TestMakeListeners(t *testing.T) {
   ],
   "name": "ingress_listener",
   "perConnectionBufferLimitBytes": 1024
-}
-`,
+}`,
 			},
 		},
 	}
@@ -197,11 +199,12 @@ func TestMakeListeners(t *testing.T) {
 	}
 }
 
-func TestmakeHTTPConMgr(t *testing.T) {
+func TestMakeHTTPConMgr(t *testing.T) {
 	testdata := []struct {
-		desc            string
-		opts            options.ConfigGeneratorOptions
-		wantHttpConnMgr string
+		desc             string
+		opts             options.ConfigGeneratorOptions
+		localReplyConfig *hcmpb.LocalReplyConfig
+		wantHTTPConnMgr  string
 	}{
 		{
 			desc: "Generate HttpConMgr with default options",
@@ -210,7 +213,7 @@ func TestmakeHTTPConMgr(t *testing.T) {
 					DisableTracing: true,
 				},
 			},
-			wantHttpConnMgr: `
+			wantHTTPConnMgr: `
 			{
 				"commonHttpProtocolOptions": {
 					"headersWithUnderscoresAction": "REJECT_REQUEST"
@@ -236,6 +239,50 @@ func TestmakeHTTPConMgr(t *testing.T) {
 			}`,
 		},
 		{
+			desc: "Generate HttpConMgr with custom local reply config",
+			opts: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					DisableTracing: true,
+				},
+			},
+			localReplyConfig: &hcmpb.LocalReplyConfig{
+				BodyFormat: &corepb.SubstitutionFormatString{
+					Format: &corepb.SubstitutionFormatString_JsonFormat{
+						JsonFormat: &structpb.Struct{
+							Fields: map[string]*structpb.Value{
+								"foo": {
+									Kind: &structpb.Value_StringValue{StringValue: "%bar%"},
+								},
+							},
+						},
+					},
+				},
+			},
+			wantHTTPConnMgr: `
+			{
+				"commonHttpProtocolOptions": {
+					"headersWithUnderscoresAction": "REJECT_REQUEST"
+				},
+				"localReplyConfig": {
+					"bodyFormat": {
+						"jsonFormat": {
+							"foo": "%bar%"
+						}
+					}
+				},
+				"normalizePath": false,
+				"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
+				"routeConfig": {},
+				"statPrefix": "ingress_http",
+				"upgradeConfigs": [
+					{
+						"upgradeType": "websocket"
+					}
+				],
+				"useRemoteAddress": false
+			}`,
+		},
+		{
 			desc: "Generate HttpConMgr when accessLog is defined",
 			opts: options.ConfigGeneratorOptions{
 				AccessLog:       "/foo",
@@ -244,7 +291,7 @@ func TestmakeHTTPConMgr(t *testing.T) {
 					DisableTracing: true,
 				},
 			},
-			wantHttpConnMgr: `
+			wantHTTPConnMgr: `
 				{
 					"accessLog": [
 						{
@@ -289,7 +336,7 @@ func TestmakeHTTPConMgr(t *testing.T) {
 					TracingSamplingRate: 1,
 				},
 			},
-			wantHttpConnMgr: `
+			wantHTTPConnMgr: `
 				{
 					"commonHttpProtocolOptions": {
 						"headersWithUnderscoresAction": "REJECT_REQUEST"
@@ -340,7 +387,7 @@ func TestmakeHTTPConMgr(t *testing.T) {
 					DisableTracing: true,
 				},
 			},
-			wantHttpConnMgr: `
+			wantHTTPConnMgr: `
 				{
 					"commonHttpProtocolOptions": {},
 					"localReplyConfig": {
@@ -372,7 +419,7 @@ func TestmakeHTTPConMgr(t *testing.T) {
 					DisableTracing: true,
 				},
 			},
-			wantHttpConnMgr: `
+			wantHTTPConnMgr: `
 				{
 					"commonHttpProtocolOptions": {},
                                         "httpProtocolOptions": {"enableTrailers": true},
@@ -400,7 +447,7 @@ func TestmakeHTTPConMgr(t *testing.T) {
 
 	for _, tc := range testdata {
 		routeConfig := routepb.RouteConfiguration{}
-		hcm, err := makeHTTPConMgr(&tc.opts, &routeConfig)
+		hcm, err := makeHTTPConMgr(&tc.opts, &routeConfig, tc.localReplyConfig)
 		if err != nil {
 			t.Fatalf("Test (%v) failed with error: %v", tc.desc, err)
 		}
@@ -411,7 +458,7 @@ func TestmakeHTTPConMgr(t *testing.T) {
 			t.Fatalf("Test (%v) failed with error: %v", tc.desc, err)
 		}
 
-		if err := util.JsonEqual(tc.wantHttpConnMgr, gotHttpConnMgr); err != nil {
+		if err := util.JsonEqual(tc.wantHTTPConnMgr, gotHttpConnMgr); err != nil {
 			t.Errorf("Test (%v): failed, \n %v ", tc.desc, err)
 		}
 	}
