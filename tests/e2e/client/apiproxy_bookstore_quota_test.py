@@ -16,6 +16,8 @@
 
 
 import argparse
+import socket
+
 import utils
 import sys
 import time
@@ -51,7 +53,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
       try:
         return self._call_http(path='/quota_read',
                                    api_key=FLAGS.api_key)
-      except ssl.SSLError as e:
+      except (ssl.SSLError, socket.timeout) as e:
         print("Exception {0} occurred".format(e))
         return None
 
