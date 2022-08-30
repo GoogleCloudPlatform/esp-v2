@@ -80,7 +80,7 @@ def test(run, n, c, t, d):
     (_, ret) = utils.IssueCommand(cmd)
 
     if ret != 0:
-        print '==== Failed to run=%s,t=%d,c=%s,ret=%d' % (str(run), t, c, ret)
+        print('==== Failed to run=%s,t=%d,c=%s,ret=%d' % (str(run), t, c, ret))
         sys.exit('Test failed')
 
     with open(os.path.join(SCRIPT_DIR, wrk_out), 'r') as f:

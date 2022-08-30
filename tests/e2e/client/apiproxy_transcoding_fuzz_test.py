@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import argparse
-import httplib
+import http.client
 import json
 import sys
 import utils
@@ -132,7 +132,7 @@ class ApiProxyTranscodingFuzzTest(object):
       sys.exit(utils.red(
           'ESPv2 crash'))
       return
-    print utils.green('No crashes detected.')
+    print(utils.green('No crashes detected.'))
 
   def _request(self, url_path, query_params, json, expected_codes,
       json_response):
@@ -155,24 +155,24 @@ class ApiProxyTranscodingFuzzTest(object):
     response = utils.Response(self._conn.getresponse())
 
     if not response.status_code in expected_codes:
-      print(utils.red(
+      print((utils.red(
           "Invalid status code {}:\n\turl={},\n\trequest_header={},\n\trequest_body={},\n\tresponse={}\n\n").format(
-          response.status_code, url, headers, json, response))
+          response.status_code, url, headers, json, response)))
       self._unexpected_errors += 1
 
     if json_response and not (
         response.status_code != 200 and response.content_type == "text/plain") \
         and not response.is_json():
-      print(utils.red(
+      print((utils.red(
           "response is not json {}:\n\turl={},\n\trequest_header={},\n\trequest_body={},\n\tresponse={}\n\n").format(
-          response.content_type, url, headers, json, response))
+          response.content_type, url, headers, json, response)))
       self._unexpected_errors += 1
 
     self._total_requests += 1
 
   def _print_results_so_far(self):
-    print 'Fuzz test results so far: total - %d, unexpected errors - %d' % (
-        self._total_requests, self._unexpected_errors)
+    print('Fuzz test results so far: total - %d, unexpected errors - %d' % (
+        self._total_requests, self._unexpected_errors))
 
   def _run_json_fuzz_tests(self, url, max_object_nest_level,
       max_list_nest_level):
@@ -197,22 +197,22 @@ class ApiProxyTranscodingFuzzTest(object):
                                               [200, 400, 404], False))
 
   def _run_fuzz_tests(self):
-    print 'Running /echo JSON fuzz tests...'
+    print('Running /echo JSON fuzz tests...')
     self._run_json_fuzz_tests('/echo', 4, 2)
     self._check_for_crash()
     self._print_results_so_far()
 
-    print 'Running /echostream JSON fuzz tests...'
+    print('Running /echostream JSON fuzz tests...')
     self._run_json_fuzz_tests('/echostream', 2, 4)
     self._check_for_crash()
     self._print_results_so_far()
 
-    print 'Running /echo query param fuzz tests...'
+    print('Running /echo query param fuzz tests...')
     self._run_query_param_fuzzer('/echo')
     self._check_for_crash()
     self._print_results_so_far()
 
-    print 'Running URL path fuzz tests...'
+    print('Running URL path fuzz tests...')
     self._run_url_path_fuzzer()
     self._check_for_crash()
     self._print_results_so_far()
@@ -223,7 +223,7 @@ class ApiProxyTranscodingFuzzTest(object):
     if self._unexpected_errors > 0:
       sys.exit(utils.red('Fuzz test failed.'))
     else:
-      print utils.green('Fuzz test passed.')
+      print(utils.green('Fuzz test passed.'))
 
 
 if __name__ == '__main__':

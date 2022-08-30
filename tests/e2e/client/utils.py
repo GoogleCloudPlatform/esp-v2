@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import httplib
+import http.client
 import json
 import ssl
 import subprocess
@@ -31,7 +31,7 @@ def IssueCommand(cmd, force_info_log=False, suppress_warning=False,
     Returns:
       A tuple of stdout, and retcode from running the provided command.
     """
-    print '=== Running: %s' % ' '.join(cmd)
+    print('=== Running: %s' % ' '.join(cmd))
     process = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE)
     stdout = ''
     while True:
@@ -40,9 +40,9 @@ def IssueCommand(cmd, force_info_log=False, suppress_warning=False,
             break
         if output:
             stdout += output
-            print '= ' + output.strip()
+            print('= ' + output.strip())
     rc = process.poll()
-    print '=== Finished with code %d' % rc
+    print('=== Finished with code %d' % rc)
     return stdout, rc
 
 
@@ -73,14 +73,14 @@ def http_connection(host, allow_unverified_cert):
         else:
             ssl_ctx.check_hostname = True
             ssl_ctx.verify_mode = ssl.CERT_REQUIRED
-        return httplib.HTTPSConnection(host, timeout=10, context=ssl_ctx)
+        return http.client.HTTPSConnection(host, timeout=10, context=ssl_ctx)
 
     else:
         if host.startswith(HTTP_PREFIX):
             host = host[len(HTTP_PREFIX):]
         else:
             host = host
-        return httplib.HTTPConnection(host)
+        return http.client.HTTPConnection(host)
 
 
 class Response(object):
@@ -98,7 +98,7 @@ class Response(object):
         try:
             return json.loads(self.text)
         except ValueError as e:
-            print 'Error: failed in JSON decode: %s' % self.text
+            print('Error: failed in JSON decode: %s' % self.text)
             return {}
 
     def is_json(self):
@@ -126,13 +126,13 @@ class ApiProxyClientTest(object):
         self._verbose = verbose
 
     def fail(self, msg):
-        print '%s: %s' % (red('FAILED'), msg if msg else '')
+        print('%s: %s' % (red('FAILED'), msg if msg else ''))
         self._failed_tests += 1
 
     def assertEqual(self, got, want):
         msg = 'assertEqual(got=%s, want=%s)' % (str(got), str(want))
         if got == want:
-            print '%s: %s' % (green('OK'), msg)
+            print('%s: %s' % (green('OK'), msg))
             self._passed_tests += 1
         else:
             self.fail(msg)
@@ -140,7 +140,7 @@ class ApiProxyClientTest(object):
     def assertGE(self, a, b):
         msg = 'assertGE(%s, %s)' % (str(a), str(b))
         if a >= b:
-            print '%s: %s' % (green('OK'), msg)
+            print('%s: %s' % (green('OK'), msg))
             self._passed_tests += 1
         else:
             self.fail(msg)
@@ -148,7 +148,7 @@ class ApiProxyClientTest(object):
     def assertLE(self, a, b):
         msg = 'assertLE(%s, %s)' % (str(a), str(b))
         if a <= b:
-            print '%s: %s' % (green('OK'), msg)
+            print('%s: %s' % (green('OK'), msg))
             self._passed_tests += 1
         else:
             self.fail(msg)
@@ -166,22 +166,22 @@ class ApiProxyClientTest(object):
             headers["Host"] = self.host_header
 
         body = json.dumps(data) if data else None
-        for key, value in userHeaders.iteritems():
+        for key, value in userHeaders.items():
             headers[key] = value
         if not method:
             method = 'POST' if data else 'GET'
         if self._verbose:
-            print 'HTTP: %s %s' % (method, url)
-            print 'headers: %s' % str(headers)
-            print 'body: %s' % body
+            print('HTTP: %s %s' % (method, url))
+            print('headers: %s' % str(headers))
+            print('body: %s' % body)
 
         conn = http_connection(self.host, self.allow_unverified_cert)
         conn.request(method, url, body, headers)
         response = Response(conn.getresponse())
-        print response.status_code
+        print(response.status_code)
 
         if self._verbose:
-            print 'Status: %s, body=%s' % (response.status_code, response.text)
+            print('Status: %s, body=%s' % (response.status_code, response.text))
         return response
 
     def set_verbose(self, verbose):

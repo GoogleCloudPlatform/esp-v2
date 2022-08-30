@@ -52,7 +52,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         """
         if FLAGS.endpoints:
             if auth:
-                print 'Negative test: remove auth.'
+                print('Negative test: remove auth.')
                 r = self._call_http(path, api_key, None, data, method)
                 self.assertEqual(r.status_code, 401)
                 try:
@@ -61,9 +61,9 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                 except:
                     self.fail("fail to decode json payload")
 
-                print 'Completed Negative test.'
+                print('Completed Negative test.')
             if api_key:
-                print 'Negative test: remove api_key.'
+                print('Negative test: remove api_key.')
                 r = self._call_http(path, None, auth, data, method)
                 self.assertEqual(r.status_code, 401)
                 try:
@@ -76,23 +76,23 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                 except:
                     self.fail("fail to decode json payload")
 
-                print 'Completed Negative test.'
+                print('Completed Negative test.')
             return self._call_http(path, api_key, auth, data, method)
         else:
             return self._call_http(path, method=method)
 
     def clear(self):
-        print 'Clear existing shelves.'
+        print('Clear existing shelves.')
         # list shelves: no api_key, no auth
         response = self._send_request('/shelves', auth=FLAGS.auth_token)
         self.assertEqual(response.status_code, 200)
         json_ret = response.json()
         for shelf in json_ret.get('shelves', []):
-            print 'Delete shelf', shelf
+            print('Delete shelf', shelf)
             self.delete_shelf(shelf['name'])
 
     def create_shelf(self, shelf):
-        print 'Create shelf: %s' % str(shelf)
+        print('Create shelf: %s' % str(shelf))
         # create shelves: auth.
         response = self._send_request(
             '/shelves', api_key=FLAGS.api_key, auth=FLAGS.auth_token,
@@ -104,30 +104,30 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         return json_ret
 
     def verify_shelf(self, shelf):
-        print 'Verify shelf: %s' % shelf['name']
+        print('Verify shelf: %s' % shelf['name'])
         # Get shelf: auth.
         r = self._send_request('/' + shelf['name'], auth=FLAGS.auth_token)
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json(), shelf)
 
     def delete_shelf(self, shelf_name):
-        print 'Remove shelf: %s' % shelf_name
+        print('Remove shelf: %s' % shelf_name)
         # delete shelf: api_key
-        print 'API_KEY: %s' % FLAGS.api_key
+        print('API_KEY: %s' % FLAGS.api_key)
         r = self._send_request(
             '/' + shelf_name, api_key=FLAGS.api_key, method='DELETE')
         self.assertEqual(r.status_code, 204)
 
     def verify_list_shelves(self, shelves):
         # list shelves: no api_key, no auth
-        print 'List shelves.'
+        print('List shelves.')
         response = self._send_request('/shelves', auth=FLAGS.auth_token)
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(response.json().get('shelves', []), shelves)
 
     def create_book(self, shelf, book):
-        print 'Create book in shelf: %s, book: %s' % (shelf, str(book))
+        print('Create book in shelf: %s, book: %s' % (shelf, str(book)))
         # Create book: api_key
         response = self._send_request(
             '/%s/books' % shelf, api_key=FLAGS.api_key, data=book)
@@ -139,7 +139,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         return json_ret
 
     def verify_book(self, book):
-        print 'Get book: /%s' % book['name']
+        print('Get book: /%s' % book['name'])
         # Get book: api_key, auth
         r = self._send_request(
             '/' + book['name'], api_key=FLAGS.api_key, auth=FLAGS.auth_token)
@@ -147,7 +147,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
         self.assertEqual(r.json(), book)
 
     def delete_book(self, book_name):
-        print 'Remove book: /%s' % book_name
+        print('Remove book: /%s' % book_name)
         # Delete book: api_key
         r = self._send_request(
             '/' + book_name, api_key=FLAGS.api_key, method='DELETE')
@@ -237,7 +237,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
             sys.exit(utils.red('%d tests passed, %d tests failed.' % (
                 self._passed_tests, self._failed_tests)))
         else:
-            print utils.green('All %d tests passed' % self._passed_tests)
+            print(utils.green('All %d tests passed' % self._passed_tests))
 
 
 if __name__ == '__main__':

@@ -149,7 +149,7 @@ if __name__ == "__main__":
         SubtestEchoStreamNoApiKey(),
     ]
 
-    print json.dumps({
+    print(json.dumps({
         'server_addr': FLAGS.server,
         'plans': [{
             'parallel': {
@@ -159,4 +159,4 @@ if __name__ == "__main__":
                 'subtests': subtests,
             },
         }]
-    }, indent=4)
+    }, indent=4))

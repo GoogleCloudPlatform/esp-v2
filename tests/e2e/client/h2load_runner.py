@@ -62,7 +62,7 @@ def test(run, n, c, t, d):
     (out, ret) = utils.IssueCommand(cmd)
 
     if ret != 0:
-        print '==== Failed to run'
+        print('==== Failed to run')
         return None
 
     metrics = {}
@@ -72,7 +72,7 @@ def test(run, n, c, t, d):
 
     # Parse the output of h2load
     for line in out.split("\n"):
-        print line
+        print(line)
         if line.startswith('requests:'):
             r = re.search(r'requests: (\d+) total, (\d+) started, (\d+) done, (\d+) succeeded, (\d+) failed, (\d+) errored, (\d+) timeout', line)
             metrics['Complete requests'] = (int(r.group(4)), 'number')
