@@ -84,7 +84,7 @@ while true; do
   echo "Auth token is: ${JWT_TOKEN}"
 
   echo "Starting bookstore quota control test at $(date)."
-  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_bookstore_quota_test.py \
+  (set -x; python3 ${ROOT}/tests/e2e/client/apiproxy_bookstore_quota_test.py \
       --host="${SCHEME}://${HOST}:${PORT}" \
       --api_key=${API_KEY} \
       --auth_token=${JWT_TOKEN} \
@@ -94,7 +94,7 @@ while true; do
 
   echo "Starting bookstore test at $(date)."
   (set -x;
-    python ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py  \
+    python3 ${ROOT}/tests/e2e/client/apiproxy_bookstore_test.py  \
       --host="${SCHEME}://${HOST}:${PORT}"  \
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
@@ -103,7 +103,7 @@ while true; do
 
   echo "Starting bookstore API Key restriction test at $(date)."
   (set -x;
-    python ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
+    python3 ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
       --host="${SCHEME}://${HOST}:${PORT}"   \
       --allow_unverified_cert=true  \
       --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
@@ -115,7 +115,7 @@ while true; do
     POST_FILE="${ROOT}/tests/e2e/testdata/bookstore/35k.json"
     echo "Starting stress test at $(date)."
     (set -x;
-      python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
+      python3 ${ROOT}/tests/e2e/client/apiproxy_client.py  \
         --test=stress  \
         --host="${SCHEME}://${HOST}:${PORT}" \
         --api_key=${API_KEY}  \
@@ -125,7 +125,7 @@ while true; do
 
     echo "Starting negative stress test."
     (set -x;
-      python ${ROOT}/tests/e2e/client/apiproxy_client.py  \
+      python3 ${ROOT}/tests/e2e/client/apiproxy_client.py  \
         --test=negative  \
         --test_data=${ROOT}/tests/e2e/testdata/bookstore/negative_test_data.json.temp  \
         --host="${SCHEME}://${HOST}:${PORT}"  \

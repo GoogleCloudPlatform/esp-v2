@@ -101,7 +101,7 @@ function grpc_test_pass_through() {
     # Generating token for each run, that they expire in 1 hour.
     local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
 
-    (set -x; python "${ROOT}/tests/e2e/client/grpc/grpc_stress_input.py" \
+    (set -x; python3 "${ROOT}/tests/e2e/client/grpc/grpc_stress_input.py" \
         --server="${HOST}:${PORT}" \
         --allowed_failure_rate=0.3 \
         --api_key="${API_KEY}" \
@@ -140,7 +140,7 @@ function grpc_test_transcode() {
   # Generating token for each run, that they expire in 1 hour.
   local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
 
-  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_client.py \
+  (set -x; python3 ${ROOT}/tests/e2e/client/apiproxy_client.py \
       --test=stress \
       --host="${SCHEME}://${HOST}:${PORT}" \
       --api_key="${API_KEY}" \
@@ -156,7 +156,7 @@ function grpc_test_transcode_fuzzing() {
   local AUTH_TOKEN=$("${ROOT}/tests/e2e/scripts/gen-auth-token.sh" -a "${SERVICE_NAME}")
 
   echo "Starting grpc transcode fuzz test at $(date)."
-  (set -x; python ${ROOT}/tests/e2e/client/apiproxy_transcoding_fuzz_test.py \
+  (set -x; python3 ${ROOT}/tests/e2e/client/apiproxy_transcoding_fuzz_test.py \
       --address="${SCHEME}://${HOST}:${PORT}" \
       --status_address="${STATUS_HOST}" \
       --api_key="${API_KEY}" \
