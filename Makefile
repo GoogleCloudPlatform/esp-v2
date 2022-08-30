@@ -256,7 +256,7 @@ tools.buildifier:
 tools.beautysh:
 	@command -v beautysh  >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing beautysh"; \
-		pip install --user beautysh; \
+		pip3 install --user beautysh; \
 	fi
 
 
