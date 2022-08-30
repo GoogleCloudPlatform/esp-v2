@@ -35,7 +35,7 @@ def IssueCommand(cmd, force_info_log=False, suppress_warning=False,
     process = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE)
     stdout = ''
     while True:
-        output = process.stdout.readline()
+        output = str(process.stdout.readline())
         if output == '' and process.poll() is not None:
             break
         if output:
