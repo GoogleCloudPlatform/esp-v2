@@ -35,12 +35,12 @@ def IssueCommand(cmd, force_info_log=False, suppress_warning=False,
     process = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE)
     stdout = ''
     while True:
-        output = str(process.stdout.readline())
-        if output == '' and process.poll() is not None:
+        output = process.stdout.readline()
+        if not output and process.poll() is not None:
             break
         if output:
-            stdout += output
-            print('= ' + output.strip())
+            stdout += str(output)
+            print('= ' + str(output.strip()))
     rc = process.poll()
     print('=== Finished with code %d' % rc)
     return stdout, rc
