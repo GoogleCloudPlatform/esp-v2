@@ -92,10 +92,12 @@ if [ -z "${ESP_FULL_VERSION}" ]; then
 fi
 echo "Building image for ESP version: ${ESP_FULL_VERSION}"
 
-cd "$(mktemp -d /tmp/docker.XXXX)"
+tempdir="$(mktemp -d /tmp/docker.XXXX)"
+cd "$tempdir"
 
 # Be careful about exposing the access token.
-curl --fail -o "service.json" -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+access_token="$(gcloud auth print-access-token)"
+curl --fail -o "service.json" -H "Authorization: Bearer ${access_token}" \
   "https://servicemanagement.googleapis.com/v1/services/${SERVICE}/configs/${CONFIG_ID}?view=FULL" \
   || error_exit "Failed to download service config"
 
