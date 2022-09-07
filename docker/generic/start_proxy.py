@@ -1452,8 +1452,8 @@ def gen_envoy_args(args):
     return cmd
 
 def output_reader(proc):
-    for line in iter(proc.stdout.readline, b''):
-        sys.stdout.write(line.decode())
+    for line in proc.stdout:
+        sys.stdout.write(line)
 
 def start_config_manager(proxy_conf):
     print("Starting Config Manager with args: {}".format(proxy_conf))
