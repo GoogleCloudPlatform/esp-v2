@@ -16,7 +16,7 @@
 
 import argparse
 import utils
-import httplib
+import http.client
 import json
 import ssl
 import sys
@@ -72,9 +72,9 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
             data = json.loads(data_text)
 
             # run test cases
-            for type, testcases in data.iteritems():
+            for type, testcases in data.items():
                 for testcase in testcases:
-                    print testcase['description']
+                    print(testcase['description'])
                     response = self._call_http(
                         testcase['path'],
                         api_key=testcase['api_key'],
@@ -89,7 +89,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
             sys.exit(utils.red('%d tests passed, %d tests failed.' % (
                 self._passed_tests, self._failed_tests)))
         else:
-            print utils.green('All %d tests passed' % self._passed_tests)
+            print(utils.green('All %d tests passed' % self._passed_tests))
 
 
 if __name__ == '__main__':

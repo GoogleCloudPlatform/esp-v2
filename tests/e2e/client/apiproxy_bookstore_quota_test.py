@@ -16,6 +16,8 @@
 
 
 import argparse
+import socket
+
 import utils
 import sys
 import time
@@ -51,8 +53,8 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
       try:
         return self._call_http(path='/quota_read',
                                    api_key=FLAGS.api_key)
-      except ssl.SSLError as e:
-        print "Exception {0} occurred".format(e)
+      except (ssl.SSLError, socket.timeout) as e:
+        print("Exception {0} occurred".format(e))
         return None
 
     # exhaust the quota in the current window.
@@ -124,7 +126,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
       sys.exit(utils.red('%d tests passed, %d tests failed.' % (
           self._passed_tests, self._failed_tests)))
     else:
-      print utils.green('All %d tests passed' % self._passed_tests)
+      print(utils.green('All %d tests passed' % self._passed_tests))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

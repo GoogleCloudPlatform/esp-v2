@@ -70,7 +70,7 @@ TEST_SUITES = {
 }
 
 flags.DEFINE_enum(
-    'test', 'simple', TEST_SUITES.keys(),
+    'test', 'simple', list(TEST_SUITES.keys()),
     'test suit name')
 
 flags.DEFINE_string('test_env', '',
@@ -131,15 +131,15 @@ if __name__ == "__main__":
             JWT_TOKEN=FLAGS.auth_token,
             POST_FILE=FLAGS.post_file))
 
-        print "=== Test data"
-    print json.dumps(test_data)
+        print("=== Test data")
+    print(json.dumps(test_data))
 
     results = []
     for i, run in enumerate(test_data['test_run']):
         for j, (runner, n, c, t, d) in enumerate(TEST_SUITES[FLAGS.test]):
-            print(
+            print((
                 "=== run test {}, case {} ===".format(i + 1,
-                                                      j + 1))
+                                                      j + 1)))
             ret = runner.test(run, n, c, t, d)
             if not ret:
                 continue
@@ -151,13 +151,13 @@ if __name__ == "__main__":
                 prefix = '='
             print('=== Result:')
             for k, v in result:
-                print("{}{} {} {}".format(prefix, k, v[0], v[1]))
+                print(("{}{} {} {}".format(prefix, k, v[0], v[1])))
 
-            print '=== Metric:'
+            print('=== Metric:')
             for k, v in metrics:
-                print("{}{} {} {}".format(prefix, k, v[0], v[1]))
+                print(("{}{} {} {}".format(prefix, k, v[0], v[1])))
 
-            print '=== Metadata:'
+            print('=== Metadata:')
             metadata = {
                 'runner': runner.__name__,
                 'number': str(n),
@@ -168,13 +168,13 @@ if __name__ == "__main__":
             }
             if 'labels' in run:
                 metadata.update(run['labels'])
-            print json.dumps(metadata)
+            print(json.dumps(metadata))
             print("\n")
 
             if len(errors) > 0:
-                print '=== Error status responses:'
+                print('=== Error status responses:')
                 for error, count in Counter(errors).most_common():
-                    print '= {}: {}'.format(count, error)
+                    print('= {}: {}'.format(count, error))
 
             results.append((result, metadata, errors))
 
@@ -182,9 +182,9 @@ if __name__ == "__main__":
         sys.exit('All load tests failed.')
     if FLAGS.test != 'negative':
         failed, non2xx, completed = count_failed_requests(results)
-        print(
+        print((
             "=== In Total\nComplete requests: {},\nFailed requests: {},\nNon-2xx responses: {}\n".format(
-                completed, failed, non2xx))
+                completed, failed, non2xx)))
         if failed + non2xx > 0.005 * completed:
             sys.exit(
                 ('Load test failed:\n'
@@ -192,4 +192,4 @@ if __name__ == "__main__":
                  '  {} non-2xx responses,\n'
                  '  {} failed requests.\n').format(completed, non2xx, failed))
 
-    print "All load tests are successful."
+    print("All load tests are successful.")
