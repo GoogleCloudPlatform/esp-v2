@@ -207,7 +207,7 @@ function detect_memory_leak_check() {
 
   python3 -m json.tool "${local_json}"
   local curr_usage=$(python3 -c  \
-    "import json, sys;obj = json.load(open(\"${local_json}\"));print obj['allocated']")
+    "import json, sys;obj = json.load(open(\"${local_json}\"));print(obj['allocated'])")
   rm "${local_json}"
   [[ -n "${curr_usage}" ]] || { echo "Could not extract memory usage";
   return 1; }
@@ -266,7 +266,7 @@ function extract_key_from_test_env_file() {
   local key="${1}"
   local json_path="${2}"
   cat "${json_path}"  \
-    | python3 -c "import json,sys;obj=json.load(sys.stdin);print obj['${key}']"  \
+    | python3 -c "import json,sys;obj=json.load(sys.stdin);print(obj['${key}'])"  \
     || { echo "Could not extract ${key} from ${json_path}";
   return 1; }
 }
