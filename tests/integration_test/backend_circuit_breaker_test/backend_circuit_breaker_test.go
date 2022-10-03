@@ -46,16 +46,13 @@ plans {
 		}
 	}
 }`
-
-	// expected error message from envoy
-	overflowError = "upstream connect error or disconnect/reset before headers. reset reason: overflow"
 )
 
 func TestBackendCircuitBreaker(t *testing.T) {
 	testData := []struct {
 		desc      string
 		extraFlag string
-		wantError bool
+		wantError string
 	}{
 		{
 			desc: "succeed with default the backend_cluster_max_requests flag.",
@@ -63,7 +60,7 @@ func TestBackendCircuitBreaker(t *testing.T) {
 		{
 			desc:      "overflow with custom flag backend_cluster_max_requests=1",
 			extraFlag: "--backend_cluster_maximum_requests=1",
-			wantError: true,
+			wantError: "upstream connect error or disconnect/reset before headers. reset reason: overflow",
 		},
 	}
 	for _, tc := range testData {
@@ -82,16 +79,16 @@ func TestBackendCircuitBreaker(t *testing.T) {
 
 			result, err := client.RunGRPCEchoTest(testPlan, s.Ports().ListenerPort)
 			if err == nil {
-				if tc.wantError {
+				if tc.wantError != "" {
 					t.Errorf("expected error, but not error.")
 				}
 				return
 			}
 
-			if !tc.wantError {
-				t.Errorf("fail, error during running test: %v", err)
-			} else if !strings.Contains(result, overflowError) {
-				t.Errorf("diff error message, got: %v, expect: %s", result, overflowError)
+			if tc.wantError == "" {
+				t.Errorf("fail, error during running test: %v; want no error", err)
+			} else if !strings.Contains(result, tc.wantError) {
+				t.Errorf("diff error message, got: %q, expect: %q", result, tc.wantError)
 			}
 		})
 	}
