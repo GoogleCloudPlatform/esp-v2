@@ -44,6 +44,7 @@ const (
 	TestBackendAuthWithImdsIdToken
 	TestBackendAuthWithImdsIdTokenRetries
 	TestBackendAuthWithImdsIdTokenWhileAllowCors
+	TestBackendCircuitBreaker
 	TestBackendHttpProtocol
 	TestBackendPerTryTimeout
 	TestBackendRetry

@@ -188,6 +188,7 @@ func TestLocalBackendCluster(t *testing.T) {
 		healthCheckGrpcBackendService           string
 		healthCheckGrpcBackendInterval          time.Duration
 		healthCheckGrpcBackendNoTrafficInterval time.Duration
+		backendClusterMaxRequests               int
 		wantError                               string
 		wantedCluster                           clusterpb.Cluster
 	}{
@@ -200,6 +201,30 @@ func TestLocalBackendCluster(t *testing.T) {
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
 				DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
+			},
+		},
+		{
+			desc:                      "Success for http backend with a backend cluster max requests",
+			backendAddress:            "http://127.0.0.1:80",
+			backendClusterMaxRequests: 10240,
+			wantedCluster: clusterpb.Cluster{
+				Name:                 util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
+				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
+				DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
+				CircuitBreakers: &clusterpb.CircuitBreakers{
+					Thresholds: []*clusterpb.CircuitBreakers_Thresholds{
+						&clusterpb.CircuitBreakers_Thresholds{
+							Priority:    corepb.RoutingPriority_DEFAULT,
+							MaxRequests: &wrappers.UInt32Value{Value: 10240},
+						},
+						&clusterpb.CircuitBreakers_Thresholds{
+							Priority:    corepb.RoutingPriority_HIGH,
+							MaxRequests: &wrappers.UInt32Value{Value: 10240},
+						},
+					},
+				},
 			},
 		},
 		{
@@ -316,6 +341,9 @@ func TestLocalBackendCluster(t *testing.T) {
 			}
 			if tc.healthCheckGrpcBackendService != "" {
 				opts.HealthCheckGrpcBackendService = tc.healthCheckGrpcBackendService
+			}
+			if tc.backendClusterMaxRequests != 0 {
+				opts.BackendClusterMaxRequests = tc.backendClusterMaxRequests
 			}
 
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
