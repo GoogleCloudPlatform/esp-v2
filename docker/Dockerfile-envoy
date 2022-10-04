@@ -61,7 +61,8 @@ RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases
 
 
 # Update to the latest
-RUN apk update && apk upgrade
+# pin to baselayout=3.2.0-r22 to workaround issue: https://github.com/sgerrand/alpine-pkg-glibc/issues/185
+RUN apk add alpine-baselayout=3.2.0-r22 && apk update && apk upgrade
 
 # Set the default root CA for gRpc.
 # opensensus lib is using gRpc to call Stackdriver
