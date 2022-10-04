@@ -203,7 +203,7 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
 
 	EnableResponseCompression = flag.Bool("enable_response_compression", defaults.EnableResponseCompression, `Enable gzip,br compression for response data. The default is disabled.`)
 
-	// BackendClusterMaxRequest is the maximum active requests allowed in a backend cluster.
+	// BackendClusterMaxRequests is the maximum active requests allowed in a backend cluster.
 	BackendClusterMaxRequests = flag.Int("backend_cluster_maximum_requests", defaults.BackendClusterMaxRequests,
 		`The maximum allowed active requests for a backend cluster. If 0, or not set, default is 1024.
 		It is the "cluster maximum requests" of Envoy circuit breaker settings(https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking#circuit-breaking) that will be applied to all backend clusters.`)
