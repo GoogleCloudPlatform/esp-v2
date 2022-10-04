@@ -242,6 +242,13 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster,
 	return providerClusters, nil
 }
 
+func makeCircuitBreakersThreadhold(opt *options.ConfigGeneratorOptions, prio corepb.RoutingPriority) *clusterpb.CircuitBreakers_Thresholds {
+	return &clusterpb.CircuitBreakers_Thresholds{
+		Priority:    prio,
+		MaxRequests: &wrappers.UInt32Value{Value: uint32(opt.BackendClusterMaxRequests)},
+	}
+}
+
 func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRoutingCluster) (*clusterpb.Cluster, error) {
 	c := &clusterpb.Cluster{
 		Name:                 brc.ClusterName,
@@ -249,6 +256,15 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		ConnectTimeout:       ptypes.DurationProto(opt.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 		LoadAssignment:       util.CreateLoadAssignment(brc.Hostname, brc.Port),
+	}
+
+	if opt.BackendClusterMaxRequests > 0 {
+		c.CircuitBreakers = &clusterpb.CircuitBreakers{
+			Thresholds: []*clusterpb.CircuitBreakers_Thresholds{
+				makeCircuitBreakersThreadhold(opt, corepb.RoutingPriority_DEFAULT),
+				makeCircuitBreakersThreadhold(opt, corepb.RoutingPriority_HIGH),
+			},
+		}
 	}
 
 	isHttp2 := brc.Protocol == util.GRPC || brc.Protocol == util.HTTP2

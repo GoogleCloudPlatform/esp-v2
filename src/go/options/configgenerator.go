@@ -133,6 +133,8 @@ type ConfigGeneratorOptions struct {
 	ScQuotaRetries            int
 	ScReportRetries           int
 
+	BackendClusterMaxRequests int
+
 	ComputePlatformOverride   string
 	EnableResponseCompression bool
 
