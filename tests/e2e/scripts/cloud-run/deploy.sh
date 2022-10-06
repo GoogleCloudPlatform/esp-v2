@@ -374,7 +374,8 @@ function test() {
   echo "Testing"
 
   # Wait a few minutes for service to be enabled and the permissions to propagate
-  sleep_wrapper "5m" "Sleep 5m for the endpoints service to be enabled"
+  # If not waiting long enough, some stress tests may get 403 permission denied. b/250920830
+  sleep_wrapper "10m" "Sleep 10m for the endpoints service to be enabled"
 
   if [[ ${PROXY_PLATFORM} == "anthos-cloud-run" ]];
   then
