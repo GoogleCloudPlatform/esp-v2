@@ -29,6 +29,7 @@ do
     --async \
     --quiet
 done
+echo "Done cleaning up GKE services"
 
 ### Cloud Run ###
 CLOUD_RUN_SERVICES=$(gcloud run services list \
@@ -73,6 +74,19 @@ for ap in ${APP_ENGINES} ; do
 done
 echo "Done cleaning up App Engines"
 
+### Firewall Rules ###
+
+FIREWALL_RULES=$(gcloud compute firewall-rules list \
+    --filter="targetTags:(gke-e2e-cloud-run) \
+    AND creationTimestamp < ${LIMIT_DATE}" \
+    --format="value(name)")
+
+for rule in $FIREWALL_RULES ; do
+  echo "Deleting Firewall rule: ${rule}"
+  gcloud compute firewall-rules delete ${rule} \
+    --quiet
+done
+echo "Done cleaning up Firewall rules"
 
 ### Endpoints Services ###
 ENDPOINTS_SERVICES=$(gcloud endpoints services list \
