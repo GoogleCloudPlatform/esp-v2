@@ -10,22 +10,26 @@
 set -eo pipefail
 
 # Set the project id
-gcloud config set project cloudesf-testing
-gcloud config set run/region us-central1
+PROJECT="cloudesf-testing"
+REGION="us-central1"
+gcloud config set project ${PROJECT}
+gcloud config set run/region "${REGION}"
 
 # Resources older than 1 day should be cleaned up
 LIMIT_DATE=$(date -d "1 day ago" +%F)
 echo "Cleaning up resources before ${LIMIT_DATE}"
 
 ### GKE Cluster ###
-GKE_SERVICES=$(gcloud container clusters list --format="value(NAME)" \
-  --filter="name ~ ^e2e- AND creationTime  < ${LIMIT_DATE}" )
+GKE_SERVICES=$(gcloud container clusters list --format='value[separator=","](NAME,ZONE)' \
+  --filter="name ~ ^e2e- AND createTime  < ${LIMIT_DATE}" )
 
 for service in ${GKE_SERVICES};
 do
-  echo "Deleting GKE service: ${service}"
-  gcloud container clusters delete ${service} \
-    --zone=us-central1-a \
+  name=$(echo "${service}" | cut -d "," -f 1)
+  zone=$(echo "${service}" | cut -d "," -f 2)
+  echo "Deleting GKE service: name=${name}, zone=${zone}"
+  gcloud container clusters delete "${name}" \
+    --zone="${zone}" \
     --async \
     --quiet
 done
@@ -38,11 +42,9 @@ CLOUD_RUN_SERVICES=$(gcloud run services list \
     AND metadata.creationTimestamp < ${LIMIT_DATE}" \
   --format="value(metadata.name)")
 
-# Note: This variable should NOT be in quotation marks,
-# allowing iteration over multi-line string
 for service in $CLOUD_RUN_SERVICES ; do
   echo "Deleting Cloud Run service: ${service}"
-  gcloud run services delete ${service} \
+  gcloud run services delete "${service}" \
     --platform=managed \
     --quiet
 done
@@ -54,8 +56,6 @@ GOOGLE_FUNCTIONS=$(gcloud functions list \
     AND updateTime < ${LIMIT_DATE}" \
   --format="value(name)")
 
-# Note: This variable should NOT be in quotation marks,
-# allowing iteration over multi-line string
 for gf in $GOOGLE_FUNCTIONS ; do
   echo "Deleting Google Function: ${gf}"
   gcloud functions delete ${gf} \
@@ -88,13 +88,53 @@ for rule in $FIREWALL_RULES ; do
 done
 echo "Done cleaning up Firewall rules"
 
+### Forwarding Rules ###
+
+TARGET_POOLS=$(gcloud compute target-pools list \
+    --regions="${REGION}" \
+    --filter="instances:(gke-e2e-cloud-run) \
+    AND creationTimestamp < ${LIMIT_DATE}" \
+    --format='value(name)')
+
+for targetpool in $TARGET_POOLS; do
+  echo "Detected cloud run target pool ${targetpool}, querying forwarding rule"
+  forwardingitem=$(gcloud compute forwarding-rules list \
+    --filter=TARGET="https://www.googleapis.com/compute/v1/projects/$PROJECT/regions/$REGION/targetPools/$targetpool" \
+    --format='value(name)')
+  echo "Deleting forwarding rule ${forwardingitem}"
+  gcloud compute forwarding-rules delete "${forwardingitem}" \
+    --region="${REGION}" \
+    --quiet
+done
+echo "Done cleaning up forwarding rules"
+
+### Target Pools ###
+# Source: https://gist.github.com/prasvats/b2a4e33ad12b40191dd9d7e222d1abde
+
+TARGET_POOLS=$(gcloud compute target-pools list \
+    --regions="${REGION}" \
+    --filter="creationTimestamp < ${LIMIT_DATE}" \
+    --format='value(name)')
+
+for targetpool in $TARGET_POOLS; do
+  echo "Query Forwarding Rule for target pool ${targetpool}"
+  forwardingitem=$(gcloud compute forwarding-rules list \
+    --filter=TARGET="https://www.googleapis.com/compute/v1/projects/$PROJECT/regions/$REGION/targetPools/$targetpool" \
+    --format='value(name)')
+    if [[ -z "$forwardingitem" ]]; then
+      echo "Deleting unused target pool ${targetpool}"
+      gcloud compute target-pools delete "${targetpool}" \
+        --region="${REGION}" \
+        --quiet
+    fi
+done
+echo "Done cleaning up target pools without forwarding rules"
+
 ### Endpoints Services ###
 ENDPOINTS_SERVICES=$(gcloud endpoints services list \
     --filter="serviceName ~ ^e2e-test-" \
   --format="value(serviceName)")
 
-# Note: This variable should NOT be in quotation marks,
-# allowing iteration over multi-line string
 for service in $ENDPOINTS_SERVICES ; do
   echo "Checking if Endpoints Service is old enough to be deleted: ${service}"
 
