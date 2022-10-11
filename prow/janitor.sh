@@ -75,6 +75,7 @@ done
 echo "Done cleaning up App Engines"
 
 ### Firewall Rules ###
+# Clean up firewall rules that point to deleted VMs.
 
 FIREWALL_RULES=$(gcloud compute firewall-rules list \
     --filter="targetTags:(gke-e2e-cloud-run) \
@@ -88,27 +89,8 @@ for rule in $FIREWALL_RULES ; do
 done
 echo "Done cleaning up Firewall rules"
 
-### Forwarding Rules ###
-
-TARGET_POOLS=$(gcloud compute target-pools list \
-    --regions="${REGION}" \
-    --filter="instances:(gke-e2e-cloud-run) \
-    AND creationTimestamp < ${LIMIT_DATE}" \
-    --format='value(name)')
-
-for targetpool in $TARGET_POOLS; do
-  echo "Detected cloud run target pool ${targetpool}, querying forwarding rule"
-  forwardingitem=$(gcloud compute forwarding-rules list \
-    --filter=TARGET="https://www.googleapis.com/compute/v1/projects/$PROJECT/regions/$REGION/targetPools/$targetpool" \
-    --format='value(name)')
-  echo "Deleting forwarding rule ${forwardingitem}"
-  gcloud compute forwarding-rules delete "${forwardingitem}" \
-    --region="${REGION}" \
-    --quiet
-done
-echo "Done cleaning up forwarding rules"
-
 ### Target Pools ###
+# Clean up target pools that are unused: no forwarding rules point to these.
 # Source: https://gist.github.com/prasvats/b2a4e33ad12b40191dd9d7e222d1abde
 
 TARGET_POOLS=$(gcloud compute target-pools list \
@@ -129,6 +111,28 @@ for targetpool in $TARGET_POOLS; do
     fi
 done
 echo "Done cleaning up target pools without forwarding rules"
+
+### Forwarding Rules ###
+# Clean up forwarding rules that point to deleted VMs.
+# Must run AFTER target pool cleanup so that we don't have any orphaned target pools.
+
+TARGET_POOLS=$(gcloud compute target-pools list \
+    --regions="${REGION}" \
+    --filter="instances:(gke-e2e-cloud-run) \
+    AND creationTimestamp < ${LIMIT_DATE}" \
+    --format='value(name)')
+
+for targetpool in $TARGET_POOLS; do
+  echo "Detected cloud run target pool ${targetpool}, querying forwarding rule"
+  forwardingitem=$(gcloud compute forwarding-rules list \
+    --filter=TARGET="https://www.googleapis.com/compute/v1/projects/$PROJECT/regions/$REGION/targetPools/$targetpool" \
+    --format='value(name)')
+  echo "Deleting forwarding rule ${forwardingitem}"
+  gcloud compute forwarding-rules delete "${forwardingitem}" \
+    --region="${REGION}" \
+    --quiet
+done
+echo "Done cleaning up forwarding rules"
 
 ### Endpoints Services ###
 ENDPOINTS_SERVICES=$(gcloud endpoints services list \
