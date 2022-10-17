@@ -20,6 +20,7 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ID="api_proxy_e2e_test"
 
+
 gcloud config set core/project cloudesf-testing
 
 cd "${ROOT}"
@@ -73,6 +74,8 @@ if [ ! -d "bin" ]; then
   mkdir bin
 fi
 
+# https://github.com/kubernetes/kubernetes/tree/master/cluster/log-dump
+export USE_TEST_INFRA_LOG_DUMPING=true
 export GO111MODULE=on
 
 # Wait for image build and push.
