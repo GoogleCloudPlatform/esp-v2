@@ -127,7 +127,7 @@ class ApiProxyTranscodingFuzzTest(object):
 
   def _check_for_crash(self):
     status = self._get_status()
-    if status != "LIVE":
+    if status != b'LIVE':
       print(status)
       sys.exit(utils.red(
           'ESPv2 crash'))
