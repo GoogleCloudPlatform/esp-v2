@@ -6,9 +6,6 @@
 - Enforce the default http rule (#725)
 - Add option TranscodingRejectCollision for transcoding. Default is false. (#723)
 
-TODO: Edit the section above before submitting! DIRECTORY /usr/local/google/home/taoxuy/esp-v2
-TODO: Edit the section above before submitting! DIRECTORY /usr/local/google/home/taoxuy/esp-v2
-===============================================
 # Release 2.38.0 26-07-2022
 
 - Upgrade envoy to v1.23.0. (#720)
