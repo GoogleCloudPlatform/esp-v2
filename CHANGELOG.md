@@ -1,3 +1,11 @@
+# Release 2.39.0 18-10-2022
+
+- Add a flag "--backend_cluster_maximum_requests (#736)
+- fix build_envoy_image failure (#737)
+- Update gcloud_build_image script to be more safe. (#730)
+- Enforce the default http rule (#725)
+- Add option TranscodingRejectCollision for transcoding. Default is false. (#723)
+
 # Release 2.38.0 26-07-2022
 
 - Upgrade envoy to v1.23.0. (#720)
