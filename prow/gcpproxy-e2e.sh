@@ -27,6 +27,9 @@ cd "${ROOT}"
 . ${ROOT}/tests/e2e/scripts/prow-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
 
+
+
+
 function runE2E() {
   local OPTIND OPTARG arg
   while getopts :f:p:c:g:m:R:St: arg; do
