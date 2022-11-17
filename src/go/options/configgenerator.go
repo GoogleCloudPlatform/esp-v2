@@ -115,11 +115,13 @@ type ConfigGeneratorOptions struct {
 
 	// JwtAuthn related flags
 	DisableJwksAsyncFetch             bool
+	JwksAsyncFetchFastListener        bool
 	JwksCacheDurationInS              int
 	JwksFetchNumRetries               int
 	JwksFetchRetryBackOffBaseInterval time.Duration
 	JwksFetchRetryBackOffMaxInterval  time.Duration
 	JwtPadForwardPayloadHeader        bool
+	JwtCacheSize                      uint
 
 	ScCheckTimeoutMs  int
 	ScQuotaTimeoutMs  int
@@ -165,10 +167,12 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		StreamIdleTimeout:                       util.DefaultIdleTimeout,
 		EnvoyXffNumTrustedHops:                  2,
 		DisableJwksAsyncFetch:                   false,
+		JwksAsyncFetchFastListener:              false,
 		JwksCacheDurationInS:                    300,
 		JwksFetchNumRetries:                     0,
 		JwksFetchRetryBackOffBaseInterval:       200 * time.Millisecond,
 		JwksFetchRetryBackOffMaxInterval:        32 * time.Second,
+		JwtCacheSize:                            0,
 		ListenerAddress:                         "0.0.0.0",
 		ListenerPort:                            8080,
 		TokenAgentPort:                          8791,
