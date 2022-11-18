@@ -581,7 +581,7 @@ environment variable or by passing "-k" flag to this script.
         action='store_true',
         default=False,
         help='''
-        Only apply when jwks_async_fetch is enabled. This flag determines if the envoy will wait
+        Only apply when --disable_jwks_async_fetch flag is not set. This flag determines if the envoy will wait
         for jwks_async_fetch to complete before binding the listener port. If false, it will wait.
         Default is false.'''
     )

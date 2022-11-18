@@ -136,7 +136,7 @@ var (
 			If not provided, Envoy will decide the default value.`)
 
 	DisableJwksAsyncFetch      = flag.Bool("disable_jwks_async_fetch", defaults.DisableJwksAsyncFetch, `When the feature is enabled, JWKS is fetched before processing any requests. When disabled, JWKS is fetched on-demand when processing the requests.`)
-	JwksAsyncFetchFastListener = flag.Bool("jwks_async_fetch_fast_listener", defaults.JwksAsyncFetchFastListener, `Only apply when jwks_async_fetch is enabled. This flag determines if the envoy will wait for jwks_async_fetch to complete before binding the listener port. If false, it will wait. Default is false.`)
+	JwksAsyncFetchFastListener = flag.Bool("jwks_async_fetch_fast_listener", defaults.JwksAsyncFetchFastListener, `Only apply when --disable_jwks_async_fetch flag is not set. This flag determines if the envoy will wait for jwks_async_fetch to complete before binding the listener port. If false, it will wait. Default is false.`)
 	JwksCacheDurationInS       = flag.Int("jwks_cache_duration_in_s", defaults.JwksCacheDurationInS, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
 
 	JwksFetchNumRetries                 = flag.Int("jwks_fetch_num_retries", defaults.JwksFetchNumRetries, `Specify the remote JWKS fetch retry policy's number of retries. The default is 0, meaning no retry policy applied.`)
