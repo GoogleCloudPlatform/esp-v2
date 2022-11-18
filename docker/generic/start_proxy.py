@@ -577,6 +577,22 @@ environment variable or by passing "-k" flag to this script.
         to the request processing latency. Default is enabled.'''
     )
     parser.add_argument(
+        '--jwks_async_fetch_fast_listener',
+        action='store_true',
+        default=False,
+        help='''
+        Only apply when --disable_jwks_async_fetch flag is not set. This flag determines if the envoy will wait
+        for jwks_async_fetch to complete before binding the listener port. If false, it will wait.
+        Default is false.'''
+    )
+    parser.add_argument(
+        '--jwt_cache_size',
+        default=None,
+        help='''
+        Specify JWT cache size, the number of unique JWT tokens in the cache. The cache only stores
+        verified good tokens. If 0, JWT cache is disabled. The default is 0.'''
+    )
+    parser.add_argument(
         '--jwks_cache_duration_in_s',
         default=None,
         help='''
@@ -1146,6 +1162,10 @@ def gen_proxy_config(args):
 
     if args.disable_jwks_async_fetch:
         proxy_conf.append("--disable_jwks_async_fetch")
+    if args.jwks_async_fetch_fast_listener:
+        proxy_conf.append("--jwks_async_fetch_fast_listener")
+    if args.jwt_cache_size:
+         proxy_conf.extend(["--jwt_cache_size", args.jwt_cache_size])
     if args.jwks_cache_duration_in_s:
          proxy_conf.extend(["--jwks_cache_duration_in_s", args.jwks_cache_duration_in_s])
     if args.jwks_fetch_num_retries:

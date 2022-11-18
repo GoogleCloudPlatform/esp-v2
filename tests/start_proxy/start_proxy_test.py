@@ -108,7 +108,7 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
-            # enable_jwks_async_fetch
+            # disable_jwks_async_fetch
             (['-R=managed','--disable_jwks_async_fetch',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
@@ -117,6 +117,36 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--disable_jwks_async_fetch',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata', '--underscores_in_headers',
+              '--disable_tracing'
+              ]),
+            # jwks_async_fetch_fast_listener
+            (['-R=managed','--jwks_async_fetch_fast_listener',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--check_metadata',
+              '--disable_tracing', '--underscores_in_headers'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--jwks_async_fetch_fast_listener',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata', '--underscores_in_headers',
+              '--disable_tracing'
+              ]),
+            # jwt_cache_size
+            (['-R=managed','--jwt_cache_size=300',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--check_metadata',
+              '--disable_tracing', '--underscores_in_headers'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--jwt_cache_size', '300',
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',

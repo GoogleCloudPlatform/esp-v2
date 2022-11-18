@@ -135,14 +135,16 @@ var (
 	ConnectionBufferLimitBytes = flag.Int("connection_buffer_limit_bytes", defaults.ConnectionBufferLimitBytes, `Configure the maximum amount of data that is buffered for each request/response body. 
 			If not provided, Envoy will decide the default value.`)
 
-	DisableJwksAsyncFetch = flag.Bool("disable_jwks_async_fetch", defaults.DisableJwksAsyncFetch, `When the feature is enabled, JWKS is fetched before processing any requests. When disabled, JWKS is fetched on-demand when processing the requests.`)
-	JwksCacheDurationInS  = flag.Int("jwks_cache_duration_in_s", defaults.JwksCacheDurationInS, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
+	DisableJwksAsyncFetch      = flag.Bool("disable_jwks_async_fetch", defaults.DisableJwksAsyncFetch, `When the feature is enabled, JWKS is fetched before processing any requests. When disabled, JWKS is fetched on-demand when processing the requests.`)
+	JwksAsyncFetchFastListener = flag.Bool("jwks_async_fetch_fast_listener", defaults.JwksAsyncFetchFastListener, `Only apply when --disable_jwks_async_fetch flag is not set. This flag determines if the envoy will wait for jwks_async_fetch to complete before binding the listener port. If false, it will wait. Default is false.`)
+	JwksCacheDurationInS       = flag.Int("jwks_cache_duration_in_s", defaults.JwksCacheDurationInS, "Specify JWT public key cache duration in seconds. The default is 5 minutes.")
 
 	JwksFetchNumRetries                 = flag.Int("jwks_fetch_num_retries", defaults.JwksFetchNumRetries, `Specify the remote JWKS fetch retry policy's number of retries. The default is 0, meaning no retry policy applied.`)
 	JwksFetchRetryBackOffBaseIntervalMs = flag.Int("jwks_fetch_retry_back_off_base_interval_ms", int(defaults.JwksFetchRetryBackOffBaseInterval.Milliseconds()), `Specify JWKS fetch retry exponential back off base interval in milliseconds. The default is 200 milliseconds.`)
 	JwksFetchRetryBackOffMaxIntervalMs  = flag.Int("jwks_fetch_retry_back_off_max_interval_ms", int(defaults.JwksFetchRetryBackOffMaxInterval.Milliseconds()), `Specify JWKS fetch retry exponential back off maximum interval in milliseconds. The default is 32 seconds.`)
 	JwtPatForwardPayloadHeader          = flag.Bool("jwt_pad_forward_payload_header", defaults.JwtPadForwardPayloadHeader, `For the JWT in request, the JWT payload is forwarded to backend in the "X-Endpoint-API-UserInfo"" header by default. 
 Normally JWT based64 encode doesn’t add padding. If this flag is true, the header will be padded.`)
+	JwtCacheSize = flag.Uint("jwt_cache_size", defaults.JwtCacheSize, `Specify JWT cache size, the number of unique JWT tokens in the cache. The cache only stores verified good tokens. If 0, JWT cache is disabled. The default is 0.`)
 
 	ScCheckTimeoutMs  = flag.Int("service_control_check_timeout_ms", defaults.ScCheckTimeoutMs, `Set the timeout in millisecond for service control Check request. Must be > 0 and the default is 1000 if not set.`)
 	ScQuotaTimeoutMs  = flag.Int("service_control_quota_timeout_ms", defaults.ScQuotaTimeoutMs, `Set the timeout in millisecond for service control Quota request. Must be > 0 and the default is 1000 if not set.`)
@@ -274,11 +276,13 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		EnableGrpcForHttp1:                            *EnableGrpcForHttp1,
 		ConnectionBufferLimitBytes:                    *ConnectionBufferLimitBytes,
 		DisableJwksAsyncFetch:                         *DisableJwksAsyncFetch,
+		JwksAsyncFetchFastListener:                    *JwksAsyncFetchFastListener,
 		JwksCacheDurationInS:                          *JwksCacheDurationInS,
 		JwksFetchNumRetries:                           *JwksFetchNumRetries,
 		JwksFetchRetryBackOffBaseInterval:             time.Duration(*JwksFetchRetryBackOffBaseIntervalMs) * time.Millisecond,
 		JwksFetchRetryBackOffMaxInterval:              time.Duration(*JwksFetchRetryBackOffMaxIntervalMs) * time.Millisecond,
 		JwtPadForwardPayloadHeader:                    *JwtPatForwardPayloadHeader,
+		JwtCacheSize:                                  *JwtCacheSize,
 		BackendRetryOns:                               *BackendRetryOns,
 		BackendRetryNum:                               *BackendRetryNum,
 		BackendPerTryTimeout:                          *BackendPerTryTimeout,

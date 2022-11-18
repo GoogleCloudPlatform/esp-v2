@@ -78,7 +78,9 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 			},
 		}
 		if !serviceInfo.Options.DisableJwksAsyncFetch {
-			jwks.AsyncFetch = &jwtpb.JwksAsyncFetch{}
+			jwks.AsyncFetch = &jwtpb.JwksAsyncFetch{
+				FastListener: serviceInfo.Options.JwksAsyncFetchFastListener,
+			}
 		}
 		if serviceInfo.Options.JwksFetchNumRetries > 0 {
 			// only create a retry policy, evenutally with a backoff if it is required.
@@ -116,6 +118,12 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 			// See b/147834348 for more information on this default behavior.
 			defaultAudience := fmt.Sprintf("https://%v", serviceInfo.Name)
 			jp.Audiences = append(jp.Audiences, defaultAudience)
+		}
+
+		if serviceInfo.Options.JwtCacheSize > 0 {
+			jp.JwtCacheConfig = &jwtpb.JwtCacheConfig{
+				JwtCacheSize: uint32(serviceInfo.Options.JwtCacheSize),
+			}
 		}
 
 		// TODO(taoxuy): add unit test
