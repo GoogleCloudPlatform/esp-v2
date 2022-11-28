@@ -35,15 +35,15 @@ RUN apt-get install -y nodejs
 RUN wget -O /usr/local/bin/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazelisk-linux-amd64 && \
     chmod +x /usr/local/bin/bazelisk
 
-# install clang-10 and associated tools (new envoy)
+# install clang-14 and associated tools (new envoy)
 RUN wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
-    echo "deb https://apt.llvm.org/buster/ llvm-toolchain-buster-13 main" >> /etc/apt/sources.list && \
+    echo "deb https://apt.llvm.org/buster/ llvm-toolchain-buster-14 main" >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y llvm-13 llvm-13-dev libclang-13-dev clang-13 \
-        lld-13 clang-tools-13 clang-format-13 libc++-dev xz-utils
+    apt-get install -y llvm-14 llvm-14-dev libclang-14-dev clang-14 \
+        lld-14 clang-tools-14 clang-format-14 libc++-dev xz-utils
 
-ENV CC clang-13
-ENV CXX clang++-13
+ENV CC clang-14
+ENV CXX clang++-14
 
 # install golang and setup Go standard envs
 ENV GOPATH /go

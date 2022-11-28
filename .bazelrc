@@ -2,7 +2,10 @@
 
 # Required by envoy and its tests
 build --define=grpc_no_ares=true
-build --cxxopt='-std=c++17'
+build --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
+
+# We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
+build --define absl=1
 
 # Compile a Position Independent Executable
 # Ref: github.com/envoyproxy/envoy#8792
@@ -10,15 +13,13 @@ build --copt=-fPIC
 
 # Other flags for the C++ compiler
 build --show_timestamps
-build --copt -Wno-unknown-warning-option
-build --copt -Wno-error=vla-parameter
 
 # Compilation modes
 build:release -c opt
 build:debug -c dbg
 
 build --experimental_local_memory_estimate
-build --experimental_strict_action_env=true
+build --incompatible_strict_action_env=true
 build --host_force_python=PY3
 build --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a
 build --action_env=BAZEL_LINKOPTS=-lm
@@ -27,8 +28,8 @@ build --action_env=BAZEL_LINKOPTS=-lm
 build --define absl=1
 
 # Pass PATH variable from the environment. CC and CXX are always clang (no gcc).
-build --action_env=CC=clang-13
-build --action_env=CXX=clang++-13
+build --action_env=CC=clang-14
+build --action_env=CXX=clang++-14
 build --action_env=PATH
 
 # Disable ICU linking for googleurl.
@@ -42,7 +43,7 @@ build:sanitizer --test_tag_filters=-no_san
 
 # Common flags for Clang
 build:clang --action_env=BAZEL_COMPILER=clang
-build:clang --linkopt=-fuse-ld=lld-13
+build:clang --linkopt=-fuse-ld=lld-14
 
 # Compile with the Scudo allocator
 # https://llvm.org/docs/ScudoHardenedAllocator.html
