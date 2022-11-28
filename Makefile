@@ -162,11 +162,11 @@ test-envoy: clang-format
 
 test-envoy-asan: clang-format
 	@echo "--> running envoy's unit tests (asan)"
-	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-13) bazelisk test --config=clang-asan  --test_output=errors //src/...
+	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) bazelisk test --config=clang-asan  --test_output=errors //src/...
 
 test-envoy-tsan: clang-format
 	@echo "--> running envoy's unit tests (tsan)"
-	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-13) bazelisk test --config=clang-tsan  --test_output=errors  //src/...
+	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) bazelisk test --config=clang-tsan  --test_output=errors  //src/...
 
 .PHONY: integration-test-run-sequential integration-test-run-parallel integration-test integration-test-asan integration-test-tsan integration-debug
 integration-test-run-sequential:
@@ -295,7 +295,7 @@ format: tools.goimports tools.buildifier
 .PHONY: clang-format shell-format
 clang-format:
 	@echo "--> formatting code with 'clang-format' tool"
-	@echo $(CPP_PROTO_FILES) | xargs clang-format-13 -i
+	@echo $(CPP_PROTO_FILES) | xargs clang-format-14 -i
 
 shell-format: tools.beautysh
 	@echo "--> formatting shell scripts with 'beautysh' tool"
