@@ -61,6 +61,9 @@ GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 SERVERLESS_PLATFORM = "Cloud Run(ESPv2)"
 SERVERLESS_XFF_NUM_TRUSTED_HOPS = 0
 
+# child pid list
+pid_list = []
+
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
 
