@@ -269,6 +269,9 @@
                               "access_token"
                             ],
                             "issuer": "e2e-client-jwk@cloudesf-testing.iam.gserviceaccount.com",
+                            "jwtCacheConfig": {
+                              "jwtCacheSize": 1000
+                            },
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
                               "asyncFetch": {},

@@ -351,6 +351,9 @@ var (
                         "access_token"
                       ],
                       "issuer": "https://test_issuer.google.com/",
+                      "jwtCacheConfig": {
+                        "jwtCacheSize": 1000
+                      },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
                         "cacheDuration": "300s",
@@ -633,6 +636,9 @@ var (
                         "access_token"
                       ],
                       "issuer": "https://test_issuer.google.com/",
+                      "jwtCacheConfig": {
+                        "jwtCacheSize": 1000
+                      },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
                         "cacheDuration": "300s",
@@ -1150,6 +1156,9 @@ var (
                         "access_token"
                       ],
                       "issuer": "https://test_issuer.google.com/",
+                      "jwtCacheConfig": {
+                        "jwtCacheSize": 1000
+                      },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
                         "cacheDuration": "300s",
@@ -1180,6 +1189,9 @@ var (
                         "access_token"
                       ],
                       "issuer": "https://test_issuer.google.com/",
+                      "jwtCacheConfig": {
+                        "jwtCacheSize": 1000
+                      },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
                         "cacheDuration": "300s",
@@ -2148,6 +2160,9 @@ var (
                         "access_token"
                       ],
                       "issuer": "https://test_issuer.google.com/",
+                      "jwtCacheConfig": {
+                        "jwtCacheSize": 1000
+                      },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
                         "cacheDuration": "300s",

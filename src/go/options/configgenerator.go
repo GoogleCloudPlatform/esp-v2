@@ -172,7 +172,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		JwksFetchNumRetries:                     0,
 		JwksFetchRetryBackOffBaseInterval:       200 * time.Millisecond,
 		JwksFetchRetryBackOffMaxInterval:        32 * time.Second,
-		JwtCacheSize:                            0,
+		JwtCacheSize:                            1000,
 		ListenerAddress:                         "0.0.0.0",
 		ListenerPort:                            8080,
 		TokenAgentPort:                          8791,
