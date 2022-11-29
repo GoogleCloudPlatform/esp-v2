@@ -26,9 +26,9 @@ RUN pip3 install --no-cache --upgrade pip setuptools
 ENV PATH /bin:$PATH
 
 ADD docker/generic/* /apiproxy/
-RUN chmod +r /apiproxy/start_proxy.py
 ADD bin/bootstrap /bin/
 ADD bin/configmanager /bin/
+RUN chmod +rx /apiproxy/start_proxy.py /bin/envoy /bin/bootstrap /bin/configmanager
 
 # create envoy user and group
 RUN addgroup -S envoy && adduser --no-create-home -S envoy -G envoy
