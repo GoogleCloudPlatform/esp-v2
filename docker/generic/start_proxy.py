@@ -24,6 +24,7 @@ import subprocess
 import sys
 import threading
 import time
+from datetime import datetime
 
 # The command to generate Envoy bootstrap config
 BOOTSTRAP_CMD = "bin/bootstrap"
@@ -33,7 +34,7 @@ CONFIGMANAGER_BIN = "bin/configmanager"
 ENVOY_BIN = "bin/envoy"
 
 # Health check period in secs, for Config Manager and Envoy.
-HEALTH_CHECK_PERIOD = 60
+HEALTH_CHECK_PERIOD = 2
 
 # bootstrap config file will write here.
 # By default, envoy writes some logs to /tmp too
@@ -1520,7 +1521,7 @@ def start_envoy(args):
 
 def sigterm_handler(signum, frame):
     """ Handler for SIGTERM, pass the signal to all child processes. """
-    logging.warning("got SIGTERM")
+    logging.warning("{}: got SIGTERM".format(datetime.utcnow().isoformat(timespec='microseconds')))
 
     global pid_list
     for pid in pid_list:
