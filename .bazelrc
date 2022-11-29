@@ -64,13 +64,8 @@ build:asan --config=debug
 build:asan --define signal_trace=disabled
 build:asan --define ENVOY_CONFIG_ASAN=1
 
-# FIXME(nareddyt): Enable ubsan builds
-# See https://github.com/GoogleCloudPlatform/esp-v2/issues/462
-#
-# build:asan --copt -fsanitize=address,undefined
-# build:asan --linkopt -fsanitize=address,undefined
-build:asan --copt -fsanitize=address
-build:asan --linkopt -fsanitize=address
+build:asan --copt -fsanitize=address,undefined
+build:asan --linkopt -fsanitize=address,undefined
 
 
 build:asan --copt -DADDRESS_SANITIZER=1
@@ -81,7 +76,7 @@ build:asan --test_env=ASAN_SYMBOLIZER_PATH
 
 build:clang-asan --config=asan
 build:clang-asan --action_env=ENVOY_UBSAN_VPTR=1
-build:clang-asan --linkopt -fuse-ld=lld-13
+build:clang-asan --linkopt -fuse-ld=lld-14
 build:clang-asan --copt -fno-sanitize=vptr,function
 build:clang-asan --linkopt -fno-sanitize=vptr,function
 build:clang-asan --copt -fno-optimize-sibling-calls
@@ -98,8 +93,8 @@ build:clang-tsan --copt -DEVENT__DISABLE_DEBUG_MODE
 # Fuzz builds
 build:asan-fuzzer --config=clang-asan
 build:asan-fuzzer -c opt
-build:asan-fuzzer --action_env=CC=clang-13
-build:asan-fuzzer --action_env=CXX=clang++-13
+build:asan-fuzzer --action_env=CC=clang-14
+build:asan-fuzzer --action_env=CXX=clang++-14
 build:asan-fuzzer --nocache_test_results
 build:asan-fuzzer --define=FUZZING_ENGINE=libfuzzer
 build:asan-fuzzer --copt=-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -111,8 +106,8 @@ build:asan-fuzzer --test_env=UBSAN_OPTIONS=print_stacktrace=1
 coverage --config=coverage
 build:coverage --action_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
 build:coverage --action_env=GCOV=llvm-profdata
-build:coverage --action_env=CC=clang-13
-build:coverage --action_env=CXX=clang++-13
+build:coverage --action_env=CC=clang-14
+build:coverage --action_env=CXX=clang++-14
 build:coverage --copt=-DNDEBUG
 build:coverage --test_timeout=900
 build:coverage --define=ENVOY_CONFIG_COVERAGE=1
