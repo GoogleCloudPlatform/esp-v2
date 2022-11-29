@@ -28,7 +28,7 @@ It is recommended to use [Bazelisk](https://github.com/bazelbuild/bazelisk) inst
 
 To get started building Envoy locally, following the instructions from [Envoy](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
 
-## Install Clang-13
+## Install Clang-14
 
 Add the package sources with the following commands.
 If these commands fail, reference [the official clang installation instructions](https://apt.llvm.org/) for your OS.
@@ -37,8 +37,8 @@ Install the following packages:
 
 ```
 sudo apt-get update
-sudo apt-get install -y llvm-13-dev libclang-13-dev clang-13 \
-    clang-tools-13 clang-format-13 xz-utils lld-13
+sudo apt-get install -y llvm-14-dev libclang-14-dev clang-14 \
+    clang-tools-14 clang-format-14 xz-utils lld-14
 ```
 
 ## Install build tools
