@@ -1520,15 +1520,15 @@ def start_envoy(args):
 
 def sigterm_handler(signum, frame):
     """ Handler for SIGTERM, pass the signal to all child processes. """
-    logger.warning("got SIGTERM")
+    logging.warning("got SIGTERM")
 
     global pid_list
     for pid in pid_list:
-        logger.info("sending TERM to PID={}".format(pid))
+        logging.info("sending TERM to PID={}".format(pid))
         try:
             os.kill(pid, signal.SIGTERM)
         except OSError:
-            logger.error("error sending TERM to PID={} continuing".format(pid))
+            logging.error("error sending TERM to PID={} continuing".format(pid))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
