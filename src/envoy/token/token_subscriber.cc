@@ -32,8 +32,8 @@ using ::espv2::api::envoy::v11::http::common::DependencyErrorBehavior;
 // Delay after a failed fetch.
 constexpr std::chrono::seconds kFailedRequestRetryTime(2);
 
-// Update the token `n` seconds before the expiration.
-constexpr std::chrono::seconds kRefreshBuffer(5);
+// Refetch the token `n` seconds before the expiration.
+constexpr std::chrono::seconds kRefreshBuffer(60);
 
 TokenSubscriber::TokenSubscriber(
     Envoy::Server::Configuration::FactoryContext& context,
