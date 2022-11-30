@@ -39,7 +39,20 @@ using ::testing::MockFunction;
 using ::testing::Return;
 using ::testing::ReturnRef;
 
-constexpr std::chrono::milliseconds kFailedExpect(2000);
+// This is the expected timer to retry a failed fetch.
+// This has to match "kFailedRequestRetryTime" in token_subscriber.cc
+constexpr std::chrono::milliseconds kExpectedFailedRefetch(2000);
+
+// This has to match "kRefreshBuffer" in token_subscriber.cc
+constexpr std::chrono::seconds kRefreshBuffer(60);
+
+// The mock token expiration time in seconds.
+constexpr std::chrono::seconds kMockTokenExpiration(1000);
+
+// This is the expected timer to refetch a expired token.
+constexpr std::chrono::milliseconds kExpectedExpireRefetch =
+    std::chrono::duration_cast<std::chrono::milliseconds>(kMockTokenExpiration -
+                                                          kRefreshBuffer);
 
 class TokenSubscriberTest : public testing::Test {
  protected:
@@ -128,7 +141,8 @@ TEST_F(TokenSubscriberTest, HandleMissingPreconditions) {
       .WillRepeatedly(Return(ByMove(nullptr)));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -172,7 +186,8 @@ TEST_F(TokenSubscriberTest, ProcessNon200Response) {
               std::move(req_headers)))));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -206,7 +221,8 @@ TEST_F(TokenSubscriberTest, ProcessNon200ResponseButInitAllowed) {
               std::move(req_headers)))));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -239,7 +255,8 @@ TEST_F(TokenSubscriberTest, ProcessMissingStatusResponse) {
               std::move(req_headers)))));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -274,7 +291,8 @@ TEST_F(TokenSubscriberTest, BadParseIdentityToken) {
   EXPECT_CALL(*info_, parseIdentityToken(_, _)).WillOnce(Return(false));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -311,7 +329,8 @@ TEST_F(TokenSubscriberTest, BadParseAccessToken) {
   EXPECT_CALL(*info_, parseAccessToken(_, _)).WillOnce(Return(false));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -348,12 +367,13 @@ TEST_F(TokenSubscriberTest, TokenSantizationCheckFails) {
   EXPECT_CALL(*info_, parseAccessToken(_, _))
       .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
         ret->token = "fake-token-with-bad\n-characters";
-        ret->expiry_duration = std::chrono::seconds(30);
+        ret->expiry_duration = kMockTokenExpiration;
         return true;
       }));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -395,7 +415,8 @@ TEST_F(TokenSubscriberTest, TokenPastExpiryCheckFails) {
       }));
 
   // Expect subscriber does not succeed.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
   EXPECT_CALL(token_callback_, Call(_)).Times(0);
 
   // Start class under test.
@@ -432,13 +453,12 @@ TEST_F(TokenSubscriberTest, Success) {
   EXPECT_CALL(*info_, parseAccessToken(_, _))
       .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
         ret->token = "fake-token";
-        ret->expiry_duration = std::chrono::seconds(30);
+        ret->expiry_duration = kMockTokenExpiration;
         return true;
       }));
 
   // Expect subscriber does succeed.
-  EXPECT_CALL(*mock_timer_,
-              enableTimer(std::chrono::milliseconds(25 * 1000), nullptr))
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedExpireRefetch, nullptr))
       .Times(1);
   EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
 
@@ -478,14 +498,14 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccess) {
   EXPECT_CALL(*info_, parseAccessToken(_, _))
       .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
         ret->token = "fake-token";
-        ret->expiry_duration = std::chrono::seconds(30);
+        ret->expiry_duration = kMockTokenExpiration;
         return true;
       }));
 
   // Expect subscriber does not succeed at first, but then does.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
-  EXPECT_CALL(*mock_timer_,
-              enableTimer(std::chrono::milliseconds(25 * 1000), nullptr))
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedExpireRefetch, nullptr))
       .Times(1);
   EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
 
@@ -532,14 +552,14 @@ TEST_F(TokenSubscriberTest, RetryMissingPreconditionThenSuccessWithAlwaysInit) {
   EXPECT_CALL(*info_, parseAccessToken(_, _))
       .WillOnce(Invoke([](absl::string_view, TokenResult* ret) {
         ret->token = "fake-token";
-        ret->expiry_duration = std::chrono::seconds(30);
+        ret->expiry_duration = kMockTokenExpiration;
         return true;
       }));
 
   // Expect subscriber does not succeed at first, but then does.
-  EXPECT_CALL(*mock_timer_, enableTimer(kFailedExpect, nullptr)).Times(1);
-  EXPECT_CALL(*mock_timer_,
-              enableTimer(std::chrono::milliseconds(25 * 1000), nullptr))
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedFailedRefetch, nullptr))
+      .Times(1);
+  EXPECT_CALL(*mock_timer_, enableTimer(kExpectedExpireRefetch, nullptr))
       .Times(1);
   EXPECT_CALL(token_callback_, Call("fake-token")).Times(1);
 
