@@ -10,6 +10,9 @@
 # and https://github.com/envoyproxy/envoy/blob/master/source/extensions/extensions_build_config.bzl
 EXTENSIONS = {
     # All extensions explicitly referenced by config generator and our tests.
+    "envoy.clusters.static": "//source/extensions/clusters/static:static_cluster_lib",
+    "envoy.clusters.strict_dns": "//source/extensions/clusters/strict_dns:strict_dns_cluster_lib",
+    "envoy.clusters.logical_dns": "//source/extensions/clusters/logical_dns:logical_dns_cluster_lib",
     "envoy.access_loggers.file": "//source/extensions/access_loggers/file:config",
     "envoy.compression.gzip.compressor": "//source/extensions/compression/gzip/compressor:config",
     "envoy.compression.brotli.compressor": "//source/extensions/compression/brotli/compressor:config",
@@ -25,6 +28,7 @@ EXTENSIONS = {
 
     # Implicitly needed for TLS config.
     "envoy.transport_sockets.raw_buffer": "//source/extensions/transport_sockets/raw_buffer:config",
+    "envoy.network.dns_resolver.cares": "//source/extensions/network/dns_resolver/cares:config",
 
     # Remaining items are for API Gateway and not covered by our tests. Do not remove.
     "envoy.access_loggers.http_grpc": "//source/extensions/access_loggers/grpc:http_config",
@@ -36,3 +40,8 @@ EXTENSIONS = {
 EXTENSION_CONFIG_VISIBILITY = ["//visibility:public"]
 EXTENSION_PACKAGE_VISIBILITY = ["//visibility:public"]
 CONTRIB_EXTENSION_PACKAGE_VISIBILITY = ["//visibility:public"]
+MOBILE_PACKAGE_VISIBILITY = ["//visibility:public"]
+
+# Set this variable to true to disable alwayslink for envoy_cc_library.
+# TODO(alyssawilk) audit uses of this in source/ and migrate all libraries to extensions.
+LEGACY_ALWAYSLINK = 1
