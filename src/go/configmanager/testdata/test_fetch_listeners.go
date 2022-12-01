@@ -352,7 +352,7 @@ var (
                       ],
                       "issuer": "https://test_issuer.google.com/",
                       "jwtCacheConfig": {
-                        "jwtCacheSize": 1000
+                        "jwtCacheSize": 100000
                       },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
@@ -637,7 +637,7 @@ var (
                       ],
                       "issuer": "https://test_issuer.google.com/",
                       "jwtCacheConfig": {
-                        "jwtCacheSize": 1000
+                        "jwtCacheSize": 100000
                       },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
@@ -1157,7 +1157,7 @@ var (
                       ],
                       "issuer": "https://test_issuer.google.com/",
                       "jwtCacheConfig": {
-                        "jwtCacheSize": 1000
+                        "jwtCacheSize": 100000
                       },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
@@ -1190,7 +1190,7 @@ var (
                       ],
                       "issuer": "https://test_issuer.google.com/",
                       "jwtCacheConfig": {
-                        "jwtCacheSize": 1000
+                        "jwtCacheSize": 100000
                       },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
@@ -2161,7 +2161,7 @@ var (
                       ],
                       "issuer": "https://test_issuer.google.com/",
                       "jwtCacheConfig": {
-                        "jwtCacheSize": 1000
+                        "jwtCacheSize": 100000
                       },
                       "payloadInMetadata": "jwt_payloads",
                       "remoteJwks": {
