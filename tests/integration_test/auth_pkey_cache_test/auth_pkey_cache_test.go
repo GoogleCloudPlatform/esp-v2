@@ -82,7 +82,7 @@ func TestAuthJwksCache(t *testing.T) {
 
 			s := env.NewTestEnv(platform.TestAuthJwksCache, platform.EchoSidecar)
 			args = append(args, "--disable_jwks_async_fetch")
-			// Have to disable jwt cache
+			// Need to disable jwt cache as the test is counting of number of jwks fetching.
 			args = append(args, "--jwt_cache_size=0")
 			if tc.jwksCacheDurationInS != 0 {
 				args = append(args, fmt.Sprintf("--jwks_cache_duration_in_s=%v", tc.jwksCacheDurationInS))
