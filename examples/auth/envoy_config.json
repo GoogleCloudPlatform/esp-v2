@@ -187,6 +187,9 @@
                               "access_token"
                             ],
                             "issuer": "123456789-compute@developer.gserviceaccount.com",
+                            "jwtCacheConfig": {
+                              "jwtCacheSize": 100000
+                            },
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
                               "asyncFetch": {},
@@ -217,6 +220,9 @@
                               "access_token"
                             ],
                             "issuer": "https://securetoken.google.com/apiproxy-231719",
+                            "jwtCacheConfig": {
+                              "jwtCacheSize": 100000
+                            },
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
                               "asyncFetch": {},
@@ -247,6 +253,9 @@
                               "access_token"
                             ],
                             "issuer": "https://accounts.google.com",
+                            "jwtCacheConfig": {
+                              "jwtCacheSize": 100000
+                            },
                             "payloadInMetadata": "jwt_payloads",
                             "remoteJwks": {
                               "asyncFetch": {},

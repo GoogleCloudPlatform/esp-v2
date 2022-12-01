@@ -144,7 +144,7 @@ var (
 	JwksFetchRetryBackOffMaxIntervalMs  = flag.Int("jwks_fetch_retry_back_off_max_interval_ms", int(defaults.JwksFetchRetryBackOffMaxInterval.Milliseconds()), `Specify JWKS fetch retry exponential back off maximum interval in milliseconds. The default is 32 seconds.`)
 	JwtPatForwardPayloadHeader          = flag.Bool("jwt_pad_forward_payload_header", defaults.JwtPadForwardPayloadHeader, `For the JWT in request, the JWT payload is forwarded to backend in the "X-Endpoint-API-UserInfo"" header by default. 
 Normally JWT based64 encode doesn’t add padding. If this flag is true, the header will be padded.`)
-	JwtCacheSize = flag.Uint("jwt_cache_size", defaults.JwtCacheSize, `Specify JWT cache size, the number of unique JWT tokens in the cache. The cache only stores verified good tokens. If 0, JWT cache is disabled. The default is 0.`)
+	JwtCacheSize = flag.Uint("jwt_cache_size", defaults.JwtCacheSize, `Specify JWT cache size, the number of unique JWT tokens in the cache. The cache only stores verified good tokens. If 0, JWT cache is disabled. It limits the memory usage. The cache used memory is roughly (token size + 64 bytes) per token. If not specified, the default is 100000.`)
 
 	ScCheckTimeoutMs  = flag.Int("service_control_check_timeout_ms", defaults.ScCheckTimeoutMs, `Set the timeout in millisecond for service control Check request. Must be > 0 and the default is 1000 if not set.`)
 	ScQuotaTimeoutMs  = flag.Int("service_control_quota_timeout_ms", defaults.ScQuotaTimeoutMs, `Set the timeout in millisecond for service control Quota request. Must be > 0 and the default is 1000 if not set.`)
