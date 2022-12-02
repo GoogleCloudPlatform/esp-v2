@@ -142,6 +142,7 @@ type ConfigGeneratorOptions struct {
 
 	TranscodingAlwaysPrintPrimitiveFields         bool
 	TranscodingAlwaysPrintEnumsAsInts             bool
+	TranscodingStreamNewLineDelimited             bool
 	TranscodingPreserveProtoFieldNames            bool
 	TranscodingIgnoreQueryParameters              string
 	TranscodingIgnoreUnknownQueryParameters       bool
@@ -149,6 +150,7 @@ type ConfigGeneratorOptions struct {
 	TranscodingMatchUnregisteredCustomVerb        bool
 	TranscodingStrictRequestValidation            bool
 	TranscodingRejectCollision                    bool
+	TranscodingCaseInsensitiveEnumParsing         bool
 	APIAllowList                                  []string
 	AllowDiscoveryAPIs                            bool
 }

@@ -9,7 +9,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.3.0
 	github.com/cncf/xds/go v0.0.0-20220314180256-7f1daf1720fc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/envoyproxy/go-control-plane v0.10.3-0.20220719090109-b024c36d9935
+	github.com/envoyproxy/go-control-plane v0.10.3-0.20221202001402-e85facd0160f
 	github.com/envoyproxy/protoc-gen-validate v0.6.7
 	github.com/golang/glog v1.0.0
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -19,7 +19,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/miekg/dns v1.1.45
-	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/spf13/afero v1.8.0 // indirect
 	github.com/stretchr/testify v1.7.1 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect

@@ -164,9 +164,11 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
 
 	TranscodingAlwaysPrintPrimitiveFields         = flag.Bool("transcoding_always_print_primitive_fields", defaults.TranscodingAlwaysPrintPrimitiveFields, "Whether to always print primitive fields for grpc-json transcoding")
 	TranscodingAlwaysPrintEnumsAsInts             = flag.Bool("transcoding_always_print_enums_as_ints", defaults.TranscodingAlwaysPrintPrimitiveFields, "Whether to always print enums as ints for grpc-json transcoding")
+	TranscodingStreamNewLineDelimited             = flag.Bool("transcoding_stream_newline_delimited", defaults.TranscodingStreamNewLineDelimited, "If true, use new line delimiter to separate response streaming messages. If false, all response streaming messages will be transcoded into a JSON array.")
 	TranscodingPreserveProtoFieldNames            = flag.Bool("transcoding_preserve_proto_field_names", defaults.TranscodingPreserveProtoFieldNames, "Whether to preserve proto field names for grpc-json transcoding")
 	TranscodingIgnoreQueryParameters              = flag.String("transcoding_ignore_query_parameters", defaults.TranscodingIgnoreQueryParameters, "A list of query parameters(separated by comma) to be ignored for transcoding method mapping in grpc-json transcoding.")
 	TranscodingIgnoreUnknownQueryParameters       = flag.Bool("transcoding_ignore_unknown_query_parameters", defaults.TranscodingIgnoreUnknownQueryParameters, "Whether to ignore query parameters that cannot be mapped to a corresponding protobuf field in grpc-json transcoding.")
+	TranscodingCaseInsensitiveEnumParsing         = flag.Bool("transcoding_case_insensitive_enum_parsing", defaults.TranscodingCaseInsensitiveEnumParsing, "Proto enum values are supposed to be in upper cases when used in JSON. Set this flag to true if your JSON request uses non uppercase enum values.")
 	TranscodingQueryParametersDisableUnescapePlus = flag.Bool("transcoding_query_parameters_disable_unescape_plus", defaults.TranscodingIgnoreUnknownQueryParameters, `By default, unescape "+" to space when extracting variables in
            the query parameters in grpc-json transcoding. This is to support HTML 2.0<https://tools.ietf.org/html/rfc1866#section-8.2.1>. Set this flag to true to disable this feature.`)
 	TranscodingMatchUnregisteredCustomVerb = flag.Bool("transcoding_match_unregistered_custom_verb", defaults.TranscodingMatchUnregisteredCustomVerb, `If true, try to match the custom verb even if it is unregistered. By default, only match when it is registered.
@@ -296,11 +298,13 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		BackendClusterMaxRequests:                     *BackendClusterMaxRequests,
 		TranscodingAlwaysPrintPrimitiveFields:         *TranscodingAlwaysPrintPrimitiveFields,
 		TranscodingAlwaysPrintEnumsAsInts:             *TranscodingAlwaysPrintEnumsAsInts,
+		TranscodingStreamNewLineDelimited:             *TranscodingStreamNewLineDelimited,
 		TranscodingPreserveProtoFieldNames:            *TranscodingPreserveProtoFieldNames,
 		TranscodingIgnoreQueryParameters:              *TranscodingIgnoreQueryParameters,
 		TranscodingIgnoreUnknownQueryParameters:       *TranscodingIgnoreUnknownQueryParameters,
 		TranscodingQueryParametersDisableUnescapePlus: *TranscodingQueryParametersDisableUnescapePlus,
 		TranscodingMatchUnregisteredCustomVerb:        *TranscodingMatchUnregisteredCustomVerb,
+		TranscodingCaseInsensitiveEnumParsing:         *TranscodingCaseInsensitiveEnumParsing,
 		EnableResponseCompression:                     *EnableResponseCompression,
 
 		// These options are not for ESPv2 users. They are overridden internally.
