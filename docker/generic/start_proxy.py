@@ -862,6 +862,16 @@ environment variable or by passing "-k" flag to this script.
         By default they are rendered as strings. Defaults to false.''')
 
     parser.add_argument(
+        '--transcoding_stream_newline_delimited', action='store_true',
+        help='''If true, use new line delimiter to separate response streaming messages.
+        If false, all response streaming messages will be transcoded into a JSON array.''')
+
+    parser.add_argument(
+        '--transcoding_case_insensitive_enum_parsing', action='store_true',
+        help='''Proto enum values are supposed to be in upper cases when used in JSON.
+        Set this flag to true if your JSON request uses non uppercase enum values.''')
+
+    parser.add_argument(
         '--transcoding_preserve_proto_field_names', action='store_true',
         help='''Whether to preserve proto field names for grpc-json transcoding.
         By default protobuf will generate JSON field names using the json_name
@@ -1374,6 +1384,12 @@ def gen_proxy_config(args):
 
     if args.transcoding_always_print_enums_as_ints:
         proxy_conf.append("--transcoding_always_print_enums_as_ints")
+
+    if args.transcoding_stream_newline_delimited:
+        proxy_conf.append("--transcoding_stream_newline_delimited")
+
+    if args.transcoding_case_insensitive_enum_parsing:
+        proxy_conf.append("--transcoding_case_insensitive_enum_parsing")
 
     if args.transcoding_preserve_proto_field_names:
         proxy_conf.append("--transcoding_preserve_proto_field_names")

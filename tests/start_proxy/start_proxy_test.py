@@ -471,6 +471,34 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing',
               '--transcoding_query_parameters_disable_unescape_plus'
               ]),
+            # json-grpc transcoding_stream_newline_delimited
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--transcoding_stream_newline_delimited',
+              '--disable_tracing',
+              '--version=2019-11-09r0',
+              ],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--service_config_id', '2019-11-09r0',
+              '--disable_tracing',
+              '--transcoding_stream_newline_delimited'
+              ]),
+            # json-grpc transcoding_case_insensitive_enum_parsing
+            (['--service=test_bookstore.gloud.run',
+              '--backend=grpc://127.0.0.1:8000',
+              '--transcoding_case_insensitive_enum_parsing',
+              '--disable_tracing',
+              '--version=2019-11-09r0',
+              ],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--service_config_id', '2019-11-09r0',
+              '--disable_tracing',
+              '--transcoding_case_insensitive_enum_parsing'
+              ]),
             # route_match disallow_colon_in_wildcard_path_segment
             (['--service=test_bookstore.gloud.run',
               '--backend=grpc://127.0.0.1:8000',

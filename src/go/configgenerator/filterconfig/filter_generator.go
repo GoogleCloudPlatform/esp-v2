@@ -329,8 +329,10 @@ func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error
 					AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
 					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
 					PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
+					StreamNewlineDelimited:     serviceInfo.Options.TranscodingStreamNewLineDelimited,
 				},
 				MatchUnregisteredCustomVerb: serviceInfo.Options.TranscodingMatchUnregisteredCustomVerb,
+				CaseInsensitiveEnumParsing:  serviceInfo.Options.TranscodingCaseInsensitiveEnumParsing,
 			}
 			if serviceInfo.Options.TranscodingStrictRequestValidation {
 				transcodeConfig.RequestValidationOptions = &transcoderpb.GrpcJsonTranscoder_RequestValidationOptions{
