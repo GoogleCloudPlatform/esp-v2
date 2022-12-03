@@ -1520,7 +1520,14 @@ def start_envoy(args):
     return proc
 
 def sigterm_handler(signum, frame):
-    """ Handler for SIGTERM, pass the signal to all child processes. """
+    """ Handler for SIGTERM and SIGINT, pass the SIGTERM to all child processes. """
+    signame = signal.Signals(signum).name
+    logging.warning("{}: got signal: {}".format(datetime.utcnow().isoformat(timespec='microseconds'), signame))
+
+    shutdown()
+
+def siginfo_handler(signum, frame):
+    """ Handler for other signals, just log the signals."""
     signame = signal.Signals(signum).name
     logging.warning("{}: got signal: {}".format(datetime.utcnow().isoformat(timespec='microseconds'), signame))
 
@@ -1535,6 +1542,9 @@ def shutdown():
         except OSError:
             logging.error("error sending TERM to PID={} continuing".format(pid))
 
+    logging.info("exiting...")
+    sys.exit(0)
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
@@ -1548,9 +1558,9 @@ if __name__ == '__main__':
     pid_list.append(envoy_proc.pid)
     signal.signal(signal.SIGTERM, sigterm_handler)
     signal.signal(signal.SIGINT, sigterm_handler)
-    signal.signal(signal.SIGHUP, sigterm_handler)
-    signal.signal(signal.SIGCHLD, sigterm_handler)
-    signal.signal(signal.SIGUSR1, sigterm_handler)
+    signal.signal(signal.SIGHUP, siginfo_handler)
+    signal.signal(signal.SIGCHLD, siginfo_handler)
+    signal.signal(signal.SIGUSR1, siginfo_handler)
 
     while True:
         time.sleep(HEALTH_CHECK_PERIOD)
