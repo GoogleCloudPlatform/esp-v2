@@ -1524,16 +1524,6 @@ def sigterm_handler(signum, frame):
     signame = signal.Signals(signum).name
     logging.warning("{}: got signal: {}".format(datetime.utcnow().isoformat(timespec='microseconds'), signame))
 
-    shutdown()
-
-def siginfo_handler(signum, frame):
-    """ Handler for other signals, just log the signals."""
-    signame = signal.Signals(signum).name
-    logging.warning("{}: got signal: {}".format(datetime.utcnow().isoformat(timespec='microseconds'), signame))
-
-def shutdown():
-    """ shut down all child processes """
-
     global pid_list
     for pid in pid_list:
         logging.info("sending TERM to PID={}".format(pid))
@@ -1558,9 +1548,6 @@ if __name__ == '__main__':
     pid_list.append(envoy_proc.pid)
     signal.signal(signal.SIGTERM, sigterm_handler)
     signal.signal(signal.SIGINT, sigterm_handler)
-    signal.signal(signal.SIGHUP, siginfo_handler)
-    signal.signal(signal.SIGCHLD, siginfo_handler)
-    signal.signal(signal.SIGUSR1, siginfo_handler)
 
     while True:
         time.sleep(HEALTH_CHECK_PERIOD)
