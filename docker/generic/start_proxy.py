@@ -24,7 +24,6 @@ import subprocess
 import sys
 import threading
 import time
-from datetime import datetime
 
 # The command to generate Envoy bootstrap config
 BOOTSTRAP_CMD = "bin/bootstrap"
@@ -1522,7 +1521,7 @@ def start_envoy(args):
 def sigterm_handler(signum, frame):
     """ Handler for SIGTERM and SIGINT, pass the SIGTERM to all child processes. """
     signame = signal.Signals(signum).name
-    logging.warning("{}: got signal: {}".format(datetime.utcnow().isoformat(timespec='microseconds'), signame))
+    logging.warning("got signal: {}".format(signame))
 
     global pid_list
     for pid in pid_list:
@@ -1532,11 +1531,9 @@ def sigterm_handler(signum, frame):
         except OSError:
             logging.error("error sending TERM to PID={} continuing".format(pid))
 
-    logging.info("exiting...")
-    sys.exit(0)
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s', level=logging.INFO)
 
     parser = make_argparser()
     args = parser.parse_args()
