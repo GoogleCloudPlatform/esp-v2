@@ -1,3 +1,12 @@
+# Release 2.40.0 05-12-2022
+
+- Add two transcoding flags: "transcoding_stream_newline_delimited" and "transcoding_case_insensitive_enum_parsing" (#760)
+- Enable jwt cache by default for jwt authentication. (#759)
+- Update envoy to the top of the tree at 11/30/2022 (#758)
+- Increase ID token refetch buffer (#757)
+- Update to Envoy 1.24.0 (#755)
+- Add two jwt_authn flags: "jwt_cache_size" and "jwks_async_fetch_fast_listener" (#753)
+
 # Release 2.39.0 18-10-2022
 
 - Add a flag "--backend_cluster_maximum_requests (#736)
