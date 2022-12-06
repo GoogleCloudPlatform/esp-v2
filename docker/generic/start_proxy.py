@@ -33,7 +33,7 @@ CONFIGMANAGER_BIN = "bin/configmanager"
 ENVOY_BIN = "bin/envoy"
 
 # Health check period in secs, for Config Manager and Envoy.
-HEALTH_CHECK_PERIOD = 60
+HEALTH_CHECK_PERIOD = 2
 
 # bootstrap config file will write here.
 # By default, envoy writes some logs to /tmp too
@@ -60,6 +60,9 @@ GOOGLE_CREDS_KEY = "GOOGLE_APPLICATION_CREDENTIALS"
 # SERVERLESS_PLATFORM has to match the one in src/go/util/util.go
 SERVERLESS_PLATFORM = "Cloud Run(ESPv2)"
 SERVERLESS_XFF_NUM_TRUSTED_HOPS = 0
+
+# child pid list
+pid_list = []
 
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
@@ -1515,9 +1518,38 @@ def start_envoy(args):
     t.start()
     return proc
 
+def sigterm_handler(signum, frame):
+    """ Handler for SIGTERM and SIGINT, pass the SIGTERM to all child processes. """
+    signame = signal.Signals(signum).name
+    logging.warning("got signal: {}".format(signame))
+
+    global pid_list
+    for pid in pid_list:
+        logging.info("sending TERM to PID={}".format(pid))
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            logging.error("error sending TERM to PID={} continuing".format(pid))
+
+def child_process_is_alive(pid):
+    """ Detect if a child process is still running. """
+    try:
+        ret_pid, exit_status = os.waitpid(pid, os.WNOHANG)
+        return True
+    except ChildProcessError:
+        logging.info("===waitpid: pid={}: doesn't exit".format(pid))
+        return False
+
+def kill_child_process(pid):
+    """ Kill a child process. """
+    try:
+        logging.info("Killing process: pid={}".format(pid))
+        os.kill(pid, signal.SIGKILL)
+    except:
+        logging.error("The child process: pid={} may not exist.".format(pid))
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s', level=logging.INFO)
 
     parser = make_argparser()
     args = parser.parse_args()
@@ -1525,16 +1557,21 @@ if __name__ == '__main__':
     cm_proc = start_config_manager(gen_proxy_config(args))
     envoy_proc = start_envoy(args)
 
+    pid_list.append(cm_proc.pid)
+    pid_list.append(envoy_proc.pid)
+    signal.signal(signal.SIGTERM, sigterm_handler)
+    signal.signal(signal.SIGINT, sigterm_handler)
+
     while True:
         time.sleep(HEALTH_CHECK_PERIOD)
-        if not cm_proc or cm_proc.poll():
-            logging.fatal("Config Manager is down, killing all processes.")
+        if not cm_proc or not child_process_is_alive(cm_proc.pid):
+            logging.fatal("Config Manager is down, killing envoy process.")
             if envoy_proc:
-               os.kill(envoy_proc.pid, signal.SIGKILL)
+                kill_child_process(envoy_proc.pid)
             sys.exit(1)
-        if not envoy_proc or envoy_proc.poll():
-            logging.fatal("Envoy is down, killing all processes.")
+        if not envoy_proc or not child_process_is_alive(envoy_proc.pid):
+            logging.fatal("Envoy is down, killing Config Manager process.")
             if cm_proc:
-               os.kill(cm_proc.pid, signal.SIGKILL)
+                kill_child_process(cm_proc.pid)
             sys.exit(1)
 
