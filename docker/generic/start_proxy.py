@@ -1550,6 +1550,10 @@ if __name__ == '__main__':
         time.sleep(HEALTH_CHECK_PERIOD)
         logging.info("poll cm_prc: {}".format(cm_proc.poll()))
         logging.info("poll envoy_prc: {}".format(envoy_proc.poll()))
+        for pid in pid_list:
+            ret_pid, exit_status = os.waitpid(pid, os.WNOHANG)
+            logging.info("===waitpid: pid={}: waitpid return: {}, {}".format(pid, ret_pid, exit_status))
+            
         if not cm_proc or cm_proc.poll():
             logging.fatal("Config Manager is down, killing all processes.")
             if envoy_proc:
