@@ -1535,11 +1535,18 @@ def child_process_is_alive(pid):
     """ Detect if a child process is still running. """
     try:
         ret_pid, exit_status = os.waitpid(pid, os.WNOHANG)
-        logging.info("===waitpid: pid={}: waitpid return: {}, {}".format(pid, ret_pid, exit_status))
         return True
     except ChildProcessError:
         logging.info("===waitpid: pid={}: doesn't exit".format(pid))
         return False
+
+def kill_child_process(pid):
+    """ Kill a child process. """
+    try:
+        logging.info("Killing process: pid={}".format(pid))
+        os.kill(pid, signal.SIGKILL)
+    except:
+        logging.error("The child process: pid={} may not exist.".format(pid))
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s', level=logging.INFO)
@@ -1558,13 +1565,13 @@ if __name__ == '__main__':
     while True:
         time.sleep(HEALTH_CHECK_PERIOD)
         if not cm_proc or not child_process_is_alive(cm_proc.pid):
-            logging.fatal("Config Manager is down, killing all processes.")
+            logging.fatal("Config Manager is down, killing envoy process.")
             if envoy_proc:
-               os.kill(envoy_proc.pid, signal.SIGKILL)
+                kill_child_process(envoy_proc.pid)
             sys.exit(1)
         if not envoy_proc or not child_process_is_alive(envoy_proc.pid):
-            logging.fatal("Envoy is down, killing all processes.")
+            logging.fatal("Envoy is down, killing Config Manager process.")
             if cm_proc:
-               os.kill(cm_proc.pid, signal.SIGKILL)
+                kill_child_process(cm_proc.pid)
             sys.exit(1)
 
