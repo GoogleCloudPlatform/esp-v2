@@ -51,6 +51,8 @@ constexpr char kJwtPayLoadsDelimeter = '.';
 constexpr char kContentTypeApplicationGrpcPrefix[] = "application/grpc";
 const Envoy::Http::LowerCaseString kContentTypeHeader{"content-type"};
 
+const Envoy::Http::LowerCaseString kForwardHeader{"forward"};
+
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
@@ -96,6 +98,46 @@ bool extractAPIKeyFromCookie(const Envoy::Http::RequestHeaderMap& headers,
     return true;
   }
   return false;
+}
+
+std::string extractIPFromForwardHeader(
+    const Envoy::Http::RequestHeaderMap& headers) {
+  const auto result = headers.get(kForwardHeader);
+  // Only support one "Forward" header, since we need to
+  // extract the last one.  If there are multiple "Forward" header
+  // we could not define last one.
+  if (result.size() != 1) {
+    return EMPTY_STRING;
+  }
+
+  absl::string_view source = result[0]->value().getStringView();
+  // Each proxy can add its "Forward" section. Multiple sections are separated by comma
+  // Here get the last section.
+  const absl::string_view::size_type pos = source.find_last_of(',');
+  if (pos != absl::string_view::npos) {
+    source.remove_prefix(pos + 1);
+  }
+
+  // Each section may have multiple fields. e.g. by=abc;for=1.2.3.4;host=abc;proto=http
+  // Extract ip from  "for=" field
+  for (absl::string_view s : absl::StrSplit(header_value, ';')) {
+    absl::string_view token = absl::StripAsciiWhitespace(s);
+    if (token.HasPrefix("for=\"") && token[token.size()-1] == '"') {
+      ip = token.substr(5, token.size()-1);
+      if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
+        ip = ip.substr(1, ip.size() - 1);
+      }
+
+      // Verify it is a valid ip.
+      auto address =
+          Network::Utility::parseInternetAddressNoThrow(std::string(ip));
+      if (address != nullptr) {
+        return ip;
+      }
+      continue;
+    }
+  }
+  return EMPTY_STRING;
 }
 
 void extractJwtPayload(const Envoy::ProtobufWkt::Value& value,

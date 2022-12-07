@@ -38,6 +38,12 @@ bool extractAPIKey(
         locations,
     std::string& api_key);
 
+// Extract IP from "Forward" header
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
+// Extract the last one.
+std::string extractIPFromForwardHeader(
+    const Envoy::Http::RequestHeaderMap& headers);
+
 // Adds information from the `FilterConfig`'s gcp_attributes to the given info.
 void fillGCPInfo(
     const ::espv2::api::envoy::v11::http::service_control::FilterConfig&
