@@ -18,16 +18,19 @@
 #include <vector>
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_split.h"
 #include "absl/types/optional.h"
 #include "api/envoy/v11/http/service_control/config.pb.h"
 #include "envoy/grpc/status.h"
 #include "envoy/http/header_map.h"
 #include "envoy/server/filter_config.h"
+#include "source/common/common/empty_string.h"
 #include "source/common/common/logger.h"
 #include "source/common/grpc/common.h"
 #include "source/common/http/header_utility.h"
 #include "source/common/http/utility.h"
+#include "source/common/network/utility.h"
 #include "source/common/stream_info/utility.h"
 #include "source/extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
@@ -107,37 +110,43 @@ std::string extractIPFromForwardHeader(
   // extract the last one.  If there are multiple "Forward" header
   // we could not define last one.
   if (result.size() != 1) {
-    return EMPTY_STRING;
+    return Envoy::EMPTY_STRING;
   }
 
   absl::string_view source = result[0]->value().getStringView();
-  // Each proxy can add its "Forward" section. Multiple sections are separated by comma
-  // Here get the last section.
+  // Multiple proxy sections are separated by comma. We only use the last one.
   const absl::string_view::size_type pos = source.find_last_of(',');
   if (pos != absl::string_view::npos) {
     source.remove_prefix(pos + 1);
   }
 
-  // Each section may have multiple fields. e.g. by=abc;for=1.2.3.4;host=abc;proto=http
-  // Extract ip from  "for=" field
-  for (absl::string_view s : absl::StrSplit(header_value, ';')) {
+  // Each section may have multiple fields, they are separated by semicolumn.
+  // e.g. by=abc;for=1.2.3.4;host=abc;proto=http
+  // Extract ip from  "for=" field.
+  for (absl::string_view s : absl::StrSplit(source, ';')) {
     absl::string_view token = absl::StripAsciiWhitespace(s);
-    if (token.HasPrefix("for=\"") && token[token.size()-1] == '"') {
-      ip = token.substr(5, token.size()-1);
+    if (absl::StartsWith(token, "for=")) {
+      absl::string_view ip = token.substr(4);
+
+      // remove double quote
+      if (ip[0] == '"' && ip[ip.size()-1] == '"') {
+        ip = ip.substr(1, ip.size() - 1);
+      }
+      // remove [] for ipv6
       if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
         ip = ip.substr(1, ip.size() - 1);
       }
 
       // Verify it is a valid ip.
-      auto address =
-          Network::Utility::parseInternetAddressNoThrow(std::string(ip));
+      const auto address =
+          Envoy::Network::Utility::parseInternetAddressNoThrow(std::string(ip));
       if (address != nullptr) {
-        return ip;
+        return std::string(ip);
       }
-      continue;
+      break;
     }
   }
-  return EMPTY_STRING;
+  return Envoy::EMPTY_STRING;
 }
 
 void extractJwtPayload(const Envoy::ProtobufWkt::Value& value,
