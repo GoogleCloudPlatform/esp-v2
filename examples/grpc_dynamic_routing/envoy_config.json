@@ -44,7 +44,12 @@
           "envoy.extensions.upstreams.http.v3.HttpProtocolOptions": {
             "@type": "type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
             "explicitHttpConfig": {
-              "http2ProtocolOptions": {}
+              "http2ProtocolOptions": {
+                "connectionKeepalive": {
+                  "interval": "30s",
+                  "timeout": "10s"
+                }
+              }
             }
           }
         }
@@ -157,7 +162,12 @@
           "envoy.extensions.upstreams.http.v3.HttpProtocolOptions": {
             "@type": "type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
             "explicitHttpConfig": {
-              "http2ProtocolOptions": {}
+              "http2ProtocolOptions": {
+                "connectionKeepalive": {
+                  "interval": "30s",
+                  "timeout": "10s"
+                }
+              }
             }
           }
         }

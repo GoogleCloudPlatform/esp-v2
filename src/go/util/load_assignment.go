@@ -15,6 +15,8 @@
 package util
 
 import (
+	"time"
+
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	httppb "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
@@ -22,12 +24,24 @@ import (
 	anypb "github.com/golang/protobuf/ptypes/any"
 )
 
+const (
+	Http2KeepaliveInterval = 30 * time.Second
+	Http2KeepaliveTimeout  = 10 * time.Second
+)
+
 // CreateUpstreamProtocolOptions creates a http2 protocol option as a typed upstream extension.
 func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
 	o := &httppb.HttpProtocolOptions{
 		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
-				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
+				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
+					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{
+						ConnectionKeepalive: &corepb.KeepaliveSettings{
+							Interval: ptypes.DurationProto(Http2KeepaliveInterval),
+							Timeout:  ptypes.DurationProto(Http2KeepaliveTimeout),
+						},
+					},
+				},
 			},
 		},
 	}
