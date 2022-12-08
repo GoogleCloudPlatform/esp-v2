@@ -86,7 +86,14 @@ func TestCreateBootstrapConfig(t *testing.T) {
             "typedExtensionProtocolOptions":{
                "envoy.extensions.upstreams.http.v3.HttpProtocolOptions":{
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
-                  "explicitHttpConfig":{"http2ProtocolOptions":{}}
+                  "explicitHttpConfig":{
+                     "http2ProtocolOptions":{
+                       "connectionKeepalive":{
+                         "interval":"30s",
+                         "timeout":"10s"
+                       }
+                     }
+                  }
                }
             },
             "loadAssignment":{
@@ -180,7 +187,14 @@ func TestCreateBootstrapConfig(t *testing.T) {
             "typedExtensionProtocolOptions":{
                "envoy.extensions.upstreams.http.v3.HttpProtocolOptions":{
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
-                  "explicitHttpConfig":{"http2ProtocolOptions":{}}
+                  "explicitHttpConfig":{
+                     "http2ProtocolOptions":{
+                       "connectionKeepalive":{
+                         "interval":"30s",
+                         "timeout":"10s"
+                       }
+                     }
+                  }
                }
             },
             "loadAssignment":{
