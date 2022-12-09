@@ -139,6 +139,7 @@ type ConfigGeneratorOptions struct {
 
 	ComputePlatformOverride   string
 	EnableResponseCompression bool
+	ClientIPFromForwardHeader bool
 
 	TranscodingAlwaysPrintPrimitiveFields         bool
 	TranscodingAlwaysPrintEnumsAsInts             bool

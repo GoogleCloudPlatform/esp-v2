@@ -207,6 +207,8 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
 
 	EnableResponseCompression = flag.Bool("enable_response_compression", defaults.EnableResponseCompression, `Enable gzip,br compression for response data. The default is disabled.`)
 
+	ClientIPFromForwardHeader = flag.Bool("client_ip_from_forward_header", defaults.ClientIPFromForwardHeader, `If true, extract client ip from "forward" header. The default false.`)
+
 	// BackendClusterMaxRequests is the maximum active requests allowed in a backend cluster.
 	BackendClusterMaxRequests = flag.Int("backend_cluster_maximum_requests", defaults.BackendClusterMaxRequests,
 		`The maximum allowed active requests for a backend cluster. If 0, or not set, default is 1024.
@@ -306,6 +308,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		TranscodingMatchUnregisteredCustomVerb:        *TranscodingMatchUnregisteredCustomVerb,
 		TranscodingCaseInsensitiveEnumParsing:         *TranscodingCaseInsensitiveEnumParsing,
 		EnableResponseCompression:                     *EnableResponseCompression,
+		ClientIPFromForwardHeader:                     *ClientIPFromForwardHeader,
 
 		// These options are not for ESPv2 users. They are overridden internally.
 		APIAllowList:       []string{},
