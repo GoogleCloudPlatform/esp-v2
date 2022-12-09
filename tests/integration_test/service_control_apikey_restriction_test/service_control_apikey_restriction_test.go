@@ -183,6 +183,8 @@ func TestExtractClientIPFromForwardedHeader(t *testing.T) {
 		"--service=" + serviceName,
 		"--service_config_id=" + configID,
 
+		"--envoy_use_remote_address",
+		"--envoy_xff_num_trusted_hops=1",
 		"--client_ip_from_forwarded_header",
 	}
 
@@ -210,9 +212,26 @@ func TestExtractClientIPFromForwardedHeader(t *testing.T) {
 			},
 		},
 		{
+			desc:        "Without forwarded header, client IP from X-Forwarded-For.",
+			url:         fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key2"),
+			message:     "hello",
+			forwardedIp: "192.16.31.84",
+			wantResp:    `{"message":"hello"}`,
+			wantScRequest: &utils.ExpectedCheck{
+				Version:         utils.ESPv2Version(),
+				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+				ServiceConfigID: "test-config-id",
+				ConsumerID:      "api_key:api-key2",
+				OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				ApiKey:          "api-key2",
+				CallerIp:        "192.16.31.84",
+			},
+		},
+		{
 			desc:            "client ip from forwarded header",
 			url:             fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key3"),
 			message:         "hello",
+			forwardedIp:     "192.16.31.84",
 			forwardedHeader: "for=1.2.3.4",
 			wantResp:        `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{

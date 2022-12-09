@@ -386,7 +386,7 @@ absl::StatusOr<std::string> extractIPFromForwardedHeader(
     source.remove_prefix(pos + 1);
   }
 
-  // Each section may have multiple fields, they are separated by semicolumn.
+  // Each section may have multiple fields, they are separated by semicolon.
   // For example: by=abc;for=1.2.3.4;host=abc;proto=http
   // Extract ip from the "for=" field.
   for (absl::string_view s : absl::StrSplit(source, ';')) {
