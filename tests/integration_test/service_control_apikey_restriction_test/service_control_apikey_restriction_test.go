@@ -26,10 +26,11 @@ import (
 )
 
 type testDataStruct struct {
-	desc        string
-	url         string
-	message     string
-	forwardedIp string
+	desc          string
+	url           string
+	message       string
+	forwardedIp   string
+	forwardHeader string
 
 	wantResp      string
 	wantScRequest *utils.ExpectedCheck
@@ -155,7 +156,9 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 			url:         fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key"),
 			message:     "hello",
 			forwardedIp: "192.16.31.84",
-			wantResp:    `{"message":"hello"}`,
+			// Even there is a valid "forward" header, but since the flag --client_ip_from_forward_header is not set, it is not used.
+			forwardHeader: "for=1.2.3.4",
+			wantResp:      `{"message":"hello"}`,
 			wantScRequest: &utils.ExpectedCheck{
 				Version:         utils.ESPv2Version(),
 				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
@@ -164,6 +167,62 @@ func TestServiceControlAPIKeyIpRestriction(t *testing.T) {
 				OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
 				ApiKey:          "api-key",
 				CallerIp:        "192.16.31.84",
+			},
+		},
+	}
+
+	for _, tc := range testData {
+		runTest(t, s, tc)
+	}
+}
+
+func TestExtractClientIPFromForwardHeader(t *testing.T) {
+	serviceName := "test-echo"
+	configID := "test-config-id"
+	args := []string{
+		"--service=" + serviceName,
+		"--service_config_id=" + configID,
+
+		"--client_ip_from_forward_header",
+	}
+
+	s := env.NewTestEnv(platform.TestExtractClientIPFromForwardHeader, platform.EchoSidecar)
+
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("failed to setup test env, %v", err)
+	}
+
+	testData := []testDataStruct{
+		{
+			desc:     "Without forward header, client IP from tcp connection.",
+			url:      fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key1"),
+			message:  "hello",
+			wantResp: `{"message":"hello"}`,
+			wantScRequest: &utils.ExpectedCheck{
+				Version:         utils.ESPv2Version(),
+				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+				ServiceConfigID: "test-config-id",
+				ConsumerID:      "api_key:api-key1",
+				OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				ApiKey:          "api-key1",
+				CallerIp:        platform.GetLoopbackAddress(),
+			},
+		},
+		{
+			desc:          "client ip from forward header",
+			url:           fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo", "?key=api-key3"),
+			message:       "hello",
+			forwardHeader: "for=1.2.3.4",
+			wantResp:      `{"message":"hello"}`,
+			wantScRequest: &utils.ExpectedCheck{
+				Version:         utils.ESPv2Version(),
+				ServiceName:     "echo-api.endpoints.cloudesf-testing.cloud.goog",
+				ServiceConfigID: "test-config-id",
+				ConsumerID:      "api_key:api-key3",
+				OperationName:   "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo",
+				ApiKey:          "api-key3",
+				CallerIp:        "1.2.3.4",
 			},
 		},
 	}
@@ -182,6 +241,7 @@ func runTest(t *testing.T, env *env.TestEnv, tc testDataStruct) {
 		"X-Android-Cert":          wantReq.AndroidCertFingerprint,
 		"X-Ios-Bundle-Identifier": wantReq.IosBundleID,
 		"X-Forwarded-For":         tc.forwardedIp,
+		"Forward":                 tc.forwardHeader,
 	})
 
 	if err != nil {
