@@ -463,6 +463,69 @@ TEST(ServiceControlUtils, GetFrontendProtocol) {
   EXPECT_EQ(Protocol::HTTP, getFrontendProtocol(nullptr, mock_stream_info));
 }
 
+TEST(TestExtractIPFromForwardHeader, HeaderNotExist) {
+  Envoy::Http::TestRequestHeaderMapImpl headers;
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "");
+}
+
+TEST(TestExtractIPFromForwardHeader, DoubleHeaders) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{"forward", "for=1.2.3.4"},
+                                                {"forward", "for=2.3.4.5"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "");
+}
+
+TEST(TestExtractIPFromForwardHeader, Ipv4) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{"forward", "for=1.2.3.4"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "1.2.3.4");
+}
+
+TEST(TestExtractIPFromForwardHeader, Ipv6) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{"forward", "for=\"[::1]\""}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "::1");
+}
+
+TEST(TestExtractIPFromForwardHeader, WrongIpv4) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{"forward", "for=1.2.3"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "");
+}
+
+TEST(TestExtractIPFromForwardHeader, WrongIpv6) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {"forward", "for=\"[fe80::1%]\""}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "");
+}
+
+TEST(TestExtractIPFromForwardHeader, Ipv4WithOtherFields) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {"forward", "by=1.2.3.4;for=1.2.3.4;host=cnn.com;proto=http"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "1.2.3.4");
+}
+
+TEST(TestExtractIPFromForwardHeader, Ipv4WithOtherFieldsWithSpace) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {"forward", "by=1.2.3.4; for=1.2.3.4; host=cnn.com; proto=http"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "1.2.3.4");
+}
+
+TEST(TestExtractIPFromForwardHeader, MultipleSectionsLastHasIP) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {"forward",
+       "for=1.1.1.1, by=1.2.3.4;for=1.2.3.4;host=cnn.com;proto=http"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "1.2.3.4");
+}
+
+TEST(TestExtractIPFromForwardHeader, MultipleSectionsLastHasIPWithSpace) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {"forward", "by=1.1.1.1, by=1.2.3.4; for=1.2.3.4"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "1.2.3.4");
+}
+
+TEST(TestExtractIPFromForwardHeader, MultipleSectionsLastNotIP) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {"forward", "by=1.1.1.1, by=1.2.3.4;for=1.2.3.4, by=2.2.2.2"}};
+  EXPECT_EQ(extractIPFromForwardHeader(headers), "");
+}
+
 }  // namespace
 }  // namespace service_control
 }  // namespace http_filters

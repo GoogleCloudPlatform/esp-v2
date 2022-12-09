@@ -86,6 +86,9 @@ message Service {
 
   // The field name for jwt payload passed into metadata
   string jwt_payload_metadata_name = 10;
+
+  // If true, extract client ip from "forward" header.
+  bool client_ip_from_forward_header = 11;
 }
 
 message GcpAttributes {

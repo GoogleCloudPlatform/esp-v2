@@ -17,8 +17,8 @@
 #include <sstream>
 #include <vector>
 
-#include "absl/strings/str_cat.h"
 #include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/types/optional.h"
 #include "api/envoy/v11/http/service_control/config.pb.h"
@@ -101,52 +101,6 @@ bool extractAPIKeyFromCookie(const Envoy::Http::RequestHeaderMap& headers,
     return true;
   }
   return false;
-}
-
-std::string extractIPFromForwardHeader(
-    const Envoy::Http::RequestHeaderMap& headers) {
-  const auto result = headers.get(kForwardHeader);
-  // Only support one "Forward" header, since we need to
-  // extract the last one.  If there are multiple "Forward" header
-  // we could not define last one.
-  if (result.size() != 1) {
-    return Envoy::EMPTY_STRING;
-  }
-
-  absl::string_view source = result[0]->value().getStringView();
-  // Multiple proxy sections are separated by comma. We only use the last one.
-  const absl::string_view::size_type pos = source.find_last_of(',');
-  if (pos != absl::string_view::npos) {
-    source.remove_prefix(pos + 1);
-  }
-
-  // Each section may have multiple fields, they are separated by semicolumn.
-  // e.g. by=abc;for=1.2.3.4;host=abc;proto=http
-  // Extract ip from  "for=" field.
-  for (absl::string_view s : absl::StrSplit(source, ';')) {
-    absl::string_view token = absl::StripAsciiWhitespace(s);
-    if (absl::StartsWith(token, "for=")) {
-      absl::string_view ip = token.substr(4);
-
-      // remove double quote
-      if (ip[0] == '"' && ip[ip.size()-1] == '"') {
-        ip = ip.substr(1, ip.size() - 1);
-      }
-      // remove [] for ipv6
-      if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
-        ip = ip.substr(1, ip.size() - 1);
-      }
-
-      // Verify it is a valid ip.
-      const auto address =
-          Envoy::Network::Utility::parseInternetAddressNoThrow(std::string(ip));
-      if (address != nullptr) {
-        return std::string(ip);
-      }
-      break;
-    }
-  }
-  return Envoy::EMPTY_STRING;
 }
 
 void extractJwtPayload(const Envoy::ProtobufWkt::Value& value,
@@ -408,6 +362,55 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
   }
 
   info.grpc_response_code = static_cast<StatusCode>(status.value());
+}
+
+std::string extractIPFromForwardHeader(
+    const Envoy::Http::RequestHeaderMap& headers) {
+  const auto result = headers.get(kForwardHeader);
+  // Only support one "Forward" header, since we need to
+  // extract the last one.  If there are multiple "Forward" header
+  // we could not define last one.
+  if (result.size() != 1) {
+    return Envoy::EMPTY_STRING;
+  }
+
+  absl::string_view source = result[0]->value().getStringView();
+  // Multiple proxy sections are separated by comma. We only use the last one.
+  const absl::string_view::size_type pos = source.find_last_of(',');
+  if (pos != absl::string_view::npos) {
+    source.remove_prefix(pos + 1);
+  }
+
+  // Each section may have multiple fields, they are separated by semicolumn.
+  // e.g. by=abc;for=1.2.3.4;host=abc;proto=http
+  // Extract ip from  "for=" field.
+  for (absl::string_view s : absl::StrSplit(source, ';')) {
+    absl::string_view token = absl::StripAsciiWhitespace(s);
+    if (absl::StartsWith(token, "for=")) {
+      absl::string_view ip = token.substr(4);
+
+      std::cerr << "============1111 ip:" << ip << std::endl;
+      // remove double quote
+      if (ip[0] == '"' && ip[ip.size() - 1] == '"') {
+        ip = ip.substr(1, ip.size() - 2);
+      }
+      std::cerr << "============2222 ip:" << ip << std::endl;
+      // remove [] for ipv6
+      if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
+        ip = ip.substr(1, ip.size() - 2);
+      }
+
+      std::cerr << "============3333 ip:" << ip << std::endl;
+      // Verify it is a valid ip.
+      const auto address =
+          Envoy::Network::Utility::parseInternetAddressNoThrow(std::string(ip));
+      if (address != nullptr) {
+        return std::string(ip);
+      }
+      break;
+    }
+  }
+  return Envoy::EMPTY_STRING;
 }
 
 }  // namespace service_control

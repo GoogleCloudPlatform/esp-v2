@@ -272,8 +272,9 @@ MATCHER_P(MatchesCheckInfo, expect, Envoy::EMPTY_STRING) {
   MATCH(android_package_name);
   MATCH(android_cert_fingerprint);
 
-  // These should not change
-  MATCH2(client_ip, "127.0.0.1");
+  std::string expect_client_ip =
+      (expect.client_ip.empty() ? "127.0.0.1" : expect.client_ip);
+  MATCH2(client_ip, expect_client_ip);
 
   MATCH2(operation_id, "test-uuid");
   MATCH2(operation_name, "get_header_key");
@@ -565,7 +566,11 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   // left blank if not provided.
   setPerRouteOperation("get_header_key");
   TestRequestHeaderMapImpl headers{
-      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+      {":method", "GET"},
+      {":path", "/echo"},
+      {"x-api-key", "foobar"},
+      {"forward", "for=1.2.3.4"},
+  };
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
   ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
@@ -573,6 +578,90 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
                                     stats_);
   CheckResponseInfo response_info;
 
+  CheckRequestInfo expected_check_info;
+  expected_check_info.api_key = "foobar";
+  EXPECT_CALL(*mock_call_,
+              callCheck(MatchesCheckInfo(expected_check_info), _, _))
+      .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
+                                        Envoy::Tracing::Span&,
+                                        CheckDoneFunc on_done) {
+        on_done(OkStatus(), response_info);
+        return nullptr;
+      }));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(OkStatus(), ""));
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
+
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_key = "foobar";
+  expected_report_info.status = OkStatus();
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesReportInfo(expected_report_info, headers,
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
+}
+
+TEST_F(HandlerTest, TestClientIPWithForwardHeaders) {
+  // set the service.client_ip_from_forward_header to true
+  // There is a "forward" header.
+  proto_config_.mutable_services(0)->set_client_ip_from_forward_header(true);
+  setPerRouteOperation("get_header_key");
+  TestRequestHeaderMapImpl headers{
+      {":method", "GET"},
+      {":path", "/echo"},
+      {"x-api-key", "foobar"},
+      {"forward", "for=1.2.3.4"},
+  };
+  TestResponseHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+                                    "test-uuid", *cfg_parser_, test_time_,
+                                    stats_);
+  CheckResponseInfo response_info;
+
+  CheckRequestInfo expected_check_info;
+  expected_check_info.api_key = "foobar";
+  // The extracted client_ip shold be from the "forward" header.
+  expected_check_info.client_ip = "1.2.3.4";
+  EXPECT_CALL(*mock_call_,
+              callCheck(MatchesCheckInfo(expected_check_info), _, _))
+      .WillOnce(Invoke([&response_info](const CheckRequestInfo&,
+                                        Envoy::Tracing::Span&,
+                                        CheckDoneFunc on_done) {
+        on_done(OkStatus(), response_info);
+        return nullptr;
+      }));
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(OkStatus(), ""));
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
+
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_key = "foobar";
+  expected_report_info.status = OkStatus();
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesReportInfo(expected_report_info, headers,
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
+}
+
+TEST_F(HandlerTest, TestClientIPWithOutForwardHeaders) {
+  // set the service.client_ip_from_forward_header to true
+  // There is NOT any "forward" header.
+  proto_config_.mutable_services(0)->set_client_ip_from_forward_header(true);
+  setPerRouteOperation("get_header_key");
+  TestRequestHeaderMapImpl headers{
+      {":method", "GET"},
+      {":path", "/echo"},
+      {"x-api-key", "foobar"},
+  };
+  TestResponseHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+                                    "test-uuid", *cfg_parser_, test_time_,
+                                    stats_);
+  CheckResponseInfo response_info;
+
+  // The extracted client_ip is default, from stream_info.
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
   EXPECT_CALL(*mock_call_,

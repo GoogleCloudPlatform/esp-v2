@@ -117,6 +117,7 @@ class ServiceControlHandlerImpl
   std::string http_method_;
   std::string uuid_;
   std::string api_key_;
+  std::string client_ip_from_forward_header_;
 
   // Considering the request headers can be modified, the original downstream
   // header should be used as request_header_size. This variable is used to

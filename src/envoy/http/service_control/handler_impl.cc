@@ -104,6 +104,10 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
                   api_key_);
   }
+
+  if (require_ctx_->service_ctx().config().client_ip_from_forward_header()) {
+    client_ip_from_forward_header_ = extractIPFromForwardHeader(headers);
+  }
 }
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
@@ -143,12 +147,16 @@ void ServiceControlHandlerImpl::fillOperationInfo(
       require_ctx_->service_ctx().config().producer_project_id();
   info.current_time = time_source_.systemTime();
 
-  if (stream_info_.downstreamAddressProvider().remoteAddress()->type() ==
-      Envoy::Network::Address::Type::Ip) {
-    info.client_ip = stream_info_.downstreamAddressProvider()
-                         .remoteAddress()
-                         ->ip()
-                         ->addressAsString();
+  if (!client_ip_from_forward_header_.empty()) {
+    info.client_ip = client_ip_from_forward_header_;
+  } else {
+    if (stream_info_.downstreamAddressProvider().remoteAddress()->type() ==
+        Envoy::Network::Address::Type::Ip) {
+      info.client_ip = stream_info_.downstreamAddressProvider()
+                           .remoteAddress()
+                           ->ip()
+                           ->addressAsString();
+    }
   }
 
   info.api_key = api_key_;
