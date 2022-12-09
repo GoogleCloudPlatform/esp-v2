@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "api/envoy/v11/http/service_control/config.pb.h"
 #include "api/envoy/v11/http/service_control/requirement.pb.h"
@@ -86,8 +87,7 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
 
 // Extract IP from the "Forwarded" header.
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
-// Return empty if fail to extract the IP.
-std::string extractIPFromForwardedHeader(
+absl::StatusOr<std::string> extractIPFromForwardedHeader(
     const Envoy::Http::RequestHeaderMap& headers);
 
 }  // namespace service_control

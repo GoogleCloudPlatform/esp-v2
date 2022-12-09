@@ -364,15 +364,18 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
   info.grpc_response_code = static_cast<StatusCode>(status.value());
 }
 
-std::string extractIPFromForwardedHeader(
+absl::StatusOr<std::string> extractIPFromForwardedHeader(
     const Envoy::Http::RequestHeaderMap& headers) {
   const auto values = headers.get(kForwardedHeader);
+  if (values.size() == 0) {
+    return Envoy::EMPTY_STRING;
+  }
 
   // Only support one header value.
   // Need to extract the last one,  could not define the last one for multiple
   // header values.
-  if (values.size() != 1) {
-    return Envoy::EMPTY_STRING;
+  if (values.size() > 1) {
+    return absl::InvalidArgumentError("more than one forwarded headers.");
   }
 
   absl::string_view source = values[0]->value().getStringView();
@@ -404,13 +407,15 @@ std::string extractIPFromForwardedHeader(
       // Verify it is a valid IP.
       const auto address =
           Envoy::Network::Utility::parseInternetAddressNoThrow(std::string(ip));
-      if (address != nullptr) {
-        return std::string(ip);
+      if (address == nullptr) {
+        return absl::InvalidArgumentError(
+            absl::StrCat(ip, "is not a valid ip address"));
       }
-      break;
+      return std::string(ip);
     }
   }
-  return Envoy::EMPTY_STRING;
+  return absl::InvalidArgumentError(
+      absl::StrCat("could not find IP from: ", source));
 }
 
 }  // namespace service_control

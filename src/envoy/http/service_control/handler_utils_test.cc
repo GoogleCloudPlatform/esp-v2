@@ -465,65 +465,65 @@ TEST(ServiceControlUtils, GetFrontendProtocol) {
 
 TEST(TestExtractIPFromForwardedHeader, HeaderNotExist) {
   Envoy::Http::TestRequestHeaderMapImpl headers;
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "");
+  EXPECT_EQ(extractIPFromForwardedHeader(headers).value(), "");
 }
 
 TEST(TestExtractIPFromForwardedHeader, DoubleHeaders) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{"forwarded", "for=1.2.3.4"},
                                                 {"forwarded", "for=2.3.4.5"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "");
+  EXPECT_FALSE(extractIPFromForwardedHeader(headers).ok());
 }
 
 TEST(TestExtractIPFromForwardedHeader, Ipv4) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{"forwarded", "for=1.2.3.4"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "1.2.3.4");
+  EXPECT_EQ(extractIPFromForwardedHeader(headers).value(), "1.2.3.4");
 }
 
 TEST(TestExtractIPFromForwardedHeader, Ipv6) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{"forwarded", "for=\"[::1]\""}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "::1");
+  EXPECT_EQ(extractIPFromForwardedHeader(headers).value(), "::1");
 }
 
 TEST(TestExtractIPFromForwardedHeader, WrongIpv4) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{"forwarded", "for=1.2.3"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "");
+  EXPECT_FALSE(extractIPFromForwardedHeader(headers).ok());
 }
 
 TEST(TestExtractIPFromForwardedHeader, WrongIpv6) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {"forwarded", "for=\"[fe80::1%]\""}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "");
+  EXPECT_FALSE(extractIPFromForwardedHeader(headers).ok());
 }
 
 TEST(TestExtractIPFromForwardedHeader, Ipv4WithOtherFields) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {"forwarded", "by=1.2.3.4;for=1.2.3.4;host=cnn.com;proto=http"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "1.2.3.4");
+  EXPECT_EQ(extractIPFromForwardedHeader(headers).value(), "1.2.3.4");
 }
 
 TEST(TestExtractIPFromForwardedHeader, Ipv4WithOtherFieldsWithSpace) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {"forwarded", "by=1.2.3.4; for=1.2.3.4; host=cnn.com; proto=http"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "1.2.3.4");
+  EXPECT_EQ(extractIPFromForwardedHeader(headers).value(), "1.2.3.4");
 }
 
 TEST(TestExtractIPFromForwardedHeader, MultipleSectionsLastHasIP) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {"forwarded",
        "for=1.1.1.1, by=1.2.3.4;for=1.2.3.4;host=cnn.com;proto=http"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "1.2.3.4");
+  EXPECT_EQ(extractIPFromForwardedHeader(headers).value(), "1.2.3.4");
 }
 
 TEST(TestExtractIPFromForwardedHeader, MultipleSectionsLastHasIPWithSpace) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {"forwarded", "by=1.1.1.1, by=1.2.3.4; for=1.2.3.4"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "1.2.3.4");
+  EXPECT_EQ(extractIPFromForwardedHeader(headers).value(), "1.2.3.4");
 }
 
 TEST(TestExtractIPFromForwardedHeader, MultipleSectionsLastNotIP) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {"forwarded", "by=1.1.1.1, by=1.2.3.4;for=1.2.3.4, by=2.2.2.2"}};
-  EXPECT_EQ(extractIPFromForwardedHeader(headers), "");
+  EXPECT_FALSE(extractIPFromForwardedHeader(headers).ok());
 }
 
 }  // namespace

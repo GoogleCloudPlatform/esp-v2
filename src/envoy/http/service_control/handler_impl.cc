@@ -106,7 +106,15 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
   }
 
   if (require_ctx_->service_ctx().config().client_ip_from_forwarded_header()) {
-    client_ip_from_forwarded_header_ = extractIPFromForwardedHeader(headers);
+    const auto status_or_ip = extractIPFromForwardedHeader(headers);
+    if (!status_or_ip.ok()) {
+      ENVOY_LOG(error, "failed to extract IP from forwarded header: {}",
+                status_or_ip.status());
+      // status ok with empty string is a valid return, it means not such
+      // header.
+    } else if (!status_or_ip.value().empty()) {
+      client_ip_from_forwarded_header_ = status_or_ip.value();
+    }
   }
 }
 
