@@ -48,7 +48,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "http://127.0.0.1:8082"
 				opt.DisableTracing = true
-				opt.ClientIPFromForwardHeader = true
+				opt.ClientIPFromForwardedHeader = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.ScServiceConfig),
 			envoyConfigPath:   platform.GetFilePath(platform.ScEnvoyConfig),

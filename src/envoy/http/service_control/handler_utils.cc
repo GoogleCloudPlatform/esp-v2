@@ -54,7 +54,7 @@ constexpr char kJwtPayLoadsDelimeter = '.';
 constexpr char kContentTypeApplicationGrpcPrefix[] = "application/grpc";
 const Envoy::Http::LowerCaseString kContentTypeHeader{"content-type"};
 
-const Envoy::Http::LowerCaseString kForwardHeader{"forward"};
+const Envoy::Http::LowerCaseString kForwardedHeader{"forwarded"};
 
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
@@ -364,12 +364,13 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
   info.grpc_response_code = static_cast<StatusCode>(status.value());
 }
 
-std::string extractIPFromForwardHeader(
+std::string extractIPFromForwardedHeader(
     const Envoy::Http::RequestHeaderMap& headers) {
-  const auto values = headers.get(kForwardHeader);
+  const auto values = headers.get(kForwardedHeader);
 
   // Only support one header value.
-  // Need to extract the last one,  could not define the last one for multiple header values.
+  // Need to extract the last one,  could not define the last one for multiple
+  // header values.
   if (values.size() != 1) {
     return Envoy::EMPTY_STRING;
   }

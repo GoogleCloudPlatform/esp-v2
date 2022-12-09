@@ -137,9 +137,9 @@ type ConfigGeneratorOptions struct {
 
 	BackendClusterMaxRequests int
 
-	ComputePlatformOverride   string
-	EnableResponseCompression bool
-	ClientIPFromForwardHeader bool
+	ComputePlatformOverride     string
+	EnableResponseCompression   bool
+	ClientIPFromForwardedHeader bool
 
 	TranscodingAlwaysPrintPrimitiveFields         bool
 	TranscodingAlwaysPrintEnumsAsInts             bool

@@ -569,7 +569,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
       {":method", "GET"},
       {":path", "/echo"},
       {"x-api-key", "foobar"},
-      {"forward", "for=1.2.3.4"},
+      {"forwarded", "for=1.2.3.4"},
   };
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
@@ -602,15 +602,15 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
 }
 
 TEST_F(HandlerTest, TestClientIPWithForwardHeaders) {
-  // set the service.client_ip_from_forward_header to true
-  // There is a "forward" header.
-  proto_config_.mutable_services(0)->set_client_ip_from_forward_header(true);
+  // set the service.client_ip_from_forwarded_header to true
+  // There is a "forwarded" header.
+  proto_config_.mutable_services(0)->set_client_ip_from_forwarded_header(true);
   setPerRouteOperation("get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"},
       {":path", "/echo"},
       {"x-api-key", "foobar"},
-      {"forward", "for=1.2.3.4"},
+      {"forwarded", "for=1.2.3.4"},
   };
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
@@ -621,7 +621,7 @@ TEST_F(HandlerTest, TestClientIPWithForwardHeaders) {
 
   CheckRequestInfo expected_check_info;
   expected_check_info.api_key = "foobar";
-  // The extracted client_ip shold be from the "forward" header.
+  // The extracted client_ip shold be from the "forwarded" header.
   expected_check_info.client_ip = "1.2.3.4";
   EXPECT_CALL(*mock_call_,
               callCheck(MatchesCheckInfo(expected_check_info), _, _))
@@ -645,9 +645,9 @@ TEST_F(HandlerTest, TestClientIPWithForwardHeaders) {
 }
 
 TEST_F(HandlerTest, TestClientIPWithOutForwardHeaders) {
-  // set the service.client_ip_from_forward_header to true
-  // There is NOT any "forward" header.
-  proto_config_.mutable_services(0)->set_client_ip_from_forward_header(true);
+  // set the service.client_ip_from_forwarded_header to true
+  // There is NOT any "forwarded" header.
+  proto_config_.mutable_services(0)->set_client_ip_from_forwarded_header(true);
   setPerRouteOperation("get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"},

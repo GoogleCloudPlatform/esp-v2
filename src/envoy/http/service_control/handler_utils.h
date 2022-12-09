@@ -84,10 +84,10 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
                 const Envoy::StreamInfo::StreamInfo& stream_info,
                 ::espv2::api_proxy::service_control::ReportRequestInfo& info);
 
-// Extract IP from the "Forward" header.
+// Extract IP from the "Forwarded" header.
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
 // Return empty if fail to extract the IP.
-std::string extractIPFromForwardHeader(
+std::string extractIPFromForwardedHeader(
     const Envoy::Http::RequestHeaderMap& headers);
 
 }  // namespace service_control
