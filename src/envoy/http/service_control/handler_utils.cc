@@ -366,42 +366,41 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
 
 std::string extractIPFromForwardHeader(
     const Envoy::Http::RequestHeaderMap& headers) {
-  const auto result = headers.get(kForwardHeader);
-  // Only support one "Forward" header, since we need to
-  // extract the last one.  If there are multiple "Forward" header
-  // we could not define last one.
-  if (result.size() != 1) {
+  const auto values = headers.get(kForwardHeader);
+
+  // Only support one header value.
+  // Need to extract the last one,  could not define the last one for multiple header values.
+  if (values.size() != 1) {
     return Envoy::EMPTY_STRING;
   }
 
-  absl::string_view source = result[0]->value().getStringView();
-  // Multiple proxy sections are separated by comma. We only use the last one.
+  absl::string_view source = values[0]->value().getStringView();
+
+  // Multiple proxy sections are separated by comma. Use the last one.
   const absl::string_view::size_type pos = source.find_last_of(',');
   if (pos != absl::string_view::npos) {
     source.remove_prefix(pos + 1);
   }
 
   // Each section may have multiple fields, they are separated by semicolumn.
-  // e.g. by=abc;for=1.2.3.4;host=abc;proto=http
-  // Extract ip from  "for=" field.
+  // For example: by=abc;for=1.2.3.4;host=abc;proto=http
+  // Extract ip from the "for=" field.
   for (absl::string_view s : absl::StrSplit(source, ';')) {
     absl::string_view token = absl::StripAsciiWhitespace(s);
     if (absl::StartsWith(token, "for=")) {
       absl::string_view ip = token.substr(4);
 
-      std::cerr << "============1111 ip:" << ip << std::endl;
-      // remove double quote
+      // IPv2 address is wrapped with \"[]\".
+      // Remove double quote.
       if (ip[0] == '"' && ip[ip.size() - 1] == '"') {
         ip = ip.substr(1, ip.size() - 2);
       }
-      std::cerr << "============2222 ip:" << ip << std::endl;
-      // remove [] for ipv6
+      // Remove [].
       if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
         ip = ip.substr(1, ip.size() - 2);
       }
 
-      std::cerr << "============3333 ip:" << ip << std::endl;
-      // Verify it is a valid ip.
+      // Verify it is a valid IP.
       const auto address =
           Envoy::Network::Utility::parseInternetAddressNoThrow(std::string(ip));
       if (address != nullptr) {
