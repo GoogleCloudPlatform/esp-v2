@@ -189,20 +189,18 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 		if err := util.ValidateRegexProgramSize(orgReg, util.GoogleRE2MaxProgramSize); err != nil {
 			return nil, nil, fmt.Errorf("invalid cors origin regex: %v", err)
 		}
-		regexMatcher := &matcher.RegexMatcher{
-			Regex: orgReg,
-		}
-		cors = &routepb.CorsPolicy{
-			AllowOriginStringMatch: []*matcher.StringMatcher{
-				{
-					MatchPattern: &matcher.StringMatcher_SafeRegex{
-						SafeRegex: regexMatcher,
-					},
+		stringMatcher := &matcher.StringMatcher{
+			MatchPattern: &matcher.StringMatcher_SafeRegex{
+				SafeRegex: &matcher.RegexMatcher{
+					Regex: orgReg,
 				},
 			},
 		}
-		originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_SafeRegexMatch{
-			SafeRegexMatch: regexMatcher,
+		cors = &routepb.CorsPolicy{
+			AllowOriginStringMatch: []*matcher.StringMatcher{stringMatcher},
+		}
+		originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_StringMatch{
+			StringMatch: stringMatcher,
 		}
 	case "":
 		glog.Infof("CORS support is disabled")

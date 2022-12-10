@@ -3627,8 +3627,10 @@ func TestMakeFallbackRoute(t *testing.T) {
               },
               {
                 "name": "origin",
-                "safeRegexMatch": {
-                  "regex": ".*"
+                "stringMatch": {
+                  "safeRegex": {
+                    "regex": ".*"
+                  }
                 }
               },
               {
