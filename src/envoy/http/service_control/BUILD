@@ -330,3 +330,16 @@ envoy_cc_fuzz_test(
         "@envoy//test/test_common:utility_lib",
     ],
 )
+
+envoy_cc_fuzz_test(
+    name = "parsing_forwarded_header_fuzz_test",
+    srcs = ["parsing_forwarded_header_fuzz_test.cc"],
+    corpus = "//tests/fuzz/corpus:parsing_forwarded_header_corpus",
+    repository = "@envoy",
+    deps = [
+        ":handler_impl_lib",
+        "//tests/fuzz/structured_inputs:parsing_forwarded_header_proto_cc_proto",
+        "@envoy//test/fuzz:utility_lib",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)

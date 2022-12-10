@@ -35,6 +35,14 @@ envoy_proto_library(
 )
 
 envoy_proto_library(
+    name = "parsing_forwarded_header_proto",
+    srcs = ["parsing_forwarded_header.proto"],
+    deps = [
+        "@envoy//test/fuzz:common_proto",
+    ],
+)
+
+envoy_proto_library(
     name = "auth_token_proto",
     srcs = ["auth_token.proto"],
     deps = [
