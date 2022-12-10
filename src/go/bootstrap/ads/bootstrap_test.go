@@ -133,7 +133,6 @@ func TestCreateBootstrapConfig(t *testing.T) {
 			wantConfig: `
 {
    "admin":{
-      "accessLogPath":"/dev/null",
       "address":{
          "socketAddress":{
             "address":"0.0.0.0",
