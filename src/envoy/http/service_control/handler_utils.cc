@@ -56,6 +56,8 @@ const Envoy::Http::LowerCaseString kContentTypeHeader{"content-type"};
 
 const Envoy::Http::LowerCaseString kForwardedHeader{"forwarded"};
 
+constexpr absl::string_view kForwardedIPTokenPrefix{"for="};
+
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
@@ -391,8 +393,8 @@ absl::StatusOr<std::string> extractIPFromForwardedHeader(
   // Extract ip from the "for=" field.
   for (absl::string_view s : absl::StrSplit(source, ';')) {
     absl::string_view token = absl::StripAsciiWhitespace(s);
-    if (absl::StartsWith(token, "for=")) {
-      absl::string_view ip = token.substr(4);
+    if (absl::StartsWith(token, kForwardedIPTokenPrefix)) {
+      absl::string_view ip = token.substr(kForwardedIPTokenPrefix.size());
 
       // IPv2 address is wrapped with \"[]\".
       // Remove double quote.
@@ -403,15 +405,16 @@ absl::StatusOr<std::string> extractIPFromForwardedHeader(
       if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
         ip = ip.substr(1, ip.size() - 2);
       }
+      std::string ip_str(ip);
 
       // Verify it is a valid IP.
       const auto address =
-          Envoy::Network::Utility::parseInternetAddressNoThrow(std::string(ip));
+          Envoy::Network::Utility::parseInternetAddressNoThrow(ip_str);
       if (address == nullptr) {
         return absl::InvalidArgumentError(
-            absl::StrCat(ip, "is not a valid ip address"));
+            absl::StrCat(ip_str, "is not a valid ip address"));
       }
-      return std::string(ip);
+      return ip_str;
     }
   }
   return absl::InvalidArgumentError(
