@@ -410,7 +410,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/[^\\/]+/test/.*\\/?$"
             }
           },
@@ -503,7 +502,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/[^\\/:]+/test/[^:]*\\/?$"
             }
           },
@@ -613,7 +611,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           },
@@ -641,7 +638,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           },
@@ -669,7 +665,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           }
@@ -1116,7 +1111,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -1144,7 +1138,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -1200,7 +1193,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
@@ -1881,7 +1873,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -1923,7 +1914,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
@@ -2161,7 +2151,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -2196,7 +2185,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+/bar\\/?$"
             }
           },
@@ -2231,7 +2219,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*/bar\\/?$"
             }
           },
@@ -2266,7 +2253,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?:verb$"
             }
           },
@@ -2301,7 +2287,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?$"
             }
           },
@@ -2364,7 +2349,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
@@ -2381,7 +2365,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+/bar\\/?$"
             }
           }
@@ -2398,7 +2381,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*/bar\\/?$"
             }
           }
@@ -2415,7 +2397,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?:verb$"
             }
           }
@@ -2432,7 +2413,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?$"
             }
           }
@@ -2923,7 +2903,6 @@ func TestMakeFallbackRoute(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/echo/[^\\/]+\\/?$"
             }
           },
@@ -2950,7 +2929,6 @@ func TestMakeFallbackRoute(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/echo/[^\\/]+\\/?$"
             }
           },
@@ -2977,7 +2955,6 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/echo/[^\\/]+\\/?$"
             }
           }
@@ -3531,7 +3508,6 @@ func TestMakeFallbackRoute(t *testing.T) {
         "allowOriginStringMatch": [
           {
             "safeRegex": {
-              "googleRe2": {},
               "regex": ".*"
             }
           }
@@ -3652,7 +3628,6 @@ func TestMakeFallbackRoute(t *testing.T) {
               {
                 "name": "origin",
                 "safeRegexMatch": {
-                  "googleRe2": {},
                   "regex": ".*"
                 }
               },
@@ -4049,9 +4024,6 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 					{
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
-								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-								},
 								Regex: `^https?://.+\\.example\\.com\/?$`,
 							},
 						},
@@ -4071,9 +4043,6 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 					{
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
-								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-								},
 								Regex: `^https?://.+\\.example\\.com\/?$`,
 							},
 						},

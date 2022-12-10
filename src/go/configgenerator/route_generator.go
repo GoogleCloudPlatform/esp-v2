@@ -190,9 +190,6 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 			return nil, nil, fmt.Errorf("invalid cors origin regex: %v", err)
 		}
 		regexMatcher := &matcher.RegexMatcher{
-			EngineType: &matcher.RegexMatcher_GoogleRe2{
-				GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-			},
 			Regex: orgReg,
 		}
 		cors = &routepb.CorsPolicy{
@@ -522,9 +519,6 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRout
 			RouteMatch: &routepb.RouteMatch{
 				PathSpecifier: &routepb.RouteMatch_SafeRegex{
 					SafeRegex: &matcher.RegexMatcher{
-						EngineType: &matcher.RegexMatcher_GoogleRe2{
-							GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-						},
 						Regex: httpRule.UriTemplate.Regex(disallowColonInWildcardPathSegment),
 					},
 				},

@@ -874,7 +874,6 @@ var (
                           }
                         ],
                         "safeRegex": {
-                          "googleRe2": {},
                           "regex": "^/v1/shelves/[^\\/]+\\/?$"
                         }
                       },
@@ -991,7 +990,6 @@ var (
                       },
                       "match": {
                         "safeRegex": {
-                          "googleRe2": {},
                           "regex": "^/v1/shelves/[^\\/]+\\/?$"
                         }
                       }
@@ -1355,7 +1353,6 @@ var (
                           }
                         ],
                         "safeRegex": {
-                          "googleRe2": {},
                           "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       },
@@ -1382,7 +1379,6 @@ var (
                           }
                         ],
                         "safeRegex": {
-                          "googleRe2": {},
                           "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       },
@@ -1471,7 +1467,6 @@ var (
                       },
                       "match": {
                         "safeRegex": {
-                          "googleRe2": {},
                           "regex": "^/v1/shelves/[^\\/]+/books/[^\\/]+\\/?$"
                         }
                       }
