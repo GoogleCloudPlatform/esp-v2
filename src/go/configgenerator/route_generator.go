@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
@@ -66,7 +67,13 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	}
 
 	if cors != nil {
-		host.Cors = cors
+		corsAny, err := ptypes.MarshalAny(cors)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling CorsPolicy to Any: %v", err)
+		}
+		host.TypedPerFilterConfig = make(map[string]*anypb.Any)
+		host.TypedPerFilterConfig[util.CORS] = corsAny
+
 		host.Routes = append(host.Routes, corsRoutes...)
 		for i, corsRoute := range corsRoutes {
 			jsonStr, _ := util.ProtoToJson(corsRoute)
@@ -152,8 +159,8 @@ func makeResponseHeadersToAdd(serviceInfo *configinfo.ServiceInfo) ([]*corepb.He
 	return l, nil
 }
 
-func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []*routepb.Route, error) {
-	var cors *routepb.CorsPolicy
+func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*corspb.CorsPolicy, []*routepb.Route, error) {
+	var cors *corspb.CorsPolicy
 	originMatcher := &routepb.HeaderMatcher{
 		Name: "origin",
 	}
@@ -169,7 +176,7 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 			},
 		}
 
-		cors = &routepb.CorsPolicy{
+		cors = &corspb.CorsPolicy{
 			AllowOriginStringMatch: []*matcher.StringMatcher{stringMatcher},
 		}
 		if org == "*" {
@@ -189,23 +196,18 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*routepb.CorsPolicy, []
 		if err := util.ValidateRegexProgramSize(orgReg, util.GoogleRE2MaxProgramSize); err != nil {
 			return nil, nil, fmt.Errorf("invalid cors origin regex: %v", err)
 		}
-		regexMatcher := &matcher.RegexMatcher{
-			EngineType: &matcher.RegexMatcher_GoogleRe2{
-				GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-			},
-			Regex: orgReg,
-		}
-		cors = &routepb.CorsPolicy{
-			AllowOriginStringMatch: []*matcher.StringMatcher{
-				{
-					MatchPattern: &matcher.StringMatcher_SafeRegex{
-						SafeRegex: regexMatcher,
-					},
+		stringMatcher := &matcher.StringMatcher{
+			MatchPattern: &matcher.StringMatcher_SafeRegex{
+				SafeRegex: &matcher.RegexMatcher{
+					Regex: orgReg,
 				},
 			},
 		}
-		originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_SafeRegexMatch{
-			SafeRegexMatch: regexMatcher,
+		cors = &corspb.CorsPolicy{
+			AllowOriginStringMatch: []*matcher.StringMatcher{stringMatcher},
+		}
+		originMatcher.HeaderMatchSpecifier = &routepb.HeaderMatcher_StringMatch{
+			StringMatch: stringMatcher,
 		}
 	case "":
 		glog.Infof("CORS support is disabled")
@@ -522,9 +524,6 @@ func makeHttpRouteMatchers(httpRule *httppattern.Pattern, seenUriTemplatesInRout
 			RouteMatch: &routepb.RouteMatch{
 				PathSpecifier: &routepb.RouteMatch_SafeRegex{
 					SafeRegex: &matcher.RegexMatcher{
-						EngineType: &matcher.RegexMatcher_GoogleRe2{
-							GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-						},
 						Regex: httpRule.UriTemplate.Regex(disallowColonInWildcardPathSegment),
 					},
 				},

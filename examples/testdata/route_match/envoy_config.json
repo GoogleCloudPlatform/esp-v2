@@ -275,7 +275,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$"
                               }
                             },
@@ -318,7 +317,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$"
                               }
                             },
@@ -361,7 +359,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/.*\\/?$"
                               }
                             },
@@ -397,7 +394,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/.*\\/?$"
                               }
                             },
@@ -433,7 +429,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/.*\\/?$"
                               }
                             },
@@ -469,7 +464,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/.*\\/?$"
                               }
                             },
@@ -505,7 +499,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/.*\\/?$"
                               }
                             },
@@ -541,7 +534,6 @@
                                 }
                               ],
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/.*\\/?$"
                               }
                             },
@@ -575,7 +567,6 @@
                             },
                             "match": {
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/libraries/[^\\/]+/shelves/[^\\/]+\\/?$"
                               }
                             }
@@ -592,7 +583,6 @@
                             },
                             "match": {
                               "safeRegex": {
-                                "googleRe2": {},
                                 "regex": "^/.*\\/?$"
                               }
                             }

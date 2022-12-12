@@ -550,7 +550,6 @@ var (
                           }
                         ],
                         "safeRegex": {
-                          "googleRe2": {},
                           "regex": "^/pet/[^\\/]+\\/?$"
                         }
                       },
@@ -816,7 +815,6 @@ var (
                       },
                       "match": {
                         "safeRegex": {
-                          "googleRe2": {},
                           "regex": "^/pet/[^\\/]+\\/?$"
                         }
                       }

@@ -25,9 +25,10 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
@@ -410,7 +411,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/[^\\/]+/test/.*\\/?$"
             }
           },
@@ -503,7 +503,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/[^\\/:]+/test/[^:]*\\/?$"
             }
           },
@@ -613,7 +612,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           },
@@ -641,7 +639,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           },
@@ -669,7 +666,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/v1/shelves/[^\\/]+\\/?$"
             }
           }
@@ -1116,7 +1112,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -1144,7 +1139,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -1200,7 +1194,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
@@ -1881,7 +1874,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -1923,7 +1915,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
@@ -2161,7 +2152,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
@@ -2196,7 +2186,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+/bar\\/?$"
             }
           },
@@ -2231,7 +2220,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*/bar\\/?$"
             }
           },
@@ -2266,7 +2254,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?:verb$"
             }
           },
@@ -2301,7 +2288,6 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?$"
             }
           },
@@ -2364,7 +2350,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
@@ -2381,7 +2366,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/[^\\/]+/bar\\/?$"
             }
           }
@@ -2398,7 +2382,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*/bar\\/?$"
             }
           }
@@ -2415,7 +2398,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?:verb$"
             }
           }
@@ -2432,7 +2414,6 @@ func TestMakeRouteConfig(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/foo/.*\\/?$"
             }
           }
@@ -2923,7 +2904,6 @@ func TestMakeFallbackRoute(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/echo/[^\\/]+\\/?$"
             }
           },
@@ -2950,7 +2930,6 @@ func TestMakeFallbackRoute(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/echo/[^\\/]+\\/?$"
             }
           },
@@ -2977,7 +2956,6 @@ func TestMakeFallbackRoute(t *testing.T) {
           },
           "match": {
             "safeRegex": {
-              "googleRe2": {},
               "regex": "^/echo/[^\\/]+\\/?$"
             }
           }
@@ -3041,16 +3019,6 @@ func TestMakeFallbackRoute(t *testing.T) {
   "name": "local_route",
   "virtualHosts": [
     {
-      "cors": {
-        "allowCredentials": false,
-        "allowMethods": "GET,POST,PUT,OPTIONS",
-        "allowOriginStringMatch": [
-          {
-            "exact": "*"
-          }
-        ],
-        "maxAge": "120"
-      },
       "domains": [
         "*"
       ],
@@ -3063,8 +3031,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"GET"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
               }
             ],
             "path": "/echo"
@@ -3087,8 +3057,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"GET"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
               }
             ],
             "path": "/echo/"
@@ -3111,8 +3083,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"POST"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
               }
             ],
             "path": "/echo"
@@ -3135,8 +3109,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"POST"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
               }
             ],
             "path": "/echo/"
@@ -3159,8 +3135,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"OPTIONS"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "OPTIONS"
+                }
               },
               {
                 "name": "origin",
@@ -3190,8 +3168,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"OPTIONS"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "OPTIONS"
+                }
               }
             ],
             "prefix": "/"
@@ -3239,7 +3219,20 @@ func TestMakeFallbackRoute(t *testing.T) {
             "prefix": "/"
           }
         }
-      ]
+      ],
+      "typedPerFilterConfig": {
+        "envoy.filters.http.cors": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.cors.v3.CorsPolicy",
+          "allowCredentials": false,
+          "allowMethods": "GET,POST,PUT,OPTIONS",
+          "allowOriginStringMatch": [
+            {
+              "exact": "*"
+            }
+          ],
+          "maxAge": "120"
+        }
+      }
     }
   ]
 }`,
@@ -3283,16 +3276,6 @@ func TestMakeFallbackRoute(t *testing.T) {
   "name": "local_route",
   "virtualHosts": [
     {
-      "cors": {
-        "allowCredentials": false,
-        "allowMethods": "GET,POST,PUT,OPTIONS",
-        "allowOriginStringMatch": [
-          {
-            "exact": "http://example.com"
-          }
-        ],
-        "maxAge": "120"
-      },
       "domains": [
         "*"
       ],
@@ -3305,8 +3288,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"GET"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
               }
             ],
             "path": "/echo"
@@ -3329,8 +3314,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"GET"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
               }
             ],
             "path": "/echo/"
@@ -3353,8 +3340,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"POST"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
               }
             ],
             "path": "/echo"
@@ -3377,8 +3366,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"POST"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
               }
             ],
             "path": "/echo/"
@@ -3401,12 +3392,16 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"OPTIONS"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "OPTIONS"
+                }
               },
               {
                 "name": "origin",
-                "stringMatch":{"exact":"http://example.com"}
+                "stringMatch": {
+                  "exact": "http://example.com"
+                }
               },
               {
                 "name": "access-control-request-method",
@@ -3432,8 +3427,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"OPTIONS"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "OPTIONS"
+                }
               }
             ],
             "prefix": "/"
@@ -3481,7 +3478,20 @@ func TestMakeFallbackRoute(t *testing.T) {
             "prefix": "/"
           }
         }
-      ]
+      ],
+      "typedPerFilterConfig": {
+        "envoy.filters.http.cors": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.cors.v3.CorsPolicy",
+          "allowCredentials": false,
+          "allowMethods": "GET,POST,PUT,OPTIONS",
+          "allowOriginStringMatch": [
+            {
+              "exact": "http://example.com"
+            }
+          ],
+          "maxAge": "120"
+        }
+      }
     }
   ]
 }`,
@@ -3525,19 +3535,6 @@ func TestMakeFallbackRoute(t *testing.T) {
   "name": "local_route",
   "virtualHosts": [
     {
-      "cors": {
-        "allowCredentials": false,
-        "allowMethods": "GET,POST,PUT,OPTIONS",
-        "allowOriginStringMatch": [
-          {
-            "safeRegex": {
-              "googleRe2": {},
-              "regex": ".*"
-            }
-          }
-        ],
-        "maxAge": "120"
-      },
       "domains": [
         "*"
       ],
@@ -3550,8 +3547,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"GET"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
               }
             ],
             "path": "/echo"
@@ -3574,8 +3573,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"GET"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
               }
             ],
             "path": "/echo/"
@@ -3598,8 +3599,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"POST"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
               }
             ],
             "path": "/echo"
@@ -3622,8 +3625,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"POST"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
               }
             ],
             "path": "/echo/"
@@ -3646,14 +3651,17 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"OPTIONS"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "OPTIONS"
+                }
               },
               {
                 "name": "origin",
-                "safeRegexMatch": {
-                  "googleRe2": {},
-                  "regex": ".*"
+                "stringMatch": {
+                  "safeRegex": {
+                    "regex": ".*"
+                  }
                 }
               },
               {
@@ -3680,8 +3688,10 @@ func TestMakeFallbackRoute(t *testing.T) {
           "match": {
             "headers": [
               {
-                "stringMatch":{"exact":"OPTIONS"},
-                "name": ":method"
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "OPTIONS"
+                }
               }
             ],
             "prefix": "/"
@@ -3729,7 +3739,22 @@ func TestMakeFallbackRoute(t *testing.T) {
             "prefix": "/"
           }
         }
-      ]
+      ],
+      "typedPerFilterConfig": {
+        "envoy.filters.http.cors": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.cors.v3.CorsPolicy",
+          "allowCredentials": false,
+          "allowMethods": "GET,POST,PUT,OPTIONS",
+          "allowOriginStringMatch": [
+            {
+              "safeRegex": {
+                "regex": ".*"
+              }
+            }
+          ],
+          "maxAge": "120"
+        }
+      }
     }
   ]
 }`,
@@ -3999,7 +4024,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		params           []string
 		allowCredentials bool
 		wantedError      string
-		wantCorsPolicy   *routepb.CorsPolicy
+		wantCorsPolicy   *corspb.CorsPolicy
 	}{
 		{
 			desc:           "No Cors",
@@ -4028,7 +4053,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		{
 			desc:   "Correct configured basic Cors, with allow methods",
 			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", "", "2m"},
-			wantCorsPolicy: &routepb.CorsPolicy{
+			wantCorsPolicy: &corspb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
 						MatchPattern: &matcher.StringMatcher_Exact{
@@ -4044,14 +4069,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		{
 			desc:   "Correct configured regex Cors, with allow headers",
 			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "Origin,Content-Type,Accept", "", "2m"},
-			wantCorsPolicy: &routepb.CorsPolicy{
+			wantCorsPolicy: &corspb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
-								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-								},
 								Regex: `^https?://.+\\.example\\.com\/?$`,
 							},
 						},
@@ -4066,14 +4088,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			desc:             "Correct configured regex Cors, with expose headers",
 			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "", "Content-Length", "2m"},
 			allowCredentials: true,
-			wantCorsPolicy: &routepb.CorsPolicy{
+			wantCorsPolicy: &corspb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
 						MatchPattern: &matcher.StringMatcher_SafeRegex{
 							SafeRegex: &matcher.RegexMatcher{
-								EngineType: &matcher.RegexMatcher_GoogleRe2{
-									GoogleRe2: &matcher.RegexMatcher_GoogleRE2{},
-								},
 								Regex: `^https?://.+\\.example\\.com\/?$`,
 							},
 						},
@@ -4118,9 +4137,22 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		if len(gotHost) != 1 {
 			t.Errorf("Test (%v): got expected number of virtual host", tc.desc)
 		}
-		gotCors := gotHost[0].GetCors()
-		if !proto.Equal(gotCors, tc.wantCorsPolicy) {
-			t.Errorf("Test (%v): makeRouteConfig failed, got Cors: %v, want: %v", tc.desc, gotCors, tc.wantCorsPolicy)
+
+		corsAny, ok := gotHost[0].TypedPerFilterConfig[util.CORS]
+		if tc.wantCorsPolicy == nil {
+			if ok {
+				t.Errorf("Test (%v): expect not CORS, but found one", tc.desc)
+			}
+		} else {
+			if !ok {
+				t.Errorf("Test (%v): expect CORS, but found none", tc.desc)
+			} else {
+				gotCors := &corspb.CorsPolicy{}
+				ptypes.UnmarshalAny(corsAny, gotCors)
+				if !proto.Equal(gotCors, tc.wantCorsPolicy) {
+					t.Errorf("Test (%v): CorsPolicy diff, got Cors: %v, want: %v", tc.desc, gotCors, tc.wantCorsPolicy)
+				}
+			}
 		}
 	}
 }

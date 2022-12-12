@@ -39,7 +39,6 @@ func TestCreateAdmin(t *testing.T) {
 			desc:      "Admin interface is enabled, created with default values",
 			adminPort: 8081,
 			want: &bootstrappb.Admin{
-				AccessLogPath: "/dev/null",
 				Address: &corepb.Address{
 					Address: &corepb.Address_SocketAddress{
 						SocketAddress: &corepb.SocketAddress{

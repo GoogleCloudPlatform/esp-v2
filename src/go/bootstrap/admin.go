@@ -29,7 +29,6 @@ func CreateAdmin(opts options.CommonOptions) *bootstrappb.Admin {
 	}
 
 	return &bootstrappb.Admin{
-		AccessLogPath: "/dev/null",
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{
