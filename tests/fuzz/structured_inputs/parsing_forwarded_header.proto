@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package espv2.tests.fuzz.protos;
+
+message ParsingForwardedHeaderInput {
+  repeated string values = 1;
+}

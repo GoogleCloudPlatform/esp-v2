@@ -152,6 +152,7 @@ envoy_cc_library(
         "@envoy//source/common/config:metadata_lib",
         "@envoy//source/common/grpc:common_lib",
         "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/network:utility_lib",
         "@envoy//source/common/stream_info:utility_lib",
         "@envoy//source/extensions/filters/http:well_known_names",
     ],
@@ -326,6 +327,19 @@ envoy_cc_fuzz_test(
         "@envoy//test/fuzz:utility_lib",
         "@envoy//test/mocks/init:init_mocks",
         "@envoy//test/mocks/server:server_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
+
+envoy_cc_fuzz_test(
+    name = "parsing_forwarded_header_fuzz_test",
+    srcs = ["parsing_forwarded_header_fuzz_test.cc"],
+    corpus = "//tests/fuzz/corpus:parsing_forwarded_header_corpus",
+    repository = "@envoy",
+    deps = [
+        ":handler_impl_lib",
+        "//tests/fuzz/structured_inputs:parsing_forwarded_header_proto_cc_proto",
+        "@envoy//test/fuzz:utility_lib",
         "@envoy//test/test_common:utility_lib",
     ],
 )

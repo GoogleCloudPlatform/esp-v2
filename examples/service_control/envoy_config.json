@@ -169,6 +169,7 @@
                         "services": [
                           {
                             "backendProtocol": "http1",
+                            "clientIpFromForwardedHeader": true,
                             "jwtPayloadMetadataName": "jwt_payloads",
                             "producerProjectId": "cloudesf-testing",
                             "serviceConfig": {

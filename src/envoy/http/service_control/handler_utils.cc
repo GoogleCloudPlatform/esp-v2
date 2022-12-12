@@ -17,6 +17,7 @@
 #include <sstream>
 #include <vector>
 
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/types/optional.h"
@@ -24,10 +25,12 @@
 #include "envoy/grpc/status.h"
 #include "envoy/http/header_map.h"
 #include "envoy/server/filter_config.h"
+#include "source/common/common/empty_string.h"
 #include "source/common/common/logger.h"
 #include "source/common/grpc/common.h"
 #include "source/common/http/header_utility.h"
 #include "source/common/http/utility.h"
+#include "source/common/network/utility.h"
 #include "source/common/stream_info/utility.h"
 #include "source/extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
@@ -50,6 +53,10 @@ constexpr char kJwtPayLoadsDelimeter = '.';
 
 constexpr char kContentTypeApplicationGrpcPrefix[] = "application/grpc";
 const Envoy::Http::LowerCaseString kContentTypeHeader{"content-type"};
+
+const Envoy::Http::LowerCaseString kForwardedHeader{"forwarded"};
+
+constexpr absl::string_view kForwardedIPTokenPrefix{"for="};
 
 inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
@@ -357,6 +364,61 @@ void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,
   }
 
   info.grpc_response_code = static_cast<StatusCode>(status.value());
+}
+
+absl::StatusOr<std::string> extractIPFromForwardedHeader(
+    const Envoy::Http::RequestHeaderMap& headers) {
+  const auto values = headers.get(kForwardedHeader);
+  if (values.size() == 0) {
+    return Envoy::EMPTY_STRING;
+  }
+
+  // Only support one header value.
+  // Need to extract the last one,  could not define the last one for multiple
+  // header values.
+  if (values.size() > 1) {
+    return absl::InvalidArgumentError("more than one forwarded headers.");
+  }
+
+  absl::string_view source = values[0]->value().getStringView();
+
+  // Multiple proxy sections are separated by comma. Use the last one.
+  const absl::string_view::size_type pos = source.find_last_of(',');
+  if (pos != absl::string_view::npos) {
+    source.remove_prefix(pos + 1);
+  }
+
+  // Each section may have multiple fields, they are separated by semicolon.
+  // For example: by=abc;for=1.2.3.4;host=abc;proto=http
+  // Extract ip from the "for=" field.
+  for (absl::string_view s : absl::StrSplit(source, ';')) {
+    absl::string_view token = absl::StripAsciiWhitespace(s);
+    if (absl::StartsWith(token, kForwardedIPTokenPrefix)) {
+      absl::string_view ip = token.substr(kForwardedIPTokenPrefix.size());
+
+      // IPv2 address is wrapped with \"[]\".
+      // Remove double quote.
+      if (ip[0] == '"' && ip[ip.size() - 1] == '"') {
+        ip = ip.substr(1, ip.size() - 2);
+      }
+      // Remove [].
+      if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
+        ip = ip.substr(1, ip.size() - 2);
+      }
+      std::string ip_str(ip);
+
+      // Verify it is a valid IP.
+      const auto address =
+          Envoy::Network::Utility::parseInternetAddressNoThrow(ip_str);
+      if (address == nullptr) {
+        return absl::InvalidArgumentError(
+            absl::StrCat(ip_str, "is not a valid ip address"));
+      }
+      return ip_str;
+    }
+  }
+  return absl::InvalidArgumentError(
+      absl::StrCat("could not find IP from: ", source));
 }
 
 }  // namespace service_control

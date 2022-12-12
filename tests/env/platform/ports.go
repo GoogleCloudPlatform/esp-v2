@@ -65,6 +65,7 @@ const (
 	TestDynamicRoutingPathPreprocessing
 	TestDynamicRoutingWithAllowCors
 	TestEnvoyDnsLookupPolicy
+	TestExtractClientIPFromForwardedHeader
 	TestFrontendAndBackendAuthHeaders
 	TestGeneratedHeaders
 	TestGRPC

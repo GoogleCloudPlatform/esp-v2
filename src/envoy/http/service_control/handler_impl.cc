@@ -104,6 +104,18 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
                   api_key_);
   }
+
+  if (require_ctx_->service_ctx().config().client_ip_from_forwarded_header()) {
+    const auto status_or_ip = extractIPFromForwardedHeader(headers);
+    if (!status_or_ip.ok()) {
+      ENVOY_LOG(error, "failed to extract IP from forwarded header: {}",
+                status_or_ip.status());
+      // status ok with empty string is a valid return, it means not such
+      // header.
+    } else if (!status_or_ip.value().empty()) {
+      client_ip_from_forwarded_header_ = status_or_ip.value();
+    }
+  }
 }
 
 ServiceControlHandlerImpl::~ServiceControlHandlerImpl() {}
@@ -143,12 +155,16 @@ void ServiceControlHandlerImpl::fillOperationInfo(
       require_ctx_->service_ctx().config().producer_project_id();
   info.current_time = time_source_.systemTime();
 
-  if (stream_info_.downstreamAddressProvider().remoteAddress()->type() ==
-      Envoy::Network::Address::Type::Ip) {
-    info.client_ip = stream_info_.downstreamAddressProvider()
-                         .remoteAddress()
-                         ->ip()
-                         ->addressAsString();
+  if (!client_ip_from_forwarded_header_.empty()) {
+    info.client_ip = client_ip_from_forwarded_header_;
+  } else {
+    if (stream_info_.downstreamAddressProvider().remoteAddress()->type() ==
+        Envoy::Network::Address::Type::Ip) {
+      info.client_ip = stream_info_.downstreamAddressProvider()
+                           .remoteAddress()
+                           ->ip()
+                           ->addressAsString();
+    }
   }
 
   info.api_key = api_key_;

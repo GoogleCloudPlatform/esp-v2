@@ -59,11 +59,12 @@ var scFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 
 	serviceName := serviceInfo.ServiceConfig().GetName()
 	service := &scpb.Service{
-		ServiceName:       serviceName,
-		ServiceConfigId:   serviceInfo.ConfigID,
-		ProducerProjectId: serviceInfo.ServiceConfig().GetProducerProjectId(),
-		ServiceConfig:     copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
-		BackendProtocol:   protocol,
+		ServiceName:                 serviceName,
+		ServiceConfigId:             serviceInfo.ConfigID,
+		ProducerProjectId:           serviceInfo.ServiceConfig().GetProducerProjectId(),
+		ServiceConfig:               copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
+		BackendProtocol:             protocol,
+		ClientIpFromForwardedHeader: serviceInfo.Options.ClientIPFromForwardedHeader,
 	}
 
 	if serviceInfo.Options.LogRequestHeaders != "" {

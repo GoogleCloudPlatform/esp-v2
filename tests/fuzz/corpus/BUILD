@@ -14,6 +14,14 @@ filegroup(
 )
 
 filegroup(
+    name = "parsing_forwarded_header_corpus",
+    testonly = 1,
+    srcs = glob([
+        "parsing_forwarded_header/**",
+    ]),
+)
+
+filegroup(
     name = "iam_token_info_corpus",
     testonly = 1,
     srcs = glob([
