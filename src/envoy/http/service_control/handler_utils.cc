@@ -158,7 +158,7 @@ void fillGCPInfo(
   }
 
   if (!gcp_attributes.project_id().empty()) {
-    info.project_id = gcp_attributes.project_id();
+    info.gcp_project_id = gcp_attributes.project_id();
   }
 }
 

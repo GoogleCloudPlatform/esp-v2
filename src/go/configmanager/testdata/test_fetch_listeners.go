@@ -1646,7 +1646,9 @@ var (
                         ]
                       },
                       "serviceConfigId": "%v",
-                      "serviceName": "%v"
+                      "serviceName": "%v",
+                      "tracingDisabled": true,
+                      "tracingProjectId": "fake-project-id"
                     }
                   ]
                 }
@@ -2496,7 +2498,8 @@ var (
                       "producerProjectId": "project123",
                       "serviceConfig": {},
                       "serviceConfigId": "2017-05-01r0",
-                      "serviceName": "bookstore.endpoints.project123.cloud.goog"
+                      "serviceName": "bookstore.endpoints.project123.cloud.goog",
+                      "tracingProjectId": "fake-project-id"
                     }
                   ]
                 }

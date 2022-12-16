@@ -89,6 +89,12 @@ message Service {
 
   // If true, extract client ip from "forwarded" header.
   bool client_ip_from_forwarded_header = 11;
+
+  // The tracing project id specified from the flag --tracing_project_id
+  string tracing_project_id = 12;
+
+  // The tracing is disabled.
+  bool tracing_disabled = 13;
 }
 
 message GcpAttributes {

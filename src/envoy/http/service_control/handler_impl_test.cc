@@ -1160,8 +1160,6 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  CheckDoneFunc stored_on_done;
-  CheckResponseInfo response_info;
   ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
@@ -1172,6 +1170,31 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // The default value of status if a check is not made is OK
   expected_report_info.status = OkStatus();
   expected_report_info.trace_id = "test-trace-id";
+  EXPECT_CALL(*mock_call_,
+              callReport(MatchesReportInfo(expected_report_info, headers,
+                                           response_headers, resp_trailer_)));
+  handler.callReport(&headers, &response_headers, &resp_trailer_, mock_span_);
+}
+
+TEST_F(HandlerTest, HandlerReportWithoutTraceId) {
+  // Test getTraceIdAsHex is not called since trace is disabled.
+  EXPECT_CALL(mock_span_, getTraceIdAsHex()).Times(0);
+  proto_config_.mutable_services(0)->set_tracing_disabled(true);
+
+  setPerRouteOperation("get_header_key");
+  TestRequestHeaderMapImpl headers{
+      {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
+  TestResponseHeaderMapImpl response_headers{
+      {"content-type", "application/grpc"}};
+  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+                                    "test-uuid", *cfg_parser_, test_time_,
+                                    stats_);
+
+  ReportRequestInfo expected_report_info;
+  initExpectedReportInfo(expected_report_info);
+  expected_report_info.api_key = "foobar";
+  // The default value of status if a check is not made is OK
+  expected_report_info.status = OkStatus();
   EXPECT_CALL(*mock_call_,
               callReport(MatchesReportInfo(expected_report_info, headers,
                                            response_headers, resp_trailer_)));

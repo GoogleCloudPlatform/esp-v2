@@ -874,7 +874,8 @@
                               }
                             },
                             "serviceConfigId": "2019-12-16r0",
-                            "serviceName": "examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app"
+                            "serviceName": "examples-grpc-dynamic-routing-wd6ufmzfya-uc.a.run.app",
+                            "tracingDisabled": true
                           }
                         ]
                       }

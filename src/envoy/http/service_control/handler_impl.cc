@@ -185,6 +185,9 @@ void ServiceControlHandlerImpl::prepareReportRequest(
   info.status = check_status_;
 
   fillGCPInfo(cfg_parser_.config(), info);
+
+  info.tracing_project_id =
+      require_ctx_->service_ctx().config().tracing_project_id();
 }
 
 void ServiceControlHandlerImpl::callCheck(
@@ -369,7 +372,9 @@ void ServiceControlHandlerImpl::callReport(
 
   info.response_code_detail = stream_info_.responseCodeDetails().value_or("");
 
-  info.trace_id = parent_span.getTraceIdAsHex();
+  if (!require_ctx_->service_ctx().config().tracing_disabled()) {
+    info.trace_id = parent_span.getTraceIdAsHex();
+  }
 
   require_ctx_->service_ctx().call().callReport(info);
 }

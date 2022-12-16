@@ -65,6 +65,8 @@ var scFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 		ServiceConfig:               copyServiceConfigForReportMetrics(serviceInfo.ServiceConfig()),
 		BackendProtocol:             protocol,
 		ClientIpFromForwardedHeader: serviceInfo.Options.ClientIPFromForwardedHeader,
+		TracingProjectId:            serviceInfo.Options.TracingProjectId,
+		TracingDisabled:             serviceInfo.Options.DisableTracing,
 	}
 
 	if serviceInfo.Options.LogRequestHeaders != "" {

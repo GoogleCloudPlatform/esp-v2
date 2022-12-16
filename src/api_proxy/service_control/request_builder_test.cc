@@ -261,7 +261,24 @@ TEST_F(RequestBuilderTest, FillGoodReportRequestTest) {
   FillOperationInfo(&info);
   FillReportRequestInfo(&info);
   info.backend_protocol = protocol::GRPC;
-  info.project_id = "test_project_id";
+  info.gcp_project_id = "test_project_id";
+  info.trace_id = "test_trace_id";
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  std::string text = ReportRequestToString(&request);
+  std::string expected_text = ReadTestBaseline("report_request.golden");
+  ASSERT_EQ(expected_text, text);
+}
+
+TEST_F(RequestBuilderTest, FillGoodReportRequestWithTracingProjectId) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+  FillReportRequestInfo(&info);
+  info.backend_protocol = protocol::GRPC;
+  info.tracing_project_id = "test_project_id";
+  info.gcp_project_id = "gcp_project_id";
   info.trace_id = "test_trace_id";
 
   gasv1::ReportRequest request;
