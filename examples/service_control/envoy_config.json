@@ -699,7 +699,8 @@
                               }
                             },
                             "serviceConfigId": "2019-12-16r0",
-                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog"
+                            "serviceName": "examples-service-control.endpoints.cloudesf-testing.cloud.goog",
+                            "tracingDisabled": true
                           }
                         ]
                       }

@@ -262,7 +262,10 @@ struct ReportRequestInfo : public OperationInfo {
   std::string response_code_detail;
 
   // The GCP project ID the proxy is deployed on.
-  std::string project_id;
+  std::string gcp_project_id;
+
+  // The project ID from the flag --tracing_project_id
+  std::string tracing_project_id;
 
   // Trace id (in hex) the request is tied to.
   std::string trace_id;

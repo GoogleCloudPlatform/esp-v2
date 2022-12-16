@@ -830,8 +830,14 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
   log_entry->set_severity(severity);
 
   // Add trace if available.
-  if (!info.trace_id.empty() && !info.project_id.empty()) {
-    log_entry->set_trace(TraceResourceName(info.trace_id, info.project_id));
+  if (!info.trace_id.empty()) {
+    if (!info.tracing_project_id.empty()) {
+      log_entry->set_trace(
+          TraceResourceName(info.trace_id, info.tracing_project_id));
+    } else if (!info.gcp_project_id.empty()) {
+      log_entry->set_trace(
+          TraceResourceName(info.trace_id, info.gcp_project_id));
+    }
   }
 
   // Fill in http request.
