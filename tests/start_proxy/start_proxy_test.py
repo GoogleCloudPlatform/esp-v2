@@ -20,7 +20,7 @@ import os, inspect
 currentdir = os.path.dirname(
     os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.insert(0, currentdir + "/../../docker/generic")
-from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config, gen_envoy_args
+from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config, gen_envoy_args, GOOGLE_CREDS_KEY
 
 
 class TestStartProxy(unittest.TestCase):
@@ -910,6 +910,8 @@ class TestStartProxy(unittest.TestCase):
         i = 0
         for flags, wantedArgs in testcases:
             print("==== checking flags [{}]".format(', '.join(flags)))
+            # Reset environment varaible as start_proxy.py may set it.
+            os.environ.pop(GOOGLE_CREDS_KEY, None)
             gotArgs = gen_proxy_config(self.parser.parse_args(flags))
             self.assertEqual(gotArgs, wantedArgs,
                              msg="Fail for input #{}: \ngot  {} \nwant {}".format(i, gotArgs, wantedArgs))
@@ -1005,6 +1007,96 @@ class TestStartProxy(unittest.TestCase):
       for flags, wantedArgs in testcases:
         gotArgs = gen_envoy_args(self.parser.parse_args(flags))
         self.assertEqual(gotArgs, wantedArgs)
+
+    def test_service_account_key_with_env(self):
+        testcases = [
+            (
+                # Input: not environment variable, nor --service_account_key
+                # Output: not environment variable, nor --service_account_key
+                None,
+                None,
+                ['--service=test_bookstore.gloud.run',
+                 '--backend=http://127.0.0.1',
+                 '--version=2019-11-09r0',
+                 ],
+                ['bin/configmanager', '--logtostderr',
+                 '--rollout_strategy', 'fixed',
+                 '--backend_address', 'http://127.0.0.1',
+                 '--v', '0',
+                 '--service', 'test_bookstore.gloud.run',
+                 '--service_config_id', '2019-11-09r0',
+                 ],
+            ),
+            (
+                # Input: environment variable is set, but nor --service_account_key.
+                # Output: both environment variable and the flag --service_account_key are set.
+                "/tmp/service_account_key",
+                "/tmp/service_account_key",
+                ['--service=test_bookstore.gloud.run',
+                 '--backend=http://127.0.0.1',
+                 '--version=2019-11-09r0',
+                 ],
+                ['bin/configmanager', '--logtostderr',
+                 '--rollout_strategy', 'fixed',
+                 '--backend_address', 'http://127.0.0.1',
+                 '--v', '0',
+                 '--service', 'test_bookstore.gloud.run',
+                 '--service_config_id', '2019-11-09r0',
+                 '--service_account_key', '/tmp/service_account_key',
+                 ],
+            ),
+            (
+                # Input: environment variable is not set, but the flag --service_account_key is set.
+                # Output: both environment variable and the flag --service_account_key are set.
+                None,
+                "/tmp/service_account_key",
+                ['--service=test_bookstore.gloud.run',
+                 '--backend=http://127.0.0.1',
+                 '--version=2019-11-09r0',
+                 '--service_account_key', '/tmp/service_account_key',
+                 ],
+                ['bin/configmanager', '--logtostderr',
+                 '--rollout_strategy', 'fixed',
+                 '--backend_address', 'http://127.0.0.1',
+                 '--v', '0',
+                 '--service', 'test_bookstore.gloud.run',
+                 '--service_config_id', '2019-11-09r0',
+                 '--service_account_key', '/tmp/service_account_key',
+                 ],
+            ),
+            (
+                # Input: environment variable and the flag --service_account_key are set, but with different values
+                # Output: the environment variable is not changed, and the flag --service_account_key is set.
+                "/tmp/service_account_key111",
+                "/tmp/service_account_key111",
+                ['--service=test_bookstore.gloud.run',
+                 '--backend=http://127.0.0.1',
+                 '--version=2019-11-09r0',
+                 '--service_account_key', '/tmp/service_account_key222',
+                 ],
+                ['bin/configmanager', '--logtostderr',
+                 '--rollout_strategy', 'fixed',
+                 '--backend_address', 'http://127.0.0.1',
+                 '--v', '0',
+                 '--service', 'test_bookstore.gloud.run',
+                 '--service_config_id', '2019-11-09r0',
+                 '--service_account_key', '/tmp/service_account_key222',
+                 ],
+            ),
+        ]
+        for oldEnv, wantedEnv, flags, wantedArgs in testcases:
+            if oldEnv:
+                os.environ[GOOGLE_CREDS_KEY] = oldEnv
+            else:
+                os.environ.pop(GOOGLE_CREDS_KEY, None)
+            gotArgs = gen_proxy_config(self.parser.parse_args(flags))
+            self.assertEqual(gotArgs, wantedArgs,
+                             msg="Fail with diff: got  {} \nwant {}".format(gotArgs, wantedArgs))
+            if wantedEnv:
+                self.assertEqual(os.environ[GOOGLE_CREDS_KEY], wantedEnv)
+            else:
+                self.assertFalse(GOOGLE_CREDS_KEY in os.environ)
+
 
 if __name__ == '__main__':
     unittest.main()

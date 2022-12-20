@@ -1061,7 +1061,7 @@ def enforce_conflict_args(args):
             return "Flag --version cannot be used together with --service_json_path."
 
     if args.non_gcp:
-        if args.service_account_key is None and GOOGLE_CREDS_KEY not in os.environ:
+        if args.service_account_key is None:
             return "If --non_gcp is specified, --service_account_key has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
         if not args.tracing_project_id:
             # for non gcp case, disable tracing if tracing project id is not provided.
@@ -1132,6 +1132,16 @@ def enforce_conflict_args(args):
     return None
 
 def gen_proxy_config(args):
+    # Copy Google default application credential file between the flag and the environment variable.
+    # We need to set both, the flag is used for calling service_control and service management,
+    # the environment variable is used for calling StackDriver for tracing.
+    if args.service_account_key is None:
+        if GOOGLE_CREDS_KEY in os.environ:
+            args.service_account_key = os.environ[GOOGLE_CREDS_KEY]
+    else:
+        if GOOGLE_CREDS_KEY not in os.environ:
+            os.environ[GOOGLE_CREDS_KEY] = args.service_account_key
+
     check_conflict_result = enforce_conflict_args(args)
     if check_conflict_result:
         logging.error(check_conflict_result)
@@ -1448,10 +1458,6 @@ def gen_proxy_config(args):
         ])
         if args.cors_allow_credentials:
             proxy_conf.append("--cors_allow_credentials")
-
-    # Set credentials file from the environment variable
-    if args.service_account_key is None and GOOGLE_CREDS_KEY in os.environ:
-        args.service_account_key = os.environ[GOOGLE_CREDS_KEY]
 
     if args.service_account_key:
         proxy_conf.extend(["--service_account_key", args.service_account_key])
