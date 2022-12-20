@@ -9,6 +9,10 @@
 # Fail on any error.
 set -eo pipefail
 
+# Resources older than 1 day should be cleaned up
+LIMIT_DATE=$(date -d "1 day ago" +%F)
+echo "Cleaning up resources before ${LIMIT_DATE}"
+
 # Set the project id
 PROJECT_IDS=("cloudesf-testing" "cloud-api-proxy-testing")
 REGIONS=("us-central1" "us-east1")
@@ -19,9 +23,6 @@ for PROJECT in ${PROJECT_IDS[@]}; do
     gcloud config set project ${PROJECT}
     gcloud config set run/region "${REGION}"
 
-    # Resources older than 1 day should be cleaned up
-    LIMIT_DATE=$(date -d "1 day ago" +%F)
-    echo "Cleaning up resources before ${LIMIT_DATE}"
 
     ### GKE Cluster ###
     GKE_SERVICES=$(gcloud container clusters list --format='value[separator=","](NAME,ZONE)' \
@@ -79,7 +80,7 @@ for PROJECT in ${PROJECT_IDS[@]}; do
     echo "Done cleaning up App Engines"
 
     ### Firewall Rules ###
-    # Clean up firewall rules that point to deleted VMs.
+    # Clean up firewall rules that point to deleted Anthos VMs.
 
     FIREWALL_RULES=$(gcloud compute firewall-rules list \
         --filter="targetTags:(gke-e2e-cloud-run) \
@@ -99,7 +100,6 @@ for PROJECT in ${PROJECT_IDS[@]}; do
 
     TARGET_POOLS=$(gcloud compute target-pools list \
         --regions="${REGION}" \
-        --filter="creationTimestamp < ${LIMIT_DATE}" \
         --format='value(name)')
 
     for targetpool in $TARGET_POOLS; do
@@ -117,7 +117,7 @@ for PROJECT in ${PROJECT_IDS[@]}; do
     echo "Done cleaning up target pools without forwarding rules"
 
     ### Forwarding Rules ###
-    # Clean up forwarding rules that point to deleted VMs.
+    # Clean up forwarding rules that point to deleted Anthos VMs.
     # Must run AFTER target pool cleanup so that we don't have any orphaned target pools.
 
     TARGET_POOLS=$(gcloud compute target-pools list \
