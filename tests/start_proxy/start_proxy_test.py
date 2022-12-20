@@ -910,7 +910,7 @@ class TestStartProxy(unittest.TestCase):
         i = 0
         for flags, wantedArgs in testcases:
             print("==== checking flags [{}]".format(', '.join(flags)))
-            # Reset environment varaible as start_proxy.py may set it.
+            # Reset the environment variable as start_proxy.py may set it.
             os.environ.pop(GOOGLE_CREDS_KEY, None)
             gotArgs = gen_proxy_config(self.parser.parse_args(flags))
             self.assertEqual(gotArgs, wantedArgs,
