@@ -54,7 +54,7 @@ constexpr uint32_t kCheckAggregationEntries = 10000;
 // api-key. It is safe to increase the check cache "flush_interval" and
 // "expiration".
 //
-// * flush_interval (5m): The first request hits the cache item needs
+// * FlushInterval (5m): the first request hits the cache item needs
 // to make a check call. But the other requests after it can continue
 // to use old cached results until the check call is responded.
 //
