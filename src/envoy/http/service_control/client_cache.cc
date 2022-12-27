@@ -50,11 +50,17 @@ namespace {
 
 // Default config for check aggregator
 constexpr uint32_t kCheckAggregationEntries = 10000;
-// Check doesn't support quota yet. It is safe to increase
-// the cache life of check results.
-// Cache life is 5 minutes. It will be refreshed every minute.
-constexpr uint32_t kCheckAggregationFlushIntervalMs = 60000;
-constexpr uint32_t kCheckAggregationExpirationMs = 300000;
+// We don't support quota in the check call. A check call only checks its
+// api-key. It is safe to increase the check cache "flush_interval" and
+// "expiration".
+//
+// * FlushInterval (5m): the first request hits the cache item needs
+// to make a check call. But the other requests after it can continue
+// to use old cached results until the check call is responded.
+//
+// * Expiration (1h): the cache item is purged after this.
+constexpr uint32_t kCheckAggregationFlushIntervalMs = (5 * 60 * 1000);
+constexpr uint32_t kCheckAggregationExpirationMs = (60 * 60 * 1000);
 
 // Default config for quota aggregator
 constexpr uint32_t kQuotaAggregationEntries = 10000;
