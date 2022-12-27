@@ -54,12 +54,12 @@ constexpr uint32_t kCheckAggregationEntries = 10000;
 // api-key. It is safe to increase the check cache "flush_interval" and
 // "expiration".
 //
-// * flush_interval (10m): The first request hits the cache item needs
+// * flush_interval (5m): The first request hits the cache item needs
 // to make a check call. But the other requests after it can continue
 // to use old cached results until the check call is responded.
 //
 // * Expiration (1h): the cache item is purged after this.
-constexpr uint32_t kCheckAggregationFlushIntervalMs = (10 * 60 * 1000);
+constexpr uint32_t kCheckAggregationFlushIntervalMs = (5 * 60 * 1000);
 constexpr uint32_t kCheckAggregationExpirationMs = (60 * 60 * 1000);
 
 // Default config for quota aggregator
