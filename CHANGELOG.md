@@ -1,3 +1,11 @@
+# Release 2.41.0 11-01-2023
+
+- Increase ServiceControl Check cache duration (#773)
+- Bug Fix for not using custom SA in flag "--service_account_key" for tracing (#772)
+- Bug Fix for writing trace_id in the endpoint log when trace is disabled (#769)
+- Add flag "--client_ip_from_forwarded_header" to enable extracting client IP from forward header (#764)
+- Add keep-alive for upstream http2 connection for 30s interval and 10s timeout (#763)
+
 # Release 2.40.0 05-12-2022
 
 - Add two transcoding flags: "transcoding_stream_newline_delimited" and "transcoding_case_insensitive_enum_parsing" (#760)
