@@ -356,17 +356,22 @@ func MakeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 		}
 
 		for _, routeMatcher := range routeMatchers {
-			r := makeRoute(routeMatcher, method)
+			bi := method.BackendInfo
+			useLocalHTTPBackend := !method.IsGRPCPath(routeMatcher.GetPath()) && !configinfo.IsDiscoveryAPI(method.Operation()) && method.HttpBackendInfo != nil
+			if useLocalHTTPBackend {
+				bi = method.HttpBackendInfo
+			}
+			r := makeRoute(routeMatcher, method, useLocalHTTPBackend)
 
 			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
 			if err != nil {
 				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation (%v): %v", operation, err)
 			}
 
-			if method.BackendInfo.Hostname != "" {
+			if bi.Hostname != "" {
 				// For routing to remote backends.
 				r.GetRoute().HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
-					HostRewriteLiteral: method.BackendInfo.Hostname,
+					HostRewriteLiteral: bi.Hostname,
 				}
 			}
 
@@ -408,17 +413,22 @@ func MakeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 	return backendRoutes, methodNotAllowedRoutes, nil
 }
 
-func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) *routepb.Route {
-	retryPolicy := &routepb.RetryPolicy{
-		RetryOn: method.BackendInfo.RetryOns,
-		NumRetries: &wrapperspb.UInt32Value{
-			Value: uint32(method.BackendInfo.RetryNum),
-		},
-		RetriableStatusCodes: method.BackendInfo.RetriableStatusCodes,
+func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, useLocalHTTPBackend bool) *routepb.Route {
+	bi := method.BackendInfo
+	if useLocalHTTPBackend {
+		bi = method.HttpBackendInfo
 	}
 
-	if method.BackendInfo.PerTryTimeout.Nanoseconds() > 0 {
-		retryPolicy.PerTryTimeout = ptypes.DurationProto(method.BackendInfo.PerTryTimeout)
+	retryPolicy := &routepb.RetryPolicy{
+		RetryOn: bi.RetryOns,
+		NumRetries: &wrapperspb.UInt32Value{
+			Value: uint32(bi.RetryNum),
+		},
+		RetriableStatusCodes: bi.RetriableStatusCodes,
+	}
+
+	if bi.PerTryTimeout.Nanoseconds() > 0 {
+		retryPolicy.PerTryTimeout = ptypes.DurationProto(bi.PerTryTimeout)
 	}
 
 	return &routepb.Route{
@@ -427,10 +437,10 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo) 
 		Action: &routepb.Route_Route{
 			Route: &routepb.RouteAction{
 				ClusterSpecifier: &routepb.RouteAction_Cluster{
-					Cluster: method.BackendInfo.ClusterName,
+					Cluster: bi.ClusterName,
 				},
-				Timeout:     ptypes.DurationProto(method.BackendInfo.Deadline),
-				IdleTimeout: ptypes.DurationProto(method.BackendInfo.IdleTimeout),
+				Timeout:     ptypes.DurationProto(bi.Deadline),
+				IdleTimeout: ptypes.DurationProto(bi.IdleTimeout),
 				RetryPolicy: retryPolicy,
 			},
 		},

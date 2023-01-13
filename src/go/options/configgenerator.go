@@ -48,6 +48,7 @@ type ConfigGeneratorOptions struct {
 	// Full URI to the backend: scheme, address/hostname, port
 	BackendAddress               string
 	EnableBackendAddressOverride bool
+	TestOnlyHTTPBackendAddress   string
 
 	// Health check related
 	Healthz                                 string
@@ -207,5 +208,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		APIAllowList:                            []string{},
 		AllowDiscoveryAPIs:                      false,
 		TranscodingRejectCollision:              false,
+		TestOnlyHTTPBackendAddress:              "",
 	}
 }

@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -975,5 +976,60 @@ func TestMakeTokenAgentCluster(t *testing.T) {
 
 	if !proto.Equal(cluster, wantCluster) {
 		t.Errorf("Test makeTokenAgentClusters, \ngot: %v,\nwant: %v", cluster, wantCluster)
+	}
+}
+
+func TestMakeClusters(t *testing.T) {
+	tests := []struct {
+		name               string
+		httpBackendCluster string
+		wantClusterNames   []string
+	}{
+		{
+			"without http backend cluster",
+			"",
+			[]string{
+				"backend-cluster-_local",
+				"metadata-cluster",
+				"service-control-cluster",
+			},
+		},
+		{
+			"with http backend cluster",
+			"http-backend-cluster-_local",
+			[]string{
+				"backend-cluster-_local",
+				"http-backend-cluster-_local",
+				"metadata-cluster",
+				"service-control-cluster",
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			fakeServiceInfo, _ := configinfo.NewServiceInfoFromServiceConfig(&confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+					},
+				},
+			}, testConfigID, options.DefaultConfigGeneratorOptions())
+			if test.httpBackendCluster != "" {
+				fakeServiceInfo.LocalHTTPBackendCluster = &configinfo.BackendRoutingCluster{
+					ClusterName: "http-backend-cluster-_local",
+				}
+			}
+			gotClusters, err := MakeClusters(fakeServiceInfo)
+			if err != nil {
+				t.Fatal(err)
+			}
+			gotClustersNames := []string{}
+			for _, c := range gotClusters {
+				gotClustersNames = append(gotClustersNames, c.GetName())
+			}
+			if !reflect.DeepEqual(gotClustersNames, test.wantClusterNames) {
+				t.Errorf("MakeClusters failed. Got cluster names in order %v; want %v.", gotClustersNames, test.wantClusterNames)
+			}
+		})
 	}
 }

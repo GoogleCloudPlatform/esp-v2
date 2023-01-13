@@ -41,6 +41,16 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 		clusters = append(clusters, backendCluster)
 	}
 
+	if serviceInfo.LocalHTTPBackendCluster != nil {
+		httpBackendCluster, err := makeLocalHTTPBackendCluster(serviceInfo)
+		if err != nil {
+			return nil, err
+		}
+		if httpBackendCluster != nil {
+			clusters = append(clusters, httpBackendCluster)
+		}
+	}
+
 	if serviceInfo.Options.NonGCP {
 		// Non-GCP will never use IMDS, only local token agent.
 		tokenAgentCluster := makeTokenAgentCluster(serviceInfo)
@@ -301,6 +311,10 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 		return nil, fmt.Errorf("Invalid DnsLookupFamily: %s; Only auto, v4only, v6only, v4preferred, and all are valid.", opt.BackendDnsLookupFamily)
 	}
 	return c, nil
+}
+
+func makeLocalHTTPBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
+	return makeBackendCluster(&serviceInfo.Options, serviceInfo.LocalHTTPBackendCluster)
 }
 
 func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {

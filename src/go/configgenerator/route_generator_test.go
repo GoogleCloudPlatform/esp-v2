@@ -2656,6 +2656,451 @@ func TestMakeRouteConfig(t *testing.T) {
 	}
 }
 
+func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
+	tests := []struct {
+		name               string
+		httpBackendAddress string
+		wantRouteConfig    string
+	}{
+		{
+			"With http backend address",
+			"https://http-backend:8081",
+			`
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
+              }
+            ],
+            "path": "/echo"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local_http",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
+              }
+            ],
+            "path": "/echo/"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local_http",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
+              }
+            ],
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
+              }
+            ],
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo/"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/endpoints.examples.bookstore.Bookstore/Echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/endpoints.examples.bookstore.Bookstore/Echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/endpoints.examples.bookstore.Bookstore/Echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/endpoints.examples.bookstore.Bookstore/Echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}
+`,
+		},
+		{
+			"Without http backend address",
+			"",
+			`
+{
+  "name": "local_route",
+  "virtualHosts": [
+    {
+      "domains": [
+        "*"
+      ],
+      "name": "backend",
+      "routes": [
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
+              }
+            ],
+            "path": "/echo"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "GET"
+                }
+              }
+            ],
+            "path": "/echo/"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
+              }
+            ],
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress Echo"
+          },
+          "match": {
+            "headers": [
+              {
+                "name": ":method",
+                "stringMatch": {
+                  "exact": "POST"
+                }
+              }
+            ],
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo/"
+          },
+          "name": "endpoints.examples.bookstore.Bookstore.Echo",
+          "route": {
+            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+            "idleTimeout": "300s",
+            "retryPolicy": {
+              "numRetries": 1,
+              "retryOn": "reset,connect-failure,refused-stream"
+            },
+            "timeout": "15s"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/endpoints.examples.bookstore.Bookstore/Echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/endpoints.examples.bookstore.Bookstore/Echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/endpoints.examples.bookstore.Bookstore/Echo"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/endpoints.examples.bookstore.Bookstore/Echo\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "path": "/endpoints.examples.bookstore.Bookstore/Echo/"
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownOperationName"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is not defined by this API."
+            },
+            "status": 404
+          },
+          "match": {
+            "prefix": "/"
+          }
+        }
+      ]
+    }
+  ]
+}
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = "grpc://grpc-backend:8080"
+			opts.TestOnlyHTTPBackendAddress = tc.httpBackendAddress
+
+			fakeServiceConfig := &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: fmt.Sprintf("%s.Echo", testApiName),
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/echo",
+						},
+					},
+				},
+				},
+			}
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			gotRoute, err := makeRouteConfig(fakeServiceInfo)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			marshaler := &jsonpb.Marshaler{}
+			gotConfig, err := marshaler.MarshalToString(gotRoute)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
+				t.Errorf("makeRouteConfig failed, \n %v", err)
+			}
+		})
+	}
+}
+
 func TestMakeFallbackRoute(t *testing.T) {
 	testData := []struct {
 		desc              string
