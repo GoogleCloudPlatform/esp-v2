@@ -8,6 +8,7 @@ src/go/proto/
 # IDE
 .clwb/
 .ijwb/
+.idea/
 
 # C++ coverage
 generated/
