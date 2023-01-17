@@ -153,6 +153,21 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
+            # disable_jwt_aud_check
+            (['-R=managed','--disable_jwt_aud_check',
+              '--http_port=8079', '--service_control_quota_retries=3',
+              '--service_control_report_timeout_ms=300',
+              '--check_metadata',
+              '--disable_tracing', '--underscores_in_headers'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--disable_jwt_aud_check',
+              '--listener_port', '8079',
+              '--service_control_quota_retries', '3',
+              '--service_control_report_timeout_ms', '300',
+              '--check_metadata', '--underscores_in_headers',
+              '--disable_tracing'
+              ]),
             # jwks_fetch retry backoff
             (['-R=managed','--disable_jwks_async_fetch',
               '--jwks_fetch_num_retries=10',

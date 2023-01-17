@@ -123,6 +123,7 @@ type ConfigGeneratorOptions struct {
 	JwksFetchRetryBackOffMaxInterval  time.Duration
 	JwtPadForwardPayloadHeader        bool
 	JwtCacheSize                      uint
+	DisableJwtAudCheck                bool
 
 	ScCheckTimeoutMs  int
 	ScQuotaTimeoutMs  int

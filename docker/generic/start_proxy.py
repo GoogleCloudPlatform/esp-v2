@@ -630,6 +630,12 @@ environment variable or by passing "-k" flag to this script.
         '''
     )
     parser.add_argument(
+        '--disable_jwt_aud_check',
+        action='store_true',
+        default=False,
+        help='''If true, will not check "aud" feild when verifying the JWT token.'''
+    )
+    parser.add_argument(
         '--http_request_timeout_s',
         default=None, type=int,
         help='''
@@ -1200,6 +1206,8 @@ def gen_proxy_config(args):
          proxy_conf.extend(["--jwks_fetch_retry_back_off_max_interval_ms", args.jwks_fetch_retry_back_off_max_interval_ms])
     if args.jwt_pad_forward_payload_header:
         proxy_conf.append("--jwt_pad_forward_payload_header")
+    if args.disable_jwt_aud_check:
+        proxy_conf.append("--disable_jwt_aud_check")
 
     if args.management:
         proxy_conf.extend(["--service_management_url", args.management])

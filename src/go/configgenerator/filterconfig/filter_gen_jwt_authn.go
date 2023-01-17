@@ -108,16 +108,18 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 			PadForwardPayloadHeader: serviceInfo.Options.JwtPadForwardPayloadHeader,
 		}
 
-		if len(provider.GetAudiences()) != 0 {
-			for _, a := range strings.Split(provider.GetAudiences(), ",") {
-				jp.Audiences = append(jp.Audiences, strings.TrimSpace(a))
+		if !serviceInfo.Options.DisableJwtAudCheck {
+			if len(provider.GetAudiences()) != 0 {
+				for _, a := range strings.Split(provider.GetAudiences(), ",") {
+					jp.Audiences = append(jp.Audiences, strings.TrimSpace(a))
+				}
+			} else {
+				// No providers specified by user.
+				// For backwards-compatibility with ESPv1, auto-generate audiences.
+				// See b/147834348 for more information on this default behavior.
+				defaultAudience := fmt.Sprintf("https://%v", serviceInfo.Name)
+				jp.Audiences = append(jp.Audiences, defaultAudience)
 			}
-		} else {
-			// No providers specified by user.
-			// For backwards-compatibility with ESPv1, auto-generate audiences.
-			// See b/147834348 for more information on this default behavior.
-			defaultAudience := fmt.Sprintf("https://%v", serviceInfo.Name)
-			jp.Audiences = append(jp.Audiences, defaultAudience)
 		}
 
 		if serviceInfo.Options.JwtCacheSize > 0 {
