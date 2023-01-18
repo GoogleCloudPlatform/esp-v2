@@ -112,7 +112,7 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 			for _, a := range strings.Split(provider.GetAudiences(), ",") {
 				jp.Audiences = append(jp.Audiences, strings.TrimSpace(a))
 			}
-		} else {
+		} else if !serviceInfo.Options.DisableJwtAudienceServiceNameCheck {
 			// No providers specified by user.
 			// For backwards-compatibility with ESPv1, auto-generate audiences.
 			// See b/147834348 for more information on this default behavior.

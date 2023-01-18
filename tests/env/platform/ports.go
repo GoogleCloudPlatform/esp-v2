@@ -90,6 +90,7 @@ const (
 	TestIdleTimeoutsForGrpcStreaming
 	TestIdleTimeoutsForUnaryRPCs
 	TestInvalidOpenIDConnectDiscovery
+	TestJWTDisabledAudCheck
 	TestJwtLocations
 	TestManagedServiceConfig
 	TestMetadataRequestsPerPlatform

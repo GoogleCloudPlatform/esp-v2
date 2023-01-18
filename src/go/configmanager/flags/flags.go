@@ -146,6 +146,8 @@ var (
 Normally JWT based64 encode doesn’t add padding. If this flag is true, the header will be padded.`)
 	JwtCacheSize = flag.Uint("jwt_cache_size", defaults.JwtCacheSize, `Specify JWT cache size, the number of unique JWT tokens in the cache. The cache only stores verified good tokens. If 0, JWT cache is disabled. It limits the memory usage. The cache used memory is roughly (token size + 64 bytes) per token. If not specified, the default is 100000.`)
 
+	DisableJwtAudienceServiceNameCheck = flag.Bool("disable_jwt_audience_service_name_check", defaults.DisableJwtAudienceServiceNameCheck, `Normally JWT "aud" field is checked against audiences specified in OpenAPI "x-google-audiences" field. This flag changes the behaviour when the "x-google-audiences" is not specified. When the "x-google-audiences" is not specified, normally the service name is used to check the JWT "aud" field.  If this flag is true, the service name is not used, JWT "aud" field will not be checked.`)
+
 	ScCheckTimeoutMs  = flag.Int("service_control_check_timeout_ms", defaults.ScCheckTimeoutMs, `Set the timeout in millisecond for service control Check request. Must be > 0 and the default is 1000 if not set.`)
 	ScQuotaTimeoutMs  = flag.Int("service_control_quota_timeout_ms", defaults.ScQuotaTimeoutMs, `Set the timeout in millisecond for service control Quota request. Must be > 0 and the default is 1000 if not set.`)
 	ScReportTimeoutMs = flag.Int("service_control_report_timeout_ms", defaults.ScReportTimeoutMs, `Set the timeout in millisecond for service control Report request. Must be > 0 and the default is 2000 if not set.`)
@@ -287,6 +289,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		JwksFetchRetryBackOffMaxInterval:              time.Duration(*JwksFetchRetryBackOffMaxIntervalMs) * time.Millisecond,
 		JwtPadForwardPayloadHeader:                    *JwtPatForwardPayloadHeader,
 		JwtCacheSize:                                  *JwtCacheSize,
+		DisableJwtAudienceServiceNameCheck:            *DisableJwtAudienceServiceNameCheck,
 		BackendRetryOns:                               *BackendRetryOns,
 		BackendRetryNum:                               *BackendRetryNum,
 		BackendPerTryTimeout:                          *BackendPerTryTimeout,
