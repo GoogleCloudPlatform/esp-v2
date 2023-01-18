@@ -142,7 +142,7 @@ var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*c
 	requirements := make(map[string]*jwtpb.JwtRequirement)
 	for _, rule := range auth.GetRules() {
 		if len(rule.GetRequirements()) > 0 {
-			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements(), rule.GetAllowWithoutCredential())
+			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements(), rule.GetAllowWithoutCredential(), serviceInfo.Options.DisableJwtAudCheck)
 		}
 	}
 
@@ -206,7 +206,7 @@ func processJwtLocations(provider *confpb.AuthProvider) ([]*jwtpb.JwtHeader, []s
 	return jwtHeaders, jwtParams, nil
 }
 
-func makeJwtRequirement(requirements []*confpb.AuthRequirement, allow_missing bool) *jwtpb.JwtRequirement {
+func makeJwtRequirement(requirements []*confpb.AuthRequirement, allow_missing, disableAudCheck bool) *jwtpb.JwtRequirement {
 	// By default, if there are multi requirements, treat it as RequireAny.
 	requires := &jwtpb.JwtRequirement{
 		RequiresType: &jwtpb.JwtRequirement_RequiresAny{
@@ -217,6 +217,13 @@ func makeJwtRequirement(requirements []*confpb.AuthRequirement, allow_missing bo
 	for _, r := range requirements {
 		var require *jwtpb.JwtRequirement
 		if r.GetAudiences() == "" {
+			require = &jwtpb.JwtRequirement{
+				RequiresType: &jwtpb.JwtRequirement_ProviderName{
+					ProviderName: r.GetProviderId(),
+				},
+			}
+		} else if disableAudCheck {
+			glog.Warningf("With flag --disable_jwt_aud_check, audiences(%s) are discarded", r.GetAudiences())
 			require = &jwtpb.JwtRequirement{
 				RequiresType: &jwtpb.JwtRequirement_ProviderName{
 					ProviderName: r.GetProviderId(),

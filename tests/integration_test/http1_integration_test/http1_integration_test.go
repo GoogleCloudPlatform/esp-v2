@@ -181,6 +181,94 @@ func TestHttp1JWT(t *testing.T) {
 	}
 }
 
+func TestJWTDisabledAudCheck(t *testing.T) {
+	t.Parallel()
+
+	serviceName := "test-echo"
+	configID := "test-config-id"
+
+	// Add flag "--disable_jwt_aud_check"
+	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
+		"--skip_service_control_filter=true", "--rollout_strategy=fixed",
+		"--disable_jwt_aud_check"}
+
+	s := env.NewTestEnv(platform.TestJWTDisabledAudCheck, platform.EchoSidecar)
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	testData := []struct {
+		desc        string
+		httpMethod  string
+		httpPath    string
+		token       string
+		wantResp    string
+		wantedError string
+	}{
+		// Path "/auth/info/googlejwt" uses AuthRequirement that only has "provider_id",
+		// Supposely, Jwt audience should check with "audiences" specified in AuthProvider.audiences,
+		// If it is empty, the service_name "bookstore_test_client.cloud.goog" should be checked.
+		// But since JwtAudCheck is disabled, audience is not checked.
+		{
+			desc:       `JWT audience is "admin.cloud.goog" and check against Provider.audiences "bookstore_test_client.cloud.goog"`,
+			httpMethod: "GET",
+			httpPath:   "/auth/info/googlejwt",
+			token:      testdata.FakeCloudTokenSingleAudience2,
+			wantResp:   `{"aud":"admin.cloud.goog","exp":4698318995,"iat":1544718995,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+		{
+			desc:       `JWT without audience and check against Provider.audience "bookstore_test_client.cloud.goog"`,
+			httpMethod: "GET",
+			httpPath:   "/auth/info/googlejwt",
+			token:      testdata.FakeCloudToken,
+			wantResp:   `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+		{
+			desc:       `JWT audience is "bookstore_test_client.cloud.goog" and check against Provider.audience "bookstore_test_client.cloud.goog"`,
+			httpMethod: "GET",
+			httpPath:   "/auth/info/googlejwt",
+			token:      testdata.FakeCloudTokenSingleAudience1,
+			wantResp:   `{"aud":"bookstore_test_client.cloud.goog","exp":4698318811,"iat":1544718811,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+		// Path "/auth/info/auth0" uses AuthRequirement that has both "provider_id" and "audiences" is "admin.cloud.goog"
+		// Supposely, Jwt audience should be checked against "admin.cloud.goog". But since JwtAudCheck is disabled, audience is not checked.
+		{
+			desc:       `JWT audience is "admin.cloud.goog" and check against AuthRequirement.audiences "admin.cloud.goog"`,
+			httpMethod: "GET",
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeCloudTokenSingleAudience2,
+			wantResp:   `{"aud":"admin.cloud.goog","exp":4698318995,"iat":1544718995,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+		{
+			desc:       `JWT without audience and check against AuthRequirement.audiences "admin.cloud.goog"`,
+			httpMethod: "GET",
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeCloudToken,
+			wantResp:   `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+		{
+			desc:       `JWT audience is "bookstore_test_client.cloud.goog" and check against AuthRequirement.audiences "admin.cloud.goog"`,
+			httpMethod: "GET",
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeCloudTokenSingleAudience1,
+			wantResp:   `{"aud":"bookstore_test_client.cloud.goog","exp":4698318811,"iat":1544718811,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+		},
+	}
+	for _, tc := range testData {
+		host := fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+		resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
+
+		if tc.wantedError == "" && err != nil || tc.wantedError != "" && err == nil || err != nil && !strings.Contains(err.Error(), tc.wantedError) {
+			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
+		} else {
+			if !strings.Contains(string(resp), tc.wantResp) {
+				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			}
+		}
+	}
+}
+
 func TestHttpHeaders(t *testing.T) {
 	t.Parallel()
 	testData := []struct {

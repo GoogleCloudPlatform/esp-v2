@@ -74,6 +74,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
+			// Service config AuthProvider.audiences is empty, envoy jwt_authn Provider.audiences is using service name.
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
@@ -151,12 +152,15 @@ func TestJwtAuthnFilter(t *testing.T) {
 							Requirements: []*confpb.AuthRequirement{
 								{
 									ProviderId: "auth_provider",
+									Audiences:  "audience3",
 								},
 							},
 						},
 					},
 				},
 			},
+			// Service config AuthProvider has non empty audiences, envoy jwt_authn Provider.audiences uses them directly.
+			// Service config AuthRequirement has non empty audiences, envoy jwt_authn requirement_map uses "provider_and_audiences
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
@@ -196,7 +200,12 @@ func TestJwtAuthnFilter(t *testing.T) {
         },
         "requirementMap": {
             "testapi.foo": {
-                "providerName": "auth_provider"
+                "providerAndAudiences": {
+                    "providerName": "auth_provider",
+                    "audiences": [
+                        "audience3"
+                    ]
+                }
             }
         }
     }
@@ -241,6 +250,8 @@ func TestJwtAuthnFilter(t *testing.T) {
 				},
 			},
 			disableJwtAudCheck: true,
+			// With JwtAudCheck is disabled,
+			// Service config AuthProvider has empty "audiences", and envoy jwt_authn Provider has empty audiences too.
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
@@ -315,6 +326,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 							Requirements: []*confpb.AuthRequirement{
 								{
 									ProviderId: "auth_provider",
+									Audiences:  "audience3",
 								},
 							},
 						},
@@ -322,6 +334,9 @@ func TestJwtAuthnFilter(t *testing.T) {
 				},
 			},
 			disableJwtAudCheck: true,
+			// With JwtAudCheck is disabled,
+			// Service config AuthProvider has non empty "audiences", but envoy jwt_authn Provider has empty audiences.
+			// Service config AuthRequirement has non empty "audiences", but envoy jwt_authn requirement_map is using provider_name, not provider_and_audience
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
