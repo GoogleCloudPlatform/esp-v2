@@ -34,7 +34,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 		disableJwksAsyncFetch      bool
 		jwksAsyncFetchFastListener bool
 		jwtCacheSize               uint
-		disableJwtAudCheck         bool
+		disableJwtServiceName      bool
 		wantJwtAuthnFilter         string
 	}{
 		{
@@ -213,7 +213,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 `,
 		},
 		{
-			desc: "Success. Generate jwt authn filter with disabled aud check and an empty audiences.",
+			desc: "Success. Generate jwt authn filter with disabled service name check and an empty audiences.",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -249,8 +249,8 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			disableJwtAudCheck: true,
-			// With JwtAudCheck is disabled,
+			disableJwtServiceName: true,
+			// With JwtAudienceServiceNameCheck is disabled,
 			// Service config AuthProvider has empty "audiences", and envoy jwt_authn Provider has empty audiences too.
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
@@ -295,7 +295,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 `,
 		},
 		{
-			desc: "Success. Generate jwt authn filter with disabled aud check and non empty audiences.",
+			desc: "Success. Generate jwt authn filter with disabled service name check and non empty audiences.",
 			fakeServiceConfig: &confpb.Service{
 				Name: testProjectName,
 				Apis: []*apipb.Api{
@@ -333,16 +333,18 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			disableJwtAudCheck: true,
-			// With JwtAudCheck is disabled,
-			// Service config AuthProvider has non empty "audiences", but envoy jwt_authn Provider has empty audiences.
-			// Service config AuthRequirement has non empty "audiences", but envoy jwt_authn requirement_map is using provider_name, not provider_and_audience
+			disableJwtServiceName: true,
+			// With JwtAudienceServiceNameCheck is disabled, but since "audiences" is not empty, it should not have any impact.
 			wantJwtAuthnFilter: `{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
         "providers": {
             "auth_provider": {
+                "audiences": [
+                    "audience1",
+                    "audience2"
+                ],
                 "forward": true,
                 "forwardPayloadHeader": "X-Endpoint-API-UserInfo",
                 "fromHeaders": [
@@ -372,7 +374,12 @@ func TestJwtAuthnFilter(t *testing.T) {
         },
         "requirementMap": {
             "testapi.foo": {
-                "providerName": "auth_provider"
+                "providerAndAudiences": {
+                    "providerName": "auth_provider",
+                    "audiences": [
+                        "audience3"
+                    ]
+                }
             }
         }
     }
@@ -658,7 +665,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 		opts.BackendAddress = "grpc://127.0.0.0:80"
 		opts.DisableJwksAsyncFetch = tc.disableJwksAsyncFetch
 		opts.JwksAsyncFetchFastListener = tc.jwksAsyncFetchFastListener
-		opts.DisableJwtAudCheck = tc.disableJwtAudCheck
+		opts.DisableJwtAudienceServiceNameCheck = tc.disableJwtServiceName
 		opts.JwtCacheSize = tc.jwtCacheSize
 		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
 		if err != nil {

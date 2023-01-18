@@ -630,10 +630,13 @@ environment variable or by passing "-k" flag to this script.
         '''
     )
     parser.add_argument(
-        '--disable_jwt_aud_check',
+        '--disable_jwt_audience_service_name_check',
         action='store_true',
         default=False,
-        help='''If true, will not check "aud" feild when verifying the JWT token.'''
+        help='''Normally JWT "aud" field is checked against audiences specified in OpenAPI "x-google-audiences" field.
+        This flag changes the behaviour when the "x-google-audiences" is not specified.
+        When the "x-google-audiences" is not specified, normally the service name is used to check the JWT "aud" field.
+        If this flag is true, the service name is not used, JWT "aud" field will not be checked.'''
     )
     parser.add_argument(
         '--http_request_timeout_s',
@@ -1206,8 +1209,8 @@ def gen_proxy_config(args):
          proxy_conf.extend(["--jwks_fetch_retry_back_off_max_interval_ms", args.jwks_fetch_retry_back_off_max_interval_ms])
     if args.jwt_pad_forward_payload_header:
         proxy_conf.append("--jwt_pad_forward_payload_header")
-    if args.disable_jwt_aud_check:
-        proxy_conf.append("--disable_jwt_aud_check")
+    if args.disable_jwt_audience_service_name_check:
+        proxy_conf.append("--disable_jwt_audience_service_name_check")
 
     if args.management:
         proxy_conf.extend(["--service_management_url", args.management])

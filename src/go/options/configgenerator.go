@@ -115,15 +115,15 @@ type ConfigGeneratorOptions struct {
 	ConnectionBufferLimitBytes    int
 
 	// JwtAuthn related flags
-	DisableJwksAsyncFetch             bool
-	JwksAsyncFetchFastListener        bool
-	JwksCacheDurationInS              int
-	JwksFetchNumRetries               int
-	JwksFetchRetryBackOffBaseInterval time.Duration
-	JwksFetchRetryBackOffMaxInterval  time.Duration
-	JwtPadForwardPayloadHeader        bool
-	JwtCacheSize                      uint
-	DisableJwtAudCheck                bool
+	DisableJwksAsyncFetch              bool
+	JwksAsyncFetchFastListener         bool
+	JwksCacheDurationInS               int
+	JwksFetchNumRetries                int
+	JwksFetchRetryBackOffBaseInterval  time.Duration
+	JwksFetchRetryBackOffMaxInterval   time.Duration
+	JwtPadForwardPayloadHeader         bool
+	JwtCacheSize                       uint
+	DisableJwtAudienceServiceNameCheck bool
 
 	ScCheckTimeoutMs  int
 	ScQuotaTimeoutMs  int

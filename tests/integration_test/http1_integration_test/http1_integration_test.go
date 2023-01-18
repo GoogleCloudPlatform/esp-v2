@@ -181,16 +181,16 @@ func TestHttp1JWT(t *testing.T) {
 	}
 }
 
-func TestJWTDisabledAudCheck(t *testing.T) {
+func TestDisableJwtServiceNameCheckFlag(t *testing.T) {
 	t.Parallel()
 
 	serviceName := "test-echo"
 	configID := "test-config-id"
 
-	// Add flag "--disable_jwt_aud_check"
+	// Add flag "--disable_jwt_audience_service_name_check"
 	args := []string{"--service=" + serviceName, "--service_config_id=" + configID,
 		"--skip_service_control_filter=true", "--rollout_strategy=fixed",
-		"--disable_jwt_aud_check"}
+		"--disable_jwt_audience_service_name_check"}
 
 	s := env.NewTestEnv(platform.TestJWTDisabledAudCheck, platform.EchoSidecar)
 	defer s.TearDown(t)
@@ -207,32 +207,32 @@ func TestJWTDisabledAudCheck(t *testing.T) {
 		wantedError string
 	}{
 		// Path "/auth/info/googlejwt" uses AuthRequirement that only has "provider_id",
-		// Supposely, Jwt audience should check with "audiences" specified in AuthProvider.audiences,
-		// If it is empty, the service_name "bookstore_test_client.cloud.goog" should be checked.
-		// But since JwtAudCheck is disabled, audience is not checked.
+		// Supposely, Jwt audience should check with "audiences" specified in AuthProvider.audiences
+		// which is empty, the service_name "bookstore_test_client.cloud.goog" should be checked.
+		// But since JwtAudienceServiceNameCheck is disabled, JWT audience is not checked.
 		{
-			desc:       `JWT audience is "admin.cloud.goog" and check against Provider.audiences "bookstore_test_client.cloud.goog"`,
+			desc:       `JWT audience is "admin.cloud.goog" and check against empty Provider.audiences.`,
 			httpMethod: "GET",
 			httpPath:   "/auth/info/googlejwt",
 			token:      testdata.FakeCloudTokenSingleAudience2,
 			wantResp:   `{"aud":"admin.cloud.goog","exp":4698318995,"iat":1544718995,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
-			desc:       `JWT without audience and check against Provider.audience "bookstore_test_client.cloud.goog"`,
+			desc:       `JWT without audience and check against empty Provider.audiences.`,
 			httpMethod: "GET",
 			httpPath:   "/auth/info/googlejwt",
 			token:      testdata.FakeCloudToken,
 			wantResp:   `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
-			desc:       `JWT audience is "bookstore_test_client.cloud.goog" and check against Provider.audience "bookstore_test_client.cloud.goog"`,
+			desc:       `JWT audience is "bookstore_test_client.cloud.goog" and check against empty Provider.audiences`,
 			httpMethod: "GET",
 			httpPath:   "/auth/info/googlejwt",
 			token:      testdata.FakeCloudTokenSingleAudience1,
 			wantResp:   `{"aud":"bookstore_test_client.cloud.goog","exp":4698318811,"iat":1544718811,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		// Path "/auth/info/auth0" uses AuthRequirement that has both "provider_id" and "audiences" is "admin.cloud.goog"
-		// Supposely, Jwt audience should be checked against "admin.cloud.goog". But since JwtAudCheck is disabled, audience is not checked.
+		// Jwt audience should be still checked against "admin.cloud.goog" even JwtAudienceServiceNameCheck is disabled.
 		{
 			desc:       `JWT audience is "admin.cloud.goog" and check against AuthRequirement.audiences "admin.cloud.goog"`,
 			httpMethod: "GET",
@@ -241,18 +241,18 @@ func TestJWTDisabledAudCheck(t *testing.T) {
 			wantResp:   `{"aud":"admin.cloud.goog","exp":4698318995,"iat":1544718995,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
-			desc:       `JWT without audience and check against AuthRequirement.audiences "admin.cloud.goog"`,
-			httpMethod: "GET",
-			httpPath:   "/auth/info/auth0",
-			token:      testdata.FakeCloudToken,
-			wantResp:   `{"exp":4698318356,"iat":1544718356,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+			desc:        `JWT without audience and check against AuthRequirement.audiences "admin.cloud.goog"`,
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/auth0",
+			token:       testdata.FakeCloudToken,
+			wantedError: "403 Forbidden",
 		},
 		{
-			desc:       `JWT audience is "bookstore_test_client.cloud.goog" and check against AuthRequirement.audiences "admin.cloud.goog"`,
-			httpMethod: "GET",
-			httpPath:   "/auth/info/auth0",
-			token:      testdata.FakeCloudTokenSingleAudience1,
-			wantResp:   `{"aud":"bookstore_test_client.cloud.goog","exp":4698318811,"iat":1544718811,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
+			desc:        `JWT audience is "bookstore_test_client.cloud.goog" and check against AuthRequirement.audiences "admin.cloud.goog"`,
+			httpMethod:  "GET",
+			httpPath:    "/auth/info/auth0",
+			token:       testdata.FakeCloudTokenSingleAudience1,
+			wantedError: "403 Forbidden",
 		},
 	}
 	for _, tc := range testData {
