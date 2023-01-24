@@ -298,6 +298,10 @@ func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
 }
 
 func makeTranscoderFilter(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+	if serviceInfo.Options.TestOnlyHTTPBackendAddress != "" {
+		glog.Warningf("Test-only http backend address is set to %q; skip transcoder filter completely.", serviceInfo.Options.TestOnlyHTTPBackendAddress)
+		return nil, nil
+	}
 	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {
 		configFile := &smpb.ConfigFile{}
 		ptypes.UnmarshalAny(sourceFile, configFile)

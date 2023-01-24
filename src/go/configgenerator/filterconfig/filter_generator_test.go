@@ -64,6 +64,7 @@ func TestTranscoderFilter(t *testing.T) {
 		transcodingStrictRequestValidation            bool
 		transcodingCaseInsensitiveEnumParsing         bool
 		wantTranscoderFilter                          string
+		testOnlyHTTPBackendAddress                    string
 	}{
 		{
 			desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
@@ -311,12 +312,35 @@ func TestTranscoderFilter(t *testing.T) {
 			},
 			wantTranscoderFilter: "",
 		},
+		{
+			desc: "Not generate transcoder filter with test-only http backend address",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+			},
+			transcodingStrictRequestValidation: true,
+			testOnlyHTTPBackendAddress:         "http://127.0.0.1:8080",
+			wantTranscoderFilter:               "",
+		},
 	}
 
 	for i, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://127.0.0.0:80"
+			opts.TestOnlyHTTPBackendAddress = tc.testOnlyHTTPBackendAddress
 			opts.TranscodingAlwaysPrintPrimitiveFields = tc.transcodingAlwaysPrintPrimitiveFields
 			opts.TranscodingPreserveProtoFieldNames = tc.transcodingPreserveProtoFieldNames
 			opts.TranscodingStreamNewLineDelimited = tc.transcodingStreamNewLineDelimited
