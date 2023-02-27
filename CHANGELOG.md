@@ -1,3 +1,8 @@
+# Release 2.42.0 27-02-2023
+
+- Add flag --disable_jwt_audience_service_name_check (#779)
+- update go version to 1.18 (#780)
+
 # Release 2.41.0 11-01-2023
 
 - Increase ServiceControl Check cache duration (#773)
