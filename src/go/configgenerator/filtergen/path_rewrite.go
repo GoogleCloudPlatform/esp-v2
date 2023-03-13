@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"fmt"
@@ -27,7 +27,13 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-var prPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+type PathRewriteGenerator struct{}
+
+func (g *PathRewriteGenerator) FilterName() string {
+	return util.PathRewrite
+}
+
+func (g *PathRewriteGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
 	pr := makePathRewriteConfig(method, httpRule)
 	if pr == nil {
 		return nil, nil
@@ -40,8 +46,8 @@ var prPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppatter
 	return prAny, nil
 }
 
-var prFilterGenFunc = func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	perRouteConfigRequiredMethods, needed := needPathRewrite(sc)
+func (g *PathRewriteGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+	perRouteConfigRequiredMethods, needed := needPathRewrite(serviceInfo)
 	if !needed {
 		return nil, nil, nil
 	}

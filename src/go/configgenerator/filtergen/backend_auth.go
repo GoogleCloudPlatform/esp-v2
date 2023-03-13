@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"fmt"
@@ -29,7 +29,13 @@ import (
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/common"
 )
 
-var baPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+type BackendAuthGenerator struct{}
+
+func (g *BackendAuthGenerator) FilterName() string {
+	return util.BackendAuth
+}
+
+func (g *BackendAuthGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
 	auPerRoute := &bapb.PerRouteFilterConfig{
 		JwtAudience: method.BackendInfo.JwtAudience,
 	}
@@ -40,7 +46,7 @@ var baPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppatter
 	return aupr, nil
 }
 
-var baFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
 	// Use map to collect list of unique jwt audiences.
 	var perRouteConfigRequiredMethods []*ci.MethodInfo
 	audMap := make(map[string]bool)

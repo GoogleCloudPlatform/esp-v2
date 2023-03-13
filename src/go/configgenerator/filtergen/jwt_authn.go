@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"fmt"
@@ -35,7 +35,13 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-var jaPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+type JwtAuthnGenerator struct{}
+
+func (g *JwtAuthnGenerator) FilterName() string {
+	return util.JwtAuthn
+}
+
+func (g *JwtAuthnGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
 	jwtPerRoute := &jwtpb.PerRouteConfig{
 		RequirementSpecifier: &jwtpb.PerRouteConfig_RequirementName{
 			RequirementName: method.Operation(),
@@ -48,7 +54,7 @@ var jaPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppatter
 	return jwt, nil
 }
 
-var jaFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
 		return nil, nil, nil
