@@ -115,8 +115,8 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	if err := serviceInfo.buildBackendFromAddress(opts.BackendAddress, false); err != nil {
 		return nil, err
 	}
-	if opts.TestOnlyHTTPBackendAddress != "" {
-		err := serviceInfo.buildBackendFromAddress(opts.TestOnlyHTTPBackendAddress, true)
+	if opts.LocalHTTPBackendAddress != "" {
+		err := serviceInfo.buildBackendFromAddress(opts.LocalHTTPBackendAddress, true)
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +168,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	return serviceInfo, nil
 }
 
-func (s *ServiceInfo) buildBackendFromAddress(address string, isTestOnlyHTTPBackend bool) error {
+func (s *ServiceInfo) buildBackendFromAddress(address string, isLocalHTTPBackend bool) error {
 	scheme, hostname, port, _, err := util.ParseURI(address)
 	if err != nil {
 		return fmt.Errorf("error parsing uri: %v", err)
@@ -181,7 +181,7 @@ func (s *ServiceInfo) buildBackendFromAddress(address string, isTestOnlyHTTPBack
 		return fmt.Errorf("error parsing local backend protocol: %v", err)
 	}
 
-	if s.Options.HealthCheckGrpcBackend && !isTestOnlyHTTPBackend {
+	if s.Options.HealthCheckGrpcBackend && !isLocalHTTPBackend {
 		if protocol != util.GRPC {
 			return fmt.Errorf("invalid flag --health_check_grpc_backend, backend protocol must be GRPC.")
 		}
@@ -190,7 +190,7 @@ func (s *ServiceInfo) buildBackendFromAddress(address string, isTestOnlyHTTPBack
 	if protocol == util.GRPC {
 		s.GrpcSupportRequired = true
 	}
-	if !isTestOnlyHTTPBackend {
+	if !isLocalHTTPBackend {
 		s.LocalBackendCluster = &BackendRoutingCluster{
 			UseTLS:      tls,
 			Protocol:    protocol,
@@ -202,7 +202,7 @@ func (s *ServiceInfo) buildBackendFromAddress(address string, isTestOnlyHTTPBack
 		s.LocalHTTPBackendCluster = &BackendRoutingCluster{
 			UseTLS:      tls,
 			Protocol:    protocol,
-			ClusterName: s.LocalTestOnlyHttpBackendClusterName(),
+			ClusterName: s.LocalHttpBackendClusterName(),
 			Hostname:    hostname,
 			Port:        port,
 		}
@@ -991,7 +991,7 @@ func (s *ServiceInfo) LocalBackendClusterName() string {
 	return util.BackendClusterName(fmt.Sprintf("%s_local", s.Name))
 }
 
-func (s *ServiceInfo) LocalTestOnlyHttpBackendClusterName() string {
+func (s *ServiceInfo) LocalHttpBackendClusterName() string {
 	return util.BackendClusterName(fmt.Sprintf("%s_local_http", s.Name))
 }
 
