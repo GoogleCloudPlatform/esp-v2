@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"fmt"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
 	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
@@ -26,27 +27,32 @@ import (
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	anypb "github.com/golang/protobuf/ptypes/any"
 )
 
-type compressorType int
+type CompressorType int
 
 const (
-	gzipCompressor compressorType = iota
-	brotliCompressor
+	GzipCompressor CompressorType = iota
+	BrotliCompressor
 )
 
-func getCompressorConfig(c compressorType) (proto.Message, string, error) {
-	switch c {
-	case gzipCompressor:
-		return &gzippb.Gzip{}, util.EnvoyGzipCompressor, nil
-	case brotliCompressor:
-		return &brpb.Brotli{}, util.EnvoyBrotliCompressor, nil
-	}
-	return nil, "", fmt.Errorf("unknown compressor type: %v", c)
+type CompressorGenerator struct {
+	CompressorType CompressorType
 }
 
-func createComprssorFilter(c compressorType) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	cfg, name, err := getCompressorConfig(c)
+func (g *CompressorGenerator) FilterName() string {
+	switch g.CompressorType {
+	case GzipCompressor:
+		return util.EnvoyGzipCompressor
+	case BrotliCompressor:
+		return util.EnvoyBrotliCompressor
+	}
+	return ""
+}
+
+func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+	cfg, name, err := g.getCompressorConfig()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -65,16 +71,23 @@ func createComprssorFilter(c compressorType) (*hcmpb.HttpFilter, []*ci.MethodInf
 		return nil, nil, fmt.Errorf("error marshaling Compressor filter config to Any: %v", err)
 	}
 	return &hcmpb.HttpFilter{
-		Name:       util.EnvoyCompressorFilter,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{a},
+		Name: util.EnvoyCompressorFilter,
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{
+			TypedConfig: a,
+		},
 	}, nil, nil
-
 }
 
-var gzipCompressorGenFunc = func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	return createComprssorFilter(gzipCompressor)
+func (g *CompressorGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+	return nil, fmt.Errorf("UNIMPLEMENTED")
 }
 
-var brotliCompressorGenFunc = func(sc *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	return createComprssorFilter(brotliCompressor)
+func (g *CompressorGenerator) getCompressorConfig() (proto.Message, string, error) {
+	switch g.CompressorType {
+	case GzipCompressor:
+		return &gzippb.Gzip{}, util.EnvoyGzipCompressor, nil
+	case BrotliCompressor:
+		return &brpb.Brotli{}, util.EnvoyBrotliCompressor, nil
+	}
+	return nil, "", fmt.Errorf("unknown compressor type: %v", g.CompressorType)
 }

@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,45 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/protobuf/jsonpb"
-	descpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/golang/protobuf/ptypes"
-
-	anypb "github.com/golang/protobuf/ptypes/any"
+	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
+	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
+	descpb "google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var (
-	rawDescriptor, _    = proto.Marshal(&descpb.FileDescriptorSet{})
-	fakeProtoDescriptor = base64.StdEncoding.EncodeToString(rawDescriptor)
+func TestTranscoderFilter(t *testing.T) {
+	rawDescriptor, err := proto.Marshal(&descpb.FileDescriptorSet{})
+	if err != nil {
+		t.Fatalf("Failed to marshal FileDescriptorSet: %v", err)
+	}
 
-	sourceFile = &smpb.ConfigFile{
+	fakeProtoDescriptor := base64.StdEncoding.EncodeToString(rawDescriptor)
+	sourceFile := &smpb.ConfigFile{
 		FilePath:     "api_descriptor.pb",
 		FileContents: rawDescriptor,
 		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
-	content, _ = ptypes.MarshalAny(sourceFile)
+	content, err := anypb.New(sourceFile)
+	if err != nil {
+		t.Fatalf("Failed to marshal source file into any: %v", err)
+	}
 
-	testProjectName       = "bookstore.endpoints.project123.cloud.goog"
-	testApiName           = "endpoints.examples.bookstore.Bookstore"
-	testServiceControlEnv = "servicecontrol.googleapis.com"
-	testConfigID          = "2019-03-02r0"
-)
-
-func TestTranscoderFilter(t *testing.T) {
 	testData := []struct {
 		desc                                          string
 		fakeServiceConfig                             *confpb.Service
@@ -336,7 +337,7 @@ func TestTranscoderFilter(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testData {
+	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://127.0.0.0:80"
@@ -355,7 +356,12 @@ func TestTranscoderFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			filterConfig, _ := makeTranscoderFilter(fakeServiceInfo)
+			gen := &GRPCTranscoderGenerator{}
+			filterConfig, _, err := gen.GenFilterConfig(fakeServiceInfo)
+			if err != nil {
+				t.Fatalf("GenFilterConfig got err %v, want no err", err)
+			}
+
 			if filterConfig == nil && tc.wantTranscoderFilter == "" {
 				// Expected no filter config generated
 				return
@@ -371,117 +377,413 @@ func TestTranscoderFilter(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantTranscoderFilter, gotFilter); err != nil {
-				t.Errorf("Test Desc(%d): %s, makeTranscoderFilter failed, \n %v", i, tc.desc, err)
+				t.Errorf("GenFilterConfig has JSON diff\n%v", err)
 			}
 		})
 	}
 }
 
-func TestHealthCheckFilter(t *testing.T) {
-	testdata := []struct {
-		desc                   string
-		BackendAddress         string
-		healthz                string
-		healthCheckGrpcBackend bool
-		wantHealthCheckFilter  string
+func TestPreserveDefaultHttpBinding(t *testing.T) {
+	testData := []struct {
+		desc             string
+		originalHttpRule string
+		wantHttpRule     string
 	}{
 		{
-			desc:           "Success, generate health check filter for gRPC",
-			BackendAddress: "grpc://127.0.0.1:80",
-			healthz:        "healthz",
-			wantHealthCheckFilter: `{
-        "name": "envoy.filters.http.health_check",
-        "typedConfig": {
-          "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
-          "passThroughMode":false,
-          "headers": [
-            {
-              "stringMatch":{"exact":"/healthz"},
-              "name":":path"
-            }
-          ]
-        }
-      }`,
+			// Add the default http binding if it's not present.
+			desc: "default http binding is not present",
+			originalHttpRule: `
+				selector: "package.name.Service.Method"
+				post: "/v1/Service/Method"
+			`,
+			wantHttpRule: `
+				selector: "package.name.Service.Method"
+				post: "/v1/Service/Method"
+				additional_bindings: {
+					post: "/package.name.Service/Method"
+					body: "*"
+				}
+			`,
 		},
 		{
-			desc:                   "Success, generate health check filter for gRPC with health check",
-			BackendAddress:         "grpc://127.0.0.1:80",
-			healthz:                "healthz",
-			healthCheckGrpcBackend: true,
-			wantHealthCheckFilter: `{
-        "name": "envoy.filters.http.health_check",
-        "typedConfig": {
-          "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
-          "passThroughMode":false,
-          "headers": [
-            {
-              "stringMatch":{"exact":"/healthz"},
-              "name":":path"
-            }
-          ],
-          "clusterMinHealthyPercentages": {
-              "backend-cluster-bookstore.endpoints.project123.cloud.goog_local": { "value": 100.0 }
+			// Do not add the default binding if it's identitical to the primary
+			// binding. Difference in selector and additional_bindings is ignored.
+			desc: "default http binding is not present",
+			originalHttpRule: `
+				selector: "package.name.Service.Method"
+				post: "/package.name.Service/Method"
+				body: "*"
+				additional_bindings: {
+					post: "/v1/Service/Method"
+				}
+			`,
+			wantHttpRule: `
+				selector: "package.name.Service.Method"
+				post: "/package.name.Service/Method"
+				body: "*"
+				additional_bindings: {
+					post: "/v1/Service/Method"
+				}
+			`,
+		},
+		{
+			// Do not add the default binding if it's identitical to any existing
+			// additional binding.
+			desc: "default http binding is not present",
+			originalHttpRule: `
+				selector: "package.name.Service.Method"
+				post: "/package.name.Service/Method"
+				body: "*"
+				additional_bindings: {
+					post: "/v1/Service/Method"
+				}
+			`,
+			wantHttpRule: `
+				selector: "package.name.Service.Method"
+				post: "/package.name.Service/Method"
+				body: "*"
+				additional_bindings: {
+					post: "/v1/Service/Method"
+				}
+			`,
+		},
+	}
+
+	for _, tc := range testData {
+		got := &ahpb.HttpRule{}
+		if err := prototext.Unmarshal([]byte(tc.originalHttpRule), got); err != nil {
+			fmt.Println("failed to unmarshal originalHttpRule: ", err)
+		}
+
+		preserveDefaultHttpBinding(got, "/package.name.Service/Method")
+		want := &ahpb.HttpRule{}
+		if err := prototext.Unmarshal([]byte(tc.wantHttpRule), want); err != nil {
+			fmt.Println("failed to unmarshal wantHttpRule: ", err)
+		}
+
+		if diff := utils.ProtoDiff(want, got); diff != "" {
+			t.Errorf("Result is not the same: diff (-want +got):\n%v", diff)
+		}
+	}
+}
+
+func TestUpdateProtoDescriptor(t *testing.T) {
+	testData := []struct {
+		desc      string
+		service   string
+		apiNames  []string
+		inDesc    string
+		wantDesc  string
+		wantError string
+	}{
+		{
+			// The input Descriptor is an invalid data, it results in error.
+			desc:      "Failed to unmarshal error",
+			service:   "",
+			inDesc:    "invalid proto descriptor",
+			wantError: "failed to unmarshal",
+		},
+		{
+			// ApiNames is a wrong service name, protoDescriptor is not modified.
+			desc: "Wrong apiName, not override",
+			service: `
+http: {
+  rules: {
+    selector: "package.name.Service.Method"
+    post: "/v2/{name=*}"
+  }
+}`,
+			apiNames: []string{"package.name.WrongService"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+	        post: "/v1/{name=*}"
+	      }
+      }
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+	        post: "/v1/{name=*}"
+	      }
+      }
+    }
+  }
+}`,
+		},
+		{
+			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied with the default binding added in its additional bindings
+			desc: "Not method options",
+			service: `
+http: {
+  rules: {
+    selector: "package.name.Service.Method"
+    post: "/v2/{name=*}"
+  }
+}`,
+			apiNames: []string{"package.name.Service"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+          selector: "package.name.Service.Method"
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
           }
-        }
-      }`,
+	      }
+      }
+    }
+  }
+}`,
 		},
 		{
-			desc:           "Success, generate health check filter for http",
-			BackendAddress: "http://127.0.0.1:80",
-			healthz:        "/",
-			wantHealthCheckFilter: `{
-        "name": "envoy.filters.http.health_check",
-        "typedConfig": {
-          "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
-          "passThroughMode":false,
-          "headers": [
-            {
-              "stringMatch":{"exact":"/"},
-              "name":":path"
-            }
-          ]
-        }
-      }`,
+			// ProtoDescriptor has an empty MethodOptions, the http rule is copied with the default binding added in its additional bindings
+			desc: "Empty method options",
+			service: `
+http: {
+  rules: {
+    selector: "package.name.Service.Method"
+    post: "/v2/{name=*}"
+  }
+}`,
+			apiNames: []string{"package.name.Service"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+      }
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+          selector: "package.name.Service.Method"
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
+      }
+    }
+  }
+}`,
+		},
+		{
+			// ProtoDescriptor has a different annotation, the http rule is copied with the default binding added in its additional bindings
+			desc: "Basic overwritten case",
+			service: `
+http: {
+  rules: {
+    selector: "package.name.Service.Method"
+    post: "/v2/{name=*}"
+  }
+}`,
+			apiNames: []string{"package.name.Service"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+	        post: "/v1/abc/{name=*}"
+	      }
+      }
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+          selector: "package.name.Service.Method"
+	        post: "/v2/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
+      }
+    }
+  }
+}`,
+		},
+		{
+			// The http rule has a different service name. It is not copied but the default binding is added if it is absent
+			desc: "Empty http rule as it has different service name",
+			service: `
+http: {
+  rules: {
+    selector: "package.name.WrongService.Method"
+    post: "/v2/{name=*}"
+  }
+}`,
+			apiNames: []string{"package.name.Service"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+	        post: "/v1/abc/{name=*}"
+	      }
+      }
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {
+        [google.api.http]: {
+	        post: "/v1/abc/{name=*}"
+          additional_bindings: {
+            post: "/package.name.Service/Method"
+            body: "*"
+          }
+	      }
+      }
+    }
+  }
+}`,
+		},
+		{
+			// The default http rule will not be added if no http rule is specified, the default binding
+			// will be done in Envoy's json transcoder.
+			desc:     "Default http rule will not be added if no http rule is specified",
+			service:  "",
+			apiNames: []string{"package.name.Service"},
+			inDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {}
+    }
+  }
+}`,
+			wantDesc: `
+file: {
+  name: "proto_file_path"
+  package: "package.name"
+  service: {
+    name: "Service"
+    method: {
+      name: "Method"
+      options: {}
+    }
+  }
+}`,
 		},
 	}
 
-	fakeServiceConfig := &confpb.Service{
-		Name: testProjectName,
-		Apis: []*apipb.Api{
-			{
-				Name: "endpoints.examples.bookstore.Bookstore",
-				Methods: []*apipb.Method{
-					{
-						Name: "CreateShelf",
-					},
-				},
-			},
-		},
-	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			serviceConfig := &confpb.Service{}
+			if err := prototext.Unmarshal([]byte(tc.service), serviceConfig); err != nil {
+				t.Fatal("failed to unmarshal service config: ", err)
+			}
 
-	for i, tc := range testdata {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = tc.BackendAddress
-		opts.Healthz = tc.healthz
-		opts.HealthCheckGrpcBackend = tc.healthCheckGrpcBackend
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Fatal(err)
-		}
+			var byteDesc []byte
+			fds := &descpb.FileDescriptorSet{}
+			if err := prototext.Unmarshal([]byte(tc.inDesc), fds); err != nil {
+				// Failed case is to use raw test to test failure
+				byteDesc = []byte(tc.inDesc)
+			} else {
+				byteDesc, _ = proto.Marshal(fds)
+			}
 
-		marshaler := &jsonpb.Marshaler{}
-		filter, err := makeHealthCheckFilter(fakeServiceInfo)
-		if err != nil {
-			t.Fatal(err)
-		}
+			gotByteDesc, err := updateProtoDescriptor(serviceConfig, tc.apiNames, byteDesc)
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("failed, expected: %s, got: %v", tc.wantError, err)
+			}
+			if tc.wantError == "" && err != nil {
+				t.Errorf("got unexpected error: %v", err)
+			}
 
-		gotFilter, err := marshaler.MarshalToString(filter)
-		if err != nil {
-			t.Fatal(err)
-		}
+			if tc.wantDesc != "" {
+				got := &descpb.FileDescriptorSet{}
+				// Not need to check error, gotByteDesc is just marshaled from the updateProtoDescriptor()
+				proto.Unmarshal(gotByteDesc, got)
+				want := &descpb.FileDescriptorSet{}
+				if err := prototext.Unmarshal([]byte(tc.wantDesc), want); err != nil {
+					t.Fatal("failed to unmarshal wantDesc: ", err)
+				}
 
-		if err := util.JsonEqual(tc.wantHealthCheckFilter, gotFilter); err != nil {
-			t.Errorf("Test Desc(%d): %s, makeHealthCheckFilter failed,\n%v", i, tc.desc, err)
-		}
+				if diff := utils.ProtoDiff(want, got); diff != "" {
+					t.Errorf("Result is not the same: diff (-want +got):\n%v", diff)
+				}
+			}
+		})
 	}
 }

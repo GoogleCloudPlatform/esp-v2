@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"testing"
@@ -109,7 +109,8 @@ func TestServiceControl(t *testing.T) {
 			}
 
 			marshaler := &jsonpb.Marshaler{}
-			filter, _, err := scFilterGenFunc(fakeServiceInfo)
+			gen := &ServiceControlGenerator{}
+			filter, _, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				t.Fatal(err)
 			}

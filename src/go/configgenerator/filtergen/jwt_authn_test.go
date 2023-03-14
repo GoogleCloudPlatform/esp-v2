@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"testing"
@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 
-	anypb "github.com/golang/protobuf/ptypes/any"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
 )
@@ -50,9 +49,6 @@ func TestJwtAuthnFilter(t *testing.T) {
 							},
 						},
 					},
-				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
 				},
 				Authentication: &confpb.Authentication{
 					Providers: []*confpb.AuthProvider{
@@ -133,9 +129,6 @@ func TestJwtAuthnFilter(t *testing.T) {
 							},
 						},
 					},
-				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
 				},
 				Authentication: &confpb.Authentication{
 					Providers: []*confpb.AuthProvider{
@@ -226,9 +219,6 @@ func TestJwtAuthnFilter(t *testing.T) {
 						},
 					},
 				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
-				},
 				Authentication: &confpb.Authentication{
 					Providers: []*confpb.AuthProvider{
 						{
@@ -307,9 +297,6 @@ func TestJwtAuthnFilter(t *testing.T) {
 							},
 						},
 					},
-				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
 				},
 				Authentication: &confpb.Authentication{
 					Providers: []*confpb.AuthProvider{
@@ -400,9 +387,6 @@ func TestJwtAuthnFilter(t *testing.T) {
 						},
 					},
 				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
-				},
 				Authentication: &confpb.Authentication{
 					Providers: []*confpb.AuthProvider{
 						{
@@ -489,9 +473,6 @@ func TestJwtAuthnFilter(t *testing.T) {
 						},
 					},
 				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
-				},
 				Authentication: &confpb.Authentication{
 					Providers: []*confpb.AuthProvider{
 						{
@@ -570,9 +551,6 @@ func TestJwtAuthnFilter(t *testing.T) {
 							},
 						},
 					},
-				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
 				},
 				Authentication: &confpb.Authentication{
 					Providers: []*confpb.AuthProvider{
@@ -660,27 +638,35 @@ func TestJwtAuthnFilter(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		opts.BackendAddress = "grpc://127.0.0.0:80"
-		opts.DisableJwksAsyncFetch = tc.disableJwksAsyncFetch
-		opts.JwksAsyncFetchFastListener = tc.jwksAsyncFetchFastListener
-		opts.DisableJwtAudienceServiceNameCheck = tc.disableJwtServiceName
-		opts.JwtCacheSize = tc.jwtCacheSize
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-		if err != nil {
-			t.Fatal(err)
-		}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
 
-		marshaler := &jsonpb.Marshaler{}
-		gotProto, _, _ := jaFilterGenFunc(fakeServiceInfo)
-		gotFilter, err := marshaler.MarshalToString(gotProto)
-		if err != nil {
-			t.Fatal(err)
-		}
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = "grpc://127.0.0.0:80"
+			opts.DisableJwksAsyncFetch = tc.disableJwksAsyncFetch
+			opts.JwksAsyncFetchFastListener = tc.jwksAsyncFetchFastListener
+			opts.DisableJwtAudienceServiceNameCheck = tc.disableJwtServiceName
+			opts.JwtCacheSize = tc.jwtCacheSize
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if err := util.JsonEqual(tc.wantJwtAuthnFilter, gotFilter); err != nil {
-			t.Errorf("Test Desc(%d): %s, makeJwtAuthnFilter failed, %s", i, tc.desc, err)
-		}
+			gen := &JwtAuthnGenerator{}
+			gotProto, _, err := gen.GenFilterConfig(fakeServiceInfo)
+			if err != nil {
+				t.Fatalf("GenFilterConfig got err %v, want no err", err)
+			}
+
+			marshaler := &jsonpb.Marshaler{}
+			gotFilter, err := marshaler.MarshalToString(gotProto)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if err := util.JsonEqual(tc.wantJwtAuthnFilter, gotFilter); err != nil {
+				t.Errorf("GenFilterConfig has JSON diff\n%v", err)
+			}
+		})
 	}
 }

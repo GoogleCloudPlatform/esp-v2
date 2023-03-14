@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"strings"
@@ -276,7 +276,8 @@ func TestBackendAuthFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			filterConfig, _, err := baFilterGenFunc(fakeServiceInfo)
+			gen := BackendAuthGenerator{}
+			filterConfig, _, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
 					t.Fatalf("exepected err (%v), got err (%v)", tc.wantError, err)

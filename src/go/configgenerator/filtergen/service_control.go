@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filterconfig
+package filtergen
 
 import (
 	"fmt"
@@ -31,7 +31,13 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-var scPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+type ServiceControlGenerator struct{}
+
+func (g *ServiceControlGenerator) FilterName() string {
+	return util.ServiceControl
+}
+
+func (g *ServiceControlGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
 	scPerRoute := &scpb.PerRouteFilterConfig{
 		OperationName: method.Operation(),
 	}
@@ -42,7 +48,7 @@ var scPerRouteFilterConfigGen = func(method *ci.MethodInfo, httpRule *httppatter
 	return scpr, nil
 }
 
-var scFilterGenFunc = func(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
 	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
 		return nil, nil, nil
 	}
