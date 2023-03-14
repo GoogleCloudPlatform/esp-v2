@@ -3054,7 +3054,7 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://grpc-backend:8080"
-			opts.TestOnlyHTTPBackendAddress = tc.httpBackendAddress
+			opts.LocalHTTPBackendAddress = tc.httpBackendAddress
 
 			fakeServiceConfig := &confpb.Service{
 				Name: testProjectName,

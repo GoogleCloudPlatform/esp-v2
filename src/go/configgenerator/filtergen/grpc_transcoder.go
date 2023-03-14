@@ -40,8 +40,8 @@ func (g *GRPCTranscoderGenerator) FilterName() string {
 }
 
 func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	if serviceInfo.Options.TestOnlyHTTPBackendAddress != "" {
-		glog.Warningf("Test-only http backend address is set to %q; skip transcoder filter completely.", serviceInfo.Options.TestOnlyHTTPBackendAddress)
+	if serviceInfo.Options.LocalHTTPBackendAddress != "" {
+		glog.Warningf("Test-only http backend address is set to %q; skip transcoder filter completely.", serviceInfo.Options.LocalHTTPBackendAddress)
 		return nil, nil, nil
 	}
 	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {

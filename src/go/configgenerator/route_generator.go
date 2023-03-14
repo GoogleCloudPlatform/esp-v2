@@ -359,6 +359,7 @@ func MakeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 			bi := method.BackendInfo
 			useLocalHTTPBackend := !method.IsGRPCPath(routeMatcher.GetPath()) && !configinfo.IsDiscoveryAPI(method.Operation()) && method.HttpBackendInfo != nil
 			if useLocalHTTPBackend {
+				glog.Infof("Use HTTP backend for method %q.", method.Operation())
 				bi = method.HttpBackendInfo
 			}
 			r := makeRoute(routeMatcher, method, useLocalHTTPBackend)
