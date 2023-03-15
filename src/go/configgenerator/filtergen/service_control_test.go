@@ -108,13 +108,17 @@ func TestServiceControl(t *testing.T) {
 				t.Error(err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gen := &ServiceControlGenerator{}
-			filter, _, err := gen.GenFilterConfig(fakeServiceInfo)
+			gen := NewServiceControlGenerator(fakeServiceInfo)
+			if !gen.IsEnabled() {
+				t.Fatal("ServiceControlGenerator is not enabled, want it to be enabled")
+			}
+
+			filter, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				t.Fatal(err)
 			}
 
+			marshaler := &jsonpb.Marshaler{}
 			gotFilter, err := marshaler.MarshalToString(filter)
 			if err != nil {
 				t.Fatal(err)

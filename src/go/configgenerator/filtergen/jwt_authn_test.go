@@ -652,8 +652,12 @@ func TestJwtAuthnFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gen := &JwtAuthnGenerator{}
-			gotProto, _, err := gen.GenFilterConfig(fakeServiceInfo)
+			gen := NewJwtAuthnGenerator(fakeServiceInfo)
+			if !gen.IsEnabled() {
+				t.Fatal("JwtAuthnGenerator is not enabled, want it to be enabled")
+			}
+
+			gotProto, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				t.Fatalf("GenFilterConfig got err %v, want no err", err)
 			}

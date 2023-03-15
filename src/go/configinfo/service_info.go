@@ -57,23 +57,28 @@ type ServiceInfo struct {
 	// Stores all the query parameters to be ignored for json-grpc transcoder.
 	AllTranscodingIgnoredQueryParams map[string]bool
 
-	AllowCors         bool
+	AllowCors bool
+	// TODO(nareddyt): Fix immutability, this var is updated by consumers
 	ServiceControlURI string
-	GcpAttributes     *scpb.GcpAttributes
+	// TODO(nareddyt): Fix immutability, this var is updated by consumers
+	GcpAttributes *scpb.GcpAttributes
 	// Keep a pointer to original service config. Should always process rules
 	// inside ServiceInfo.
 	serviceConfig *confpb.Service
 	AccessToken   *commonpb.AccessToken
-	Options       options.ConfigGeneratorOptions
+	// TODO(nareddyt): Fix immutability, this var is updated by consumers
+	Options options.ConfigGeneratorOptions
 
 	// Stores information about all backend clusters.
-	GrpcSupportRequired     bool
-	LocalBackendCluster     *BackendRoutingCluster
+	GrpcSupportRequired bool
+	LocalBackendCluster *BackendRoutingCluster
+	// TODO(nareddyt): Fix immutability, this var is updated by consumers
 	LocalHTTPBackendCluster *BackendRoutingCluster
 	RemoteBackendClusters   []*BackendRoutingCluster
 }
 
 type BackendRoutingCluster struct {
+	// TODO(nareddyt): Fix immutability, this var is updated by consumers
 	ClusterName string
 	Hostname    string
 	Port        uint32

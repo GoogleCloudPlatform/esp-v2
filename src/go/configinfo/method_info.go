@@ -21,7 +21,6 @@ import (
 
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -53,11 +52,6 @@ type MethodInfo struct {
 	// The auto-generated cors methods, used to replace snakeName with jsonName in their
 	// url templates in config time.
 	GeneratedCorsMethod *MethodInfo
-
-	// The PerRouteConfig generator.
-	// It should be added during making filters if the filter has the PerRouteConfig
-	// for the methods.
-	PerRouteConfigGens []*PerRouteConfigGenerator
 }
 
 // backendInfo stores information from Backend rule for backend rerouting.
@@ -100,10 +94,3 @@ func (m *MethodInfo) IsGRPCPath(path string) bool {
 func IsDiscoveryAPI(operationName string) bool {
 	return strings.HasPrefix(operationName, discoveryAPIPrefix)
 }
-
-type PerRouteConfigGenerator struct {
-	FilterName string
-	PerRouteConfigGenFunc
-}
-
-type PerRouteConfigGenFunc func(method *MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error)

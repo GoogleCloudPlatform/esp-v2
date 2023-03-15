@@ -27,10 +27,32 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-type PathRewriteGenerator struct{}
+type PathRewriteGenerator struct {
+	// skipFilter indicates if this filter is disabled based on options and config.
+	skipFilter bool
+}
+
+// NewPathRewriteGenerator creates the PathRewriteGenerator with cached config.
+func NewPathRewriteGenerator(serviceInfo *ci.ServiceInfo) *PathRewriteGenerator {
+	for _, method := range serviceInfo.Methods {
+		for _, httpRule := range method.HttpRule {
+			if pr := makePathRewriteConfig(method, httpRule); pr != nil {
+				return &PathRewriteGenerator{}
+			}
+		}
+	}
+
+	return &PathRewriteGenerator{
+		skipFilter: true,
+	}
+}
 
 func (g *PathRewriteGenerator) FilterName() string {
 	return util.PathRewrite
+}
+
+func (g *PathRewriteGenerator) IsEnabled() bool {
+	return !g.skipFilter
 }
 
 func (g *PathRewriteGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
@@ -46,33 +68,15 @@ func (g *PathRewriteGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule
 	return prAny, nil
 }
 
-func (g *PathRewriteGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	perRouteConfigRequiredMethods, needed := needPathRewrite(serviceInfo)
-	if !needed {
-		return nil, nil, nil
-	}
+func (g *PathRewriteGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	a, err := ptypes.MarshalAny(&prpb.FilterConfig{})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	return &hcmpb.HttpFilter{
 		Name:       util.PathRewrite,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
-	}, perRouteConfigRequiredMethods, nil
-}
-
-func needPathRewrite(serviceInfo *ci.ServiceInfo) ([]*ci.MethodInfo, bool) {
-	needed := false
-	var perRouteConfigRequiredMethods []*ci.MethodInfo
-	for _, method := range serviceInfo.Methods {
-		for _, httpRule := range method.HttpRule {
-			if pr := makePathRewriteConfig(method, httpRule); pr != nil {
-				needed = true
-				perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
-			}
-		}
-	}
-	return perRouteConfigRequiredMethods, needed
+	}, nil
 }
 
 func makePathRewriteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) *prpb.PerRouteFilterConfig {

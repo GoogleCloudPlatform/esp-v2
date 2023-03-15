@@ -49,18 +49,6 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 	return []*listenerpb.Listener{listener}, nil
 }
 
-// AddPerRouteConfigGenToMethods adds the filterGenerator functions to all the methods in place.
-func AddPerRouteConfigGenToMethods(methods []*sc.MethodInfo, filterGen FilterGenerator) error {
-	for _, method := range methods {
-		method.PerRouteConfigGens = append(method.PerRouteConfigGens, &sc.PerRouteConfigGenerator{
-			FilterName:            filterGen.FilterName(),
-			PerRouteConfigGenFunc: filterGen.GenPerRouteConfig,
-		})
-	}
-	return nil
-
-}
-
 // GetFilterConfigAndAddPerRouteConfigGen does two things
 //   - Return all http filter configs in a list
 //   - In place add the perRouteConfigGen function to all methods defined in serviceInfo
@@ -68,21 +56,26 @@ func GetFilterConfigAndAddPerRouteConfigGen(serviceInfo *sc.ServiceInfo, filterG
 	var httpFilters []*hcmpb.HttpFilter
 
 	for _, filterGenerator := range filterGenerators {
-		filter, perRouteConfigRequiredMethods, err := filterGenerator.GenFilterConfig(serviceInfo)
+		if !filterGenerator.IsEnabled() {
+			continue
+		}
+
+		filter, err := filterGenerator.GenFilterConfig(serviceInfo)
 		if err != nil {
 			return nil, fmt.Errorf("fail to create config for the filter %q: %v", filterGenerator.FilterName(), err)
 		}
-		if filter != nil {
-			jsonStr, _ := util.ProtoToJson(filter)
-			glog.Infof("adding filter config of %q : %v", filterGenerator.FilterName(), jsonStr)
-			httpFilters = append(httpFilters, filter)
-
-			if len(perRouteConfigRequiredMethods) > 0 {
-				if err := AddPerRouteConfigGenToMethods(perRouteConfigRequiredMethods, filterGenerator); err != nil {
-					return nil, err
-				}
-			}
+		if filter == nil {
+			glog.Infof("No filter config generated for %q, potentially because it only has per-route configs.", filterGenerator.FilterName())
+			continue
 		}
+
+		jsonStr, err := util.ProtoToJson(filter)
+		if err != nil {
+			return nil, fmt.Errorf("fail to convert proto to JSON for filter %q: %v", filterGenerator.FilterName(), err)
+		}
+
+		glog.Infof("adding filter config of %q : %v", filterGenerator.FilterName(), jsonStr)
+		httpFilters = append(httpFilters, filter)
 	}
 	return httpFilters, nil
 }
@@ -94,7 +87,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []FilterGenerato
 		return nil, err
 	}
 
-	route, err := makeRouteConfig(serviceInfo)
+	route, err := makeRouteConfig(serviceInfo, filterGenerators)
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}

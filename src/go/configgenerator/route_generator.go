@@ -39,7 +39,7 @@ const (
 	virtualHostName = "backend"
 )
 
-func makeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfiguration, error) {
+func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []FilterGenerator) (*routepb.RouteConfiguration, error) {
 	var virtualHosts []*routepb.VirtualHost
 	host := routepb.VirtualHost{
 		Name:    virtualHostName,
@@ -55,7 +55,7 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo) (*routepb.RouteConfigu
 	//
 	//
 	// // Per-selector routes for both local and remote backends.
-	backendRoutes, methodNotAllowedRoutes, err := MakeRouteTable(serviceInfo)
+	backendRoutes, methodNotAllowedRoutes, err := MakeRouteTable(serviceInfo, filterGenerators)
 	if err != nil {
 		return nil, err
 	}
@@ -308,23 +308,32 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*corspb.CorsPolicy, []*
 	return cors, corsRoutes, nil
 }
 
-func makePerRouteFilterConfig(operation string, method *configinfo.MethodInfo, httpRule *httppattern.Pattern) (map[string]*anypb.Any, error) {
+// makePerRouteFilterConfig generates the per-route config across all filters for a single method and http rule.
+func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern, filterGenerators []FilterGenerator) (map[string]*anypb.Any, error) {
 	perFilterConfig := make(map[string]*anypb.Any)
 
-	for _, perRouteConfigGen := range method.PerRouteConfigGens {
-		perRouteFilterConfig, err := perRouteConfigGen.PerRouteConfigGenFunc(method, httpRule)
-		if err != nil {
-			return perFilterConfig, err
+	for _, filterGen := range filterGenerators {
+		if !filterGen.IsEnabled() {
+			continue
 		}
 
-		perFilterConfig[perRouteConfigGen.FilterName] = perRouteFilterConfig
+		perRouteFilterConfig, err := filterGen.GenPerRouteConfig(method, httpRule)
+		if err != nil {
+			return perFilterConfig, fmt.Errorf("failed to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
+		}
+
+		if perRouteFilterConfig == nil {
+			continue
+		}
+
+		perFilterConfig[filterGen.FilterName()] = perRouteFilterConfig
 	}
 
 	return perFilterConfig, nil
 }
 
 // MakeRouteTable generates the backendRoute and denylistRoute from serviceInfo
-func MakeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*routepb.Route, error) {
+func MakeRouteTable(serviceInfo *configinfo.ServiceInfo, filterGenerators []FilterGenerator) ([]*routepb.Route, []*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
 	var methodNotAllowedRoutes []*routepb.Route
 	httpPatternMethods, err := getSortMethodsByHttpPattern(serviceInfo)
@@ -364,7 +373,7 @@ func MakeRouteTable(serviceInfo *configinfo.ServiceInfo) ([]*routepb.Route, []*r
 			}
 			r := makeRoute(routeMatcher, method, useLocalHTTPBackend)
 
-			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(operation, method, httpRule)
+			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(method, httpRule, filterGenerators)
 			if err != nil {
 				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation (%v): %v", operation, err)
 			}

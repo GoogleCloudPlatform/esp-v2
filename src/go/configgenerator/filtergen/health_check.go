@@ -15,8 +15,6 @@
 package filtergen
 
 import (
-	"fmt"
-
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
@@ -30,13 +28,27 @@ import (
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
 
-type HealthCheckGenerator struct{}
+type HealthCheckGenerator struct {
+	// skipFilter indicates if this filter is disabled based on options and config.
+	skipFilter bool
+}
+
+// NewHealthCheckGenerator creates the HealthCheckGenerator with cached config.
+func NewHealthCheckGenerator(serviceInfo *ci.ServiceInfo) *HealthCheckGenerator {
+	return &HealthCheckGenerator{
+		skipFilter: serviceInfo.Options.Healthz == "",
+	}
+}
 
 func (g *HealthCheckGenerator) FilterName() string {
 	return util.HealthCheck
 }
 
-func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *HealthCheckGenerator) IsEnabled() bool {
+	return !g.skipFilter
+}
+
+func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	hcFilterConfig := &hcpb.HealthCheck{
 		PassThroughMode: &wrapperspb.BoolValue{Value: false},
 
@@ -62,16 +74,16 @@ func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hc
 
 	hcFilterConfigStruc, err := ptypes.MarshalAny(hcFilterConfig)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	return &hcmpb.HttpFilter{
 		Name: util.HealthCheck,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{
 			TypedConfig: hcFilterConfigStruc,
 		},
-	}, nil, nil
+	}, nil
 }
 
 func (g *HealthCheckGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	return nil, fmt.Errorf("UNIMPLEMENTED")
+	return nil, nil
 }

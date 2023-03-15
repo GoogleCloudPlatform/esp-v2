@@ -33,70 +33,50 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type GRPCTranscoderGenerator struct{}
+type GRPCTranscoderGenerator struct {
+	// configFile points to the proto descriptor file. Nil if no descriptor.
+	configFile *smpb.ConfigFile
+
+	// skipFilter indicates if this filter is disabled based on options and config.
+	skipFilter bool
+}
+
+// NewGRPCTranscoderGenerator creates the GRPCTranscoderGenerator with cached config.
+func NewGRPCTranscoderGenerator(serviceInfo *ci.ServiceInfo) *GRPCTranscoderGenerator {
+	gen := &GRPCTranscoderGenerator{}
+
+	if serviceInfo.Options.LocalHTTPBackendAddress != "" {
+		glog.Warningf("Local http backend address is set to %q; skip transcoder filter completely.", serviceInfo.Options.LocalHTTPBackendAddress)
+		gen.skipFilter = true
+	}
+
+	if !serviceInfo.GrpcSupportRequired {
+		gen.skipFilter = true
+	}
+
+	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {
+		// Error ignored to match pre-existing behavior.
+		configFile := &smpb.ConfigFile{}
+		_ = sourceFile.UnmarshalTo(configFile)
+		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+			gen.configFile = configFile
+		}
+	}
+
+	return gen
+}
 
 func (g *GRPCTranscoderGenerator) FilterName() string {
 	return util.GRPCJSONTranscoder
 }
 
-func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	if serviceInfo.Options.LocalHTTPBackendAddress != "" {
-		glog.Warningf("Test-only http backend address is set to %q; skip transcoder filter completely.", serviceInfo.Options.LocalHTTPBackendAddress)
-		return nil, nil, nil
+func (g *GRPCTranscoderGenerator) IsEnabled() bool {
+	if g.skipFilter {
+		return false
 	}
-	for _, sourceFile := range serviceInfo.ServiceConfig().GetSourceInfo().GetSourceFiles() {
-		configFile := &smpb.ConfigFile{}
-		ptypes.UnmarshalAny(sourceFile, configFile)
 
-		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
-			var ignoredQueryParameterList []string
-			for IgnoredQueryParameter := range serviceInfo.AllTranscodingIgnoredQueryParams {
-				ignoredQueryParameterList = append(ignoredQueryParameterList, IgnoredQueryParameter)
-
-			}
-			sort.Sort(sort.StringSlice(ignoredQueryParameterList))
-
-			configContent, err := updateProtoDescriptor(serviceInfo.ServiceConfig(), serviceInfo.ApiNames,
-				configFile.GetFileContents())
-			if err != nil {
-				return nil, nil, err
-			}
-
-			transcodeConfig := &transcoderpb.GrpcJsonTranscoder{
-				DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
-					ProtoDescriptorBin: configContent,
-				},
-				AutoMapping:                  true,
-				ConvertGrpcStatus:            true,
-				IgnoredQueryParameters:       ignoredQueryParameterList,
-				IgnoreUnknownQueryParameters: serviceInfo.Options.TranscodingIgnoreUnknownQueryParameters,
-				QueryParamUnescapePlus:       !serviceInfo.Options.TranscodingQueryParametersDisableUnescapePlus,
-				PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
-					AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
-					AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
-					PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
-					StreamNewlineDelimited:     serviceInfo.Options.TranscodingStreamNewLineDelimited,
-				},
-				MatchUnregisteredCustomVerb: serviceInfo.Options.TranscodingMatchUnregisteredCustomVerb,
-				CaseInsensitiveEnumParsing:  serviceInfo.Options.TranscodingCaseInsensitiveEnumParsing,
-			}
-			if serviceInfo.Options.TranscodingStrictRequestValidation {
-				transcodeConfig.RequestValidationOptions = &transcoderpb.GrpcJsonTranscoder_RequestValidationOptions{
-					RejectUnknownMethod:              true,
-					RejectUnknownQueryParameters:     true,
-					RejectBindingBodyFieldCollisions: serviceInfo.Options.TranscodingRejectCollision,
-				}
-			}
-
-			transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
-
-			transcodeConfigStruct, _ := ptypes.MarshalAny(transcodeConfig)
-			transcodeFilter := &hcmpb.HttpFilter{
-				Name:       util.GRPCJSONTranscoder,
-				ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: transcodeConfigStruct},
-			}
-			return transcodeFilter, nil, nil
-		}
+	if g.configFile != nil {
+		return true
 	}
 
 	// b/148605552: Previous versions of the `gcloud_build_image` script did not download the proto descriptor.
@@ -105,11 +85,65 @@ func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 	glog.Error("Unable to setup gRPC-JSON transcoding because no proto descriptor was found in the service config. " +
 		"Please use version 2020-01-29 (or later) of the `gcloud_build_image` script. " +
 		"https://github.com/GoogleCloudPlatform/esp-v2/blob/master/docker/serverless/gcloud_build_image")
-	return nil, nil, nil
+	return false
+}
+
+func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+	if g.configFile == nil {
+		return nil, fmt.Errorf("internal error, config file should be set as transcoder filer is enabled")
+	}
+
+	var ignoredQueryParameterList []string
+	for IgnoredQueryParameter := range serviceInfo.AllTranscodingIgnoredQueryParams {
+		ignoredQueryParameterList = append(ignoredQueryParameterList, IgnoredQueryParameter)
+
+	}
+	sort.Sort(sort.StringSlice(ignoredQueryParameterList))
+
+	configContent, err := updateProtoDescriptor(serviceInfo.ServiceConfig(), serviceInfo.ApiNames,
+		g.configFile.GetFileContents())
+	if err != nil {
+		return nil, err
+	}
+
+	transcodeConfig := &transcoderpb.GrpcJsonTranscoder{
+		DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptorBin{
+			ProtoDescriptorBin: configContent,
+		},
+		AutoMapping:                  true,
+		ConvertGrpcStatus:            true,
+		IgnoredQueryParameters:       ignoredQueryParameterList,
+		IgnoreUnknownQueryParameters: serviceInfo.Options.TranscodingIgnoreUnknownQueryParameters,
+		QueryParamUnescapePlus:       !serviceInfo.Options.TranscodingQueryParametersDisableUnescapePlus,
+		PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
+			AlwaysPrintPrimitiveFields: serviceInfo.Options.TranscodingAlwaysPrintPrimitiveFields,
+			AlwaysPrintEnumsAsInts:     serviceInfo.Options.TranscodingAlwaysPrintEnumsAsInts,
+			PreserveProtoFieldNames:    serviceInfo.Options.TranscodingPreserveProtoFieldNames,
+			StreamNewlineDelimited:     serviceInfo.Options.TranscodingStreamNewLineDelimited,
+		},
+		MatchUnregisteredCustomVerb: serviceInfo.Options.TranscodingMatchUnregisteredCustomVerb,
+		CaseInsensitiveEnumParsing:  serviceInfo.Options.TranscodingCaseInsensitiveEnumParsing,
+	}
+	if serviceInfo.Options.TranscodingStrictRequestValidation {
+		transcodeConfig.RequestValidationOptions = &transcoderpb.GrpcJsonTranscoder_RequestValidationOptions{
+			RejectUnknownMethod:              true,
+			RejectUnknownQueryParameters:     true,
+			RejectBindingBodyFieldCollisions: serviceInfo.Options.TranscodingRejectCollision,
+		}
+	}
+
+	transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
+
+	transcodeConfigStruct, _ := ptypes.MarshalAny(transcodeConfig)
+	transcodeFilter := &hcmpb.HttpFilter{
+		Name:       util.GRPCJSONTranscoder,
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: transcodeConfigStruct},
+	}
+	return transcodeFilter, nil
 }
 
 func (g *GRPCTranscoderGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	return nil, fmt.Errorf("UNIMPLEMENTED")
+	return nil, nil
 }
 
 func updateProtoDescriptor(service *confpb.Service, apiNames []string, descriptorBytes []byte) ([]byte, error) {

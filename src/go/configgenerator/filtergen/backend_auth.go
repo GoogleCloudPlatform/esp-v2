@@ -29,13 +29,31 @@ import (
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/common"
 )
 
-type BackendAuthGenerator struct{}
+type BackendAuthGenerator struct {
+	// audMap is the list of unique audiences in the config.
+	audMap map[string]bool
+}
+
+// NewBackendAuthGenerator creates the BackendAuthGenerator with cached config.
+func NewBackendAuthGenerator(serviceInfo *ci.ServiceInfo) *BackendAuthGenerator {
+	return &BackendAuthGenerator{
+		audMap: getUniqueAudiences(serviceInfo),
+	}
+}
 
 func (g *BackendAuthGenerator) FilterName() string {
 	return util.BackendAuth
 }
 
+func (g *BackendAuthGenerator) IsEnabled() bool {
+	return len(g.audMap) > 0
+}
+
 func (g *BackendAuthGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+	if method.BackendInfo == nil || method.BackendInfo.JwtAudience == "" {
+		return nil, nil
+	}
+
 	auPerRoute := &bapb.PerRouteFilterConfig{
 		JwtAudience: method.BackendInfo.JwtAudience,
 	}
@@ -46,25 +64,12 @@ func (g *BackendAuthGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule
 	return aupr, nil
 }
 
-func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	// Use map to collect list of unique jwt audiences.
-	var perRouteConfigRequiredMethods []*ci.MethodInfo
-	audMap := make(map[string]bool)
-	for _, method := range serviceInfo.Methods {
-		if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
-			audMap[method.BackendInfo.JwtAudience] = true
-			perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
-		}
-	}
-	// If audMap is empty, not need to add the filter.
-	if len(audMap) == 0 {
-		return nil, nil, nil
-	}
-
+func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	var audList []string
-	for aud := range audMap {
+	for aud := range g.audMap {
 		audList = append(audList, aud)
 	}
+
 	// This sort is just for unit-test to compare with expected result.
 	sort.Strings(audList)
 	backendAuthConfig := &bapb.FilterConfig{
@@ -73,7 +78,7 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hc
 
 	depErrorBehaviorEnum, err := parseDepErrorBehavior(serviceInfo.Options.DependencyErrorBehavior)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	backendAuthConfig.DepErrorBehavior = depErrorBehaviorEnum
 
@@ -102,12 +107,23 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hc
 	}
 	backendAuthConfigStruct, err := ptypes.MarshalAny(backendAuthConfig)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	backendAuthFilter := &hcmpb.HttpFilter{
 		Name:       util.BackendAuth,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: backendAuthConfigStruct},
 	}
-	return backendAuthFilter, perRouteConfigRequiredMethods, nil
+	return backendAuthFilter, nil
+}
+
+// getUniqueAudiences returns a list of all unique audiences specified in ServiceInfo.
+func getUniqueAudiences(serviceInfo *ci.ServiceInfo) map[string]bool {
+	audMap := make(map[string]bool)
+	for _, method := range serviceInfo.Methods {
+		if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
+			audMap[method.BackendInfo.JwtAudience] = true
+		}
+	}
+	return audMap
 }

@@ -31,10 +31,34 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-type ServiceControlGenerator struct{}
+type ServiceControlGenerator struct {
+	// skipFilter indicates if this filter is disabled based on options and config.
+	skipFilter bool
+}
+
+// NewServiceControlGenerator creates the ServiceControlGenerator with cached config.
+func NewServiceControlGenerator(serviceInfo *ci.ServiceInfo) *ServiceControlGenerator {
+	if serviceInfo.Options.SkipServiceControlFilter {
+		return &ServiceControlGenerator{
+			skipFilter: true,
+		}
+	}
+
+	if serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
+		return &ServiceControlGenerator{
+			skipFilter: true,
+		}
+	}
+
+	return &ServiceControlGenerator{}
+}
 
 func (g *ServiceControlGenerator) FilterName() string {
 	return util.ServiceControl
+}
+
+func (g *ServiceControlGenerator) IsEnabled() bool {
+	return !g.skipFilter
 }
 
 func (g *ServiceControlGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
@@ -48,11 +72,7 @@ func (g *ServiceControlGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpR
 	return scpr, nil
 }
 
-func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
-	if serviceInfo == nil || serviceInfo.ServiceConfig().GetControl().GetEnvironment() == "" {
-		return nil, nil, nil
-	}
-
+func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	// TODO(b/148638212): Clean up this hacky way of specifying the protocol for Service Control report.
 	// This is safe (for now) as our Service Control filter only differentiates between gRPC or non-gRPC.
 	var protocol string
@@ -172,19 +192,19 @@ func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 
 	depErrorBehaviorEnum, err := parseDepErrorBehavior(serviceInfo.Options.DependencyErrorBehavior)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	filterConfig.DepErrorBehavior = depErrorBehaviorEnum
 
 	scs, err := ptypes.MarshalAny(filterConfig)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	filter := &hcmpb.HttpFilter{
 		Name:       util.ServiceControl,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: scs},
 	}
-	return filter, perRouteConfigRequiredMethods, nil
+	return filter, nil
 }
 
 func makeServiceControlCallingConfig(opts options.ConfigGeneratorOptions) *scpb.ServiceControlCallingConfig {

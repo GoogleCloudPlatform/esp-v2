@@ -15,8 +15,6 @@
 package filtergen
 
 import (
-	"fmt"
-
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
@@ -32,7 +30,11 @@ func (g *RouterGenerator) FilterName() string {
 	return util.Router
 }
 
-func (g *RouterGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *RouterGenerator) IsEnabled() bool {
+	return true
+}
+
+func (g *RouterGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	router, _ := ptypes.MarshalAny(&routerpb.Router{
 		SuppressEnvoyHeaders: serviceInfo.Options.SuppressEnvoyHeaders,
 		StartChildSpan:       !serviceInfo.Options.DisableTracing,
@@ -42,9 +44,9 @@ func (g *RouterGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.H
 		Name:       util.Router,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: router},
 	}
-	return routerFilter, nil, nil
+	return routerFilter, nil
 }
 
 func (g *RouterGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	return nil, fmt.Errorf("UNIMPLEMENTED")
+	return nil, nil
 }

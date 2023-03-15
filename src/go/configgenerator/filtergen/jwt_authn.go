@@ -35,13 +35,42 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-type JwtAuthnGenerator struct{}
+type JwtAuthnGenerator struct {
+	// skipFilter indicates if this filter is disabled based on options and config.
+	skipFilter bool
+}
+
+// NewJwtAuthnGenerator creates the JwtAuthnGenerator with cached config.
+func NewJwtAuthnGenerator(serviceInfo *ci.ServiceInfo) *JwtAuthnGenerator {
+	if serviceInfo.Options.SkipJwtAuthnFilter {
+		return &JwtAuthnGenerator{
+			skipFilter: true,
+		}
+	}
+
+	auth := serviceInfo.ServiceConfig().GetAuthentication()
+	if len(auth.GetProviders()) == 0 {
+		return &JwtAuthnGenerator{
+			skipFilter: true,
+		}
+	}
+
+	return &JwtAuthnGenerator{}
+}
 
 func (g *JwtAuthnGenerator) FilterName() string {
 	return util.JwtAuthn
 }
 
+func (g *JwtAuthnGenerator) IsEnabled() bool {
+	return !g.skipFilter
+}
+
 func (g *JwtAuthnGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+	if !method.RequireAuth {
+		return nil, nil
+	}
+
 	jwtPerRoute := &jwtpb.PerRouteConfig{
 		RequirementSpecifier: &jwtpb.PerRouteConfig_RequirementName{
 			RequirementName: method.Operation(),
@@ -54,21 +83,18 @@ func (g *JwtAuthnGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *h
 	return jwt, nil
 }
 
-func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
-	if len(auth.GetProviders()) == 0 {
-		return nil, nil, nil
-	}
 	providers := make(map[string]*jwtpb.JwtProvider)
 	for _, provider := range auth.GetProviders() {
 		addr, err := util.ExtractAddressFromURI(provider.GetJwksUri())
 		if err != nil {
-			return nil, nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
+			return nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
 		}
 		clusterName := util.JwtProviderClusterName(addr)
 		fromHeaders, fromParams, err := processJwtLocations(provider)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		jwks := &jwtpb.RemoteJwks{
@@ -139,21 +165,10 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb
 		providers[provider.GetId()] = jp
 	}
 
-	if len(providers) == 0 {
-		return nil, nil, nil
-	}
-
 	requirements := make(map[string]*jwtpb.JwtRequirement)
 	for _, rule := range auth.GetRules() {
 		if len(rule.GetRequirements()) > 0 {
 			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements(), rule.GetAllowWithoutCredential())
-		}
-	}
-
-	var perRouteConfigRequiredMethods []*ci.MethodInfo
-	for _, method := range serviceInfo.Methods {
-		if method.RequireAuth {
-			perRouteConfigRequiredMethods = append(perRouteConfigRequiredMethods, method)
 		}
 	}
 
@@ -165,9 +180,9 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb
 	jas, _ := ptypes.MarshalAny(jwtAuthentication)
 	jwtAuthnFilter := &hcmpb.HttpFilter{
 		Name:       util.JwtAuthn,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{jas},
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: jas},
 	}
-	return jwtAuthnFilter, perRouteConfigRequiredMethods, nil
+	return jwtAuthnFilter, nil
 }
 
 func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string, error) {

@@ -2633,7 +2633,7 @@ func TestMakeRouteConfig(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := makeRouteConfig(fakeServiceInfo)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, nil)
 			if tc.wantedError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 					t.Fatalf("expected err: %v, got: %v", tc.wantedError, err)
@@ -3083,7 +3083,7 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := makeRouteConfig(fakeServiceInfo)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4442,7 +4442,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := makeRouteConfig(fakeServiceInfo)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, nil)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -4570,7 +4570,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 		gotRoute, err := makeRouteConfig(&configinfo.ServiceInfo{
 			Name:    "test-api",
 			Options: opts,
-		})
+		}, nil)
 		if tc.wantedError != "" {
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
@@ -4714,7 +4714,7 @@ func TestHeadersToAdd(t *testing.T) {
 		gotRoute, err := makeRouteConfig(&configinfo.ServiceInfo{
 			Name:    "test-api",
 			Options: opts,
-		})
+		}, nil)
 		if tc.wantedError != "" {
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
