@@ -118,8 +118,12 @@ func TestHealthCheckFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gen := &HealthCheckGenerator{}
-			filter, _, err := gen.GenFilterConfig(fakeServiceInfo)
+			gen := NewHealthCheckGenerator(fakeServiceInfo)
+			if !gen.IsEnabled() {
+				t.Fatal("HealthCheckGenerator is not enabled, want it to be enabled")
+			}
+
+			filter, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				t.Fatal(err)
 			}

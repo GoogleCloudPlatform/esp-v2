@@ -15,8 +15,6 @@
 package filtergen
 
 import (
-	"fmt"
-
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
@@ -26,24 +24,38 @@ import (
 	anypb "github.com/golang/protobuf/ptypes/any"
 )
 
-type CORSGenerator struct{}
+type CORSGenerator struct {
+	// skipFilter indicates if this filter is disabled based on options and config.
+	skipFilter bool
+}
+
+// NewCORSGenerator creates the CORSGenerator with cached config.
+func NewCORSGenerator(serviceInfo *ci.ServiceInfo) *CORSGenerator {
+	return &CORSGenerator{
+		skipFilter: serviceInfo.Options.CorsPreset != "basic" && serviceInfo.Options.CorsPreset != "cors_with_regex",
+	}
+}
 
 func (g *CORSGenerator) FilterName() string {
 	return util.CORS
 }
 
-func (g *CORSGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *CORSGenerator) IsEnabled() bool {
+	return !g.skipFilter
+}
+
+func (g *CORSGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	a, err := ptypes.MarshalAny(&corspb.Cors{})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	corsFilter := &hcmpb.HttpFilter{
 		Name:       util.CORS,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
 	}
-	return corsFilter, nil, nil
+	return corsFilter, nil
 }
 
 func (g *CORSGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	return nil, fmt.Errorf("UNIMPLEMENTED")
+	return nil, nil
 }

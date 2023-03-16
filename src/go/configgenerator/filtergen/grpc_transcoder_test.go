@@ -296,45 +296,6 @@ func TestTranscoderFilter(t *testing.T) {
 }
       `, fakeProtoDescriptor, testApiName),
 		},
-		{
-			desc: "Not generate transcoder filter without protofile",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-						Methods: []*apipb.Method{
-							{
-								Name: "foo",
-							},
-						},
-					},
-				},
-			},
-			wantTranscoderFilter: "",
-		},
-		{
-			desc: "Not generate transcoder filter with test-only http backend address",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-						Methods: []*apipb.Method{
-							{
-								Name: "foo",
-							},
-						},
-					},
-				},
-				SourceInfo: &confpb.SourceInfo{
-					SourceFiles: []*anypb.Any{content},
-				},
-			},
-			transcodingStrictRequestValidation: true,
-			localHTTPBackendAddress:            "http://127.0.0.1:8080",
-			wantTranscoderFilter:               "",
-		},
 	}
 
 	for _, tc := range testData {
@@ -356,8 +317,12 @@ func TestTranscoderFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gen := &GRPCTranscoderGenerator{}
-			filterConfig, _, err := gen.GenFilterConfig(fakeServiceInfo)
+			gen := NewGRPCTranscoderGenerator(fakeServiceInfo)
+			if !gen.IsEnabled() {
+				t.Fatal("GRPCTranscoderGenerator is not enabled, want it to be enabled")
+			}
+
+			filterConfig, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				t.Fatalf("GenFilterConfig got err %v, want no err", err)
 			}
@@ -378,6 +343,83 @@ func TestTranscoderFilter(t *testing.T) {
 
 			if err := util.JsonEqual(tc.wantTranscoderFilter, gotFilter); err != nil {
 				t.Errorf("GenFilterConfig has JSON diff\n%v", err)
+			}
+		})
+	}
+}
+
+func TestTranscoderFilter_Disabled(t *testing.T) {
+	rawDescriptor, err := proto.Marshal(&descpb.FileDescriptorSet{})
+	if err != nil {
+		t.Fatalf("Failed to marshal FileDescriptorSet: %v", err)
+	}
+
+	sourceFile := &smpb.ConfigFile{
+		FilePath:     "api_descriptor.pb",
+		FileContents: rawDescriptor,
+		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
+	}
+	content, err := anypb.New(sourceFile)
+	if err != nil {
+		t.Fatalf("Failed to marshal source file into any: %v", err)
+	}
+
+	testData := []struct {
+		desc                    string
+		fakeServiceConfig       *confpb.Service
+		localHTTPBackendAddress string
+	}{
+		{
+			desc: "Not generate transcoder filter without protofile",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Not generate transcoder filter with test-only http backend address",
+			fakeServiceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+			},
+			localHTTPBackendAddress: "http://127.0.0.1:8080",
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.BackendAddress = "grpc://127.0.0.0:80"
+			opts.LocalHTTPBackendAddress = tc.localHTTPBackendAddress
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			gen := NewGRPCTranscoderGenerator(fakeServiceInfo)
+			if gen.IsEnabled() {
+				t.Errorf("GRPCTranscoderGenerator is enabled, want it to be disabled")
 			}
 		})
 	}

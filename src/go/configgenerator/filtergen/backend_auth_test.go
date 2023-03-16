@@ -276,8 +276,12 @@ func TestBackendAuthFilter(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gen := BackendAuthGenerator{}
-			filterConfig, _, err := gen.GenFilterConfig(fakeServiceInfo)
+			gen := NewBackendAuthGenerator(fakeServiceInfo)
+			if !gen.IsEnabled() {
+				t.Fatal("BackendAuthGenerator is not enabled, want it to be enabled")
+			}
+
+			filterConfig, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
 					t.Fatalf("exepected err (%v), got err (%v)", tc.wantError, err)

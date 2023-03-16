@@ -28,68 +28,51 @@ type FilterGenerator interface {
 	// FilterName returns the name of the filter.
 	FilterName() string
 
-	// GenFilterConfig generates the filter config and a list of methods that need per-route configs.
-	GenFilterConfig(*ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error)
+	// IsEnabled returns true if the filter config should be generated.
+	// If false, none of the generation methods will be called.
+	IsEnabled() bool
 
-	// GenPerRouteConfig generates the per-route config for the given HTTP route.
-	// This method is only called on the routes that `GenFilterConfig` returns.
+	// GenFilterConfig generates the filter config.
+	//
+	// Return (nil, nil) if the filter has no listener-level config, but may
+	// have per-route configurations.
+	GenFilterConfig(*ci.ServiceInfo) (*hcmpb.HttpFilter, error)
+
+	// GenPerRouteConfig generates the per-route config for the given HTTP route (HTTP pattern).
+	// The MethodInfo that contains the route is also provided.
+	//
+	// This method is called on all routes. Return (nil, nil) to indicate the
+	// filter does NOT require a per-route config for the given route.
 	GenPerRouteConfig(*ci.MethodInfo, *httppattern.Pattern) (*anypb.Any, error)
 }
 
 // MakeFilterGenerators provide of a slice of FilterGenerator in sequence.
 func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]FilterGenerator, error) {
-	var filterGenerators []FilterGenerator
+	return []FilterGenerator{
+		filtergen.NewCORSGenerator(serviceInfo),
 
-	if serviceInfo.Options.CorsPreset == "basic" || serviceInfo.Options.CorsPreset == "cors_with_regex" {
-		filterGenerators = append(filterGenerators, &filtergen.CORSGenerator{})
-	}
+		// Health check filter is behind Path Matcher filter, since Service Control
+		// filter needs to get the corresponding rule for health check in order to skip Report
+		filtergen.NewHealthCheckGenerator(serviceInfo),
+		filtergen.NewCompressorGenerator(serviceInfo, filtergen.GzipCompressor),
+		filtergen.NewCompressorGenerator(serviceInfo, filtergen.BrotliCompressor),
+		filtergen.NewJwtAuthnGenerator(serviceInfo),
+		filtergen.NewServiceControlGenerator(serviceInfo),
 
-	// Add Health Check filter if needed. It must behind Path Matcher filter, since Service Control
-	// filter needs to get the corresponding rule for health check cmake depend.insalls, in order to skip Report
-	if serviceInfo.Options.Healthz != "" {
-		filterGenerators = append(filterGenerators, &filtergen.HealthCheckGenerator{})
-	}
-
-	if serviceInfo.Options.EnableResponseCompression {
-		filterGenerators = append(filterGenerators, &filtergen.CompressorGenerator{
-			CompressorType: filtergen.GzipCompressor,
-		})
-		filterGenerators = append(filterGenerators, &filtergen.CompressorGenerator{
-			CompressorType: filtergen.BrotliCompressor,
-		})
-	}
-
-	// Add JWT Authn filter if needed.
-	if !serviceInfo.Options.SkipJwtAuthnFilter {
-		filterGenerators = append(filterGenerators, &filtergen.JwtAuthnGenerator{})
-	}
-
-	// Add Service Control filter if needed.
-	if !serviceInfo.Options.SkipServiceControlFilter {
-		filterGenerators = append(filterGenerators, &filtergen.ServiceControlGenerator{})
-	}
-
-	// Add gRPC Transcoder filter and gRPCWeb filter configs for gRPC backend.
-	if serviceInfo.GrpcSupportRequired {
 		// grpc-web filter should be before grpc transcoder filter.
 		// It converts content-type application/grpc-web to application/grpc and
 		// grpc transcoder will bypass requests with application/grpc content type.
 		// Otherwise grpc transcoder will try to transcode a grpc-web request which
 		// will fail.
-		filterGenerators = append(filterGenerators, &filtergen.GRPCWebGenerator{})
-		filterGenerators = append(filterGenerators, &filtergen.GRPCTranscoderGenerator{})
-	}
+		filtergen.NewGRPCWebGenerator(serviceInfo),
+		filtergen.NewGRPCTranscoderGenerator(serviceInfo),
 
-	filterGenerators = append(filterGenerators, &filtergen.BackendAuthGenerator{})
-	filterGenerators = append(filterGenerators, &filtergen.PathRewriteGenerator{})
+		filtergen.NewBackendAuthGenerator(serviceInfo),
+		filtergen.NewPathRewriteGenerator(serviceInfo),
+		filtergen.NewGRPCMetadataScrubberGenerator(serviceInfo),
 
-	if serviceInfo.Options.EnableGrpcForHttp1 {
-		// Add GrpcMetadataScrubber filter to retain gRPC trailers
-		filterGenerators = append(filterGenerators, &filtergen.GRPCMetadataScrubberGenerator{})
-	}
-
-	// Add Envoy Router filter so requests are routed upstream.
-	// Router filter should be the last.
-	filterGenerators = append(filterGenerators, &filtergen.RouterGenerator{})
-	return filterGenerators, nil
+		// Add Envoy Router filter so requests are routed upstream.
+		// Router filter should be the last.
+		&filtergen.RouterGenerator{},
+	}, nil
 }

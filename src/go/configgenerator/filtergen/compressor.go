@@ -38,11 +38,22 @@ const (
 )
 
 type CompressorGenerator struct {
-	CompressorType CompressorType
+	compressorType CompressorType
+
+	// skipFilter indicates if this filter is disabled based on options and config.
+	skipFilter bool
+}
+
+// NewCompressorGenerator creates the CompressorGenerator with cached config.
+func NewCompressorGenerator(serviceInfo *ci.ServiceInfo, compressorType CompressorType) *CompressorGenerator {
+	return &CompressorGenerator{
+		compressorType: compressorType,
+		skipFilter:     !serviceInfo.Options.EnableResponseCompression,
+	}
 }
 
 func (g *CompressorGenerator) FilterName() string {
-	switch g.CompressorType {
+	switch g.compressorType {
 	case GzipCompressor:
 		return util.EnvoyGzipCompressor
 	case BrotliCompressor:
@@ -51,14 +62,18 @@ func (g *CompressorGenerator) FilterName() string {
 	return ""
 }
 
-func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, []*ci.MethodInfo, error) {
+func (g *CompressorGenerator) IsEnabled() bool {
+	return !g.skipFilter
+}
+
+func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
 	cfg, name, err := g.getCompressorConfig()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	ca, err := ptypes.MarshalAny(cfg)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error marshaling %s Compressor config to Any: %v", name, err)
+		return nil, fmt.Errorf("error marshaling %s Compressor config to Any: %v", name, err)
 	}
 	cmp := &comppb.Compressor{
 		CompressorLibrary: &corepb.TypedExtensionConfig{
@@ -68,26 +83,26 @@ func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcm
 	}
 	a, err := ptypes.MarshalAny(cmp)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error marshaling Compressor filter config to Any: %v", err)
+		return nil, fmt.Errorf("error marshaling Compressor filter config to Any: %v", err)
 	}
 	return &hcmpb.HttpFilter{
 		Name: util.EnvoyCompressorFilter,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{
 			TypedConfig: a,
 		},
-	}, nil, nil
+	}, nil
 }
 
 func (g *CompressorGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	return nil, fmt.Errorf("UNIMPLEMENTED")
+	return nil, nil
 }
 
 func (g *CompressorGenerator) getCompressorConfig() (proto.Message, string, error) {
-	switch g.CompressorType {
+	switch g.compressorType {
 	case GzipCompressor:
 		return &gzippb.Gzip{}, util.EnvoyGzipCompressor, nil
 	case BrotliCompressor:
 		return &brpb.Brotli{}, util.EnvoyBrotliCompressor, nil
 	}
-	return nil, "", fmt.Errorf("unknown compressor type: %v", g.CompressorType)
+	return nil, "", fmt.Errorf("unknown compressor type: %v", g.compressorType)
 }
