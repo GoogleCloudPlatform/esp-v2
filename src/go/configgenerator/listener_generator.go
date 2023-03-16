@@ -49,10 +49,8 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 	return []*listenerpb.Listener{listener}, nil
 }
 
-// GetFilterConfigAndAddPerRouteConfigGen does two things
-//   - Return all http filter configs in a list
-//   - In place add the perRouteConfigGen function to all methods defined in serviceInfo
-func GetFilterConfigAndAddPerRouteConfigGen(serviceInfo *sc.ServiceInfo, filterGenerators []FilterGenerator) ([]*hcmpb.HttpFilter, error) {
+// MakeHttpFilterConfigs generates all enabled HTTP filter configs and returns them (ordered list).
+func MakeHttpFilterConfigs(serviceInfo *sc.ServiceInfo, filterGenerators []FilterGenerator) ([]*hcmpb.HttpFilter, error) {
 	var httpFilters []*hcmpb.HttpFilter
 
 	for _, filterGenerator := range filterGenerators {
@@ -82,7 +80,7 @@ func GetFilterConfigAndAddPerRouteConfigGen(serviceInfo *sc.ServiceInfo, filterG
 
 // MakeListener provides a dynamic listener for Envoy
 func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []FilterGenerator, localReplyConfig *hcmpb.LocalReplyConfig) (*listenerpb.Listener, error) {
-	httpFilters, err := GetFilterConfigAndAddPerRouteConfigGen(serviceInfo, filterGenerators)
+	httpFilters, err := MakeHttpFilterConfigs(serviceInfo, filterGenerators)
 	if err != nil {
 		return nil, err
 	}

@@ -38,7 +38,8 @@ type FilterGenerator interface {
 	// have per-route configurations.
 	GenFilterConfig(*ci.ServiceInfo) (*hcmpb.HttpFilter, error)
 
-	// GenPerRouteConfig generates the per-route config for the given HTTP route.
+	// GenPerRouteConfig generates the per-route config for the given HTTP route (HTTP pattern).
+	// The MethodInfo that contains the route is also provided.
 	//
 	// This method is called on all routes. Return (nil, nil) to indicate the
 	// filter does NOT require a per-route config for the given route.
