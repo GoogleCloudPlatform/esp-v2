@@ -161,7 +161,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			path:   "/auth/info/auth0",
 			apiKey: "api-key",
 			method: "GET",
-			token:  testdata.FakeCloudTokenMultiAudiences,
+			token:  testdata.FakeCloudTokenLongClaims,
 			mockedCheckResponse: &scpb.CheckResponse{
 				CheckInfo: &scpb.CheckResponse_CheckInfo{
 					ConsumerInfo: &scpb.CheckResponse_ConsumerInfo{

@@ -62,7 +62,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           200,
 			method:                  "/v1/shelves?key=api-key-0",
-			token:                   testdata.FakeCloudTokenMultiAudiences,
+			token:                   testdata.FakeCloudTokenLongClaims,
 			wantHandlerRequestCount: 3,
 			wantError:               `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 504 and body: upstream request timeout"}`,
 		},
@@ -73,7 +73,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			sleepTimes:              2,
 			sleepLengthMs:           200, // The handler will sleep too long twice, so envoy will retry these requests
 			method:                  "/v1/shelves?key=api-key-1",
-			token:                   testdata.FakeCloudTokenMultiAudiences,
+			token:                   testdata.FakeCloudTokenLongClaims,
 			wantHandlerRequestCount: 3,
 			wantResp:                `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
@@ -84,7 +84,7 @@ func TestServiceControlCheckRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           0, // The handler will not sleep, so envoy's request to the backend should be successful
 			method:                  "/v1/shelves?key=api-key-2",
-			token:                   testdata.FakeCloudTokenMultiAudiences,
+			token:                   testdata.FakeCloudTokenLongClaims,
 			wantHandlerRequestCount: 1,
 			wantResp:                `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
@@ -159,7 +159,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           200,
 			method:                  "/v1/shelves?key=api-key-0",
-			token:                   testdata.FakeCloudTokenMultiAudiences,
+			token:                   testdata.FakeCloudTokenLongClaims,
 			wantHandlerRequestCount: 3,
 		},
 		{
@@ -169,7 +169,7 @@ func TestServiceControlQuotaRetry(t *testing.T) {
 			sleepTimes:              3,
 			sleepLengthMs:           0,
 			method:                  "/v1/shelves/200?key=api-key-1",
-			token:                   testdata.FakeCloudTokenMultiAudiences,
+			token:                   testdata.FakeCloudTokenLongClaims,
 			wantHandlerRequestCount: 1,
 		},
 	}

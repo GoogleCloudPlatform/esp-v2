@@ -52,7 +52,7 @@ func TestWebsocket(t *testing.T) {
 			query: "key=api-key",
 			header: map[string][]string{
 				"Authorization": {
-					"Bearer " + testdata.FakeCloudTokenMultiAudiences,
+					"Bearer " + testdata.FakeCloudTokenLongClaims,
 				},
 			},
 			schema:       "ws",

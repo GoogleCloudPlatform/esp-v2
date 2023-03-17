@@ -125,14 +125,14 @@ func TestServiceControlWithTLS(t *testing.T) {
 	}{
 		{
 			desc:     "Succeed, ServiceControl HTTPS server uses same cert as proxy",
-			token:    testdata.FakeCloudTokenMultiAudiences,
+			token:    testdata.FakeCloudTokenLongClaims,
 			certPath: platform.GetFilePath(platform.ProxyCert),
 			keyPath:  platform.GetFilePath(platform.ProxyKey),
 			wantResp: `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
 			desc:      "Failed to call ServiceControl HTTPS server, with different Cert as proxy",
-			token:     testdata.FakeCloudTokenMultiAudiences,
+			token:     testdata.FakeCloudTokenLongClaims,
 			port:      platform.TestServiceControlTLSWithValidCert,
 			certPath:  platform.GetFilePath(platform.MismatchCert),
 			keyPath:   platform.GetFilePath(platform.MismatchKey),

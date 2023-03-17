@@ -171,7 +171,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			clientProtocol:  "http",
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
-			token:           testdata.FakeCloudTokenMultiAudiences,
+			token:           testdata.FakeCloudTokenLongClaims,
 			wantResp:        `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`, wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -204,7 +204,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			clientProtocol:  "http",
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
-			token:           testdata.FakeCloudTokenMultiAudiences,
+			token:           testdata.FakeCloudTokenLongClaims,
 			wantError:       `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 504 and body: upstream request timeout"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
@@ -303,7 +303,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 		},
 		{
@@ -319,7 +319,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantError:      `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:One or more Google Service Control backends are unavailable."}`,
 		},
 		{
@@ -335,7 +335,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantError:      `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:Client project not valid. Please pass a valid project."}`,
 		},
 	}

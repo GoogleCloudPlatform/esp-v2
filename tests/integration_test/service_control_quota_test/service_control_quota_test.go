@@ -75,7 +75,7 @@ func TestServiceControlQuota(t *testing.T) {
 			desc:           "succeed, quota allocation works well",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
@@ -125,7 +125,7 @@ func TestServiceControlQuota(t *testing.T) {
 			desc:           "Quota not called when Check fails with invalid API Key",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=invalid-api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
 			mockedCheckResponse: &scpb.CheckResponse{
 				CheckErrors: []*scpb.CheckError{
@@ -254,7 +254,7 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 			desc:           "first request is granted with 3 service calls: check, quota and report",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
@@ -307,7 +307,7 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 			desc:           "second call, request is granted with 2 service control: quota, report",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
@@ -351,7 +351,7 @@ func TestServiceControlQuotaFailOpen(t *testing.T) {
 			desc:           "third call, request is granted with 2 service control: quota, report",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
@@ -462,7 +462,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			desc:           "succeed, the first request of failed quota allocation is replied with success",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
 			wantResp:       `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantScRequests: []interface{}{
@@ -512,7 +512,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			desc:           "failed, the requests after failed qutoa allocation request will be denied",
 			clientProtocol: "http",
 			method:         "/v1/shelves?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
 			httpCallError:  `429 Too Many Requests, {"code":429,"message":"RESOURCE_EXHAUSTED"}`,
 			wantScRequests: []interface{}{

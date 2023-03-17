@@ -94,7 +94,7 @@ func TestTranscodingErrors(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/200/books/2002?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantErr:        "404 Not Found",
 		},
 		{
@@ -102,7 +102,7 @@ func TestTranscodingErrors(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			bodyBytes:      []byte(`NO_BRACES_JSON`),
 			wantErr: `400 Bad Request, {"code":400,"message":"Unexpected token.
 NO_BRACES_JSON
@@ -113,7 +113,7 @@ NO_BRACES_JSON
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			bodyBytes:      []byte(`{"theme" : "Children"`),
 			wantErr: `400 Bad Request, {"code":400,"message":"Unexpected end of string. Expected , or } after key:value pair.
 
@@ -124,7 +124,7 @@ NO_BRACES_JSON
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			bodyBytes:      []byte(`{"theme"  "Children"}`),
 			wantErr: `400 Bad Request, {"code":400,"message":"Expected : between key:value pair.
 {"theme"  "Children"}
@@ -135,7 +135,7 @@ NO_BRACES_JSON
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/0/books?key=api-key",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			bodyBytes:      []byte(`{"theme" : "Children"}EXTRA`),
 			wantErr: `{"code":400,"message":"Parsing terminated before end of input.
 theme" : "Children"}EXTRA
