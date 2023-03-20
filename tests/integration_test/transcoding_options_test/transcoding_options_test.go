@@ -141,7 +141,7 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 			httpMethod:     "POST",
 			method:         "/v1/shelves/100/books?key=api-key&unknown_parameter=val",
 			bodyBytes:      []byte(`{"id": 4, "type": 1, "author":"Mark", "priceInUsd": 100}`),
-			wantError:      "503 Service Unavailable",
+			wantError:      "http response status is not 200 OK: 415 Unsupported Media Type",
 		},
 		{
 			desc:                                    "Success. Set transcodingIgnoreUnknownQueryParameters to true.",
@@ -159,7 +159,7 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 			method:                           "/v1/shelves/100/books?key=api-key&unknown_parameter_foo=val&unknown_parameter_bar=val",
 			bodyBytes:                        []byte(`{"id": 4, "type": 1, "author":"Mark", "priceInUsd": 100}`),
 			transcodingIgnoreQueryParameters: "unknown_parameter_foo",
-			wantError:                        "503 Service Unavailable",
+			wantError:                        "http response status is not 200 OK: 415 Unsupported Media Type",
 		},
 		{
 			desc:                             "Success. Set right transcodingIgnoreQueryParameters.",
@@ -207,7 +207,7 @@ func TestTranscodingIgnoreParameters(t *testing.T) {
 			}
 
 			if !strings.Contains(err.Error(), tc.wantError) {
-				t.Errorf("Test (%s): failed with unexpected error, want: %v, get: %s", tc.desc, err, tc.wantError)
+				t.Errorf("Test (%s): failed with unexpected error, got: %v, want: %v", tc.desc, err, tc.wantError)
 			}
 		}()
 	}

@@ -147,7 +147,7 @@ theme" : "Children"}EXTRA
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/100?key=api-key&badQueryParam=test",
-			wantErr:        `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: remote reset"}`,
+			wantErr:        `http response status is not 200 OK: 415 Unsupported Media Type`,
 		},
 	}
 	for _, tc := range tests {

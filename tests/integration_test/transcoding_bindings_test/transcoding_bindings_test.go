@@ -222,7 +222,7 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 			disallowColonInWildcardPathSegment: false,
 			method:                             "/v1/shelves/100/single/random:registeredCustomVerb?key=api-key",
 			bodyBytes:                          []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
-			wantErr:                            `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: remote reset"}`,
+			wantErr:                            `http response status is not 200 OK: 415 Unsupported Media Type`,
 		},
 		{
 			desc:                               "Failed, registered custom verb is matched with trailing double wildcard in route but not in transcoder filter",
@@ -231,7 +231,7 @@ func TestTranscodingBindingsForCustomVerb(t *testing.T) {
 			disallowColonInWildcardPathSegment: false,
 			method:                             "/v1/shelves/100/double/random:registeredCustomVerb?key=api-key",
 			bodyBytes:                          []byte(`{"id": 5, "author" : "Leo Tolstoy", "title" : "War and Peace"}`),
-			wantErr:                            `503 Service Unavailable, {"code":503,"message":"upstream connect error or disconnect/reset before headers. retried and the latest reset reason: remote reset"}`,
+			wantErr:                            `http response status is not 200 OK: 415 Unsupported Media Type`,
 		},
 		{
 			desc:                               "Failed, registered custom verb is not matched with trailing single wildcard by either route regex or transcoder filter",
