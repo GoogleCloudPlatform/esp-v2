@@ -122,7 +122,7 @@ func TestGRPC(t *testing.T) {
 			desc:           "Http client calling gRPC backend invalid query parameter, causing transcoding to fail by default",
 			clientProtocol: "http",
 			method:         "/v1/shelves/200?key=api_key&foo=bar",
-			wantError:      "503 Service Unavailable", // Transcoder does not send an application/grpc to the backend
+			wantError:      "http response status is not 200 OK: 415 Unsupported Media Type", // Transcoder does not send an application/grpc to the backend
 		},
 		{
 			desc:           "gRPC client calling gRPC backend, backend returns gRPC error",
