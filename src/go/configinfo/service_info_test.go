@@ -1746,12 +1746,71 @@ func TestMethods(t *testing.T) {
 	}
 }
 
+func TestProcessBackendRuleForHTTPBackend(t *testing.T) {
+	testData := []struct {
+		desc              string
+		fakeServiceConfig *confpb.Service
+		// Map of selector to the expected deadline for the corresponding route.
+		wantErrString string
+	}{
+		{
+			desc: "Wrong protocol scheme caught for HTTP backend",
+			fakeServiceConfig: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": &confpb.BackendRule{
+									Address:  "grpc://http.abc.com/api/",
+									Deadline: 20.5,
+								},
+							},
+						},
+					},
+				},
+			},
+			wantErrString: "gRPC protocol conflicted with http backend",
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+
+			if tc.wantErrString != "" {
+				if err == nil {
+					t.Errorf("Service info got error nil; want non-nil error containing string %q", tc.wantErrString)
+				} else if !strings.Contains(err.Error(), tc.wantErrString) {
+					t.Errorf("Service info got error %v; want error containing string %q", err, tc.wantErrString)
+				}
+			} else if err != nil {
+				t.Errorf("Service info got error %v; want nil error", err)
+			}
+		})
+	}
+}
+
 func TestProcessBackendRuleForDeadline(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *confpb.Service
 		// Map of selector to the expected deadline for the corresponding route.
-		wantedMethodDeadlines map[string]time.Duration
+		wantedMethodDeadlines      map[string]time.Duration
+		wantedHTTPBackendDeadlines map[string]time.Duration
 	}{
 		{
 			desc: "Mixed deadlines across multiple backend rules",
@@ -1780,6 +1839,12 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 							Address:  "grpc://abc.com/api/",
 							Selector: "abc.com.api",
 							Deadline: 10.5,
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": &confpb.BackendRule{
+									Address:  "http://http.abc.com/api/",
+									Deadline: 20.5,
+								},
+							},
 						},
 						{
 							Address:  "grpc://cnn.com/api/",
@@ -1792,6 +1857,9 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 			wantedMethodDeadlines: map[string]time.Duration{
 				"abc.com.api": 10*time.Second + 500*time.Millisecond,
 				"cnn.com.api": 20 * time.Second,
+			},
+			wantedHTTPBackendDeadlines: map[string]time.Duration{
+				"abc.com.api": 20*time.Second + 500*time.Millisecond,
 			},
 		},
 		{
@@ -1913,6 +1981,18 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 				if wantDeadline != gotDeadline {
 					t.Errorf("Deadline not expected, got: %v, want: %v", gotDeadline, wantDeadline)
 				}
+
+				if wantedHTTPBackendDeadlines, ok := tc.wantedHTTPBackendDeadlines[operation]; !ok {
+					continue
+				} else {
+					if mi.HttpBackendInfo == nil {
+						t.Fatalf("HTTP backend info is nil; want non-nil because the http backend rule is specified.")
+					}
+					gotHTTPBackendDeadline := mi.HttpBackendInfo.Deadline
+					if wantedHTTPBackendDeadlines != gotHTTPBackendDeadline {
+						t.Errorf("Deadline not expected, got: %v, want: %v", gotHTTPBackendDeadline, wantDeadline)
+					}
+				}
 			}
 		})
 	}
@@ -1924,7 +2004,8 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 		fakeServiceConfig *confpb.Service
 		globalIdleTimeout time.Duration
 		// Map of selector to the expected idle timeout for the corresponding route.
-		wantedMethodIdleTimeout map[string]time.Duration
+		wantedMethodIdleTimeout      map[string]time.Duration
+		wantedHTTPBackendIdleTimeout map[string]time.Duration
 	}{
 		{
 			desc:              "Global idle timeout takes priority over small deadline",
@@ -1946,11 +2027,21 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 							Address:  "grpc://abc.com/api/",
 							Selector: "abc.com.api",
 							Deadline: 10.5,
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": &confpb.BackendRule{
+									Address:  "http://abc.com/api/",
+									Selector: "abc.com.api.by.override",
+									Deadline: 11.5,
+								},
+							},
 						},
 					},
 				},
 			},
 			wantedMethodIdleTimeout: map[string]time.Duration{
+				"abc.com.api": util.DefaultIdleTimeout,
+			},
+			wantedHTTPBackendIdleTimeout: map[string]time.Duration{
 				"abc.com.api": util.DefaultIdleTimeout,
 			},
 		},
@@ -2183,6 +2274,18 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 
 				if gotIdleTimeout != wantIdleTimeout {
 					t.Errorf("IdleTimeout not expected, got: %v, want: %v", gotIdleTimeout, wantIdleTimeout)
+				}
+
+				if wantedHTTPBackendIdleTimeout, ok := tc.wantedHTTPBackendIdleTimeout[operation]; !ok {
+					continue
+				} else {
+					if mi.HttpBackendInfo == nil {
+						t.Fatalf("HTTP backend info is nil; want non-nil because the http backend rule is specified.")
+					}
+					gotHTTPBackendIdleTimeout := mi.HttpBackendInfo.IdleTimeout
+					if wantedHTTPBackendIdleTimeout != gotHTTPBackendIdleTimeout {
+						t.Errorf("IdleTimeout not expected, got: %v, want: %v", gotHTTPBackendIdleTimeout, wantedHTTPBackendIdleTimeout)
+					}
 				}
 			}
 		})
@@ -2884,6 +2987,7 @@ func TestProcessBackendRuleForRetry(t *testing.T) {
 		})
 	}
 }
+
 func TestBackendAddressOverride(t *testing.T) {
 	testData := []struct {
 		desc                         string

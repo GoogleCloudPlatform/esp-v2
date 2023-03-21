@@ -34,6 +34,10 @@ import (
 	typepb "google.golang.org/genproto/protobuf/ptype"
 )
 
+const (
+	httpBackendProtocolKey = "http"
+)
+
 // ServiceInfo contains service level information.
 type ServiceInfo struct {
 	Name     string
@@ -548,70 +552,93 @@ func (s *ServiceInfo) processBackendRule() error {
 			glog.Warningf("Skip backend rule %q because discovery API is not supported.", selector)
 			continue
 		}
+		method, err := s.getMethod(r.GetSelector())
+		if err != nil {
+			return err
+		}
 		if r.Address == "" || s.Options.EnableBackendAddressOverride {
 			// Processing a backend rule associated with the local backend.
-			if err := s.addBackendInfoToMethod(r, "", "", "", s.LocalBackendClusterName(), 0); err != nil {
+			bi, err := s.ruleToBackendInfo(r, "", "", "", s.LocalBackendClusterName(), 0)
+			if err != nil {
 				return fmt.Errorf("error processing local backend rule for operation (%v), %v", r.Selector, err)
 			}
+			method.BackendInfo = bi
 		} else {
-			// Processing a backend rule associated with a remote backend.
-			scheme, hostname, port, path, err := util.ParseURI(r.Address)
-			if err != nil {
-				return fmt.Errorf("error parsing remote backend rule's address for operation (%v), %v", r.Selector, err)
-			}
-			address := fmt.Sprintf("%v:%v", hostname, port)
-
-			if _, exist := backendRoutingClustersMap[address]; !exist {
-				// Create cluster for the remote backend.
-				protocol, tls, err := util.ParseBackendProtocol(scheme, r.Protocol)
-				if err != nil {
-					return fmt.Errorf("error parsing remote backend rule's protocol for operation (%v), %v", r.Selector, err)
-				}
-				if protocol == util.GRPC {
-					s.GrpcSupportRequired = true
-				}
-
-				backendClusterName := util.BackendClusterName(address)
-				s.RemoteBackendClusters = append(s.RemoteBackendClusters,
-					&BackendRoutingCluster{
-						ClusterName: backendClusterName,
-						UseTLS:      tls,
-						Protocol:    protocol,
-						Hostname:    hostname,
-						Port:        port,
-					})
-				backendRoutingClustersMap[address] = backendClusterName
-			}
-
-			backendClusterName := backendRoutingClustersMap[address]
-			if err := s.addBackendInfoToMethod(r, scheme, hostname, path, backendClusterName, port); err != nil {
-				return fmt.Errorf("error processing remote backend rule for operation (%v), %v", r.Selector, err)
-			}
-		}
-
-		// TODO(b/264413763): Remove the test only below once we make backend rule support multiple
-		// addresses.
-		if s.LocalHTTPBackendCluster != nil {
-			method, err := s.getMethod(r.GetSelector())
-			if err != nil {
+			if err := s.addBackendRuleToMethod(r, backendRoutingClustersMap, method, false); err != nil {
 				return err
 			}
+		}
+		httpBackendRule := r.GetOverridesByRequestProtocol()[httpBackendProtocolKey]
+		if httpBackendRule == nil {
+			if s.LocalHTTPBackendCluster == nil {
+				continue
+			}
+			// Local HTTP backend cluster exists. Add it to the http backend info for the method.
 			idleTimeout := calculateStreamIdleTimeout(util.DefaultResponseDeadline, s.Options)
 			method.HttpBackendInfo = &backendInfo{
 				ClusterName: s.LocalHTTPBackendCluster.ClusterName,
 				Deadline:    util.DefaultResponseDeadline,
 				IdleTimeout: idleTimeout,
 			}
+			continue
 		}
-
+		// TODO(yangshuo): remove this after the API compiler ensures it.
+		httpBackendRule.Selector = r.Selector
+		if err := s.addBackendRuleToMethod(httpBackendRule, backendRoutingClustersMap, method, true); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string, port uint32) error {
+func (s *ServiceInfo) addBackendRuleToMethod(r *confpb.BackendRule, addressToCluster map[string]string, method *MethodInfo, isHTTPBackend bool) error {
+	scheme, hostname, port, path, err := util.ParseURI(r.Address)
+	if err != nil {
+		return fmt.Errorf("error parsing remote backend rule's address for operation (%v), %v", r.Selector, err)
+	}
+	address := fmt.Sprintf("%v:%v", hostname, port)
+
+	if _, exist := addressToCluster[address]; !exist {
+		// Create a cluster for the remote backend.
+		protocol, tls, err := util.ParseBackendProtocol(scheme, r.Protocol)
+		if err != nil {
+			return fmt.Errorf("error parsing remote backend rule's protocol for operation (%v), %v", r.Selector, err)
+		}
+		if protocol == util.GRPC {
+			if isHTTPBackend {
+				return fmt.Errorf("gRPC protocol conflicted with http backend; this is an API compiler bug")
+			}
+			s.GrpcSupportRequired = true
+		}
+
+		backendClusterName := util.BackendClusterName(address)
+		s.RemoteBackendClusters = append(s.RemoteBackendClusters,
+			&BackendRoutingCluster{
+				ClusterName: backendClusterName,
+				UseTLS:      tls,
+				Protocol:    protocol,
+				Hostname:    hostname,
+				Port:        port,
+			})
+		addressToCluster[address] = backendClusterName
+	}
+
+	backendClusterName := addressToCluster[address]
+
+	if bi, err := s.ruleToBackendInfo(r, scheme, hostname, path, backendClusterName, port); err != nil {
+		return fmt.Errorf("error processing remote backend rule for operation (%v), %v", r.Selector, err)
+	} else if isHTTPBackend {
+		method.HttpBackendInfo = bi
+	} else {
+		method.BackendInfo = bi
+	}
+	return nil
+}
+
+func (s *ServiceInfo) ruleToBackendInfo(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string, port uint32) (*backendInfo, error) {
 	method, err := s.getMethod(r.GetSelector())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// For CONSTANT_ADDRESS, an empty uri will generate an empty path header.
@@ -654,7 +681,7 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 		idleTimeout = calculateStreamIdleTimeout(deadline, s.Options)
 	}
 
-	method.BackendInfo = &backendInfo{
+	bi := &backendInfo{
 		ClusterName:     backendClusterName,
 		Path:            path,
 		Hostname:        hostname,
@@ -672,9 +699,9 @@ func (s *ServiceInfo) addBackendInfoToMethod(r *confpb.BackendRule, scheme strin
 			r.Selector)
 		jwtAud = ""
 	}
-	method.BackendInfo.JwtAudience = jwtAud
+	bi.JwtAudience = jwtAud
 
-	return nil
+	return bi, nil
 }
 
 func (s *ServiceInfo) determineBackendAuthJwtAud(r *confpb.BackendRule, scheme string, hostname string) string {
