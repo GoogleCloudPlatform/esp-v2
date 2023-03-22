@@ -34,10 +34,6 @@ import (
 	typepb "google.golang.org/genproto/protobuf/ptype"
 )
 
-const (
-	httpBackendProtocolKey = "http"
-)
-
 // ServiceInfo contains service level information.
 type ServiceInfo struct {
 	Name     string
@@ -121,14 +117,8 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	// * Methods:
 	//		 set by processApis, processHttpRule, addGrpcHttpRules, processUsageRule
 	//     used by processApiKeyLocations
-	if err := serviceInfo.buildBackendFromAddress(opts.BackendAddress, false); err != nil {
+	if err := serviceInfo.buildBackendFromAddress(opts.BackendAddress); err != nil {
 		return nil, err
-	}
-	if opts.LocalHTTPBackendAddress != "" {
-		err := serviceInfo.buildBackendFromAddress(opts.LocalHTTPBackendAddress, true)
-		if err != nil {
-			return nil, err
-		}
 	}
 	serviceInfo.processEndpoints()
 	if err := serviceInfo.processApis(); err != nil {
@@ -177,7 +167,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 	return serviceInfo, nil
 }
 
-func (s *ServiceInfo) buildBackendFromAddress(address string, isLocalHTTPBackend bool) error {
+func (s *ServiceInfo) buildBackendFromAddress(address string) error {
 	scheme, hostname, port, _, err := util.ParseURI(address)
 	if err != nil {
 		return fmt.Errorf("error parsing uri: %v", err)
@@ -190,7 +180,7 @@ func (s *ServiceInfo) buildBackendFromAddress(address string, isLocalHTTPBackend
 		return fmt.Errorf("error parsing local backend protocol: %v", err)
 	}
 
-	if s.Options.HealthCheckGrpcBackend && !isLocalHTTPBackend {
+	if s.Options.HealthCheckGrpcBackend {
 		if protocol != util.GRPC {
 			return fmt.Errorf("invalid flag --health_check_grpc_backend, backend protocol must be GRPC.")
 		}
@@ -199,22 +189,12 @@ func (s *ServiceInfo) buildBackendFromAddress(address string, isLocalHTTPBackend
 	if protocol == util.GRPC {
 		s.GrpcSupportRequired = true
 	}
-	if !isLocalHTTPBackend {
-		s.LocalBackendCluster = &BackendRoutingCluster{
-			UseTLS:      tls,
-			Protocol:    protocol,
-			ClusterName: s.LocalBackendClusterName(),
-			Hostname:    hostname,
-			Port:        port,
-		}
-	} else {
-		s.LocalHTTPBackendCluster = &BackendRoutingCluster{
-			UseTLS:      tls,
-			Protocol:    protocol,
-			ClusterName: s.LocalHttpBackendClusterName(),
-			Hostname:    hostname,
-			Port:        port,
-		}
+	s.LocalBackendCluster = &BackendRoutingCluster{
+		UseTLS:      tls,
+		Protocol:    protocol,
+		ClusterName: s.LocalBackendClusterName(),
+		Hostname:    hostname,
+		Port:        port,
 	}
 	return nil
 }
@@ -568,18 +548,8 @@ func (s *ServiceInfo) processBackendRule() error {
 				return err
 			}
 		}
-		httpBackendRule := r.GetOverridesByRequestProtocol()[httpBackendProtocolKey]
+		httpBackendRule := r.GetOverridesByRequestProtocol()[util.HTTPBackendProtocolKey]
 		if httpBackendRule == nil {
-			if s.LocalHTTPBackendCluster == nil {
-				continue
-			}
-			// Local HTTP backend cluster exists. Add it to the http backend info for the method.
-			idleTimeout := calculateStreamIdleTimeout(util.DefaultResponseDeadline, s.Options)
-			method.HttpBackendInfo = &backendInfo{
-				ClusterName: s.LocalHTTPBackendCluster.ClusterName,
-				Deadline:    util.DefaultResponseDeadline,
-				IdleTimeout: idleTimeout,
-			}
 			continue
 		}
 		// TODO(yangshuo): remove this after the API compiler ensures it.
@@ -786,15 +756,6 @@ func (s *ServiceInfo) processLocalBackendOperations() error {
 			ClusterName: s.LocalBackendCluster.ClusterName,
 			Deadline:    util.DefaultResponseDeadline,
 			IdleTimeout: idleTimeout,
-		}
-
-		// Associate the method with the HTTP backend.
-		if s.LocalHTTPBackendCluster != nil {
-			method.HttpBackendInfo = &backendInfo{
-				ClusterName: s.LocalHTTPBackendCluster.ClusterName,
-				Deadline:    util.DefaultResponseDeadline,
-				IdleTimeout: idleTimeout,
-			}
 		}
 	}
 

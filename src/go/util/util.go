@@ -133,6 +133,9 @@ const (
 	// The serverless platform for the flag --compute_platform_override
 	// It is copied from SERVERLESS_PLATFORM at "docker/start_proxy.py"
 	ServerlessPlatform = "Cloud Run(ESPv2)"
+
+	// HTTPBackendProtocolKey is the HTTP backend rule key defined in backend rules.
+	HTTPBackendProtocolKey = "http"
 )
 
 type BackendProtocol int32

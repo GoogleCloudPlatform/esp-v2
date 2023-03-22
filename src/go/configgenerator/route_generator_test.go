@@ -2692,7 +2692,8 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
           },
           "name": "endpoints.examples.bookstore.Bookstore.Echo",
           "route": {
-            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local_http",
+	    "cluster": "backend-cluster-http-backend:8081",
+            "hostRewriteLiteral": "http-backend",
             "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
@@ -2718,7 +2719,8 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
           },
           "name": "endpoints.examples.bookstore.Bookstore.Echo",
           "route": {
-            "cluster": "backend-cluster-bookstore.endpoints.project123.cloud.goog_local_http",
+	    "cluster": "backend-cluster-http-backend:8081",
+            "hostRewriteLiteral": "http-backend",
             "idleTimeout": "300s",
             "retryPolicy": {
               "numRetries": 1,
@@ -3078,6 +3080,19 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 				},
 				},
 			}
+			if tc.httpBackendAddress != "" {
+				fakeServiceConfig.Backend = &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: fmt.Sprintf("%s.Echo", testApiName),
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": &confpb.BackendRule{Address: tc.httpBackendAddress},
+							},
+						},
+					},
+				}
+			}
+
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
