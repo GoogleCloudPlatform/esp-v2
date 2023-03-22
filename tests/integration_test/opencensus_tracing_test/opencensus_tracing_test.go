@@ -84,7 +84,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 			sleepTimes:     3,
 			sleepLengthMs:  200,
 			method:         "/v1/shelves?key=api-key-0",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantSpanNames: []string{
 				"JWT Remote PubKey Fetch", // The first request will result in a JWT call
 				"Service Control remote call: Check",
@@ -100,7 +100,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 			sleepTimes:     2,
 			sleepLengthMs:  200, // The handler will sleep too long twice, so envoy will retry these requests
 			method:         "/v1/shelves?key=api-key-1",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
 				"Service Control remote call: Check - Retry 1",
@@ -116,7 +116,7 @@ func TestTracesServiceControlCheckWithRetry(t *testing.T) {
 			sleepTimes:     3,
 			sleepLengthMs:  0, // The handler will not sleep, so envoy's request to the backend should be successful
 			method:         "/v1/shelves?key=api-key-2",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantSpanNames: []string{
 				"Service Control remote call: Check",
 				"router backend-cluster-bookstore.endpoints.cloudesf-testing.cloud.goog_local egress",
@@ -662,7 +662,7 @@ func TestTraceContextPropagationHeadersForScCheck(t *testing.T) {
 			}
 
 			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
-			_, err := bsclient.MakeCall("http", addr, "GET", "/v1/shelves?key=api-key-2", testdata.FakeCloudTokenMultiAudiences, incomingTraceContexts)
+			_, err := bsclient.MakeCall("http", addr, "GET", "/v1/shelves?key=api-key-2", testdata.FakeCloudTokenLongClaims, incomingTraceContexts)
 			if err != nil {
 				t.Errorf("expected no err, got err: %v", err)
 				return

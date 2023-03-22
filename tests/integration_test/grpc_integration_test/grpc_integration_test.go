@@ -234,21 +234,21 @@ func TestGRPCWeb(t *testing.T) {
 		// Successes:
 		{
 			method:      "ListShelves",
-			token:       testdata.FakeCloudTokenMultiAudiences,
+			token:       testdata.FakeCloudTokenLongClaims,
 			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    `{"shelves":[{"id":"100","theme":"Kids"},{"id":"200","theme":"Classic"}]}`,
 			wantTrailer: successTrailer,
 		},
 		{
 			method:      "DeleteShelf",
-			token:       testdata.FakeCloudTokenMultiAudiences,
+			token:       testdata.FakeCloudTokenLongClaims,
 			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    "{}",
 			wantTrailer: successTrailer,
 		},
 		{
 			method:      "GetShelf",
-			token:       testdata.FakeCloudTokenMultiAudiences,
+			token:       testdata.FakeCloudTokenLongClaims,
 			header:      http.Header{"x-api-key": []string{"api-key"}},
 			wantResp:    `{"id":"100","theme":"Kids"}`,
 			wantTrailer: successTrailer,
@@ -256,19 +256,19 @@ func TestGRPCWeb(t *testing.T) {
 		// Failures:
 		{
 			method:      "GetShelf",
-			token:       testdata.FakeCloudTokenMultiAudiences,
+			token:       testdata.FakeCloudTokenLongClaims,
 			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"ABORTED"}},
 			wantTrailer: abortedTrailer,
 		},
 		{
 			method:      "DeleteShelf",
-			token:       testdata.FakeCloudTokenMultiAudiences,
+			token:       testdata.FakeCloudTokenLongClaims,
 			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"INTERNAL"}},
 			wantTrailer: internalTrailer,
 		},
 		{
 			method:      "ListShelves",
-			token:       testdata.FakeCloudTokenMultiAudiences,
+			token:       testdata.FakeCloudTokenLongClaims,
 			header:      http.Header{"x-api-key": []string{"api-key"}, client.TestHeaderKey: []string{"DATA_LOSS"}},
 			wantTrailer: dataLossTrailer,
 		},
@@ -469,7 +469,7 @@ func TestGRPCJwt(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "POST",
 			method:         "/v1/shelves/200/books?key=api-key&&book.title=Romeo%20and%20Julie",
-			token:          testdata.FakeCloudTokenMultiAudiences,
+			token:          testdata.FakeCloudTokenLongClaims,
 			wantResp:       `{"title":"Romeo and Julie"}`,
 		},
 		// Testing JWT with multiple Providers, token from anyone should work,
