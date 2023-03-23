@@ -16,6 +16,7 @@ package configgenerator
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -30,7 +31,6 @@ import (
 )
 
 // MakeClusters provides dynamic cluster settings for Envoy
-// This must be called before MakeListeners.
 func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 	var clusters []*clusterpb.Cluster
 	backendCluster, err := makeLocalBackendCluster(serviceInfo)
@@ -79,9 +79,6 @@ func MakeClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {
 		clusters = append(clusters, iamCluster)
 	}
 
-	// Note: makeServiceControlCluster should be called before makeListener
-	// as makeServiceControlFilter is using m.serviceControlURI assigned by
-	// makeServiceControlCluster
 	scCluster, err := makeServiceControlCluster(serviceInfo)
 	if err != nil {
 		return nil, err
@@ -346,37 +343,23 @@ func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, e
 }
 
 func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
-	uri := serviceControlURL(serviceInfo, serviceInfo.Options)
-	if uri == "" {
-		return nil, nil
-	}
-
-	// The assumption about control.environment field. Its format:
-	//   [scheme://] +  host + [:port]
-	// * It should not have any path part
-	// * If scheme is missed, https is the default
-
-	scheme, hostname, port, path, err := util.ParseURI(uri)
+	port, err := strconv.Atoi(serviceInfo.ServiceControlURI.Port())
 	if err != nil {
-		return nil, err
-	}
-	if path != "" {
-		return nil, fmt.Errorf("error parsing service control URI: should not have path part: %s, %s", uri, path)
+		return nil, fmt.Errorf("failed to parse port from url %+v: %v", serviceInfo.ServiceControlURI, err)
 	}
 
 	connectTimeoutProto := ptypes.DurationProto(5 * time.Second)
-	serviceInfo.ServiceControlURI = scheme + "://" + hostname + "/v1/services"
 	c := &clusterpb.Cluster{
 		Name:                 util.ServiceControlClusterName,
 		LbPolicy:             clusterpb.Cluster_ROUND_ROBIN,
 		ConnectTimeout:       connectTimeoutProto,
 		DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
-		ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
-		LoadAssignment:       util.CreateLoadAssignment(hostname, port),
+		ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+		LoadAssignment:       util.CreateLoadAssignment(serviceInfo.ServiceControlURI.Hostname(), uint32(port)),
 	}
 
-	if scheme == "https" {
-		transportSocket, err := util.CreateUpstreamTransportSocket(hostname, serviceInfo.Options.SslSidestreamClientRootCertsPath, "", nil, "")
+	if serviceInfo.ServiceControlURI.Scheme == "https" {
+		transportSocket, err := util.CreateUpstreamTransportSocket(serviceInfo.ServiceControlURI.Hostname(), serviceInfo.Options.SslSidestreamClientRootCertsPath, "", nil, "")
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling tls context to transport_socket config for cluster %s, err=%v",
 				c.Name, err)
@@ -385,14 +368,6 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster,
 	}
 
 	return c, nil
-}
-
-func serviceControlURL(serviceInfo *sc.ServiceInfo, opts options.ConfigGeneratorOptions) string {
-	if uri := opts.ServiceControlURL; uri != "" {
-		// Ignore value from ServiceConfig if flag is set
-		return uri
-	}
-	return serviceInfo.ServiceConfig().GetControl().GetEnvironment()
 }
 
 func makeRemoteBackendClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster, error) {

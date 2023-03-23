@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"sort"
 	"strings"
@@ -3986,6 +3987,113 @@ func TestProcessUsageRule(t *testing.T) {
 				if eq := cmp.Equal(gotMethod, wantMethod, cmp.Comparer(proto.Equal)); !eq {
 					t.Errorf("Method mistmatch \ngot : %+v,\nwant: %+v", gotMethod, wantMethod)
 				}
+			}
+		})
+	}
+}
+
+func TestProcessServiceControlURL(t *testing.T) {
+	testData := []struct {
+		desc                  string
+		serviceConfigIn       *confpb.Service
+		optionsIn             options.ConfigGeneratorOptions
+		wantServiceControlURI url.URL
+	}{
+		{
+			desc: "URL from service config by default",
+			serviceConfigIn: &confpb.Service{
+				Control: &confpb.Control{
+					Environment: "https://staging-servicecontrol.sandbox.googleapis.com",
+				},
+			},
+			wantServiceControlURI: url.URL{
+				Scheme: "https",
+				Host:   "staging-servicecontrol.sandbox.googleapis.com:443",
+			},
+		},
+		{
+			desc: "option overrides service config",
+			serviceConfigIn: &confpb.Service{
+				Control: &confpb.Control{
+					// not used due to non-empty option
+					Environment: "https://staging-servicecontrol.sandbox.googleapis.com",
+				},
+			},
+			optionsIn: options.ConfigGeneratorOptions{
+				ServiceControlURL: "https://servicecontrol.googleapis.com",
+			},
+			wantServiceControlURI: url.URL{
+				Scheme: "https",
+				Host:   "servicecontrol.googleapis.com:443",
+			},
+		},
+		{
+			desc:                  "Empty inputs results in empty URL",
+			serviceConfigIn:       &confpb.Service{},
+			wantServiceControlURI: url.URL{},
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Fill in required fields not relevant to test.
+			tc.serviceConfigIn.Apis = []*apipb.Api{
+				{
+					Name: testApiName,
+				},
+			}
+
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.serviceConfigIn, testConfigID, tc.optionsIn)
+			if err != nil {
+				t.Fatalf("processServiceControlURL(...) has wrong error, got: %v, want no error", err)
+			}
+
+			if diff := cmp.Diff(tc.wantServiceControlURI, serviceInfo.ServiceControlURI); diff != "" {
+				t.Errorf("processServiceControlURL(...) has unexpected diff for ServiceControlURI (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestProcessServiceControlURL_BadInput(t *testing.T) {
+	testData := []struct {
+		desc            string
+		serviceConfigIn *confpb.Service
+		optionsIn       options.ConfigGeneratorOptions
+		wantErr         string
+	}{
+		{
+			desc: "url parsing fails",
+			serviceConfigIn: &confpb.Service{
+				Control: &confpb.Control{
+					Environment: "https://[::1:80",
+				},
+			},
+			wantErr: `parse "https://[::1:80": missing ']' in host`,
+		},
+		{
+			desc: "url should not have path segment",
+			serviceConfigIn: &confpb.Service{
+				Control: &confpb.Control{
+					Environment: "https://servicecontrol.googleapis.com/v1/services",
+				},
+			},
+			wantErr: `should not have path part: /v1/services`,
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Fill in required fields not relevant to test.
+			tc.serviceConfigIn.Apis = []*apipb.Api{
+				{
+					Name: testApiName,
+				},
+			}
+
+			_, err := NewServiceInfoFromServiceConfig(tc.serviceConfigIn, testConfigID, tc.optionsIn)
+			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
+				t.Fatalf("processServiceControlURL(...) has wrong error, got: %v, want: %q", err, tc.wantErr)
 			}
 		})
 	}

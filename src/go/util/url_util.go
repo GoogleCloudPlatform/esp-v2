@@ -75,6 +75,31 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 	return u.Scheme, u.Hostname(), uint32(portVal), pathNoTrailingSlash, nil
 }
 
+// ParseURIIntoURL is the same as ParseURI, but it returns the URL in a
+// standard struct.
+func ParseURIIntoURL(uri string) (url.URL, error) {
+	scheme, hostname, port, path, err := ParseURI(uri)
+	if err != nil {
+		return url.URL{}, err
+	}
+
+	host := fmt.Sprintf("%v:%v", hostname, port)
+	if isIpv6Hostname(hostname) {
+		// IPv6 hostname should be embraced by brackets
+		host = fmt.Sprintf("[%v]:%d", hostname, port)
+	}
+
+	return url.URL{
+		Scheme: scheme,
+		Host:   host,
+		Path:   path,
+	}, nil
+}
+
+func isIpv6Hostname(hostname string) bool {
+	return strings.Contains(hostname, ":")
+}
+
 // ParseBackendProtocol parses a scheme string and http protocol string into BackendProtocol and UseTLS bool.
 func ParseBackendProtocol(scheme string, httpProtocol string) (BackendProtocol, bool, error) {
 	scheme = strings.ToLower(scheme)

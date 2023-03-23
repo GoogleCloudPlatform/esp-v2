@@ -18,9 +18,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
 )
 
@@ -221,25 +223,93 @@ func TestParseURI(t *testing.T) {
 			url:     "https://[::1:80",
 			wantErr: `parse "https://[::1:80": missing ']' in host`,
 		},
+		{
+			desc:           "successful for ipv6 with custom port",
+			url:            "http://[::1]:8080",
+			wantedScheme:   "http",
+			wantedHostname: "::1",
+			wantedPort:     8080,
+		},
 	}
 
-	for i, tc := range testData {
-		scheme, hostname, port, path, err := ParseURI(tc.url)
-		if scheme != tc.wantedScheme {
-			t.Errorf("Test Desc(%d): %s, extract backend address scheme, got: %v, want: %v", i, tc.desc, scheme, tc.wantedScheme)
-		}
-		if hostname != tc.wantedHostname {
-			t.Errorf("Test Desc(%d): %s, extract backend address hostname got: %v, want: %v", i, tc.desc, hostname, tc.wantedHostname)
-		}
-		if port != tc.wantedPort {
-			t.Errorf("Test Desc(%d): %s, extract backend address port got: %v, want: %v", i, tc.desc, port, tc.wantedPort)
-		}
-		if path != tc.wantPath {
-			t.Errorf("Test Desc(%d): %s, extract backend address path got: %v, want: %v", i, tc.desc, path, tc.wantPath)
-		}
-		if (err == nil && tc.wantErr != "") || (err != nil && !strings.Contains(err.Error(), tc.wantErr)) {
-			t.Errorf("Test Desc(%d): %s, extract backend address got: %v, want: %v", i, tc.desc, err, tc.wantErr)
-		}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			scheme, hostname, port, path, err := ParseURI(tc.url)
+			if scheme != tc.wantedScheme {
+				t.Errorf("ParseURI(%q) has wrong scheme, got: %v, want: %v", tc.url, scheme, tc.wantedScheme)
+			}
+			if hostname != tc.wantedHostname {
+				t.Errorf("ParseURI(%q) has wrong hostname, got: %v, want: %v", tc.url, hostname, tc.wantedHostname)
+			}
+			if port != tc.wantedPort {
+				t.Errorf("ParseURI(%q) has wrong port, got: %v, want: %v", tc.url, port, tc.wantedPort)
+			}
+			if path != tc.wantPath {
+				t.Errorf("ParseURI(%q) has wrong path, got: %v, want: %v", tc.url, path, tc.wantPath)
+			}
+			if (err == nil && tc.wantErr != "") || (err != nil && !strings.Contains(err.Error(), tc.wantErr)) {
+				t.Errorf("ParseURI(%q) has wrong error, got: %v, want: %v", tc.url, err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestParseURIIntoURL(t *testing.T) {
+	testData := []struct {
+		desc    string
+		uri     string
+		wantURL url.URL
+		wantErr string
+	}{
+		{
+			desc: "successful for ipv4 URI without port",
+			uri:  "https://abc.example.org",
+			wantURL: url.URL{
+				Scheme: "https",
+				Host:   "abc.example.org:443",
+			},
+		},
+		{
+			desc: "successful for ipv4 URI with port",
+			uri:  "https://abc.example.org:9000",
+			wantURL: url.URL{
+				Scheme: "https",
+				Host:   "abc.example.org:9000",
+			},
+		},
+		{
+			desc: "successful for ipv6 URI without port",
+			uri:  "http://[::1]",
+			wantURL: url.URL{
+				Scheme: "http",
+				Host:   "[::1]:80",
+			},
+		},
+		{
+			desc: "successful for ipv6 URI with port",
+			uri:  "http://[::1]:8080",
+			wantURL: url.URL{
+				Scheme: "http",
+				Host:   "[::1]:8080",
+			},
+		},
+		{
+			desc:    "bad brackets in ipv6 address",
+			uri:     "https://[::1:80",
+			wantErr: `parse "https://[::1:80": missing ']' in host`,
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			gotURL, err := ParseURIIntoURL(tc.uri)
+			if (err == nil && tc.wantErr != "") || (err != nil && !strings.Contains(err.Error(), tc.wantErr)) {
+				t.Errorf("ParseURIIntoURL(%q) has wrong error, got: %v, want: %v", tc.uri, err, tc.wantErr)
+			}
+			if diff := cmp.Diff(tc.wantURL, gotURL); diff != "" {
+				t.Errorf("ParseURIIntoURL(%q) has unexpected diff (-want +got):\n%s", tc.uri, diff)
+			}
+		})
 	}
 }
 
