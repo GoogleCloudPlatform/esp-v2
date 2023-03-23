@@ -121,7 +121,7 @@ func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 		Services:        []*scpb.Service{service},
 		ScCallingConfig: makeServiceControlCallingConfig(serviceInfo.Options),
 		ServiceControlUri: &commonpb.HttpUri{
-			Uri:     serviceInfo.ServiceControlURI,
+			Uri:     serviceInfo.ServiceControlURI.String() + "/v1/services",
 			Cluster: util.ServiceControlClusterName,
 			Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
 		},

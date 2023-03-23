@@ -17,6 +17,7 @@ package configinfo
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -57,9 +58,8 @@ type ServiceInfo struct {
 	// Stores all the query parameters to be ignored for json-grpc transcoder.
 	AllTranscodingIgnoredQueryParams map[string]bool
 
-	AllowCors bool
-	// TODO(nareddyt): Fix immutability, this var is updated by consumers
-	ServiceControlURI string
+	AllowCors         bool
+	ServiceControlURI url.URL
 	// TODO(nareddyt): Fix immutability, this var is updated by consumers
 	GcpAttributes *scpb.GcpAttributes
 	// Keep a pointer to original service config. Should always process rules
@@ -161,6 +161,9 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 		return nil, err
 	}
 	if err := serviceInfo.processAuthRequirement(); err != nil {
+		return nil, err
+	}
+	if err := serviceInfo.processServiceControlURL(); err != nil {
 		return nil, err
 	}
 
@@ -427,6 +430,7 @@ func (s *ServiceInfo) processHttpRule() error {
 		if err != nil {
 			return fmt.Errorf("error processing http rule for operation (%v): %v", rule.Selector, err)
 		}
+
 		if err := s.addHttpRule(method, rule, addedRouteMatchWithOptionsSet, s.Options.DisallowColonInWildcardPathSegment); err != nil {
 			return err
 		}
@@ -698,9 +702,7 @@ func (s *ServiceInfo) processAllBackends() error {
 		backendInfo := method.BackendInfo
 		if backendInfo == nil {
 			return fmt.Errorf("all the methods should have an un-empty BackendInfo")
-
 		}
-
 		if err := s.applyGlobalBackendInfoOverride(backendInfo); err != nil {
 			return err
 		}
@@ -984,10 +986,6 @@ func (s *ServiceInfo) LocalBackendClusterName() string {
 	return util.BackendClusterName(fmt.Sprintf("%s_local", s.Name))
 }
 
-func (s *ServiceInfo) LocalHttpBackendClusterName() string {
-	return util.BackendClusterName(fmt.Sprintf("%s_local_http", s.Name))
-}
-
 func (s *ServiceInfo) shouldSkipDiscoveryAPI(operation string) bool {
 	return IsDiscoveryAPI(operation) && !s.Options.AllowDiscoveryAPIs
 }
@@ -1041,4 +1039,35 @@ func parseRetriableStatusCodes(statusCodes string) ([]uint32, error) {
 		}
 	}
 	return codes, nil
+}
+
+func (s *ServiceInfo) processServiceControlURL() error {
+	uri := getServiceControlURL(s.serviceConfig, s.Options)
+	if uri == "" {
+		return nil
+	}
+
+	// The assumption about control.environment field. Its format:
+	//   [scheme://] +  host + [:port]
+	// * It should not have any path part
+	// * If scheme is missed, https is the default
+
+	url, err := util.ParseURIIntoURL(uri)
+	if err != nil {
+		return fmt.Errorf("failed to parse uri %q into url: %v", uri, err)
+	}
+	if url.Path != "" {
+		return fmt.Errorf("error parsing service control url %+v: should not have path part: %s", url, url.Path)
+	}
+	s.ServiceControlURI = url
+	return nil
+}
+
+func getServiceControlURL(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) string {
+	// Ignore value from ServiceConfig if flag is set
+	if uri := opts.ServiceControlURL; uri != "" {
+		return uri
+	}
+
+	return serviceConfig.GetControl().GetEnvironment()
 }
