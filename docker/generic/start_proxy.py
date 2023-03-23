@@ -594,7 +594,8 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Specify JWT cache size, the number of unique JWT tokens in the cache. The cache only stores verified
         good tokens. If 0, JWT cache is disabled. It limits the memory usage. The cache used memory
-        is roughly (token size + 64 bytes) per token. If not specified, the default is 100000.'''
+        is roughly (at most 4 KB data + 64 bytes metadata) per token. If not specified, the default is 1000,
+        which represents a max memory usage of 4.35 MB.'''
     )
     parser.add_argument(
         '--jwks_cache_duration_in_s',
