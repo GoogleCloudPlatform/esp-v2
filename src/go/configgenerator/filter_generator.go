@@ -49,6 +49,7 @@ type FilterGenerator interface {
 // MakeFilterGenerators provide of a slice of FilterGenerator in sequence.
 func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]FilterGenerator, error) {
 	return []FilterGenerator{
+		&filtergen.HeaderSanitizerGenerator{},
 		filtergen.NewCORSGenerator(serviceInfo),
 
 		// Health check filter is behind Path Matcher filter, since Service Control

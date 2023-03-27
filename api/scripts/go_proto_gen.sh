@@ -42,3 +42,7 @@ cp -f bazel-bin/api/envoy/v11/http/backend_auth/config_go_proto_/github.com/Goog
 bazelisk build //api/envoy/v11/http/grpc_metadata_scrubber:config_go_proto
 mkdir -p src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber
 cp -f bazel-bin/api/envoy/v11/http/grpc_metadata_scrubber/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber/* src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber
+# HTTP filter header_sanitizer
+bazelisk build //api/envoy/v11/http/header_sanitizer:config_go_proto
+mkdir -p src/go/proto/api/envoy/v11/http/header_sanitizer
+cp -f bazel-bin/api/envoy/v11/http/header_sanitizer/config_go_proto_/github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/header_sanitizer/* src/go/proto/api/envoy/v11/http/header_sanitizer

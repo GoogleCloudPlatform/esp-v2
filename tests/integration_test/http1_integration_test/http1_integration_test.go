@@ -135,14 +135,14 @@ func TestHttp1JWT(t *testing.T) {
 		{
 			desc:        "Fail, with valid JWT token",
 			httpMethod:  "GET",
-			httpPath:    "/auth/info/googlejwt",
+			httpPath:    "/auth/info/googleservicecontrol.googleapis.com:443/",
 			token:       testdata.FakeBadToken,
 			wantedError: "401 Unauthorized",
 		},
 		{
 			desc:        "Fail, without valid JWT token",
 			httpMethod:  "GET",
-			httpPath:    "/auth/info/googlejwt",
+			httpPath:    "/auth/info/googleservicecontrol.googleapis.com:443/",
 			wantedError: "401 Unauthorized",
 		},
 		{

@@ -164,6 +164,12 @@
                   },
                   "httpFilters": [
                     {
+                      "name": "com.google.espv2.filters.http.header_sanitizer",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+                      }
+                    },
+                    {
                       "name": "envoy.filters.http.jwt_authn",
                       "typedConfig": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",

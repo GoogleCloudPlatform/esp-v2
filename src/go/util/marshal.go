@@ -23,6 +23,7 @@ import (
 
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/backend_auth"
 	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber"
+	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/header_sanitizer"
 	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/path_rewrite"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/service_control"
 
@@ -117,6 +118,8 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(bapb.FilterConfig), nil
 	case "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig":
 		return new(gmspb.FilterConfig), nil
+	case "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig":
+		return new(hspb.FilterConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router":
 		return new(routerpb.Router), nil
 	case "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext":
