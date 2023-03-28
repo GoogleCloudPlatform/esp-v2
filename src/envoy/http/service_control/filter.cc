@@ -53,6 +53,14 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
     return Envoy::Http::FilterHeadersStatus::StopIteration;
   }
 
+  // TODO(b/273531500): Temporary until CAG rollout is complete.
+  if (utils::handleHttpMethodOverride(headers)) {
+    // Update later filters that the HTTP method has changed by clearing the
+    // route cache.
+    ENVOY_LOG(debug, "HTTP method override occurred, recalculating route");
+    decoder_callbacks_->downstreamCallbacks()->clearRouteCache();
+  }
+
   // Make sure route is calculated
   auto route = decoder_callbacks_->route();
 
