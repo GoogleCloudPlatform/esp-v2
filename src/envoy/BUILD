@@ -18,6 +18,11 @@ alias(
 )
 
 alias(
+    name = "header_sanitizer",
+    actual = "//src/envoy/http/header_sanitizer:filter_factory",
+)
+
+alias(
     name = "path_rewrite",
     actual = "//src/envoy/http/path_rewrite:filter_factory",
 )
@@ -38,6 +43,7 @@ envoy_cc_binary(
     deps = [
         ":backend_auth",
         ":grpc_metadata_scrubber",
+        ":header_sanitizer",
         ":main",
         ":path_rewrite",
         ":service_control",

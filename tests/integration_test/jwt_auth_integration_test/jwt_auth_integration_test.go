@@ -17,6 +17,7 @@ package jwt_auth_integration_test
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -485,6 +486,69 @@ func TestFrontendAndBackendAuthHeaders(t *testing.T) {
 				gotHeaderValStr := fmt.Sprintf("%v", gotHeaderVal)
 				if !ok || wantValue != gotHeaderValStr {
 					t.Fatalf("failed on header %s,\n  got: %s\n want: %v", wantKey, gotHeaderValStr, wantHeader)
+				}
+			}
+		})
+	}
+}
+
+func TestAuthWithMethodOverride(t *testing.T) {
+	t.Parallel()
+
+	configID := "test-config-id"
+	args := []string{"--service_config_id=" + configID, "--rollout_strategy=fixed"}
+
+	s := env.NewTestEnv(platform.TestAuthWithMethodOverride, platform.GrpcBookstoreSidecar)
+	defer s.TearDown(t)
+	if err := s.Setup(args); err != nil {
+		t.Fatalf("fail to setup test env, %v", err)
+	}
+
+	time.Sleep(5 * time.Second)
+	tests := []struct {
+		desc       string
+		httpMethod string
+		path       string
+		header     http.Header
+		wantResp   string
+		wantError  string
+	}{
+		{
+			desc:       "Succeeded, no JWT needed to get a book",
+			httpMethod: "GET",
+			path:       "/v1/shelves/100/books/1001?key=api-key",
+			wantResp:   `{"id":"1001","title":"Alphabet"}`,
+		},
+		{
+			desc:       "Failed, need JWT to delete a book.",
+			httpMethod: "DELETE",
+			path:       "/v1/shelves/100/books/1001?key=api-key",
+			wantError:  `401 Unauthorized, {"code":401,"message":"Jwt is missing"}`,
+		},
+		{
+			// Regression test for b/273531500 & b/270767471.
+			desc:       "Failed, need JWT to delete a book even when HTTP method override occurs",
+			httpMethod: "GET",
+			path:       "/v1/shelves/100/books/1001?key=api-key",
+			header: map[string][]string{
+				"x-http-method-override": {"DELETE"},
+			},
+			wantError: `{"code":401,"message":"Jwt is missing"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+			resp, err := client.MakeCall("http", addr, tc.httpMethod, tc.path, "", tc.header)
+
+			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
+				t.Errorf("Test (%s): failed, expected err: %v, got: %v", tc.desc, tc.wantError, err)
+			} else if tc.wantError == "" && err != nil {
+				t.Errorf("Test (%s): failed, expected no error, got error: %s", tc.desc, err)
+			} else {
+				if !strings.Contains(resp, tc.wantResp) {
+					t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
 				}
 			}
 		})

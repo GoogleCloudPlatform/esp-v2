@@ -203,6 +203,12 @@
                   },
                   "httpFilters": [
                     {
+                      "name": "com.google.espv2.filters.http.header_sanitizer",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+                      }
+                    },
+                    {
                       "name": "com.google.espv2.filters.http.backend_auth",
                       "typedConfig": {
                         "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.FilterConfig",

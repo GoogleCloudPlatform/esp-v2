@@ -34,6 +34,7 @@ const (
 	TestAuthAllowMissing
 	TestAuthJwksAsyncFetch
 	TestAuthJwksCache
+	TestAuthWithMethodOverride
 	TestBackendAddressOverride
 	TestBackendAuthDisableAuth
 	TestBackendAuthPerPlatform

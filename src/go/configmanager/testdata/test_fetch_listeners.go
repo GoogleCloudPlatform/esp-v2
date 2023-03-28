@@ -92,7 +92,13 @@ var (
               "headersWithUnderscoresAction": "REJECT_REQUEST"
             },
             "httpFilters": [
-              {
+							{
+								"name": "com.google.espv2.filters.http.header_sanitizer",
+								"typedConfig": {
+									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+								}
+							},
+							{
                 "name": "envoy.filters.http.grpc_web",
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb"
@@ -316,7 +322,13 @@ var (
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "httpFilters": [
-              {
+							{
+								"name": "com.google.espv2.filters.http.header_sanitizer",
+								"typedConfig": {
+									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+								}
+							},
+							{
                 "name": "envoy.filters.http.jwt_authn",
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -604,7 +616,13 @@ var (
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "httpFilters": [
-              {
+							{
+								"name": "com.google.espv2.filters.http.header_sanitizer",
+								"typedConfig": {
+									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+								}
+							},
+							{
                 "name": "envoy.filters.http.jwt_authn",
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -1116,7 +1134,13 @@ var (
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "httpFilters": [
-              {
+							{
+								"name": "com.google.espv2.filters.http.header_sanitizer",
+								"typedConfig": {
+									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+								}
+							},
+							{
                 "name": "envoy.filters.http.jwt_authn",
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -1587,7 +1611,13 @@ var (
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "httpFilters": [
-              {
+							{
+								"name": "com.google.espv2.filters.http.header_sanitizer",
+								"typedConfig": {
+									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+								}
+							},
+							{
                 "name": "com.google.espv2.filters.http.service_control",
                 "typedConfig": {
                   "@type": "type.googleapis.com/espv2.api.envoy.v11.http.service_control.FilterConfig",
@@ -2122,7 +2152,13 @@ var (
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "httpFilters": [
-              {
+							{
+								"name": "com.google.espv2.filters.http.header_sanitizer",
+								"typedConfig": {
+									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+								}
+							},
+							{
                 "name": "envoy.filters.http.jwt_authn",
                 "typedConfig": {
                   "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -2454,7 +2490,13 @@ var (
           "typedConfig": {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "httpFilters": [
-              {
+							{
+								"name": "com.google.espv2.filters.http.header_sanitizer",
+								"typedConfig": {
+									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+								}
+							},
+							{
                 "name": "com.google.espv2.filters.http.service_control",
                 "typedConfig": {
                   "@type": "type.googleapis.com/espv2.api.envoy.v11.http.service_control.FilterConfig",

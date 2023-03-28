@@ -58,6 +58,8 @@ const (
 	BackendAuth = "com.google.espv2.filters.http.backend_auth"
 	// gRPC Metadata Scrubber filter.
 	GrpcMetadataScrubber = "com.google.espv2.filters.http.grpc_metadata_scrubber"
+	// HeaderSanitizerScrubber is the filter name (matches c++ factory).
+	HeaderSanitizerScrubber = "com.google.espv2.filters.http.header_sanitizer"
 
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"
