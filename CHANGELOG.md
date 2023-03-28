@@ -1,3 +1,9 @@
+# Release 2.43.0 28-03-2023
+
+- move x-http-method-override to beginning of filter chain (#801)
+- Reduce default jwt_cache_size to 1000 (#798)
+- improve parsing and handling of ServiceControlUrl (#800)
+
 # Release 2.42.0 27-02-2023
 
 - Add flag --disable_jwt_audience_service_name_check (#779)
