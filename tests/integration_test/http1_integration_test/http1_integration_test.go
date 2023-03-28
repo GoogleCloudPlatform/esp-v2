@@ -137,13 +137,13 @@ func TestHttp1JWT(t *testing.T) {
 			httpMethod:  "GET",
 			httpPath:    "/auth/info/googleservicecontrol.googleapis.com:443/",
 			token:       testdata.FakeBadToken,
-			wantedError: "401 Unauthorized",
+			wantedError: `{"code":404,"message":"The current request is not defined by this API."}`,
 		},
 		{
 			desc:        "Fail, without valid JWT token",
 			httpMethod:  "GET",
 			httpPath:    "/auth/info/googleservicecontrol.googleapis.com:443/",
-			wantedError: "401 Unauthorized",
+			wantedError: `{"code":404,"message":"The current request is not defined by this API."}`,
 		},
 		{
 			desc:       "Succeed, with valid JWT token, with allowed audience",
@@ -168,16 +168,18 @@ func TestHttp1JWT(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		host := fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
-		resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
+		t.Run(tc.desc, func(t *testing.T) {
+			host := fmt.Sprintf("http://%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+			resp, err := client.DoJWT(host, tc.httpMethod, tc.httpPath, "", "", tc.token)
 
-		if tc.wantedError == "" && err != nil || tc.wantedError != "" && err == nil || err != nil && !strings.Contains(err.Error(), tc.wantedError) {
-			t.Errorf("Test (%s): failed, expected err: %s, got: %s", tc.desc, tc.wantedError, err)
-		} else {
-			if !strings.Contains(string(resp), tc.wantResp) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, string(resp))
+			if tc.wantedError == "" && err != nil || tc.wantedError != "" && err == nil || err != nil && !strings.Contains(err.Error(), tc.wantedError) {
+				t.Errorf("Failed, expected err: %s, got: %s", tc.wantedError, err)
+			} else {
+				if !strings.Contains(string(resp), tc.wantResp) {
+					t.Errorf("Failed, expected: %s, got: %s", tc.wantResp, string(resp))
+				}
 			}
-		}
+		})
 	}
 }
 
