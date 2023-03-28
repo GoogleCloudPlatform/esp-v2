@@ -135,13 +135,6 @@ func TestHttp1JWT(t *testing.T) {
 		{
 			desc:        "Fail, with valid JWT token",
 			httpMethod:  "GET",
-			httpPath:    "/auth/info/googleservicecontrol.googleapis.com:443/",
-			token:       testdata.FakeBadToken,
-			wantedError: `{"code":404,"message":"The current request is not defined by this API."}`,
-		},
-		{
-			desc:        "Fail, with valid JWT token",
-			httpMethod:  "GET",
 			httpPath:    "/auth/info/googlejwt",
 			token:       testdata.FakeBadToken,
 			wantedError: "401 Unauthorized",
@@ -151,6 +144,13 @@ func TestHttp1JWT(t *testing.T) {
 			httpMethod:  "GET",
 			httpPath:    "/auth/info/googlejwt",
 			wantedError: "401 Unauthorized",
+		},
+		{
+			desc:       "Succeed, with valid JWT token, with allowed audience",
+			httpMethod: "GET",
+			httpPath:   "/auth/info/auth0",
+			token:      testdata.FakeCloudTokenSingleAudience2,
+			wantResp:   `{"aud":"admin.cloud.goog","exp":4698318995,"iat":1544718995,"iss":"api-proxy-testing@cloud.goog","sub":"api-proxy-testing@cloud.goog"}`,
 		},
 		{
 			desc:        "Fail, with valid JWT token, without allowed audience",
