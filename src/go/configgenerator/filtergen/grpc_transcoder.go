@@ -145,7 +145,11 @@ func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 func (g *GRPCTranscoderGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
 	if method.HttpBackendInfo != nil {
 		glog.Infof("Disable transcoder for the per-route config for method %q because it has HTTP backends.", method.Operation())
-		return anypb.New(&transcoderpb.GrpcJsonTranscoder{})
+		return anypb.New(&transcoderpb.GrpcJsonTranscoder{
+			DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptor{
+				ProtoDescriptor: "",
+			},
+		})
 	}
 	return nil, nil
 }
