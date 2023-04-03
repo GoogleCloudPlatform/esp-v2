@@ -12,8 +12,8 @@ When making changes to the config proto files, make sure:
 * No breaking changes, the changes should be backward compatible,
 * If a breaking change is required, increase config version.
 
-When making changes to Config Manager, make sure that **older** config generator binaries are compatible
-with **newer** Envoy binaries under the current API version. If it's incompatible,
+When making changes to Config Manager, make sure the new config is compatible
+with older Envoy binaries under the current API version. If it's incompatible,
 increase the config version.
 
 ## Steps to increase config version
