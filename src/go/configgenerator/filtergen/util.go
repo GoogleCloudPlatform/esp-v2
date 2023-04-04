@@ -19,6 +19,9 @@ import (
 	"sort"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/common"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 )
 
 func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, error) {
@@ -32,4 +35,17 @@ func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, 
 		return commonpb.DependencyErrorBehavior_UNSPECIFIED, fmt.Errorf("unknown value for DependencyErrorBehavior (%v), accepted values are: %+q", stringVal, keys)
 	}
 	return commonpb.DependencyErrorBehavior(depErrorBehaviorInt), nil
+}
+
+func FilterConfigToHTTPFilter(filter proto.Message, name string) (*hcmpb.HttpFilter, error) {
+	a, err := ptypes.MarshalAny(filter)
+	if err != nil {
+		return nil, fmt.Errorf("fail to marshal filter config to Any for filter %q: %v", name, err)
+	}
+	return &hcmpb.HttpFilter{
+		Name: name,
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{
+			TypedConfig: a,
+		},
+	}, nil
 }

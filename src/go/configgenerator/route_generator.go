@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
@@ -30,8 +31,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -72,7 +73,7 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []Fil
 			return nil, fmt.Errorf("error marshaling CorsPolicy to Any: %v", err)
 		}
 		host.TypedPerFilterConfig = make(map[string]*anypb.Any)
-		host.TypedPerFilterConfig[util.CORS] = corsAny
+		host.TypedPerFilterConfig[filtergen.CORSFilterName] = corsAny
 
 		host.Routes = append(host.Routes, corsRoutes...)
 		for i, corsRoute := range corsRoutes {
@@ -317,15 +318,18 @@ func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppatte
 			continue
 		}
 
-		perRouteFilterConfig, err := filterGen.GenPerRouteConfig(method, httpRule)
+		config, err := filterGen.GenPerRouteConfig(method, httpRule)
 		if err != nil {
 			return perFilterConfig, fmt.Errorf("failed to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
 		}
-
-		if perRouteFilterConfig == nil {
+		if config == nil {
 			continue
 		}
 
+		perRouteFilterConfig, err := ptypes.MarshalAny(config)
+		if err != nil {
+			return nil, fmt.Errorf("fail to marshal per-route config to Any for filter %q: %v", filterGen.FilterName(), err)
+		}
 		perFilterConfig[filterGen.FilterName()] = perRouteFilterConfig
 	}
 

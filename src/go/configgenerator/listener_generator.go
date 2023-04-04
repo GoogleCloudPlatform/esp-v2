@@ -17,20 +17,19 @@ package configgenerator
 import (
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/tracing"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
-
-	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-
 	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	facpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -67,13 +66,18 @@ func MakeHttpFilterConfigs(serviceInfo *sc.ServiceInfo, filterGenerators []Filte
 			continue
 		}
 
-		jsonStr, err := util.ProtoToJson(filter)
+		httpFilter, err := filtergen.FilterConfigToHTTPFilter(filter, filterGenerator.FilterName())
+		if err != nil {
+			return nil, err
+		}
+
+		jsonStr, err := util.ProtoToJson(httpFilter)
 		if err != nil {
 			return nil, fmt.Errorf("fail to convert proto to JSON for filter %q: %v", filterGenerator.FilterName(), err)
 		}
 
 		glog.Infof("adding filter config of %q : %v", filterGenerator.FilterName(), jsonStr)
-		httpFilters = append(httpFilters, filter)
+		httpFilters = append(httpFilters, httpFilter)
 	}
 	return httpFilters, nil
 }

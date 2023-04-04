@@ -16,12 +16,14 @@ package filtergen
 
 import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	grpcwebpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_web/v3"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/golang/protobuf/ptypes"
-	"google.golang.org/protobuf/types/known/anypb"
+	"github.com/golang/protobuf/proto"
+)
+
+const (
+	// GRPCWebFilterName is the Envoy filter name for debug logging.
+	GRPCWebFilterName = "envoy.filters.http.grpc_web"
 )
 
 type GRPCWebGenerator struct {
@@ -37,24 +39,17 @@ func NewGRPCWebGenerator(serviceInfo *ci.ServiceInfo) *GRPCWebGenerator {
 }
 
 func (g *GRPCWebGenerator) FilterName() string {
-	return util.GRPCWeb
+	return GRPCWebFilterName
 }
 
 func (g *GRPCWebGenerator) IsEnabled() bool {
 	return !g.skipFilter
 }
 
-func (g *GRPCWebGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	a, err := ptypes.MarshalAny(&grpcwebpb.GrpcWeb{})
-	if err != nil {
-		return nil, err
-	}
-	return &hcmpb.HttpFilter{
-		Name:       util.GRPCWeb,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
-	}, nil
+func (g *GRPCWebGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+	return &grpcwebpb.GrpcWeb{}, nil
 }
 
-func (g *GRPCWebGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *GRPCWebGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

@@ -17,49 +17,16 @@ package util
 import "fmt"
 
 const (
-	// Upstream envoy http filter names.
-
-	// Buffer HTTP filter
-	Buffer = "envoy.filters.http.buffer"
-	// CORS HTTP filter
-	CORS = "envoy.filters.http.cors"
-	// GRPCJSONTranscoder HTTP filter
-	GRPCJSONTranscoder = "envoy.filters.http.grpc_json_transcoder"
-	// GRPCWeb HTTP filter
-	GRPCWeb = "envoy.filters.http.grpc_web"
-	// Router HTTP filter
-	Router = "envoy.filters.http.router"
-	// Health checking HTTP filter
-	HealthCheck = "envoy.filters.http.health_check"
 	// Echo network filter
 	Echo = "envoy.filters.network.echo"
 	// HTTPConnectionManager network filter
 	HTTPConnectionManager = "envoy.filters.network.http_connection_manager"
-	// JwtAuthn filter.
-	JwtAuthn = "envoy.filters.http.jwt_authn"
 	// TLSTransportSocket is Envoy TLS Transport Socket name.
 	TLSTransportSocket = "envoy.transport_sockets.tls"
 	// AccessFileLogger filter name
 	AccessFileLogger = "envoy.access_loggers.file"
 	// Upstream protocol options
 	UpstreamProtocolOptions = "envoy.extensions.upstreams.http.v3.HttpProtocolOptions"
-	// Envoy compressor filter name
-	EnvoyCompressorFilter = "envoy.filters.http.compressor"
-	EnvoyBrotliCompressor = "envoy.compression.brotli.compressor"
-	EnvoyGzipCompressor   = "envoy.compression.gzip.compressor"
-
-	// ESPv2 custom http filters.
-
-	// ServiceControl filter.
-	ServiceControl = "com.google.espv2.filters.http.service_control"
-	// PathRewrite filter.
-	PathRewrite = "com.google.espv2.filters.http.path_rewrite"
-	// BackendAuth filter.
-	BackendAuth = "com.google.espv2.filters.http.backend_auth"
-	// gRPC Metadata Scrubber filter.
-	GrpcMetadataScrubber = "com.google.espv2.filters.http.grpc_metadata_scrubber"
-	// HeaderSanitizerScrubber is the filter name (matches c++ factory).
-	HeaderSanitizerScrubber = "com.google.espv2.filters.http.header_sanitizer"
 
 	// The metadata server cluster name.
 	MetadataServerClusterName = "metadata-cluster"

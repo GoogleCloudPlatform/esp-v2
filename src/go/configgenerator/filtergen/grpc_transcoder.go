@@ -22,15 +22,18 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/proto"
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
-	"google.golang.org/protobuf/proto"
+	protov2 "google.golang.org/protobuf/proto"
 	descpb "google.golang.org/protobuf/types/descriptorpb"
-	"google.golang.org/protobuf/types/known/anypb"
+)
+
+const (
+	// GRPCTranscoderFilterName is the Envoy filter name for debug logging.
+	GRPCTranscoderFilterName = "envoy.filters.http.grpc_json_transcoder"
 )
 
 type GRPCTranscoderGenerator struct {
@@ -67,7 +70,7 @@ func NewGRPCTranscoderGenerator(serviceInfo *ci.ServiceInfo) *GRPCTranscoderGene
 }
 
 func (g *GRPCTranscoderGenerator) FilterName() string {
-	return util.GRPCJSONTranscoder
+	return GRPCTranscoderFilterName
 }
 
 func (g *GRPCTranscoderGenerator) IsEnabled() bool {
@@ -88,7 +91,7 @@ func (g *GRPCTranscoderGenerator) IsEnabled() bool {
 	return false
 }
 
-func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
 	if g.configFile == nil {
 		return nil, fmt.Errorf("internal error, config file should be set as transcoder filer is enabled")
 	}
@@ -133,23 +136,17 @@ func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 	}
 
 	transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
-
-	transcodeConfigStruct, _ := ptypes.MarshalAny(transcodeConfig)
-	transcodeFilter := &hcmpb.HttpFilter{
-		Name:       util.GRPCJSONTranscoder,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: transcodeConfigStruct},
-	}
-	return transcodeFilter, nil
+	return transcodeConfig, nil
 }
 
-func (g *GRPCTranscoderGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *GRPCTranscoderGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	if method.HttpBackendInfo != nil {
 		glog.Infof("Disable transcoder for the per-route config for method %q because it has HTTP backends.", method.Operation())
-		return anypb.New(&transcoderpb.GrpcJsonTranscoder{
+		return &transcoderpb.GrpcJsonTranscoder{
 			DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptor{
 				ProtoDescriptor: "",
 			},
-		})
+		}, nil
 	}
 	return nil, nil
 }
@@ -181,7 +178,7 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 	}
 
 	fds := &descpb.FileDescriptorSet{}
-	if err := proto.Unmarshal(descriptorBytes, fds); err != nil {
+	if err := protov2.Unmarshal(descriptorBytes, fds); err != nil {
 		glog.Error("failed to unmarshal protodescriptor, error: ", err)
 		return nil, fmt.Errorf("failed to unmarshal proto descriptor, error: %v", err)
 	}
@@ -204,14 +201,14 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 					if method.GetOptions() == nil {
 						method.Options = &descpb.MethodOptions{}
 					}
-					proto.SetExtension(method.GetOptions(), ahpb.E_Http, rule)
+					protov2.SetExtension(method.GetOptions(), ahpb.E_Http, rule)
 				}
 
 				// If an http rule is specified for a rpc endpoint then the rpc's default http binding will be
 				// disabled according to the logic in the envoy's json transcoder filter. To still enable
 				// the default http binding, which is the designed behavior, the default http binding needs to be
 				// added to the http rule's additional bindings.
-				if httpRule := proto.GetExtension(method.GetOptions(), ahpb.E_Http).(*ahpb.HttpRule); httpRule != nil {
+				if httpRule := protov2.GetExtension(method.GetOptions(), ahpb.E_Http).(*ahpb.HttpRule); httpRule != nil {
 					defaultPath := fmt.Sprintf("/%s/%s", apiName, method.GetName())
 					preserveDefaultHttpBinding(httpRule, defaultPath)
 				}
@@ -219,7 +216,7 @@ func updateProtoDescriptor(service *confpb.Service, apiNames []string, descripto
 		}
 	}
 
-	newData, err := proto.Marshal(fds)
+	newData, err := protov2.Marshal(fds)
 	if err != nil {
 		glog.Error("failed to marshal proto descriptor, error: ", err)
 		return nil, fmt.Errorf("failed to marshal proto descriptor, error: %v", err)
@@ -232,7 +229,7 @@ func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
 
 	// Check existence of the default binding in httpRule's additional_bindings to avoid duplication.
 	for _, additionalBinding := range httpRule.AdditionalBindings {
-		if proto.Equal(additionalBinding, defaultBinding) {
+		if protov2.Equal(additionalBinding, defaultBinding) {
 			return
 		}
 	}
@@ -240,7 +237,7 @@ func preserveDefaultHttpBinding(httpRule *ahpb.HttpRule, defaultPath string) {
 	// additional_bindings.
 	defaultBinding.Selector = httpRule.GetSelector()
 	defaultBinding.AdditionalBindings = httpRule.GetAdditionalBindings()
-	if proto.Equal(httpRule, defaultBinding) {
+	if protov2.Equal(httpRule, defaultBinding) {
 		return
 	}
 	defaultBinding.Selector = ""

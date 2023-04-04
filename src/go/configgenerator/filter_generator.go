@@ -18,8 +18,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	anypb "github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/proto"
 )
 
 // FilterGenerator is an interface for objects that generate Envoy filters.
@@ -34,16 +33,20 @@ type FilterGenerator interface {
 
 	// GenFilterConfig generates the filter config.
 	//
+	// Return type is the filter's config proto.
+	//
 	// Return (nil, nil) if the filter has no listener-level config, but may
 	// have per-route configurations.
-	GenFilterConfig(*ci.ServiceInfo) (*hcmpb.HttpFilter, error)
+	GenFilterConfig(*ci.ServiceInfo) (proto.Message, error)
 
 	// GenPerRouteConfig generates the per-route config for the given HTTP route (HTTP pattern).
 	// The MethodInfo that contains the route is also provided.
 	//
+	// Return type is the filter's per-route config proto.
+	//
 	// This method is called on all routes. Return (nil, nil) to indicate the
 	// filter does NOT require a per-route config for the given route.
-	GenPerRouteConfig(*ci.MethodInfo, *httppattern.Pattern) (*anypb.Any, error)
+	GenPerRouteConfig(*ci.MethodInfo, *httppattern.Pattern) (proto.Message, error)
 }
 
 // MakeFilterGenerators provide of a slice of FilterGenerator in sequence.
