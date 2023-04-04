@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -4598,7 +4599,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			t.Errorf("Test (%v): got expected number of virtual host", tc.desc)
 		}
 
-		corsAny, ok := gotHost[0].TypedPerFilterConfig[util.CORS]
+		corsAny, ok := gotHost[0].TypedPerFilterConfig[filtergen.CORSFilterName]
 		if tc.wantCorsPolicy == nil {
 			if ok {
 				t.Errorf("Test (%v): expect not CORS, but found one", tc.desc)

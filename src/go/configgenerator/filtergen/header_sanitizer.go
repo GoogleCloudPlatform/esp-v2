@@ -18,7 +18,7 @@ import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/header_sanitizer"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 const (

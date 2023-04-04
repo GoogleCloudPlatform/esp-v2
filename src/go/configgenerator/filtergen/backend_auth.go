@@ -20,8 +20,8 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	"google.golang.org/protobuf/proto"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/backend_auth"

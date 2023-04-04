@@ -23,8 +23,8 @@ import (
 	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
 	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
 	comppb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/compressor/v3"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 )
 
 type CompressorType int
@@ -73,7 +73,7 @@ func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (prot
 	if err != nil {
 		return nil, err
 	}
-	ca, err := anypb.New(cfg)
+	ca, err := ptypes.MarshalAny(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling %s Compressor config to Any: %v", name, err)
 	}
@@ -92,9 +92,9 @@ func (g *CompressorGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule 
 func (g *CompressorGenerator) getCompressorConfig() (proto.Message, string, error) {
 	switch g.compressorType {
 	case GzipCompressor:
-		return &gzippb.Gzip{}, EnvoyBrotliCompressorName, nil
+		return &gzippb.Gzip{}, EnvoyGzipCompressorName, nil
 	case BrotliCompressor:
-		return &brpb.Brotli{}, EnvoyGzipCompressorName, nil
+		return &brpb.Brotli{}, EnvoyBrotliCompressorName, nil
 	}
 	return nil, "", fmt.Errorf("unknown compressor type: %v", g.compressorType)
 }

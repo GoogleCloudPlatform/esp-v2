@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
@@ -72,7 +73,7 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []Fil
 			return nil, fmt.Errorf("error marshaling CorsPolicy to Any: %v", err)
 		}
 		host.TypedPerFilterConfig = make(map[string]*anypb.Any)
-		host.TypedPerFilterConfig[util.CORS] = corsAny
+		host.TypedPerFilterConfig[filtergen.CORSFilterName] = corsAny
 
 		host.Routes = append(host.Routes, corsRoutes...)
 		for i, corsRoute := range corsRoutes {
@@ -325,7 +326,7 @@ func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppatte
 			continue
 		}
 
-		perRouteFilterConfig, err := anypb.New(config)
+		perRouteFilterConfig, err := ptypes.MarshalAny(config)
 		if err != nil {
 			return nil, fmt.Errorf("fail to marshal per-route config to Any for filter %q: %v", filterGen.FilterName(), err)
 		}

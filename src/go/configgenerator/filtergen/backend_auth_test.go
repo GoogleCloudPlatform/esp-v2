@@ -289,8 +289,13 @@ func TestBackendAuthFilter(t *testing.T) {
 				return
 			}
 
+			httpFilter, err := FilterConfigToHTTPFilter(filterConfig, gen.FilterName())
+			if err != nil {
+				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
+			}
+
 			marshaler := &jsonpb.Marshaler{}
-			gotFilter, err := marshaler.MarshalToString(filterConfig)
+			gotFilter, err := marshaler.MarshalToString(httpFilter)
 			if err != nil {
 				t.Fatal(err)
 			}

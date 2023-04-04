@@ -18,7 +18,7 @@ import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 const (

@@ -24,10 +24,10 @@ import (
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	"google.golang.org/protobuf/proto"
 )
 
 const (

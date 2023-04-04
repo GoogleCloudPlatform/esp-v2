@@ -21,9 +21,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
-	"google.golang.org/protobuf/proto"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 

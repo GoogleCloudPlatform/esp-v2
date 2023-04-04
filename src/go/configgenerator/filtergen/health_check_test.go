@@ -123,13 +123,18 @@ func TestHealthCheckFilter(t *testing.T) {
 				t.Fatal("HealthCheckGenerator is not enabled, want it to be enabled")
 			}
 
-			filter, err := gen.GenFilterConfig(fakeServiceInfo)
+			filterConfig, err := gen.GenFilterConfig(fakeServiceInfo)
 			if err != nil {
 				t.Fatal(err)
 			}
 
+			httpFilter, err := FilterConfigToHTTPFilter(filterConfig, gen.FilterName())
+			if err != nil {
+				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
+			}
+
 			marshaler := &jsonpb.Marshaler{}
-			gotFilter, err := marshaler.MarshalToString(filter)
+			gotFilter, err := marshaler.MarshalToString(httpFilter)
 			if err != nil {
 				t.Fatal(err)
 			}

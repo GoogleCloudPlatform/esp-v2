@@ -19,6 +19,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -35,7 +36,7 @@ func TestMakeListeners(t *testing.T) {
 	configFile := &smpb.ConfigFile{
 		FileType: smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
-	data, err := anypb.New(configFile)
+	data, err := ptypes.MarshalAny(configFile)
 	if err != nil {
 		t.Fatal(err)
 	}
