@@ -16,12 +16,14 @@ package filtergen
 
 import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/proto"
+)
+
+const (
+	// CORSFilterName is the Envoy filter name for debug logging.
+	CORSFilterName = "envoy.filters.http.cors"
 )
 
 type CORSGenerator struct {
@@ -37,25 +39,17 @@ func NewCORSGenerator(serviceInfo *ci.ServiceInfo) *CORSGenerator {
 }
 
 func (g *CORSGenerator) FilterName() string {
-	return util.CORS
+	return CORSFilterName
 }
 
 func (g *CORSGenerator) IsEnabled() bool {
 	return !g.skipFilter
 }
 
-func (g *CORSGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	a, err := ptypes.MarshalAny(&corspb.Cors{})
-	if err != nil {
-		return nil, err
-	}
-	corsFilter := &hcmpb.HttpFilter{
-		Name:       util.CORS,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
-	}
-	return corsFilter, nil
+func (g *CORSGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+	return &corspb.Cors{}, nil
 }
 
-func (g *CORSGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *CORSGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

@@ -17,11 +17,13 @@ package filtergen
 import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/proto"
+)
+
+const (
+	// GrpcMetadataScrubberFilterName is the Envoy filter name for debug logging.
+	GrpcMetadataScrubberFilterName = "com.google.espv2.filters.http.grpc_metadata_scrubber"
 )
 
 type GRPCMetadataScrubberGenerator struct {
@@ -37,24 +39,17 @@ func NewGRPCMetadataScrubberGenerator(serviceInfo *ci.ServiceInfo) *GRPCMetadata
 }
 
 func (g *GRPCMetadataScrubberGenerator) FilterName() string {
-	return util.GrpcMetadataScrubber
+	return GrpcMetadataScrubberFilterName
 }
 
 func (g *GRPCMetadataScrubberGenerator) IsEnabled() bool {
 	return !g.skipFilter
 }
 
-func (g *GRPCMetadataScrubberGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	a, err := ptypes.MarshalAny(&gmspb.FilterConfig{})
-	if err != nil {
-		return nil, err
-	}
-	return &hcmpb.HttpFilter{
-		Name:       util.GrpcMetadataScrubber,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
-	}, nil
+func (g *GRPCMetadataScrubberGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+	return &gmspb.FilterConfig{}, nil
 }
 
-func (g *GRPCMetadataScrubberGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *GRPCMetadataScrubberGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

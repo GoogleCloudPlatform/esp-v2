@@ -22,9 +22,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-
 	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
@@ -67,13 +67,24 @@ func MakeHttpFilterConfigs(serviceInfo *sc.ServiceInfo, filterGenerators []Filte
 			continue
 		}
 
-		jsonStr, err := util.ProtoToJson(filter)
+		a, err := anypb.New(filter)
+		if err != nil {
+			return nil, fmt.Errorf("fail to marshal filter config to Any for filter %q: %v", filterGenerator.FilterName(), err)
+		}
+		httpFilter := &hcmpb.HttpFilter{
+			Name: filterGenerator.FilterName(),
+			ConfigType: &hcmpb.HttpFilter_TypedConfig{
+				TypedConfig: a,
+			},
+		}
+
+		jsonStr, err := util.ProtoToJson(httpFilter)
 		if err != nil {
 			return nil, fmt.Errorf("fail to convert proto to JSON for filter %q: %v", filterGenerator.FilterName(), err)
 		}
 
 		glog.Infof("adding filter config of %q : %v", filterGenerator.FilterName(), jsonStr)
-		httpFilters = append(httpFilters, filter)
+		httpFilters = append(httpFilters, httpFilter)
 	}
 	return httpFilters, nil
 }

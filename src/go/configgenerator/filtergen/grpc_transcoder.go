@@ -22,15 +22,17 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/protobuf/proto"
 	descpb "google.golang.org/protobuf/types/descriptorpb"
-	"google.golang.org/protobuf/types/known/anypb"
+)
+
+const (
+	// GRPCTranscoderFilterName is the Envoy filter name for debug logging.
+	GRPCTranscoderFilterName = "envoy.filters.http.grpc_json_transcoder"
 )
 
 type GRPCTranscoderGenerator struct {
@@ -67,7 +69,7 @@ func NewGRPCTranscoderGenerator(serviceInfo *ci.ServiceInfo) *GRPCTranscoderGene
 }
 
 func (g *GRPCTranscoderGenerator) FilterName() string {
-	return util.GRPCJSONTranscoder
+	return GRPCTranscoderFilterName
 }
 
 func (g *GRPCTranscoderGenerator) IsEnabled() bool {
@@ -88,7 +90,7 @@ func (g *GRPCTranscoderGenerator) IsEnabled() bool {
 	return false
 }
 
-func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
 	if g.configFile == nil {
 		return nil, fmt.Errorf("internal error, config file should be set as transcoder filer is enabled")
 	}
@@ -133,23 +135,17 @@ func (g *GRPCTranscoderGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 	}
 
 	transcodeConfig.Services = append(transcodeConfig.Services, serviceInfo.ApiNames...)
-
-	transcodeConfigStruct, _ := ptypes.MarshalAny(transcodeConfig)
-	transcodeFilter := &hcmpb.HttpFilter{
-		Name:       util.GRPCJSONTranscoder,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: transcodeConfigStruct},
-	}
-	return transcodeFilter, nil
+	return transcodeConfig, nil
 }
 
-func (g *GRPCTranscoderGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *GRPCTranscoderGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	if method.HttpBackendInfo != nil {
 		glog.Infof("Disable transcoder for the per-route config for method %q because it has HTTP backends.", method.Operation())
-		return anypb.New(&transcoderpb.GrpcJsonTranscoder{
+		return &transcoderpb.GrpcJsonTranscoder{
 			DescriptorSet: &transcoderpb.GrpcJsonTranscoder_ProtoDescriptor{
 				ProtoDescriptor: "",
 			},
-		})
+		}, nil
 	}
 	return nil, nil
 }

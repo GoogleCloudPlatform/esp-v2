@@ -15,16 +15,16 @@
 package filtergen
 
 import (
-	"fmt"
-
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/path_rewrite"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/protobuf/proto"
+)
+
+const (
+	// PathRewriteFilterName is the Envoy filter name for debug logging.
+	PathRewriteFilterName = "com.google.espv2.filters.http.path_rewrite"
 )
 
 type PathRewriteGenerator struct {
@@ -34,54 +34,35 @@ type PathRewriteGenerator struct {
 
 // NewPathRewriteGenerator creates the PathRewriteGenerator with cached config.
 func NewPathRewriteGenerator(serviceInfo *ci.ServiceInfo) *PathRewriteGenerator {
+	g := &PathRewriteGenerator{}
+
 	for _, method := range serviceInfo.Methods {
 		for _, httpRule := range method.HttpRule {
-			if pr := makePathRewriteConfig(method, httpRule); pr != nil {
-				return &PathRewriteGenerator{}
+			if pr, err := g.GenPerRouteConfig(method, httpRule); err == nil && pr != nil {
+				return g
 			}
 		}
 	}
 
-	return &PathRewriteGenerator{
-		skipFilter: true,
-	}
+	g.skipFilter = true
+	return g
 }
 
 func (g *PathRewriteGenerator) FilterName() string {
-	return util.PathRewrite
+	return PathRewriteFilterName
 }
 
 func (g *PathRewriteGenerator) IsEnabled() bool {
 	return !g.skipFilter
 }
 
-func (g *PathRewriteGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	pr := makePathRewriteConfig(method, httpRule)
-	if pr == nil {
-		return nil, nil
-	}
-
-	prAny, err := ptypes.MarshalAny(pr)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling path_rewrite per-route config to Any: %v", err)
-	}
-	return prAny, nil
+func (g *PathRewriteGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+	return &prpb.FilterConfig{}, nil
 }
 
-func (g *PathRewriteGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	a, err := ptypes.MarshalAny(&prpb.FilterConfig{})
-	if err != nil {
-		return nil, err
-	}
-	return &hcmpb.HttpFilter{
-		Name:       util.PathRewrite,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
-	}, nil
-}
-
-func makePathRewriteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) *prpb.PerRouteFilterConfig {
+func (g *PathRewriteGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	if method.BackendInfo == nil {
-		return nil
+		return nil, nil
 	}
 
 	if method.BackendInfo.TranslationType == confpb.BackendRule_APPEND_PATH_TO_ADDRESS {
@@ -90,7 +71,7 @@ func makePathRewriteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern)
 				PathTranslationSpecifier: &prpb.PerRouteFilterConfig_PathPrefix{
 					PathPrefix: method.BackendInfo.Path,
 				},
-			}
+			}, nil
 		}
 	}
 	if method.BackendInfo.TranslationType == confpb.BackendRule_CONSTANT_ADDRESS {
@@ -105,7 +86,7 @@ func makePathRewriteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern)
 			PathTranslationSpecifier: &prpb.PerRouteFilterConfig_ConstantPath{
 				ConstantPath: constPath,
 			},
-		}
+		}, nil
 	}
-	return nil
+	return nil, nil
 }

@@ -20,13 +20,17 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/proto"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/backend_auth"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/common"
+)
+
+const (
+	// BackendAuthFilterName is the Envoy filter name for debug logging.
+	BackendAuthFilterName = "com.google.espv2.filters.http.backend_auth"
 )
 
 type BackendAuthGenerator struct {
@@ -42,29 +46,24 @@ func NewBackendAuthGenerator(serviceInfo *ci.ServiceInfo) *BackendAuthGenerator 
 }
 
 func (g *BackendAuthGenerator) FilterName() string {
-	return util.BackendAuth
+	return BackendAuthFilterName
 }
 
 func (g *BackendAuthGenerator) IsEnabled() bool {
 	return len(g.audMap) > 0
 }
 
-func (g *BackendAuthGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *BackendAuthGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	if method.BackendInfo == nil || method.BackendInfo.JwtAudience == "" {
 		return nil, nil
 	}
 
-	auPerRoute := &bapb.PerRouteFilterConfig{
+	return &bapb.PerRouteFilterConfig{
 		JwtAudience: method.BackendInfo.JwtAudience,
-	}
-	aupr, err := ptypes.MarshalAny(auPerRoute)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling backend_auth per-route config to Any: %v", err)
-	}
-	return aupr, nil
+	}, nil
 }
 
-func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
 	var audList []string
 	for aud := range g.audMap {
 		audList = append(audList, aud)
@@ -105,16 +104,8 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hc
 			},
 		}
 	}
-	backendAuthConfigStruct, err := ptypes.MarshalAny(backendAuthConfig)
-	if err != nil {
-		return nil, err
-	}
 
-	backendAuthFilter := &hcmpb.HttpFilter{
-		Name:       util.BackendAuth,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: backendAuthConfigStruct},
-	}
-	return backendAuthFilter, nil
+	return backendAuthConfig, nil
 }
 
 // getUniqueAudiences returns a list of all unique audiences specified in ServiceInfo.

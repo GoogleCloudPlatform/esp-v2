@@ -24,11 +24,15 @@ import (
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/protobuf/proto"
+)
+
+const (
+	// ServiceControlFilterName is the Envoy filter name for debug logging.
+	ServiceControlFilterName = "com.google.espv2.filters.http.service_control"
 )
 
 type ServiceControlGenerator struct {
@@ -54,25 +58,20 @@ func NewServiceControlGenerator(serviceInfo *ci.ServiceInfo) *ServiceControlGene
 }
 
 func (g *ServiceControlGenerator) FilterName() string {
-	return util.ServiceControl
+	return ServiceControlFilterName
 }
 
 func (g *ServiceControlGenerator) IsEnabled() bool {
 	return !g.skipFilter
 }
 
-func (g *ServiceControlGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
-	scPerRoute := &scpb.PerRouteFilterConfig{
+func (g *ServiceControlGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
+	return &scpb.PerRouteFilterConfig{
 		OperationName: method.Operation(),
-	}
-	scpr, err := ptypes.MarshalAny(scPerRoute)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling service_control per-route config to Any: %v", err)
-	}
-	return scpr, nil
+	}, nil
 }
 
-func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
 	// TODO(b/148638212): Clean up this hacky way of specifying the protocol for Service Control report.
 	// This is safe (for now) as our Service Control filter only differentiates between gRPC or non-gRPC.
 	var protocol string
@@ -194,17 +193,9 @@ func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 	if err != nil {
 		return nil, err
 	}
-	filterConfig.DepErrorBehavior = depErrorBehaviorEnum
 
-	scs, err := ptypes.MarshalAny(filterConfig)
-	if err != nil {
-		return nil, err
-	}
-	filter := &hcmpb.HttpFilter{
-		Name:       util.ServiceControl,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: scs},
-	}
-	return filter, nil
+	filterConfig.DepErrorBehavior = depErrorBehaviorEnum
+	return filterConfig, nil
 }
 
 func makeServiceControlCallingConfig(opts options.ConfigGeneratorOptions) *scpb.ServiceControlCallingConfig {

@@ -16,16 +16,18 @@ package filtergen
 
 import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoytypepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/proto"
+)
+
+const (
+	// HealthCheckFilterName is the Envoy filter name for debug logging.
+	HealthCheckFilterName = "envoy.filters.http.health_check"
 )
 
 type HealthCheckGenerator struct {
@@ -41,14 +43,14 @@ func NewHealthCheckGenerator(serviceInfo *ci.ServiceInfo) *HealthCheckGenerator 
 }
 
 func (g *HealthCheckGenerator) FilterName() string {
-	return util.HealthCheck
+	return HealthCheckFilterName
 }
 
 func (g *HealthCheckGenerator) IsEnabled() bool {
 	return !g.skipFilter
 }
 
-func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
 	hcFilterConfig := &hcpb.HealthCheck{
 		PassThroughMode: &wrapperspb.BoolValue{Value: false},
 
@@ -72,18 +74,9 @@ func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hc
 		}
 	}
 
-	hcFilterConfigStruc, err := ptypes.MarshalAny(hcFilterConfig)
-	if err != nil {
-		return nil, err
-	}
-	return &hcmpb.HttpFilter{
-		Name: util.HealthCheck,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{
-			TypedConfig: hcFilterConfigStruc,
-		},
-	}, nil
+	return hcFilterConfig, nil
 }
 
-func (g *HealthCheckGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *HealthCheckGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

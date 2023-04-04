@@ -22,17 +22,21 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/proto"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	durationpb "github.com/golang/protobuf/ptypes/duration"
 	emptypb "github.com/golang/protobuf/ptypes/empty"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+)
+
+const (
+	// JWTAuthnFilterName is the Envoy filter name for debug logging.
+	JWTAuthnFilterName = "envoy.filters.http.jwt_authn"
 )
 
 type JwtAuthnGenerator struct {
@@ -59,31 +63,26 @@ func NewJwtAuthnGenerator(serviceInfo *ci.ServiceInfo) *JwtAuthnGenerator {
 }
 
 func (g *JwtAuthnGenerator) FilterName() string {
-	return util.JwtAuthn
+	return JWTAuthnFilterName
 }
 
 func (g *JwtAuthnGenerator) IsEnabled() bool {
 	return !g.skipFilter
 }
 
-func (g *JwtAuthnGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *JwtAuthnGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	if !method.RequireAuth {
 		return nil, nil
 	}
 
-	jwtPerRoute := &jwtpb.PerRouteConfig{
+	return &jwtpb.PerRouteConfig{
 		RequirementSpecifier: &jwtpb.PerRouteConfig_RequirementName{
 			RequirementName: method.Operation(),
 		},
-	}
-	jwt, err := ptypes.MarshalAny(jwtPerRoute)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling jwt_authn per-route config to Any: %v", err)
-	}
-	return jwt, nil
+	}, nil
 }
 
-func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
+func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
 	auth := serviceInfo.ServiceConfig().GetAuthentication()
 	providers := make(map[string]*jwtpb.JwtProvider)
 	for _, provider := range auth.GetProviders() {
@@ -172,17 +171,10 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb
 		}
 	}
 
-	jwtAuthentication := &jwtpb.JwtAuthentication{
+	return &jwtpb.JwtAuthentication{
 		Providers:      providers,
 		RequirementMap: requirements,
-	}
-
-	jas, _ := ptypes.MarshalAny(jwtAuthentication)
-	jwtAuthnFilter := &hcmpb.HttpFilter{
-		Name:       util.JwtAuthn,
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: jas},
-	}
-	return jwtAuthnFilter, nil
+	}, nil
 }
 
 func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string, error) {

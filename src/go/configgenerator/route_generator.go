@@ -30,8 +30,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
 	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -317,15 +317,18 @@ func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppatte
 			continue
 		}
 
-		perRouteFilterConfig, err := filterGen.GenPerRouteConfig(method, httpRule)
+		config, err := filterGen.GenPerRouteConfig(method, httpRule)
 		if err != nil {
 			return perFilterConfig, fmt.Errorf("failed to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
 		}
-
-		if perRouteFilterConfig == nil {
+		if config == nil {
 			continue
 		}
 
+		perRouteFilterConfig, err := anypb.New(config)
+		if err != nil {
+			return nil, fmt.Errorf("fail to marshal per-route config to Any for filter %q: %v", filterGen.FilterName(), err)
+		}
 		perFilterConfig[filterGen.FilterName()] = perRouteFilterConfig
 	}
 

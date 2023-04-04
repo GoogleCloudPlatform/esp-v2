@@ -17,34 +17,29 @@ package filtergen
 import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/header_sanitizer"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/proto"
+)
+
+const (
+	// HeaderSanitizerFilterName is the Envoy filter name for debug logging.
+	HeaderSanitizerFilterName = "com.google.espv2.filters.http.header_sanitizer"
 )
 
 type HeaderSanitizerGenerator struct{}
 
 func (g *HeaderSanitizerGenerator) FilterName() string {
-	return util.HeaderSanitizerScrubber
+	return HeaderSanitizerFilterName
 }
 
 func (g *HeaderSanitizerGenerator) IsEnabled() bool {
 	return true
 }
 
-func (g *HeaderSanitizerGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (*hcmpb.HttpFilter, error) {
-	a, err := ptypes.MarshalAny(&hspb.FilterConfig{})
-	if err != nil {
-		return nil, err
-	}
-	return &hcmpb.HttpFilter{
-		Name:       g.FilterName(),
-		ConfigType: &hcmpb.HttpFilter_TypedConfig{TypedConfig: a},
-	}, nil
+func (g *HeaderSanitizerGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+	return &hspb.FilterConfig{}, nil
 }
 
-func (g *HeaderSanitizerGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (*anypb.Any, error) {
+func (g *HeaderSanitizerGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }
