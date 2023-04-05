@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v11/http/common/base.pb.h"
+#include "api/envoy/v12/http/common/base.pb.h"
 #include "envoy/common/pure.h"
 #include "envoy/tracing/http_tracer.h"
 #include "envoy/upstream/cluster_manager.h"
@@ -54,7 +54,7 @@ class HttpCallFactoryImpl : public HttpCallFactory {
  public:
   HttpCallFactoryImpl(
       Envoy::Upstream::ClusterManager& cm, Envoy::Event::Dispatcher& dispatcher,
-      const ::espv2::api::envoy::v11::http::common::HttpUri& uri,
+      const ::espv2::api::envoy::v12::http::common::HttpUri& uri,
       const std::string& suffix_url,
       std::function<const std::string&()> token_fn, uint32_t timeout_ms,
       uint32_t retries, Envoy::TimeSource& time_source,
@@ -75,7 +75,7 @@ class HttpCallFactoryImpl : public HttpCallFactory {
   Envoy::Event::Dispatcher& dispatcher_;
 
   // call uri address
-  const ::espv2::api::envoy::v11::http::common::HttpUri uri_;
+  const ::espv2::api::envoy::v12::http::common::HttpUri uri_;
   const std::string suffix_url_;
 
   // token getter

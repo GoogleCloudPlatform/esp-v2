@@ -14,7 +14,7 @@
 
 #include "src/envoy/token/token_subscriber.h"
 
-#include "api/envoy/v11/http/common/base.pb.h"
+#include "api/envoy/v12/http/common/base.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "source/common/http/message_impl.h"
@@ -30,7 +30,7 @@ namespace test {
 
 using ::Envoy::Server::Configuration::MockFactoryContext;
 using ::Envoy::Upstream::MockThreadLocalCluster;
-using ::espv2::api::envoy::v11::http::common::DependencyErrorBehavior;
+using ::espv2::api::envoy::v12::http::common::DependencyErrorBehavior;
 
 using ::testing::_;
 using ::testing::ByMove;

@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/service_control"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )

@@ -13,6 +13,6 @@ api_cc_py_proto_library(
 
 go_proto_library(
     name = "config_go_proto",
-    importpath = "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber",
+    importpath = "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/grpc_metadata_scrubber",
     proto = ":config_proto",
 )

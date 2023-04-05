@@ -33,7 +33,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":filter_lib",
-        "//api/envoy/v11/http/header_sanitizer:config_proto_cc_proto",
+        "//api/envoy/v12/http/header_sanitizer:config_proto_cc_proto",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

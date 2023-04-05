@@ -83,13 +83,13 @@ func TestMakeListeners(t *testing.T) {
 							{
 								"name": "com.google.espv2.filters.http.header_sanitizer",
 								"typedConfig": {
-									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+									"@type": "type.googleapis.com/espv2.api.envoy.v12.http.header_sanitizer.FilterConfig"
 								}
 							},
 							{
                 "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig"
+                  "@type": "type.googleapis.com/espv2.api.envoy.v12.http.grpc_metadata_scrubber.FilterConfig"
                 }
               },
               {
@@ -244,13 +244,13 @@ func TestMakeListeners(t *testing.T) {
 							{
 								"name": "com.google.espv2.filters.http.header_sanitizer",
 								"typedConfig": {
-									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+									"@type": "type.googleapis.com/espv2.api.envoy.v12.http.header_sanitizer.FilterConfig"
 								}
 							},
 							{
                 "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig"
+                  "@type": "type.googleapis.com/espv2.api.envoy.v12.http.grpc_metadata_scrubber.FilterConfig"
                 }
               },
               {

@@ -16,7 +16,7 @@ package filtergen
 
 import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/header_sanitizer"
+	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/header_sanitizer"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/protobuf/proto"
 )

@@ -14,9 +14,9 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.v11.http.backend_auth;
+package espv2.api.envoy.v12.http.backend_auth;
 
-import "api/envoy/v11/http/common/base.proto";
+import "api/envoy/v12/http/common/base.proto";
 import "validate/validate.proto";
 
 // This config will be use in RouteEntry perFilterConfig
@@ -54,13 +54,13 @@ message FilterConfig {
 
     // The Instance Metadata Server uri used to fetch id token from Instance
     // Metadata Server.
-    espv2.api.envoy.v11.http.common.HttpUri imds_token = 2;
+    espv2.api.envoy.v12.http.common.HttpUri imds_token = 2;
 
     // Information used to fetch id token from Google Cloud IAM.
-    espv2.api.envoy.v11.http.common.IamTokenInfo iam_token = 3;
+    espv2.api.envoy.v12.http.common.IamTokenInfo iam_token = 3;
   }
 
   // How the filter config will handle failures when fetching ID tokens.
-  espv2.api.envoy.v11.http.common.DependencyErrorBehavior dep_error_behavior =
+  espv2.api.envoy.v12.http.common.DependencyErrorBehavior dep_error_behavior =
       4;
 }

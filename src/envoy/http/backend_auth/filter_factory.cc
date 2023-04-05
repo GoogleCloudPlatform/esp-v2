@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v11/http/backend_auth/config.pb.h"
-#include "api/envoy/v11/http/backend_auth/config.pb.validate.h"
+#include "api/envoy/v12/http/backend_auth/config.pb.h"
+#include "api/envoy/v12/http/backend_auth/config.pb.validate.h"
 #include "envoy/registry/registry.h"
 #include "source/extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/backend_auth/config_parser_impl.h"
@@ -30,14 +30,14 @@ namespace backend_auth {
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v11::http::backend_auth::FilterConfig,
-          ::espv2::api::envoy::v11::http::backend_auth::PerRouteFilterConfig> {
+          ::espv2::api::envoy::v12::http::backend_auth::FilterConfig,
+          ::espv2::api::envoy::v12::http::backend_auth::PerRouteFilterConfig> {
  public:
   FilterFactory() : FactoryBase(kFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v11::http::backend_auth::FilterConfig&
+      const ::espv2::api::envoy::v12::http::backend_auth::FilterConfig&
           proto_config,
       const std::string& stats_prefix,
       Envoy::Server::Configuration::FactoryContext& context) override {
@@ -53,7 +53,7 @@ class FilterFactory
 
   Envoy::Router::RouteSpecificFilterConfigConstSharedPtr
   createRouteSpecificFilterConfigTyped(
-      const ::espv2::api::envoy::v11::http::backend_auth::PerRouteFilterConfig&
+      const ::espv2::api::envoy::v12::http::backend_auth::PerRouteFilterConfig&
           per_route,
       Envoy::Server::Configuration::ServerFactoryContext&,
       Envoy::ProtobufMessage::ValidationVisitor&) override {

@@ -293,13 +293,13 @@ var (
 							{
 								"name": "com.google.espv2.filters.http.header_sanitizer",
 								"typedConfig": {
-									"@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+									"@type": "type.googleapis.com/espv2.api.envoy.v12.http.header_sanitizer.FilterConfig"
 								}
 							},
 							{
                 "name": "com.google.espv2.filters.http.backend_auth",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.FilterConfig",
+                  "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
                   "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                   "imdsToken": {
                     "cluster": "metadata-cluster",
@@ -316,13 +316,13 @@ var (
               {
                 "name": "com.google.espv2.filters.http.path_rewrite",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.FilterConfig"
+                  "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.FilterConfig"
                 }
               },
               {
                 "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig"
+                  "@type": "type.googleapis.com/espv2.api.envoy.v12.http.grpc_metadata_scrubber.FilterConfig"
                  }
               },
               {
@@ -430,11 +430,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "https://us-central1-cloud-esf.cloudfunctions.net/hello"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/hello"
                         }
                       }
@@ -465,11 +465,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "https://us-central1-cloud-esf.cloudfunctions.net/hello"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/hello"
                         }
                       }
@@ -500,11 +500,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
                         }
                       }
@@ -535,11 +535,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
                         }
                       }
@@ -572,11 +572,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
                         }
                       }
@@ -607,11 +607,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
                         }
                       }
@@ -642,11 +642,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "1083071298623-e...t.apps.googleusercontent.com"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "pathPrefix": "/api"
                         }
                       }
@@ -677,11 +677,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "https://us-west2-cloud-esf.cloudfunctions.net/search"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "constantPath": {
                             "path": "/search"
                           }
@@ -714,11 +714,11 @@ var (
                       },
                       "typedPerFilterConfig": {
                         "com.google.espv2.filters.http.backend_auth": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig",
                           "jwtAudience": "https://us-west2-cloud-esf.cloudfunctions.net/search"
                         },
                         "com.google.espv2.filters.http.path_rewrite": {
-                          "@type": "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig",
+                          "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                           "constantPath": {
                             "path": "/search"
                           }

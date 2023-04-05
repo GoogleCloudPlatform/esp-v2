@@ -127,13 +127,13 @@
                     {
                       "name": "com.google.espv2.filters.http.header_sanitizer",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v12.http.header_sanitizer.FilterConfig"
                       }
                     },
                     {
                       "name": "com.google.espv2.filters.http.service_control",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.service_control.FilterConfig",
+                        "@type": "type.googleapis.com/espv2.api.envoy.v12.http.service_control.FilterConfig",
                         "depErrorBehavior": "BLOCK_INIT_ON_ANY_ERROR",
                         "generatedHeaderPrefix": "X-Endpoint-",
                         "imdsToken": {
@@ -714,7 +714,7 @@
                     {
                       "name": "com.google.espv2.filters.http.grpc_metadata_scrubber",
                       "typedConfig": {
-                        "@type": "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig"
+                        "@type": "type.googleapis.com/espv2.api.envoy.v12.http.grpc_metadata_scrubber.FilterConfig"
                       }
                     },
                     {
@@ -775,7 +775,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.service_control.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v12.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves"
                               }
                             }
@@ -807,7 +807,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.service_control.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v12.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.ListShelves"
                               }
                             }
@@ -839,7 +839,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.service_control.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v12.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
                               }
                             }
@@ -871,7 +871,7 @@
                             },
                             "typedPerFilterConfig": {
                               "com.google.espv2.filters.http.service_control": {
-                                "@type": "type.googleapis.com/espv2.api.envoy.v11.http.service_control.PerRouteFilterConfig",
+                                "@type": "type.googleapis.com/espv2.api.envoy.v12.http.service_control.PerRouteFilterConfig",
                                 "operationName": "1.examples_service_control_endpoints_cloudesf_testing_cloud_goog.CreateShelf"
                               }
                             }
