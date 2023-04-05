@@ -14,8 +14,8 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
-#include "api/envoy/v11/http/service_control/config.pb.h"
-#include "api/envoy/v11/http/service_control/requirement.pb.h"
+#include "api/envoy/v12/http/service_control/config.pb.h"
+#include "api/envoy/v12/http/service_control/requirement.pb.h"
 #include "source/common/config/metadata.h"
 #include "source/common/http/utility.h"
 #include "src/api_proxy/service_control/request_builder.h"
@@ -35,13 +35,13 @@ namespace service_control {
 bool extractAPIKey(
     const Envoy::Http::RequestHeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::espv2::api::envoy::v11::http::service_control::ApiKeyLocation>&
+        ::espv2::api::envoy::v12::http::service_control::ApiKeyLocation>&
         locations,
     std::string& api_key);
 
 // Adds information from the `FilterConfig`'s gcp_attributes to the given info.
 void fillGCPInfo(
-    const ::espv2::api::envoy::v11::http::service_control::FilterConfig&
+    const ::espv2::api::envoy::v12::http::service_control::FilterConfig&
         filter_config,
     ::espv2::api_proxy::service_control::ReportRequestInfo& info);
 
@@ -77,7 +77,7 @@ void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
 
 // Returns the protocol of the backend service or UNKNOWN if not found
 ::espv2::api_proxy::service_control::protocol::Protocol getBackendProtocol(
-    const ::espv2::api::envoy::v11::http::service_control::Service& service);
+    const ::espv2::api::envoy::v12::http::service_control::Service& service);
 
 // Fill in the HTTP and gRPC status into the report info.
 void fillStatus(const Envoy::Http::ResponseHeaderMap* response_headers,

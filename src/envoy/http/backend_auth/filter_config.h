@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v11/http/backend_auth/config.pb.h"
+#include "api/envoy/v12/http/backend_auth/config.pb.h"
 #include "source/common/common/logger.h"
 #include "src/envoy/http/backend_auth/config_parser.h"
 

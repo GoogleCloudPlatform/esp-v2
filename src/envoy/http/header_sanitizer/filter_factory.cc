@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "api/envoy/v11/http/header_sanitizer/config.pb.h"
-#include "api/envoy/v11/http/header_sanitizer/config.pb.validate.h"
+#include "api/envoy/v12/http/header_sanitizer/config.pb.h"
+#include "api/envoy/v12/http/header_sanitizer/config.pb.validate.h"
 #include "envoy/registry/registry.h"
 #include "source/extensions/filters/http/common/factory_base.h"
 #include "src/envoy/http/header_sanitizer/filter.h"
@@ -31,13 +31,13 @@ constexpr const char kFilterName[] =
  */
 class FilterFactory
     : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::espv2::api::envoy::v11::http::header_sanitizer::FilterConfig> {
+          ::espv2::api::envoy::v12::http::header_sanitizer::FilterConfig> {
  public:
   FilterFactory() : FactoryBase(kFilterName) {}
 
  private:
   Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::espv2::api::envoy::v11::http::header_sanitizer::FilterConfig&,
+      const ::espv2::api::envoy::v12::http::header_sanitizer::FilterConfig&,
       const std::string&,
       Envoy::Server::Configuration::FactoryContext&) override {
     return [](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {

@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/protobuf/jsonpb"
 
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/common"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
@@ -82,7 +82,7 @@ func TestBackendAuthFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
       "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
       "imdsToken":{
           "cluster":"metadata-cluster",
@@ -158,7 +158,7 @@ func TestBackendAuthFilter(t *testing.T) {
 			wantBackendAuthFilter: `{
         "name":"com.google.espv2.filters.http.backend_auth",
         "typedConfig":{
-          "@type":"type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.FilterConfig",
+          "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
           "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
           "imdsToken":{
             "cluster":"metadata-cluster",
@@ -203,7 +203,7 @@ func TestBackendAuthFilter(t *testing.T) {
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
-      "@type":"type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.FilterConfig",
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
 			"depErrorBehavior":"ALWAYS_INIT",
       "iamToken":{
          "accessToken":{

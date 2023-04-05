@@ -21,11 +21,11 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 
-	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/backend_auth"
-	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/grpc_metadata_scrubber"
-	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/header_sanitizer"
-	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/path_rewrite"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/service_control"
+	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/backend_auth"
+	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/grpc_metadata_scrubber"
+	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/header_sanitizer"
+	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/path_rewrite"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	statspb "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
@@ -104,21 +104,21 @@ var Resolver = FuncResolver(func(url string) (proto.Message, error) {
 		return new(jwtpb.PerRouteConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager":
 		return new(hcmpb.HttpConnectionManager), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.FilterConfig":
 		return new(prpb.FilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.path_rewrite.PerRouteFilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig":
 		return new(prpb.PerRouteFilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.service_control.PerRouteFilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.service_control.PerRouteFilterConfig":
 		return new(scpb.PerRouteFilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.service_control.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.service_control.FilterConfig":
 		return new(scpb.FilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.PerRouteFilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.PerRouteFilterConfig":
 		return new(bapb.PerRouteFilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.backend_auth.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig":
 		return new(bapb.FilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.grpc_metadata_scrubber.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.grpc_metadata_scrubber.FilterConfig":
 		return new(gmspb.FilterConfig), nil
-	case "type.googleapis.com/espv2.api.envoy.v11.http.header_sanitizer.FilterConfig":
+	case "type.googleapis.com/espv2.api.envoy.v12.http.header_sanitizer.FilterConfig":
 		return new(hspb.FilterConfig), nil
 	case "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router":
 		return new(routerpb.Router), nil

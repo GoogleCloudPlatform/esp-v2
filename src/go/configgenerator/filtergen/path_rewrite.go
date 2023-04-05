@@ -16,7 +16,7 @@ package filtergen
 
 import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v11/http/path_rewrite"
+	prpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/path_rewrite"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/protobuf/proto"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"

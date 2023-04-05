@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "api/envoy/v11/http/service_control/config.pb.h"
+#include "api/envoy/v12/http/service_control/config.pb.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/tracing/http_tracer.h"
 #include "envoy/upstream/cluster_manager.h"
@@ -43,8 +43,8 @@ class ClientCacheHttpRequestTest;
 class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   ClientCache(
-      const ::espv2::api::envoy::v11::http::service_control::Service& config,
-      const ::espv2::api::envoy::v11::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::v12::http::service_control::Service& config,
+      const ::espv2::api::envoy::v12::http::service_control::FilterConfig&
           filter_config,
       const std::string& stats_prefix, Envoy::Stats::Scope& scope,
       Envoy::Upstream::ClusterManager& cm, Envoy::TimeSource& time_source,
@@ -89,7 +89,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       QuotaDoneFunc on_done);
 
   void initHttpRequestSetting(
-      const ::espv2::api::envoy::v11::http::service_control::FilterConfig&
+      const ::espv2::api::envoy::v12::http::service_control::FilterConfig&
           filter_config);
 
   void collectCallStatus(CallStatusStats& filter_stats,
@@ -100,7 +100,7 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
       const ::google::protobuf::util::Status& status, Response* resp,
       const std::string& body);
 
-  const ::espv2::api::envoy::v11::http::service_control::Service& config_;
+  const ::espv2::api::envoy::v12::http::service_control::Service& config_;
 
   // Filter statistics.
   ServiceControlFilterStats filter_stats_;

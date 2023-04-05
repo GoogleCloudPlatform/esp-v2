@@ -25,7 +25,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":config_parser_interface",
-        "//api/envoy/v11/http/path_rewrite:config_proto_cc_proto",
+        "//api/envoy/v12/http/path_rewrite:config_proto_cc_proto",
         "//src/api_proxy/path_matcher:path_matcher_lib",
         "//src/api_proxy/path_matcher:variable_binding_utils_lib",
         "@envoy//source/common/common:empty_string",

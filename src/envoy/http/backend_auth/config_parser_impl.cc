@@ -24,9 +24,9 @@ namespace envoy {
 namespace http_filters {
 namespace backend_auth {
 
-using ::espv2::api::envoy::v11::http::backend_auth::FilterConfig;
-using ::espv2::api::envoy::v11::http::common::AccessToken;
-using ::espv2::api::envoy::v11::http::common::DependencyErrorBehavior;
+using ::espv2::api::envoy::v12::http::backend_auth::FilterConfig;
+using ::espv2::api::envoy::v12::http::common::AccessToken;
+using ::espv2::api::envoy::v12::http::common::DependencyErrorBehavior;
 using ::google::protobuf::util::TimeUtil;
 using token::GetTokenFunc;
 using token::TokenSubscriber;

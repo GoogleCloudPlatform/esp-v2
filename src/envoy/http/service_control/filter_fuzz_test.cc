@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "api/envoy/v11/http/service_control/config.pb.validate.h"
+#include "api/envoy/v12/http/service_control/config.pb.validate.h"
 #include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
@@ -24,7 +24,7 @@ namespace http_filters {
 namespace service_control {
 namespace fuzz {
 
-namespace filter_api = ::espv2::api::envoy::v11::http::service_control;
+namespace filter_api = ::espv2::api::envoy::v12::http::service_control;
 namespace sc_api = ::google::api::servicecontrol::v1;
 
 using ::Envoy::TestStreamInfo;
@@ -143,7 +143,7 @@ DEFINE_PROTO_FUZZER(
     ServiceControlFilterConfig filter_config(input.config(), "fuzz-test-stats",
                                              context);
 
-    ::espv2::api::envoy::v11::http::service_control::PerRouteFilterConfig
+    ::espv2::api::envoy::v12::http::service_control::PerRouteFilterConfig
         per_route_cfg;
     per_route_cfg.set_operation_name(
         input.config().requirements(0).operation_name());

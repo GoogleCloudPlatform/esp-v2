@@ -21,7 +21,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/types/optional.h"
-#include "api/envoy/v11/http/service_control/config.pb.h"
+#include "api/envoy/v12/http/service_control/config.pb.h"
 #include "envoy/grpc/status.h"
 #include "envoy/http/header_map.h"
 #include "envoy/server/filter_config.h"
@@ -35,8 +35,8 @@
 #include "source/extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
-using ::espv2::api::envoy::v11::http::service_control::ApiKeyLocation;
-using ::espv2::api::envoy::v11::http::service_control::Service;
+using ::espv2::api::envoy::v12::http::service_control::ApiKeyLocation;
+using ::espv2::api::envoy::v12::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LatencyInfo;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::util::StatusCode;
@@ -141,7 +141,7 @@ bool isGrpcRequest(absl::string_view content_type) {
 }  // namespace
 
 void fillGCPInfo(
-    const ::espv2::api::envoy::v11::http::service_control::FilterConfig&
+    const ::espv2::api::envoy::v12::http::service_control::FilterConfig&
         filter_config,
     ::espv2::api_proxy::service_control::ReportRequestInfo& info) {
   if (!filter_config.has_gcp_attributes()) {
@@ -303,7 +303,7 @@ void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
 bool extractAPIKey(
     const Envoy::Http::RequestHeaderMap& headers,
     const ::google::protobuf::RepeatedPtrField<
-        ::espv2::api::envoy::v11::http::service_control::ApiKeyLocation>&
+        ::espv2::api::envoy::v12::http::service_control::ApiKeyLocation>&
         locations,
     std::string& api_key) {
   // If checking multiple headers, cache the parameters so they are only parsed

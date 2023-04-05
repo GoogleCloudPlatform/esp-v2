@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package espv2.api.envoy.v11.http.header_sanitizer;
+package espv2.api.envoy.v12.http.header_sanitizer;
 
 // header_sanitizer filter doesn't need any config.
 // But a config protobuf type is required by FilterFactory.

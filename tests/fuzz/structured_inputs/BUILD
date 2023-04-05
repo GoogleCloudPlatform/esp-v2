@@ -54,7 +54,7 @@ envoy_proto_library(
     name = "service_control_filter_proto",
     srcs = ["service_control_filter.proto"],
     deps = [
-        "//api/envoy/v11/http/service_control:config_proto",
+        "//api/envoy/v12/http/service_control:config_proto",
         "@envoy//test/fuzz:common_proto",
     ],
 )
