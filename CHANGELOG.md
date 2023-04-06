@@ -2,7 +2,6 @@
 
 - Update Envoy to v1.25.4 (#809)
 - Bump API version v11 -> v12 (#808)
-- Revert: Add back in HTTP method override in service control filter (#802) (#806)
 
 # Release 2.43.0 28-03-2023
 
