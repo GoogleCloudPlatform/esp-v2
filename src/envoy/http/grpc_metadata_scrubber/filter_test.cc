@@ -51,14 +51,16 @@ TEST_F(GrpcMetadataScrubberFilterTest, ContentLengthRemoved) {
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
             filter_->encodeHeaders(headers, false));
 
-  EXPECT_EQ(Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                            "grpc_metadata_scrubber.all")
-                ->value(),
-            1L);
-  EXPECT_EQ(Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                            "grpc_metadata_scrubber.removed")
-                ->value(),
-            1L);
+  EXPECT_EQ(
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_.store(),
+                                      "grpc_metadata_scrubber.all")
+          ->value(),
+      1L);
+  EXPECT_EQ(
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_.store(),
+                                      "grpc_metadata_scrubber.removed")
+          ->value(),
+      1L);
   // Content-Length is removed
   EXPECT_TRUE(headers.ContentLength() == nullptr);
 }
@@ -69,14 +71,16 @@ TEST_F(GrpcMetadataScrubberFilterTest, WrongContentType) {
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
             filter_->encodeHeaders(headers, false));
 
-  EXPECT_EQ(Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                            "grpc_metadata_scrubber.all")
-                ->value(),
-            1L);
-  EXPECT_EQ(Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                            "grpc_metadata_scrubber.removed")
-                ->value(),
-            0L);
+  EXPECT_EQ(
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_.store(),
+                                      "grpc_metadata_scrubber.all")
+          ->value(),
+      1L);
+  EXPECT_EQ(
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_.store(),
+                                      "grpc_metadata_scrubber.removed")
+          ->value(),
+      0L);
   // Content-Length is not removed
   EXPECT_TRUE(headers.ContentLength() != nullptr);
 }
@@ -87,14 +91,16 @@ TEST_F(GrpcMetadataScrubberFilterTest, NotContentLength) {
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::Continue,
             filter_->encodeHeaders(headers, false));
 
-  EXPECT_EQ(Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                            "grpc_metadata_scrubber.all")
-                ->value(),
-            1L);
-  EXPECT_EQ(Envoy::TestUtility::findCounter(mock_factory_context_.scope_,
-                                            "grpc_metadata_scrubber.removed")
-                ->value(),
-            0L);
+  EXPECT_EQ(
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_.store(),
+                                      "grpc_metadata_scrubber.all")
+          ->value(),
+      1L);
+  EXPECT_EQ(
+      Envoy::TestUtility::findCounter(mock_factory_context_.scope_.store(),
+                                      "grpc_metadata_scrubber.removed")
+          ->value(),
+      0L);
 }
 
 }  // namespace
