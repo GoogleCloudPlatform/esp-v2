@@ -1,3 +1,12 @@
+# Release 2.44.0 06-04-2023
+
+TODO: Edit the section below before submitting! DIRECTORY /usr/local/google/home/taoxuy/esp-v2
+===============================================
+
+- Update Envoy to v1.25.4 (#809)
+- bump API version v11 -> v12 (#808)
+- Revert: Add back in HTTP method override in service control filter (#802) (#806)
+
 # Release 2.43.0 28-03-2023
 
 - move x-http-method-override to beginning of filter chain (#801)
