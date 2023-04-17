@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"

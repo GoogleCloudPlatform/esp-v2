@@ -24,17 +24,15 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/proto"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestMakeRouteConfig(t *testing.T) {

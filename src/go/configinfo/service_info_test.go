@@ -29,11 +29,11 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/google/go-cmp/cmp"
 	"github.com/gorilla/mux"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
@@ -3845,7 +3845,7 @@ func TestProcessAccessToken(t *testing.T) {
 					RemoteToken: &commonpb.HttpUri{
 						Uri:     "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token",
 						Cluster: "metadata-cluster",
-						Timeout: ptypes.DurationProto(30 * time.Second),
+						Timeout: durationpb.New(30 * time.Second),
 					},
 				},
 			},
@@ -3858,7 +3858,7 @@ func TestProcessAccessToken(t *testing.T) {
 					RemoteToken: &commonpb.HttpUri{
 						Uri:     "http://127.0.0.1:8791/local/access_token",
 						Cluster: "token-agent-cluster",
-						Timeout: ptypes.DurationProto(30 * time.Second),
+						Timeout: durationpb.New(30 * time.Second),
 					},
 				},
 			},

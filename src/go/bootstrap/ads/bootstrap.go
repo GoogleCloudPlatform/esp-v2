@@ -17,14 +17,13 @@ package ads
 import (
 	"fmt"
 
+	bt "github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/ptypes"
-
-	bt "github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // CreateBootstrapConfig outputs envoy bootstrap config for xDS.
@@ -32,7 +31,7 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 	apiVersion := corepb.ApiVersion_V3
 
 	// Parse ADS connect timeout
-	connectTimeoutProto := ptypes.DurationProto(opts.AdsConnectTimeout)
+	connectTimeoutProto := durationpb.New(opts.AdsConnectTimeout)
 
 	bt := &bootstrappb.Bootstrap{
 		// Node info

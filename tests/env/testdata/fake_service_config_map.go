@@ -20,8 +20,8 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/proto"
 
 	anypb "github.com/golang/protobuf/ptypes/any"
 	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"

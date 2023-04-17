@@ -29,9 +29,9 @@ import (
 	facpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
-	structpb "github.com/golang/protobuf/ptypes/struct"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/structpb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // MakeListeners provides dynamic listeners for Envoy
@@ -105,7 +105,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []FilterGenerato
 	httpConMgr.HttpFilters = httpFilters
 
 	// HTTP filter configuration
-	httpFilterConfig, err := ptypes.MarshalAny(httpConMgr)
+	httpFilterConfig, err := anypb.New(httpConMgr)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func makeHTTPConMgr(opts *options.ConfigGeneratorOptions, route *routepb.RouteCo
 			}
 		}
 
-		serialized, _ := ptypes.MarshalAny(fileAccessLog)
+		serialized, _ := anypb.New(fileAccessLog)
 
 		httpConMgr.AccessLog = []*acpb.AccessLog{
 			{

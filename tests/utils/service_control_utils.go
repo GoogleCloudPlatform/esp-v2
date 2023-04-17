@@ -21,7 +21,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"

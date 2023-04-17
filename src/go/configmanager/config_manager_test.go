@@ -31,19 +31,17 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/serviceconfig"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
-	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
-
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	discoverypb "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
+	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestFetchListeners(t *testing.T) {
@@ -280,10 +278,7 @@ func getListeners(configManager *ConfigManager, opts options.ConfigGeneratorOpti
 		return nil, nil, "", err
 	}
 
-	marshaler := &jsonpb.Marshaler{
-		AnyResolver: util.Resolver,
-	}
-	gotListeners, err := marshaler.MarshalToString(resp.Resources[0])
+	gotListeners, err := util.ProtoToJson(resp.Resources[0])
 	return req, respInterface, gotListeners, err
 }
 

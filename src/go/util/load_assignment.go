@@ -20,8 +20,8 @@ import (
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	httppb "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
-	"github.com/golang/protobuf/ptypes"
-	anypb "github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 const (
@@ -37,15 +37,15 @@ func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
 				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{
 						ConnectionKeepalive: &corepb.KeepaliveSettings{
-							Interval: ptypes.DurationProto(Http2KeepaliveInterval),
-							Timeout:  ptypes.DurationProto(Http2KeepaliveTimeout),
+							Interval: durationpb.New(Http2KeepaliveInterval),
+							Timeout:  durationpb.New(Http2KeepaliveTimeout),
 						},
 					},
 				},
 			},
 		},
 	}
-	a, _ := ptypes.MarshalAny(o)
+	a, _ := anypb.New(o)
 
 	return map[string]*anypb.Any{
 		UpstreamProtocolOptions: a,

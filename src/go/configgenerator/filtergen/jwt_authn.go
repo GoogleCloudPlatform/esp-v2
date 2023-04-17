@@ -21,17 +21,16 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/proto"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
-	durationpb "github.com/golang/protobuf/ptypes/duration"
-	emptypb "github.com/golang/protobuf/ptypes/empty"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -102,7 +101,7 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.
 				HttpUpstreamType: &corepb.HttpUri_Cluster{
 					Cluster: clusterName,
 				},
-				Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
+				Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 			},
 			CacheDuration: &durationpb.Duration{
 				Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
@@ -120,8 +119,8 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.
 					Value: uint32(serviceInfo.Options.JwksFetchNumRetries),
 				},
 				RetryBackOff: &corepb.BackoffStrategy{
-					BaseInterval: ptypes.DurationProto(serviceInfo.Options.JwksFetchRetryBackOffBaseInterval),
-					MaxInterval:  ptypes.DurationProto(serviceInfo.Options.JwksFetchRetryBackOffMaxInterval),
+					BaseInterval: durationpb.New(serviceInfo.Options.JwksFetchRetryBackOffBaseInterval),
+					MaxInterval:  durationpb.New(serviceInfo.Options.JwksFetchRetryBackOffMaxInterval),
 				},
 			}
 			jwks.RetryPolicy = rp

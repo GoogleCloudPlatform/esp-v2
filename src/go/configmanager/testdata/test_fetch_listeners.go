@@ -18,8 +18,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	descpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/protobuf/proto"
+	descpb "google.golang.org/protobuf/types/descriptorpb"
 )
 
 const (

@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"

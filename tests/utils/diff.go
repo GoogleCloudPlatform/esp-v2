@@ -17,7 +17,8 @@ package utils
 import (
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 )
 
 // ProtoDiff returns git diff style line-by-line diff between marshalled proto.
@@ -28,7 +29,7 @@ func ProtoDiff(x, y proto.Message) string {
 		return ""
 	}
 
-	return StringDiff(proto.MarshalTextString(x), proto.MarshalTextString(y))
+	return StringDiff(prototext.Format(x), prototext.Format(y))
 }
 
 // StringDiff returns git diff style line-by-line diff between two strings.

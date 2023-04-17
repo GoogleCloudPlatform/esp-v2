@@ -19,10 +19,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	sm "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 // MockServiceMrg mocks the Service Management server.

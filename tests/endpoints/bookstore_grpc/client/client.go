@@ -31,12 +31,12 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/brotli/go/cbrotli"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	bsgrpcv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
 	bspbv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"

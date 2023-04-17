@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	bookstorepb "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
 	emptypb "github.com/golang/protobuf/ptypes/empty"

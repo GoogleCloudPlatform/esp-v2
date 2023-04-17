@@ -25,7 +25,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	echoClient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"

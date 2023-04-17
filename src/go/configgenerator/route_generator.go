@@ -29,10 +29,10 @@ import (
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -68,7 +68,7 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []Fil
 	}
 
 	if cors != nil {
-		corsAny, err := ptypes.MarshalAny(cors)
+		corsAny, err := anypb.New(cors)
 		if err != nil {
 			return nil, fmt.Errorf("error marshaling CorsPolicy to Any: %v", err)
 		}
@@ -326,7 +326,7 @@ func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppatte
 			continue
 		}
 
-		perRouteFilterConfig, err := ptypes.MarshalAny(config)
+		perRouteFilterConfig, err := anypb.New(config)
 		if err != nil {
 			return nil, fmt.Errorf("fail to marshal per-route config to Any for filter %q: %v", filterGen.FilterName(), err)
 		}
@@ -442,7 +442,7 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 	}
 
 	if bi.PerTryTimeout.Nanoseconds() > 0 {
-		retryPolicy.PerTryTimeout = ptypes.DurationProto(bi.PerTryTimeout)
+		retryPolicy.PerTryTimeout = durationpb.New(bi.PerTryTimeout)
 	}
 
 	return &routepb.Route{
@@ -453,8 +453,8 @@ func makeRoute(routeMatcher *routepb.RouteMatch, method *configinfo.MethodInfo, 
 				ClusterSpecifier: &routepb.RouteAction_Cluster{
 					Cluster: bi.ClusterName,
 				},
-				Timeout:     ptypes.DurationProto(bi.Deadline),
-				IdleTimeout: ptypes.DurationProto(bi.IdleTimeout),
+				Timeout:     durationpb.New(bi.Deadline),
+				IdleTimeout: durationpb.New(bi.IdleTimeout),
 				RetryPolicy: retryPolicy,
 			},
 		},

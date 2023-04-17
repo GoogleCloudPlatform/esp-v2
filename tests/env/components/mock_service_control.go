@@ -25,8 +25,8 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
+	"google.golang.org/protobuf/proto"
 
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )

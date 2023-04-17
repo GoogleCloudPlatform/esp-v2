@@ -21,8 +21,8 @@ import (
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoytypepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/golang/protobuf/proto"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/proto"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (

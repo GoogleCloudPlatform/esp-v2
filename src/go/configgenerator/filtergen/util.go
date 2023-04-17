@@ -20,8 +20,8 @@ import (
 
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, error) {
@@ -38,7 +38,7 @@ func parseDepErrorBehavior(stringVal string) (commonpb.DependencyErrorBehavior, 
 }
 
 func FilterConfigToHTTPFilter(filter proto.Message, name string) (*hcmpb.HttpFilter, error) {
-	a, err := ptypes.MarshalAny(filter)
+	a, err := anypb.New(filter)
 	if err != nil {
 		return nil, fmt.Errorf("fail to marshal filter config to Any for filter %q: %v", name, err)
 	}

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"

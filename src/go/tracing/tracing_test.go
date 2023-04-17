@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"

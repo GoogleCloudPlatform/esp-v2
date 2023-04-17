@@ -15,7 +15,6 @@
 package static
 
 import (
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"testing"
@@ -24,10 +23,8 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
-	"github.com/golang/protobuf/jsonpb"
-	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var (
@@ -117,21 +114,16 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 				t.Fatalf("ReadFile failed, got %v", err)
 			}
 
-			unmarshaler := &jsonpb.Unmarshaler{
-				AnyResolver:        util.Resolver,
-				AllowUnknownFields: false,
-			}
-
-			var s confpb.Service
-			if err := unmarshaler.Unmarshal(bytes.NewBuffer(configBytes), &s); err != nil {
-				t.Fatalf("Unmarshal() returned error %v, want nil", err)
+			s, err := util.UnmarshalServiceConfig(configBytes)
+			if err != nil {
+				t.Fatalf("UnmarshalServiceConfig() returned error %v, want nil", err)
 			}
 
 			opts := flags.EnvoyConfigOptionsFromFlags()
 			tc.opt_mod(&opts)
 
 			// Function under test
-			gotBootstrap, err := ServiceToBootstrapConfig(&s, FakeConfigID, opts)
+			gotBootstrap, err := ServiceToBootstrapConfig(s, FakeConfigID, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -142,7 +134,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			}
 
 			var expectedBootstrap bootstrappb.Bootstrap
-			if err := unmarshaler.Unmarshal(bytes.NewBuffer(envoyConfig), &expectedBootstrap); err != nil {
+			if err := protojson.Unmarshal(envoyConfig, &expectedBootstrap); err != nil {
 				t.Fatalf("Unmarshal() returned error %v, want nil", err)
 			}
 
@@ -163,10 +155,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 
 func bootstrapToJson(protoMsg *bootstrappb.Bootstrap) (string, error) {
 	// Marshal both protos back to json-strings to pretty print them
-	marshaler := &jsonpb.Marshaler{
-		AnyResolver: util.Resolver,
-	}
-	gotString, err := marshaler.MarshalToString(protoMsg)
+	gotString, err := util.ProtoToJson(protoMsg)
 	if err != nil {
 		return "", err
 	}

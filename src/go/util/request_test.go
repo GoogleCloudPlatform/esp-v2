@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func initServerForTestCallWithAccessToken(t *testing.T, desc, wantMethod, wantToken string, respBody []byte, respStatusCode, rejectTimes int, silentInterval time.Duration) *httptest.Server {

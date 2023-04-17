@@ -15,7 +15,6 @@
 package configmanager
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -217,7 +216,7 @@ func (m *ConfigManager) readAndApplyServiceConfig(servicePath string) error {
 		return fmt.Errorf("fail to read service config file: %s, error: %s", servicePath, err)
 	}
 
-	serviceConfig, err := util.UnmarshalServiceConfig(bytes.NewReader(config))
+	serviceConfig, err := util.UnmarshalServiceConfig(config)
 	if err != nil {
 		return fmt.Errorf("fail to unmarshal service config with error: %s", err)
 	}

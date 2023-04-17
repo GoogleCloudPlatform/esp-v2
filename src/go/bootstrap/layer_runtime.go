@@ -16,7 +16,7 @@ package bootstrap
 
 import (
 	bootstrappb "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
-	structpb "github.com/golang/protobuf/ptypes/struct"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // CreateLayeredRuntime outputs LayeredRuntime struct for bootstrap config

@@ -18,7 +18,7 @@ import (
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 const (

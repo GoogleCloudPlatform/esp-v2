@@ -23,8 +23,8 @@ import (
 	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
 	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
 	comppb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/compressor/v3"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type CompressorType int
@@ -73,7 +73,7 @@ func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (prot
 	if err != nil {
 		return nil, err
 	}
-	ca, err := ptypes.MarshalAny(cfg)
+	ca, err := anypb.New(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error marshaling %s Compressor config to Any: %v", name, err)
 	}
