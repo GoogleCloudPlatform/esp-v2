@@ -86,8 +86,8 @@ func (g *GRPCTranscoderGenerator) IsEnabled() bool {
 	// We cannot ensure that users have the latest version of the script, so notify them via non-fatal logs.
 	// Log as error instead of warning because error logs will show up even if `--enable_debug` is false.
 	glog.Error("Unable to setup gRPC-JSON transcoding because no proto descriptor was found in the service config. " +
-			"Please use version 2020-01-29 (or later) of the `gcloud_build_image` script. " +
-			"https://github.com/GoogleCloudPlatform/esp-v2/blob/master/docker/serverless/gcloud_build_image")
+		"Please use version 2020-01-29 (or later) of the `gcloud_build_image` script. " +
+		"https://github.com/GoogleCloudPlatform/esp-v2/blob/master/docker/serverless/gcloud_build_image")
 	return false
 }
 

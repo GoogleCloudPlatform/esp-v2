@@ -24,14 +24,13 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"google.golang.org/protobuf/proto"
-
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
+	"google.golang.org/protobuf/proto"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -2642,8 +2641,7 @@ func TestMakeRouteConfig(t *testing.T) {
 				t.Fatalf("expected err: %v, got: %v", tc.wantedError, err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gotConfig, err := marshaler.MarshalToString(gotRoute)
+			gotConfig, err := util.ProtoToJson(gotRoute)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3102,8 +3100,7 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gotConfig, err := marshaler.MarshalToString(gotRoute)
+			gotConfig, err := util.ProtoToJson(gotRoute)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4461,8 +4458,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gotConfig, err := marshaler.MarshalToString(gotRoute)
+			gotConfig, err := util.ProtoToJson(gotRoute)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4607,7 +4603,11 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				t.Errorf("Test (%v): expect CORS, but found none", tc.desc)
 			} else {
 				gotCors := &corspb.CorsPolicy{}
-				ptypes.UnmarshalAny(corsAny, gotCors)
+				err := corsAny.UnmarshalTo(gotCors)
+				if err != nil {
+					t.Fatalf("Test (%v): UnmarshalTo got err: %v", tc.desc, err)
+				}
+
 				if !proto.Equal(gotCors, tc.wantCorsPolicy) {
 					t.Errorf("Test (%v): CorsPolicy diff, got Cors: %v, want: %v", tc.desc, gotCors, tc.wantCorsPolicy)
 				}

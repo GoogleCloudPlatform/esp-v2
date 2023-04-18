@@ -41,7 +41,9 @@ import (
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestFetchListeners(t *testing.T) {
@@ -654,13 +656,13 @@ var initMockServer = func(t *testing.T, config *safeData) *httptest.Server {
 	}))
 }
 
-func getClusterName(a *any.Any) string {
+func getClusterName(a *anypb.Any) string {
 	c := &clusterpb.Cluster{}
 	ptypes.UnmarshalAny(a, c)
 	return c.GetName()
 }
 
-func sortClusters(s []*any.Any) []*any.Any {
+func sortClusters(s []*anypb.Any) []*anypb.Any {
 	sort.Slice(s, func(i, j int) bool {
 		return getClusterName(s[i]) < getClusterName(s[j])
 	})
@@ -668,21 +670,17 @@ func sortClusters(s []*any.Any) []*any.Any {
 }
 
 func unmarshalJsonTestToPbMessage(input string, output proto.Message) error {
-	unmarshaler := &jsonpb.Unmarshaler{
-		AnyResolver: util.Resolver,
-	}
-
 	switch t := output.(type) {
 	case *confpb.Service:
-		if err := unmarshaler.Unmarshal(strings.NewReader(input), output.(*confpb.Service)); err != nil {
+		if err := protojson.Unmarshal([]byte(input), output.(*confpb.Service)); err != nil {
 			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
 		}
 	case *smpb.ListServiceRolloutsResponse:
-		if err := unmarshaler.Unmarshal(strings.NewReader(input), output.(*smpb.ListServiceRolloutsResponse)); err != nil {
+		if err := protojson.Unmarshal([]byte(input), output.(*smpb.ListServiceRolloutsResponse)); err != nil {
 			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
 		}
 	case *servicecontrolpb.ReportResponse:
-		if err := unmarshaler.Unmarshal(strings.NewReader(input), output.(*servicecontrolpb.ReportResponse)); err != nil {
+		if err := protojson.Unmarshal([]byte(input), output.(*servicecontrolpb.ReportResponse)); err != nil {
 			return fmt.Errorf("fail to unmarshal %T: %v", t, err)
 		}
 		return nil

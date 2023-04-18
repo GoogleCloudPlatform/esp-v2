@@ -29,8 +29,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/google/brotli/go/cbrotli"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
@@ -272,8 +272,7 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 		return "", fmt.Errorf("%v got unexpected error: code = %v, message = %v", method, statusErr.Code(), utils.RpcStatusDeterministicJsonFormat([]byte(statusErr.Message())))
 	}
 
-	var marshaler jsonpb.Marshaler
-	return marshaler.MarshalToString(respMsg)
+	return util.ProtoToJson(respMsg)
 }
 
 var MakeBookstoreV2GrpcCall = func(addr, method string, header http.Header) (string, error) {
@@ -309,8 +308,7 @@ var MakeBookstoreV2GrpcCall = func(addr, method string, header http.Header) (str
 		return "", fmt.Errorf("%v got unexpected error: %v", method, err)
 	}
 
-	var marshaler jsonpb.Marshaler
-	return marshaler.MarshalToString(respMsg)
+	return util.ProtoToJson(respMsg)
 }
 
 // MakeGRPCWebCall returns response in JSON and gRPC-Web trailer.
@@ -402,8 +400,7 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 		return "", nil, fmt.Errorf("failed to unmarshal response message: %v", err)
 	}
 
-	var marshaler jsonpb.Marshaler
-	respJSON, err := marshaler.MarshalToString(respMsg)
+	respJSON, err := util.ProtoToJson(respMsg)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to convert response message to JSON: %v", err)
 	}

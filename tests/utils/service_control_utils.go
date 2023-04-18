@@ -23,9 +23,9 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	structpb "github.com/golang/protobuf/ptypes/struct"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	ltypepb "google.golang.org/genproto/googleapis/logging/type"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type ServiceRequestType int
