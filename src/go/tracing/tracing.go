@@ -21,13 +21,12 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
-
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	"github.com/golang/glog"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
@@ -117,7 +116,7 @@ func CreateTracing(opts options.CommonOptions) (*hcmpb.HttpConnectionManager_Tra
 		return nil, err
 	}
 
-	typedConfig, err := ptypes.MarshalAny(openCensusConfig)
+	typedConfig, err := anypb.New(openCensusConfig)
 	if err != nil {
 		return nil, err
 	}

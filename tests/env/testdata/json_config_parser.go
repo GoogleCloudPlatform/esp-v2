@@ -17,11 +17,12 @@ package testdata
 import (
 	"strings"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/jsonpb"
-
 	conf "google.golang.org/genproto/googleapis/api/serviceconfig"
+
+	// Link in all protos.
+	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 var (
@@ -33,7 +34,6 @@ var (
 func parseFromJson(json string) *conf.Service {
 	unmarshaler := &jsonpb.Unmarshaler{
 		AllowUnknownFields: true,
-		AnyResolver:        util.Resolver,
 	}
 	var serviceConfig conf.Service
 	if err := unmarshaler.Unmarshal(strings.NewReader(json), &serviceConfig); err != nil {

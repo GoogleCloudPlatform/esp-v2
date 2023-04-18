@@ -18,7 +18,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 // FilterGenerator is an interface for objects that generate Envoy filters.

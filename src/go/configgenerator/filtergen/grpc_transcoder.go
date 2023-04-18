@@ -23,10 +23,10 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	transcoderpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_json_transcoder/v3"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
+	"google.golang.org/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	descpb "google.golang.org/protobuf/types/descriptorpb"
 )

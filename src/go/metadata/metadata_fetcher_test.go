@@ -21,7 +21,7 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 )

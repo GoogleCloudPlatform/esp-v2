@@ -22,8 +22,8 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
-	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/types/known/durationpb"
+	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -133,7 +133,7 @@ func makeMetadataCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error
 		return nil, fmt.Errorf("fail to parse metadata cluster URI: %v", err)
 	}
 
-	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
+	connectTimeoutProto := durationpb.New(serviceInfo.Options.ClusterConnectTimeout)
 	c := &clusterpb.Cluster{
 		Name:           util.MetadataServerClusterName,
 		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
@@ -160,7 +160,7 @@ func makeTokenAgentCluster(serviceInfo *sc.ServiceInfo) *clusterpb.Cluster {
 	return &clusterpb.Cluster{
 		Name:           util.TokenAgentClusterName,
 		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
-		ConnectTimeout: ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout),
+		ConnectTimeout: durationpb.New(serviceInfo.Options.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{
 			Type: clusterpb.Cluster_STATIC,
 		},
@@ -177,7 +177,7 @@ func makeIamCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, error) {
 		return nil, fmt.Errorf("fail to parse IAM cluster URI: %v", err)
 	}
 
-	connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
+	connectTimeoutProto := durationpb.New(serviceInfo.Options.ClusterConnectTimeout)
 	c := &clusterpb.Cluster{
 		Name:            util.IamServerClusterName,
 		LbPolicy:        clusterpb.Cluster_ROUND_ROBIN,
@@ -224,7 +224,7 @@ func makeJwtProviderClusters(serviceInfo *sc.ServiceInfo) ([]*clusterpb.Cluster,
 			return nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
 		}
 
-		connectTimeoutProto := ptypes.DurationProto(serviceInfo.Options.ClusterConnectTimeout)
+		connectTimeoutProto := durationpb.New(serviceInfo.Options.ClusterConnectTimeout)
 
 		c := &clusterpb.Cluster{
 			Name:           clusterName,
@@ -260,7 +260,7 @@ func makeBackendCluster(opt *options.ConfigGeneratorOptions, brc *sc.BackendRout
 	c := &clusterpb.Cluster{
 		Name:                 brc.ClusterName,
 		LbPolicy:             clusterpb.Cluster_ROUND_ROBIN,
-		ConnectTimeout:       ptypes.DurationProto(opt.ClusterConnectTimeout),
+		ConnectTimeout:       durationpb.New(opt.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 		LoadAssignment:       util.CreateLoadAssignment(brc.Hostname, brc.Port),
 	}
@@ -321,13 +321,13 @@ func makeLocalBackendCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster, e
 	}
 
 	if serviceInfo.Options.HealthCheckGrpcBackend {
-		intervalProto := ptypes.DurationProto(serviceInfo.Options.HealthCheckGrpcBackendInterval)
+		intervalProto := durationpb.New(serviceInfo.Options.HealthCheckGrpcBackendInterval)
 		c.HealthChecks = []*corepb.HealthCheck{
 			&corepb.HealthCheck{
 				// Set the timeout as Interval
 				Timeout:            intervalProto,
 				Interval:           intervalProto,
-				NoTrafficInterval:  ptypes.DurationProto(serviceInfo.Options.HealthCheckGrpcBackendNoTrafficInterval),
+				NoTrafficInterval:  durationpb.New(serviceInfo.Options.HealthCheckGrpcBackendNoTrafficInterval),
 				UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
 				HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
 				HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
@@ -348,7 +348,7 @@ func makeServiceControlCluster(serviceInfo *sc.ServiceInfo) (*clusterpb.Cluster,
 		return nil, fmt.Errorf("failed to parse port from url %+v: %v", serviceInfo.ServiceControlURI, err)
 	}
 
-	connectTimeoutProto := ptypes.DurationProto(5 * time.Second)
+	connectTimeoutProto := durationpb.New(5 * time.Second)
 	c := &clusterpb.Cluster{
 		Name:                 util.ServiceControlClusterName,
 		LbPolicy:             clusterpb.Cluster_ROUND_ROBIN,

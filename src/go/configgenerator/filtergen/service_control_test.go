@@ -20,8 +20,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/jsonpb"
-
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
 )
@@ -118,8 +116,7 @@ func TestServiceControl(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gotFilter, err := marshaler.MarshalToString(filter)
+			gotFilter, err := util.ProtoToJson(filter)
 			if err != nil {
 				t.Fatal(err)
 			}

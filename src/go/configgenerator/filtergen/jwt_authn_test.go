@@ -20,8 +20,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/jsonpb"
-
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
 )
@@ -667,8 +665,7 @@ func TestJwtAuthnFilter(t *testing.T) {
 				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gotFilter, err := marshaler.MarshalToString(httpFilter)
+			gotFilter, err := util.ProtoToJson(httpFilter)
 			if err != nil {
 				t.Fatal(err)
 			}

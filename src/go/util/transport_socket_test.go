@@ -141,8 +141,7 @@ func TestCreateUpstreamTransportSocket(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		marshaler := &jsonpb.Marshaler{}
-		gotConfig, err := marshaler.MarshalToString(gotTransportSocket)
+		gotConfig, err := ProtoToJson(gotTransportSocket)
 		if err != nil {
 			t.Fatal(err)
 		}

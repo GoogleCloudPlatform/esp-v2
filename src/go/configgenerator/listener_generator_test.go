@@ -18,25 +18,23 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	structpb "github.com/golang/protobuf/ptypes/struct"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func TestMakeListeners(t *testing.T) {
 	configFile := &smpb.ConfigFile{
 		FileType: smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
-	data, err := ptypes.MarshalAny(configFile)
+	data, err := anypb.New(configFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -424,9 +422,8 @@ func TestMakeListeners(t *testing.T) {
 			continue
 		}
 
-		marshaler := &jsonpb.Marshaler{}
 		for j, wantListener := range tc.wantListeners {
-			gotListener, err := marshaler.MarshalToString(listeners[j])
+			gotListener, err := util.ProtoToJson(listeners[j])
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -691,8 +688,7 @@ func TestMakeHTTPConMgr(t *testing.T) {
 			t.Fatalf("Test (%v) failed with error: %v", tc.desc, err)
 		}
 
-		marshaler := &jsonpb.Marshaler{}
-		gotHttpConnMgr, err := marshaler.MarshalToString(hcm)
+		gotHttpConnMgr, err := util.ProtoToJson(hcm)
 		if err != nil {
 			t.Fatalf("Test (%v) failed with error: %v", tc.desc, err)
 		}
@@ -932,8 +928,7 @@ func TestMakeSchemeHeaderOverride(t *testing.T) {
 					t.Fatalf("failed, got nil, want: %v", tc.want)
 				}
 			} else {
-				marshaler := &jsonpb.Marshaler{}
-				got, err := marshaler.MarshalToString(sho)
+				got, err := util.ProtoToJson(sho)
 				if err != nil {
 					t.Fatalf("failed to marshal to json with error: %v", err)
 				}

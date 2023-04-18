@@ -20,8 +20,8 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/backend_auth"
@@ -87,7 +87,7 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 				IamUri: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenPath(serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail)),
 					Cluster: util.IamServerClusterName,
-					Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
+					Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 				},
 				// Currently only support fetching access token from instance metadata
 				// server, not by service account file.
@@ -100,7 +100,7 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 			ImdsToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenPath),
 				Cluster: util.MetadataServerClusterName,
-				Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
+				Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 			},
 		}
 	}

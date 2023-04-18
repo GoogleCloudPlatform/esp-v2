@@ -18,11 +18,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes"
-
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tlspb "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -59,7 +58,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 		commonTls.AlpnProtocols = alpnProtocols
 	}
 
-	tlsContext, err := ptypes.MarshalAny(&tlspb.UpstreamTlsContext{
+	tlsContext, err := anypb.New(&tlspb.UpstreamTlsContext{
 		Sni:              hostname,
 		CommonTlsContext: commonTls,
 	},
@@ -100,7 +99,7 @@ func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimu
 			Value: true,
 		}
 	}
-	tlsContext, err := ptypes.MarshalAny(downstreamTlsContext)
+	tlsContext, err := anypb.New(downstreamTlsContext)
 	if err != nil {
 		return nil, err
 	}

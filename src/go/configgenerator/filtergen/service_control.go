@@ -24,10 +24,10 @@ import (
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -122,7 +122,7 @@ func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 		ServiceControlUri: &commonpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI.String() + "/v1/services",
 			Cluster: util.ServiceControlClusterName,
-			Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
+			Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 		},
 		GeneratedHeaderPrefix: serviceInfo.Options.GeneratedHeaderPrefix,
 	}
@@ -134,7 +134,7 @@ func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 				IamUri: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamAccessTokenPath(serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail)),
 					Cluster: util.IamServerClusterName,
-					Timeout: ptypes.DurationProto(serviceInfo.Options.HttpRequestTimeout),
+					Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 				},
 				ServiceAccountEmail: serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail,
 				Delegates:           serviceInfo.Options.ServiceControlCredentials.Delegates,

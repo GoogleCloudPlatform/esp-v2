@@ -23,16 +23,15 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/ptypes"
-
-	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	typepb "google.golang.org/genproto/protobuf/ptype"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // ServiceInfo contains service level information.
@@ -310,7 +309,7 @@ func (s *ServiceInfo) processAccessToken() {
 					// Use http://127.0.0.1:8791/local/access_token by default.
 					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.TokenAgentPort, util.TokenAgentAccessTokenPath),
 					Cluster: util.TokenAgentClusterName,
-					Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
+					Timeout: durationpb.New(s.Options.HttpRequestTimeout),
 				},
 			},
 		}
@@ -323,7 +322,7 @@ func (s *ServiceInfo) processAccessToken() {
 			RemoteToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenPath),
 				Cluster: util.MetadataServerClusterName,
-				Timeout: ptypes.DurationProto(s.Options.HttpRequestTimeout),
+				Timeout: durationpb.New(s.Options.HttpRequestTimeout),
 			},
 		},
 	}

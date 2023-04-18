@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type RetryConfig struct {

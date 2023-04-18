@@ -24,14 +24,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
 	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 	descpb "google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -48,7 +46,7 @@ func TestTranscoderFilter(t *testing.T) {
 		FileContents: rawDescriptor,
 		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
-	content, err := ptypes.MarshalAny(sourceFile)
+	content, err := anypb.New(sourceFile)
 	if err != nil {
 		t.Fatalf("Failed to marshal source file into any: %v", err)
 	}
@@ -341,8 +339,7 @@ func TestTranscoderFilter(t *testing.T) {
 				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
 			}
 
-			marshaler := &jsonpb.Marshaler{}
-			gotFilter, err := marshaler.MarshalToString(httpFilter)
+			gotFilter, err := util.ProtoToJson(httpFilter)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -365,7 +362,7 @@ func TestTranscoderFilter_Disabled(t *testing.T) {
 		FileContents: rawDescriptor,
 		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
-	content, err := ptypes.MarshalAny(sourceFile)
+	content, err := anypb.New(sourceFile)
 	if err != nil {
 		t.Fatalf("Failed to marshal source file into any: %v", err)
 	}

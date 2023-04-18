@@ -24,16 +24,15 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	wrappers "github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/google/go-cmp/cmp"
-
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	"github.com/google/go-cmp/cmp"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
+	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 var (
@@ -77,7 +76,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			backendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: clusterpb.Cluster{
 				Name:                 "service-control-cluster",
-				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
+				ConnectTimeout:       durationpb.New(5 * time.Second),
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 				LoadAssignment:       util.CreateLoadAssignment(testServiceControlEnv, 443),
@@ -115,7 +114,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			backendAddress: "http://127.0.0.1:80",
 			wantedCluster: clusterpb.Cluster{
 				Name:                 "service-control-cluster",
-				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
+				ConnectTimeout:       durationpb.New(5 * time.Second),
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 8000),
@@ -138,7 +137,7 @@ func TestMakeServiceControlCluster(t *testing.T) {
 			backendAddress:        "grpc://127.0.0.1:80",
 			wantedCluster: clusterpb.Cluster{
 				Name:                 "service-control-cluster",
-				ConnectTimeout:       ptypes.DurationProto(5 * time.Second),
+				ConnectTimeout:       durationpb.New(5 * time.Second),
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 				LoadAssignment:       util.CreateLoadAssignment(testServiceControlEnv, 443),
@@ -198,7 +197,7 @@ func TestLocalBackendCluster(t *testing.T) {
 			backendAddress: "http://127.0.0.1:80",
 			wantedCluster: clusterpb.Cluster{
 				Name:                 util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
-				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:       durationpb.New(20 * time.Second),
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
 				DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
@@ -210,7 +209,7 @@ func TestLocalBackendCluster(t *testing.T) {
 			backendClusterMaxRequests: 10240,
 			wantedCluster: clusterpb.Cluster{
 				Name:                 util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
-				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:       durationpb.New(20 * time.Second),
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
 				DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
@@ -233,7 +232,7 @@ func TestLocalBackendCluster(t *testing.T) {
 			backendAddress: "https://mybackend.com:443",
 			wantedCluster: clusterpb.Cluster{
 				Name:                 util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
-				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:       durationpb.New(20 * time.Second),
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 				TransportSocket:      createTransportSocket("mybackend.com"),
@@ -245,7 +244,7 @@ func TestLocalBackendCluster(t *testing.T) {
 			backendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: clusterpb.Cluster{
 				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
-				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:                durationpb.New(20 * time.Second),
 				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
 				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
@@ -257,7 +256,7 @@ func TestLocalBackendCluster(t *testing.T) {
 			backendAddress: "grpcs://mybackend.com:443",
 			wantedCluster: clusterpb.Cluster{
 				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
-				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:                durationpb.New(20 * time.Second),
 				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
 				TransportSocket:               createH2TransportSocket("mybackend.com"),
@@ -271,15 +270,15 @@ func TestLocalBackendCluster(t *testing.T) {
 			healthCheckGrpcBackend: true,
 			wantedCluster: clusterpb.Cluster{
 				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
-				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:                durationpb.New(20 * time.Second),
 				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
 				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 				HealthChecks: []*corepb.HealthCheck{
 					&corepb.HealthCheck{
-						Timeout:            ptypes.DurationProto(1 * time.Second),
-						Interval:           ptypes.DurationProto(1 * time.Second),
-						NoTrafficInterval:  ptypes.DurationProto(60 * time.Second),
+						Timeout:            durationpb.New(1 * time.Second),
+						Interval:           durationpb.New(1 * time.Second),
+						NoTrafficInterval:  durationpb.New(60 * time.Second),
 						UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
 						HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
 						HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
@@ -299,16 +298,16 @@ func TestLocalBackendCluster(t *testing.T) {
 			healthCheckGrpcBackendService:           "foo.bar.service",
 			wantedCluster: clusterpb.Cluster{
 				Name:                          util.BackendClusterName(fmt.Sprintf("%s_local", testProjectName)),
-				ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:                durationpb.New(20 * time.Second),
 				ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 				LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
 				TransportSocket:               createH2TransportSocket("mybackend.com"),
 				TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 				HealthChecks: []*corepb.HealthCheck{
 					&corepb.HealthCheck{
-						Timeout:            ptypes.DurationProto(10 * time.Second),
-						Interval:           ptypes.DurationProto(10 * time.Second),
-						NoTrafficInterval:  ptypes.DurationProto(30 * time.Second),
+						Timeout:            durationpb.New(10 * time.Second),
+						Interval:           durationpb.New(10 * time.Second),
+						NoTrafficInterval:  durationpb.New(30 * time.Second),
 						UnhealthyThreshold: &wrappers.UInt32Value{Value: 3},
 						HealthyThreshold:   &wrappers.UInt32Value{Value: 3},
 						HealthChecker: &corepb.HealthCheck_GrpcHealthCheck_{
@@ -425,7 +424,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "backend-cluster-mybackend.com:443",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:      createTransportSocket("mybackend.com"),
@@ -464,7 +463,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "backend-cluster-mybackend.com:80",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 80),
 					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
@@ -505,14 +504,14 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "backend-cluster-mybackend_http.com:80",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_http.com", 80),
 					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 				{
 					Name:                 "backend-cluster-mybackend_https.com:443",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
 					TransportSocket:      createTransportSocket("mybackend_https.com"),
@@ -554,7 +553,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                          "backend-cluster-mybackend.com:443",
-					ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:               createH2TransportSocket("mybackend.com"),
@@ -590,7 +589,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                          "backend-cluster-mybackend.com:80",
-					ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 80),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
@@ -632,7 +631,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                          "backend-cluster-mybackend_http.com:80",
-					ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend_http.com", 80),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
@@ -640,7 +639,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 				},
 				{
 					Name:                          "backend-cluster-mybackend_https.com:443",
-					ConnectTimeout:                ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend_https.com", 443),
 					TransportSocket:               createH2TransportSocket("mybackend_https.com"),
@@ -681,7 +680,7 @@ func TestMakeRemoteBackendRoutingCluster(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "backend-cluster-mybackend.run.app:443",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.run.app", 443),
@@ -774,7 +773,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "jwt-provider-cluster-metadata.com:443",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
@@ -782,7 +781,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 				},
 				{
 					Name:                 "jwt-provider-cluster-metadata.com:80",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 80),
@@ -816,7 +815,7 @@ func TestMakeJwtProviderClusters(t *testing.T) {
 			wantedClusters: []*clusterpb.Cluster{
 				{
 					Name:                 "jwt-provider-cluster-metadata.com:443",
-					ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
@@ -883,7 +882,7 @@ func TestMakeIamCluster(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: &clusterpb.Cluster{
 				Name:                 util.IamServerClusterName,
-				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:       durationpb.New(20 * time.Second),
 				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_STRICT_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
@@ -907,7 +906,7 @@ func TestMakeIamCluster(t *testing.T) {
 			BackendAddress: "grpc://127.0.0.1:80",
 			wantedCluster: &clusterpb.Cluster{
 				Name:                 util.IamServerClusterName,
-				ConnectTimeout:       ptypes.DurationProto(20 * time.Second),
+				ConnectTimeout:       durationpb.New(20 * time.Second),
 				DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 				ClusterDiscoveryType: &clusterpb.Cluster_Type{clusterpb.Cluster_STRICT_DNS},
 				LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
@@ -967,7 +966,7 @@ func TestMakeTokenAgentCluster(t *testing.T) {
 	wantCluster := &clusterpb.Cluster{
 		Name:           util.TokenAgentClusterName,
 		LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
-		ConnectTimeout: ptypes.DurationProto(fakeServiceInfo.Options.ClusterConnectTimeout),
+		ConnectTimeout: durationpb.New(fakeServiceInfo.Options.ClusterConnectTimeout),
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{
 			Type: clusterpb.Cluster_STATIC,
 		},
