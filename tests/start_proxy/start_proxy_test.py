@@ -908,6 +908,7 @@ class TestStartProxy(unittest.TestCase):
               '--health_check_grpc_backend',
               '--health_check_grpc_backend_interval=3s',
               '--health_check_grpc_backend_service=/foo.bar',
+              '--health_check_grpc_backend_no_traffic_interval=5s',
               '--version=2019-11-09r0',
               ],
              ['bin/configmanager', '--logtostderr',
@@ -916,6 +917,7 @@ class TestStartProxy(unittest.TestCase):
               '--health_check_grpc_backend',
               '--health_check_grpc_backend_service', '/foo.bar',
               '--health_check_grpc_backend_interval', '3s',
+              '--health_check_grpc_backend_no_traffic_interval', '5s',
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
@@ -979,6 +981,8 @@ class TestStartProxy(unittest.TestCase):
             ['--version=2019-11-09r0', '--health_check_grpc_backend_interval=3s'],
             # The flag --health_check_grpc_backend_service requires the flag --health_check_grpc_backend
             ['--version=2019-11-09r0', '--health_check_grpc_backend_service=/foo.bar'],
+            # The flag --health_check_grpc_backend_no_traffic_interval requires the flag --health_check_grpc_backend
+            ['--version=2019-11-09r0', '--health_check_grpc_backend_no_traffic_interval=1s'],
             ['--version=2019-11-09r0', '--ssl_client_root_certs_file=/tmp/server.crt', '--ssl_backend_client_root_certs_file=/tmp/server.crt']
           ]
 
