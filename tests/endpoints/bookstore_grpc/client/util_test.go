@@ -21,9 +21,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+
 	bookstorepb "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/emptypb"
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 )
 
 func readerToString(r io.Reader) string {

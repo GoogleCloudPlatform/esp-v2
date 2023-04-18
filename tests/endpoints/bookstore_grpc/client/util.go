@@ -29,7 +29,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 // GRPCWebTrailer represents key-value pairs in gRPC-Web trailer.

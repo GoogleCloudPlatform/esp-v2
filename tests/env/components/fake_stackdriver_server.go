@@ -24,9 +24,9 @@ import (
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
+	emptypb "github.com/golang/protobuf/ptypes/empty"
 	cloudtracegrpc "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
 	cloudtracepb "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // FakeTraceServer implements the cloud trace v2 RPCs (see cloudtracegrpc.TraceServiceServer)

@@ -20,10 +20,10 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
-	"google.golang.org/protobuf/encoding/prototext"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 
+	anypb "github.com/golang/protobuf/ptypes/any"
 	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
@@ -51,7 +51,7 @@ func generateSourceInfo(addr string) (*scpb.SourceInfo, error) {
 		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
 	}
 
-	content, err := anypb.New(sourceFile)
+	content, err := ptypes.MarshalAny(sourceFile)
 	if err != nil {
 		return nil, fmt.Errorf("error marshalAny for proto descriptor")
 	}
@@ -106,7 +106,7 @@ func AppendLogMetrics(cfg *scpb.Service) error {
 	}
 
 	lm := &scpb.Service{}
-	if err = prototext.Unmarshal(txt, lm); err != nil {
+	if err = proto.UnmarshalText(string(txt), lm); err != nil {
 		return fmt.Errorf("failed to parse the text from logs_metrics.pb.txt, %s", err)
 	}
 	proto.Merge(cfg, lm)

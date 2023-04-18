@@ -21,11 +21,11 @@ import (
 	"sort"
 	"testing"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	ltypepb "google.golang.org/genproto/googleapis/logging/type"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type ServiceRequestType int

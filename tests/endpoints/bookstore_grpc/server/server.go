@@ -24,13 +24,13 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	bspbv1 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v1"
 	bspbv2 "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/proto/v2"
@@ -280,13 +280,13 @@ func (s *BookstoreServerV1Impl) CreateShelf(ctx context.Context, req *bspbv1.Cre
 	// Unmarshal, copy and marshal, to verify the received binary `any`
 	if req.Shelf.Any != nil {
 		var obj bspbv1.ObjectOnlyForAny
-		err := req.Shelf.Any.UnmarshalTo(obj)
+		err := ptypes.UnmarshalAny(req.Shelf.Any, &obj)
 		if err != nil {
 			return nil, status.New(codes.Internal, "cannot unmarshal shelf.any").Err()
 		}
 
 		newObj := obj
-		req.Shelf.Any, err = anypb.New(newObj)
+		req.Shelf.Any, err = ptypes.MarshalAny(&newObj)
 		if err != nil {
 			return nil, status.New(codes.Internal, "cannot marshal shelf.any").Err()
 		}

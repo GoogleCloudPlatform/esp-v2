@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/golang/glog"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 
 	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
