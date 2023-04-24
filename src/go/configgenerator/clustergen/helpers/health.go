@@ -10,6 +10,7 @@ import (
 	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
+// ClusterGRPCHealthCheckConfiger is a helper to set gRPC backend health check config on a cluster.
 type ClusterGRPCHealthCheckConfiger struct {
 	ServiceName       string
 	Interval          time.Duration
@@ -32,6 +33,7 @@ func MaybeAddGRPCHealthCheck(grpcHealthChecker *ClusterGRPCHealthCheckConfiger, 
 	return nil
 }
 
+// MakeHealthConfig creates a HealthCheck with gRPC backend health config for a cluster.
 func (c *ClusterGRPCHealthCheckConfiger) MakeHealthConfig() ([]*corepb.HealthCheck, error) {
 	intervalProto := durationpb.New(c.Interval)
 	return []*corepb.HealthCheck{

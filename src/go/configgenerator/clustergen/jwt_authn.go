@@ -5,12 +5,15 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
+// JWTProviderCluster is an Envoy cluster to communicate with a remote JWKS
+// provider. Each cluster talks to one remote server.
 type JWTProviderCluster struct {
 	Provider              *scpb.AuthProvider
 	ClusterConnectTimeout time.Duration
@@ -19,10 +22,22 @@ type JWTProviderCluster struct {
 	TLS *helpers.ClusterTLSConfiger
 }
 
+// NewJWTProviderClustersFromServiceConfig creates all JWTProviderCluster from
+// OP service config + descriptor + ESPv2 options.
+//
+// Generates multiple clusters, one per each JWT provider address.
+// Automatically de-duplicates addresses.
+func NewJWTProviderClustersFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) ([]*JWTProviderCluster, error) {
+	// TODO(nareddyt)
+	return nil, nil
+}
+
+// GetName implements the ClusterGenerator interface.
 func (c *JWTProviderCluster) GetName() string {
 	return c.Provider.Id
 }
 
+// GenConfig implements the ClusterGenerator interface.
 func (c *JWTProviderCluster) GenConfig() (*clusterpb.Cluster, error) {
 	jwksUri := c.Provider.GetJwksUri()
 	addr, err := util.ExtractAddressFromURI(jwksUri)

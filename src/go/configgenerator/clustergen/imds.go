@@ -5,15 +5,21 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 var (
+	// MetadataServerClusterName is the name of the IMDS xDS cluster.
 	MetadataServerClusterName = "metadata-cluster"
 )
 
+// IMDSCluster is an Envoy cluster to communicate with the GCP Compute Engine
+// Instance Metadata Service. This is primarily used to generate access tokens
+// and ID tokens.
 type IMDSCluster struct {
 	MetadataURL           string
 	ClusterConnectTimeout time.Duration
@@ -22,10 +28,19 @@ type IMDSCluster struct {
 	TLS *helpers.ClusterTLSConfiger
 }
 
+// NewIMDSClusterFromServiceConfig creates a IMDSCluster from
+// OP service config + descriptor + ESPv2 options.
+func NewIMDSClusterFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) (*IMDSCluster, error) {
+	// TODO(nareddyt)
+	return nil, nil
+}
+
+// GetName implements the ClusterGenerator interface.
 func (c *IMDSCluster) GetName() string {
 	return MetadataServerClusterName
 }
 
+// GenConfig implements the ClusterGenerator interface.
 func (c *IMDSCluster) GenConfig() (*clusterpb.Cluster, error) {
 	scheme, hostname, port, _, err := util.ParseURI(c.MetadataURL)
 	if err != nil {

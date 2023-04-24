@@ -7,15 +7,20 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 var (
+	// ServiceControlClusterName is the name of the Service Control v1 xDS cluster.
 	ServiceControlClusterName = "service-control-cluster"
 )
 
+// ServiceControlCluster is an Envoy cluster to communicate with the remote
+// Service Control v1 server.
 type ServiceControlCluster struct {
 	ServiceControlURI url.URL
 
@@ -23,10 +28,19 @@ type ServiceControlCluster struct {
 	TLS *helpers.ClusterTLSConfiger
 }
 
+// NewServiceControlClusterFromServiceConfig creates a ServiceControlCluster from
+// OP service config + descriptor + ESPv2 options.
+func NewServiceControlClusterFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) (*ServiceControlCluster, error) {
+	// TODO(nareddyt)
+	return nil, nil
+}
+
+// GetName implements the ClusterGenerator interface.
 func (c *ServiceControlCluster) GetName() string {
 	return ServiceControlClusterName
 }
 
+// GenConfig implements the ClusterGenerator interface.
 func (c *ServiceControlCluster) GenConfig() (*clusterpb.Cluster, error) {
 	port, err := strconv.Atoi(c.ServiceControlURI.Port())
 	if err != nil {

@@ -14,6 +14,7 @@ var (
 	DNSDefaultPort = "53"
 )
 
+// ClusterDNSConfiger is a helper to set DNS addresses on a cluster.
 type ClusterDNSConfiger struct {
 	Address string
 }
@@ -33,6 +34,7 @@ func MaybeAddDNSResolver(dnsConfiger *ClusterDNSConfiger, cluster *clusterpb.Clu
 	return nil
 }
 
+// MakeResolversConfig creates an address with DNS config for a cluster.
 func (c *ClusterDNSConfiger) MakeResolversConfig() ([]*corepb.Address, error) {
 	var dnsResolvers []*corepb.Address
 	addressSlice := strings.Split(c.Address, ";")

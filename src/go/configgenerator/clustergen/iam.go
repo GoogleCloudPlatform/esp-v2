@@ -5,11 +5,21 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
+var (
+	// IAMServerClusterName is the name of the IAM xDS cluster.
+	IAMServerClusterName = "iam-cluster"
+)
+
+// IAMCluster is an Envoy cluster to communicate with the GCP Cloud IAM.
+// This is primarily used to generate access tokens and ID tokens for API Gateway
+// use case.
 type IAMCluster struct {
 	IamURL                string
 	ClusterConnectTimeout time.Duration
@@ -18,14 +28,19 @@ type IAMCluster struct {
 	TLS *helpers.ClusterTLSConfiger
 }
 
-var (
-	IamServerClusterName = "iam-cluster"
-)
-
-func (c *IAMCluster) GetName() string {
-	return IamServerClusterName
+// NewIAMClusterFromServiceConfig creates a IAMCluster from
+// OP service config + descriptor + ESPv2 options.
+func NewIAMClusterFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) (*IAMCluster, error) {
+	// TODO(nareddyt)
+	return nil, nil
 }
 
+// GetName implements the ClusterGenerator interface.
+func (c *IAMCluster) GetName() string {
+	return IAMServerClusterName
+}
+
+// GenConfig implements the ClusterGenerator interface.
 func (c *IAMCluster) GenConfig() (*clusterpb.Cluster, error) {
 	scheme, hostname, port, _, err := util.ParseURI(c.IamURL)
 	if err != nil {

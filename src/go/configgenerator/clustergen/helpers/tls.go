@@ -18,10 +18,11 @@ var (
 	DefaultClientSslFilename = "client"
 )
 
+// ClusterTLSConfiger is a helper to set TLS config on a cluster.
 type ClusterTLSConfiger struct {
 	RootCertsPath string
 
-	// TODO: Only set these 2 for backend cluster, no other ones.
+	// TODO(nareddyt): Only set these 2 for backend cluster, no other ones.
 	ClientCertsPath    string
 	ClientCipherSuites string
 }
