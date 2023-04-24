@@ -41,7 +41,11 @@ func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts opt
 		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
 
-	clusters, err := gen.MakeClusters(serviceInfo)
+	clusterGens, err := gen.NewClusterGeneratorsFromOPConfig(serviceConfig, opts)
+	if err != nil {
+		return nil, err
+	}
+	clusters, err := gen.MakeClusters(clusterGens)
 	if err != nil {
 		return nil, err
 	}

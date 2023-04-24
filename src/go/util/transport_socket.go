@@ -26,7 +26,6 @@ import (
 
 const (
 	defaultServerSslFilename = "server"
-	defaultClientSslFilename = "client"
 )
 
 var (
@@ -37,42 +36,6 @@ var (
 		"TLSv1.3": tlspb.TlsParameters_TLSv1_3,
 	}
 )
-
-// CreateUpstreamTransportSocket creates a TransportSocket for Upstream
-func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string, alpnProtocols []string, cipherSuites string) (*corepb.TransportSocket, error) {
-	if rootCertsPath == "" {
-		return nil, fmt.Errorf("root certs path cannot be empty.")
-	}
-
-	sslFileName := defaultClientSslFilename
-	// Backward compatible for ESPv1
-	if strings.Contains(sslClientPath, "/etc/nginx/ssl") {
-		sslFileName = "backend"
-	}
-
-	commonTls, err := CreateCommonTlsContext(rootCertsPath, sslClientPath, sslFileName, "", "", cipherSuites)
-	if err != nil {
-		return nil, err
-	}
-	if len(alpnProtocols) > 0 {
-		commonTls.AlpnProtocols = alpnProtocols
-	}
-
-	tlsContext, err := anypb.New(&tlspb.UpstreamTlsContext{
-		Sni:              hostname,
-		CommonTlsContext: commonTls,
-	},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &corepb.TransportSocket{
-		Name: TLSTransportSocket,
-		ConfigType: &corepb.TransportSocket_TypedConfig{
-			TypedConfig: tlsContext,
-		},
-	}, nil
-}
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
 func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*corepb.TransportSocket, error) {

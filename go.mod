@@ -14,6 +14,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
+	github.com/imdario/mergo v0.3.15
 	github.com/miekg/dns v1.1.45
 	golang.org/x/net v0.8.0
 	golang.org/x/oauth2 v0.5.0

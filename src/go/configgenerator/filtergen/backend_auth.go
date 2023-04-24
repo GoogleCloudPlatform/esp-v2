@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"google.golang.org/protobuf/proto"
@@ -86,7 +87,7 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 			IamToken: &commonpb.IamTokenInfo{
 				IamUri: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenPath(serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail)),
-					Cluster: util.IamServerClusterName,
+					Cluster: clustergen.IAMServerClusterName,
 					Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 				},
 				// Currently only support fetching access token from instance metadata
@@ -99,7 +100,7 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_ImdsToken{
 			ImdsToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenPath),
-				Cluster: util.MetadataServerClusterName,
+				Cluster: clustergen.MetadataServerClusterName,
 				Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 			},
 		}
