@@ -24,7 +24,7 @@ import (
 // RemoteBackendCluster is an Envoy cluster to communicate with remote backends
 // via dynamic routing. Primarily for API Gateway use case.
 type RemoteBackendCluster struct {
-	BackendCluster *helpers.BackendCluster
+	BackendCluster *helpers.BaseBackendCluster
 }
 
 // NewRemoteBackendClustersFromServiceConfig creates all RemoteBackendCluster from
@@ -38,10 +38,10 @@ func NewRemoteBackendClustersFromServiceConfig(serviceConfig *scpb.Service, opts
 
 // GetName implements the ClusterGenerator interface.
 func (c *RemoteBackendCluster) GetName() string {
-	return c.BackendCluster.GetName()
+	return c.BackendCluster.ClusterName
 }
 
 // GenConfig implements the ClusterGenerator interface.
 func (c *RemoteBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
-	return c.BackendCluster.GenConfig()
+	return c.BackendCluster.GenBaseConfig()
 }

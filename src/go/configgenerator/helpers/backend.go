@@ -25,11 +25,11 @@ import (
 	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// BackendCluster is an Envoy cluster to communicate with a backend.
+// BaseBackendCluster is an Envoy cluster to communicate with a backend.
 //
 // This should NOT be used directly.
 // Use it via an abstraction like RemoteBackendCluster or LocalBackendCluster.
-type BackendCluster struct {
+type BaseBackendCluster struct {
 	ClusterName string
 	Hostname    string
 	Port        uint32
@@ -44,13 +44,9 @@ type BackendCluster struct {
 	TLS *ClusterTLSConfiger
 }
 
-// GetName implements the ClusterGenerator interface.
-func (c *BackendCluster) GetName() string {
-	return c.ClusterName
-}
-
-// GenConfig implements the ClusterGenerator interface.
-func (c *BackendCluster) GenConfig() (*clusterpb.Cluster, error) {
+// GenBaseConfig generates the base cluster configuration that is common to
+// all backend clusters.
+func (c *BaseBackendCluster) GenBaseConfig() (*clusterpb.Cluster, error) {
 	config := &clusterpb.Cluster{
 		Name:                 c.ClusterName,
 		LbPolicy:             clusterpb.Cluster_ROUND_ROBIN,

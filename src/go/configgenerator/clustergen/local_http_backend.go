@@ -24,7 +24,7 @@ import (
 // LocalHTTPBackendCluster is an Envoy cluster to communicate with a local backend
 // that speaks internal HTTP protocol (not OpenAPI).
 type LocalHTTPBackendCluster struct {
-	BackendCluster *helpers.BackendCluster
+	BackendCluster *helpers.BaseBackendCluster
 }
 
 // NewLocalHTTPBackendClusterFromServiceConfig creates a LocalHTTPBackendCluster from
@@ -36,10 +36,10 @@ func NewLocalHTTPBackendClusterFromServiceConfig(serviceConfig *scpb.Service, op
 
 // GetName implements the ClusterGenerator interface.
 func (c *LocalHTTPBackendCluster) GetName() string {
-	return c.BackendCluster.GetName()
+	return c.BackendCluster.ClusterName
 }
 
 // GenConfig implements the ClusterGenerator interface.
 func (c *LocalHTTPBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
-	return c.BackendCluster.GenConfig()
+	return c.BackendCluster.GenBaseConfig()
 }

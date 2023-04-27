@@ -24,7 +24,7 @@ import (
 // LocalBackendCluster is an Envoy cluster to communicate with a local backend
 // that speaks HTTP (OpenAPI) or gRPC (service config) protocol.
 type LocalBackendCluster struct {
-	BackendCluster *helpers2.BackendCluster
+	BackendCluster *helpers2.BaseBackendCluster
 	GRPCHealth     *helpers2.ClusterGRPCHealthCheckConfiger
 }
 
@@ -37,12 +37,12 @@ func NewLocalBackendClusterFromServiceConfig(serviceConfig *scpb.Service, opts o
 
 // GetName implements the ClusterGenerator interface.
 func (c *LocalBackendCluster) GetName() string {
-	return c.BackendCluster.GetName()
+	return c.BackendCluster.ClusterName
 }
 
 // GenConfig implements the ClusterGenerator interface.
 func (c *LocalBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
-	config, err := c.BackendCluster.GenConfig()
+	config, err := c.BackendCluster.GenBaseConfig()
 	if err != nil {
 		return nil, err
 	}
