@@ -20,9 +20,9 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -42,11 +42,21 @@ type IAMCluster struct {
 	TLS *helpers.ClusterTLSConfiger
 }
 
-// NewIAMClusterFromServiceConfig creates a IAMCluster from
-// OP service config + descriptor + ESPv2 options.
-func NewIAMClusterFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) (*IAMCluster, error) {
-	// TODO(nareddyt)
-	return nil, nil
+// NewIAMClustersFromOPConfig creates a IAMCluster from
+// OP service config + descriptor + ESPv2 options. It is a ClusterGeneratorOPFactory.
+func NewIAMClustersFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]ClusterGenerator, error) {
+	if opts.ServiceControlCredentials == nil && opts.BackendAuthCredentials == nil {
+		return nil, nil
+	}
+
+	return []ClusterGenerator{
+		&IAMCluster{
+			IamURL:                opts.IamURL,
+			ClusterConnectTimeout: opts.ClusterConnectTimeout,
+			DNS:                   helpers.NewClusterDNSConfigerFromOPConfig(opts),
+			TLS:                   helpers.NewClusterTLSConfigerFromOPConfig(opts, false),
+		},
+	}, nil
 }
 
 // GetName implements the ClusterGenerator interface.

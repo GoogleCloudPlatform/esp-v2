@@ -21,7 +21,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -34,16 +34,25 @@ var (
 // token agent.
 type TokenAgentCluster struct {
 	ClusterConnectTimeout time.Duration
-	TokenAgentPort        int
+	TokenAgentPort        uint
 
 	DNS *helpers.ClusterDNSConfiger
 }
 
-// NewTokenAgentClusterFromServiceConfig creates a TokenAgentCluster from
-// OP service config + descriptor + ESPv2 options.
-func NewTokenAgentClusterFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) (*TokenAgentCluster, error) {
-	// TODO(nareddyt)
-	return nil, nil
+// NewTokenAgentClustersFromOPConfig creates a TokenAgentCluster from
+// OP service config + descriptor + ESPv2 options. It is a ClusterGeneratorOPFactory.
+func NewTokenAgentClustersFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]ClusterGenerator, error) {
+	if !opts.NonGCP && opts.ServiceAccountKey == "" {
+		return nil, nil
+	}
+
+	return []ClusterGenerator{
+		&TokenAgentCluster{
+			ClusterConnectTimeout: opts.ClusterConnectTimeout,
+			TokenAgentPort:        opts.TokenAgentPort,
+			DNS:                   helpers.NewClusterDNSConfigerFromOPConfig(opts),
+		},
+	}, nil
 }
 
 // GetName implements the ClusterGenerator interface.

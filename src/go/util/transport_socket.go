@@ -50,7 +50,7 @@ func CreateUpstreamTransportSocket(hostname, rootCertsPath, sslClientPath string
 		sslFileName = "backend"
 	}
 
-	commonTls, err := createCommonTlsContext(rootCertsPath, sslClientPath, sslFileName, "", "", cipherSuites)
+	commonTls, err := CreateCommonTlsContext(rootCertsPath, sslClientPath, sslFileName, "", "", cipherSuites)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimu
 		sslFileName = "nginx"
 	}
 
-	commonTls, err := createCommonTlsContext(sslServerRootPath, sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
+	commonTls, err := CreateCommonTlsContext(sslServerRootPath, sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimu
 	}, nil
 }
 
-func createCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*tlspb.CommonTlsContext, error) {
+func CreateCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*tlspb.CommonTlsContext, error) {
 	commonTls := &tlspb.CommonTlsContext{}
 	// Add TLS certificate
 	if sslPath != "" && sslFileName != "" {

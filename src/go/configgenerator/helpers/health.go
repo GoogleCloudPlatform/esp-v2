@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -29,6 +30,20 @@ type ClusterGRPCHealthCheckConfiger struct {
 	ServiceName       string
 	Interval          time.Duration
 	NoTrafficInterval time.Duration
+}
+
+// NewClusterGRPCHealthCheckConfigerFromOPConfig creates a ClusterGRPCHealthCheckConfiger from
+// OP service config + descriptor + ESPv2 options.
+func NewClusterGRPCHealthCheckConfigerFromOPConfig(opts options.ConfigGeneratorOptions) *ClusterGRPCHealthCheckConfiger {
+	if !opts.HealthCheckGrpcBackend {
+		return nil
+	}
+
+	return &ClusterGRPCHealthCheckConfiger{
+		ServiceName:       opts.HealthCheckGrpcBackendService,
+		Interval:          opts.HealthCheckGrpcBackendInterval,
+		NoTrafficInterval: opts.HealthCheckGrpcBackendNoTrafficInterval,
+	}
 }
 
 // MaybeAddGRPCHealthCheck adds the generated backend gRPC health check config
