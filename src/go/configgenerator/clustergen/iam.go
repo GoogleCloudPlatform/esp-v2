@@ -1,10 +1,24 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package clustergen
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -24,8 +38,8 @@ type IAMCluster struct {
 	IamURL                string
 	ClusterConnectTimeout time.Duration
 
-	DNS *helpers.ClusterDNSConfiger
-	TLS *helpers.ClusterTLSConfiger
+	DNS *helpers2.ClusterDNSConfiger
+	TLS *helpers2.ClusterTLSConfiger
 }
 
 // NewIAMClusterFromServiceConfig creates a IAMCluster from
@@ -67,7 +81,7 @@ func (c *IAMCluster) GenConfig() (*clusterpb.Cluster, error) {
 		config.TransportSocket = transportSocket
 	}
 
-	if err := helpers.MaybeAddDNSResolver(c.DNS, config); err != nil {
+	if err := helpers2.MaybeAddDNSResolver(c.DNS, config); err != nil {
 		return nil, err
 	}
 

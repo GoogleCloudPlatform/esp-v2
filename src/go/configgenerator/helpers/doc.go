@@ -12,6 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package clustergen provides individual Cluster Generators to generate an
-// xDS cluster config.
-package clustergen
+// Package helpers contains utility structs that operate on any generic cluster.
+package helpers
