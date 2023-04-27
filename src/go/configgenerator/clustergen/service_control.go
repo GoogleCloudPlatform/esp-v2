@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"time"
 
-	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -38,8 +38,8 @@ var (
 type ServiceControlCluster struct {
 	ServiceControlURI url.URL
 
-	DNS *helpers2.ClusterDNSConfiger
-	TLS *helpers2.ClusterTLSConfiger
+	DNS *helpers.ClusterDNSConfiger
+	TLS *helpers.ClusterTLSConfiger
 }
 
 // NewServiceControlClusterFromServiceConfig creates a ServiceControlCluster from
@@ -79,7 +79,7 @@ func (c *ServiceControlCluster) GenConfig() (*clusterpb.Cluster, error) {
 		config.TransportSocket = transportSocket
 	}
 
-	if err := helpers2.MaybeAddDNSResolver(c.DNS, config); err != nil {
+	if err := helpers.MaybeAddDNSResolver(c.DNS, config); err != nil {
 		return nil, err
 	}
 

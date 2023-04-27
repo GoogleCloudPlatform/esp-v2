@@ -15,7 +15,7 @@
 package clustergen
 
 import (
-	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -24,8 +24,8 @@ import (
 // LocalBackendCluster is an Envoy cluster to communicate with a local backend
 // that speaks HTTP (OpenAPI) or gRPC (service config) protocol.
 type LocalBackendCluster struct {
-	BackendCluster *helpers2.BaseBackendCluster
-	GRPCHealth     *helpers2.ClusterGRPCHealthCheckConfiger
+	BackendCluster *helpers.BaseBackendCluster
+	GRPCHealth     *helpers.ClusterGRPCHealthCheckConfiger
 }
 
 // NewLocalBackendClusterFromServiceConfig creates a LocalBackendCluster from
@@ -47,7 +47,7 @@ func (c *LocalBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
 		return nil, err
 	}
 
-	if err := helpers2.MaybeAddGRPCHealthCheck(c.GRPCHealth, config); err != nil {
+	if err := helpers.MaybeAddGRPCHealthCheck(c.GRPCHealth, config); err != nil {
 		return nil, err
 	}
 

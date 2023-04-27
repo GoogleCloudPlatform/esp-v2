@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -38,8 +38,8 @@ type IMDSCluster struct {
 	MetadataURL           string
 	ClusterConnectTimeout time.Duration
 
-	DNS *helpers2.ClusterDNSConfiger
-	TLS *helpers2.ClusterTLSConfiger
+	DNS *helpers.ClusterDNSConfiger
+	TLS *helpers.ClusterTLSConfiger
 }
 
 // NewIMDSClusterFromServiceConfig creates a IMDSCluster from
@@ -80,7 +80,7 @@ func (c *IMDSCluster) GenConfig() (*clusterpb.Cluster, error) {
 		config.TransportSocket = transportSocket
 	}
 
-	if err := helpers2.MaybeAddDNSResolver(c.DNS, config); err != nil {
+	if err := helpers.MaybeAddDNSResolver(c.DNS, config); err != nil {
 		return nil, err
 	}
 
