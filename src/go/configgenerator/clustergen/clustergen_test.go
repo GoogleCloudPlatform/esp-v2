@@ -107,9 +107,8 @@ func (tc *DisabledOPTestCase) RunTest(t *testing.T, factory clustergen.ClusterGe
 	})
 }
 
-// DisabledOPTestCase is the shared struct to test a ClusterGenerator with
-// One Platform config. It checks that the factory function returns a nil
-// ClusterGenerator.
+// FactoryErrorOPTestCase is the shared struct to test a ClusterGenerator with
+// One Platform config. It checks that the factory function returns an error.
 type FactoryErrorOPTestCase struct {
 	Desc string
 
