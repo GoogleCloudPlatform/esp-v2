@@ -33,14 +33,18 @@ type BaseBackendCluster struct {
 	ClusterName string
 	Hostname    string
 	Port        uint32
-	UseTLS      bool
 	Protocol    util.BackendProtocol
 
 	ClusterConnectTimeout  time.Duration
 	MaxRequestsThreshold   int
 	BackendDnsLookupFamily string
 
+	// DNS adds on additional DNS resolver config to the cluster.
+	// Nil if not needed.
 	DNS *ClusterDNSConfiger
+
+	// TLS adds on additional TLS transport socket config to the cluster.
+	// Nil if not needed.
 	TLS *ClusterTLSConfiger
 }
 
@@ -66,7 +70,7 @@ func (c *BaseBackendCluster) GenBaseConfig() (*clusterpb.Cluster, error) {
 
 	isHttp2 := c.Protocol == util.GRPC || c.Protocol == util.HTTP2
 
-	if c.UseTLS {
+	if c.TLS != nil {
 		var alpnProtocols []string
 		if isHttp2 {
 			alpnProtocols = []string{"h2"}

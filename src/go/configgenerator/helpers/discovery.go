@@ -12,6 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package clustergen provides individual Cluster Generators to generate an
-// xDS cluster config.
-package clustergen
+package helpers
+
+import (
+	"strings"
+
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+)
+
+const (
+	discoveryAPIPrefix = "google.discovery"
+)
+
+func IsOPDiscoveryAPI(operationName string) bool {
+	return strings.HasPrefix(operationName, discoveryAPIPrefix)
+}
+
+func ShouldSkipOPDiscoveryAPI(operation string, opts options.ConfigGeneratorOptions) bool {
+	return IsOPDiscoveryAPI(operation) && !opts.AllowDiscoveryAPIs
+}

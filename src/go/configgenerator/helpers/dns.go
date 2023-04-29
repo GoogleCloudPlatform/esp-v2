@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 )
@@ -31,6 +32,18 @@ var (
 // ClusterDNSConfiger is a helper to set DNS addresses on a cluster.
 type ClusterDNSConfiger struct {
 	Address string
+}
+
+// NewClusterDNSConfigerFromOPConfig creates a ClusterTLSConfiger from
+// OP service config + descriptor + ESPv2 options.
+func NewClusterDNSConfigerFromOPConfig(opts options.ConfigGeneratorOptions) *ClusterDNSConfiger {
+	if opts.DnsResolverAddresses == "" {
+		return nil
+	}
+
+	return &ClusterDNSConfiger{
+		Address: opts.DnsResolverAddresses,
+	}
 }
 
 // MaybeAddDNSResolver adds the generated DNS resolvers config to the given cluster.
