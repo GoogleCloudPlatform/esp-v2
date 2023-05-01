@@ -24,10 +24,10 @@ import (
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-// NewClusterGeneratorsFromOPConfig creates all required ClusterGenerators from
-// OP service config + descriptor + ESPv2 options.
-func NewClusterGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]clustergen.ClusterGenerator, error) {
-	factories := []clustergen.ClusterGeneratorOPFactory{
+// GetESPv2ClusterGenFactories returns the enabled ClusterGenerators for
+// ESPv2.
+func GetESPv2ClusterGenFactories() []clustergen.ClusterGeneratorOPFactory {
+	return []clustergen.ClusterGeneratorOPFactory{
 		clustergen.NewLocalBackendClustersFromOPConfig,
 		clustergen.NewTokenAgentClustersFromOPConfig,
 		clustergen.NewIMDSClustersFromOPConfig,
@@ -36,7 +36,11 @@ func NewClusterGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts opt
 		clustergen.NewRemoteBackendClustersFromOPConfig,
 		clustergen.NewJWTProviderClustersFromOPConfig,
 	}
+}
 
+// NewClusterGeneratorsFromOPConfig creates all required ClusterGenerators from
+// OP service config + descriptor + ESPv2 options.
+func NewClusterGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, factories []clustergen.ClusterGeneratorOPFactory) ([]clustergen.ClusterGenerator, error) {
 	var gens []clustergen.ClusterGenerator
 	for _, factory := range factories {
 		generator, err := factory(serviceConfig, opts)

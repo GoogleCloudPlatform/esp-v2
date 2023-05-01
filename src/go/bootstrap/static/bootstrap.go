@@ -41,7 +41,8 @@ func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts opt
 		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
 
-	clusterGens, err := gen.NewClusterGeneratorsFromOPConfig(serviceConfig, opts)
+	clusterGensFactories := gen.GetESPv2ClusterGenFactories()
+	clusterGens, err := gen.NewClusterGeneratorsFromOPConfig(serviceConfig, opts, clusterGensFactories)
 	if err != nil {
 		return nil, err
 	}

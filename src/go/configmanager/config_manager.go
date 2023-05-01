@@ -258,7 +258,8 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 
 	var clusterResources, listenerResources []types.Resource
 
-	gens, err := gen.NewClusterGeneratorsFromOPConfig(m.serviceInfo.ServiceConfig(), m.serviceInfo.Options)
+	clusterGensFactories := gen.GetESPv2ClusterGenFactories()
+	gens, err := gen.NewClusterGeneratorsFromOPConfig(m.serviceInfo.ServiceConfig(), m.serviceInfo.Options, clusterGensFactories)
 	if err != nil {
 		return nil, err
 	}
