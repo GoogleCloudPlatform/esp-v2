@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
@@ -69,11 +70,9 @@ type ServiceInfo struct {
 	Options options.ConfigGeneratorOptions
 
 	// Stores information about all backend clusters.
-	GrpcSupportRequired bool
-	LocalBackendCluster *BackendRoutingCluster
-	// TODO(nareddyt): Fix immutability, this var is updated by consumers
-	LocalHTTPBackendCluster *BackendRoutingCluster
-	RemoteBackendClusters   []*BackendRoutingCluster
+	GrpcSupportRequired   bool
+	LocalBackendCluster   *BackendRoutingCluster
+	RemoteBackendClusters []*BackendRoutingCluster
 }
 
 type BackendRoutingCluster struct {
@@ -308,7 +307,7 @@ func (s *ServiceInfo) processAccessToken() {
 				RemoteToken: &commonpb.HttpUri{
 					// Use http://127.0.0.1:8791/local/access_token by default.
 					Uri:     fmt.Sprintf("http://%s:%v%s", util.LoopbackIPv4Addr, s.Options.TokenAgentPort, util.TokenAgentAccessTokenPath),
-					Cluster: util.TokenAgentClusterName,
+					Cluster: clustergen.TokenAgentClusterName,
 					Timeout: durationpb.New(s.Options.HttpRequestTimeout),
 				},
 			},
@@ -321,7 +320,7 @@ func (s *ServiceInfo) processAccessToken() {
 		TokenType: &commonpb.AccessToken_RemoteToken{
 			RemoteToken: &commonpb.HttpUri{
 				Uri:     fmt.Sprintf("%s%s", s.Options.MetadataURL, util.AccessTokenPath),
-				Cluster: util.MetadataServerClusterName,
+				Cluster: clustergen.MetadataServerClusterName,
 				Timeout: durationpb.New(s.Options.HttpRequestTimeout),
 			},
 		},
@@ -584,7 +583,7 @@ func (s *ServiceInfo) addBackendRuleToMethod(r *confpb.BackendRule, addressToClu
 			s.GrpcSupportRequired = true
 		}
 
-		backendClusterName := util.BackendClusterName(address)
+		backendClusterName := fmt.Sprintf("backend-cluster-%s", address)
 		s.RemoteBackendClusters = append(s.RemoteBackendClusters,
 			&BackendRoutingCluster{
 				ClusterName: backendClusterName,
@@ -982,7 +981,7 @@ func (s *ServiceInfo) getOrCreateMethod(name string) (*MethodInfo, error) {
 }
 
 func (s *ServiceInfo) LocalBackendClusterName() string {
-	return util.BackendClusterName(fmt.Sprintf("%s_local", s.Name))
+	return fmt.Sprintf("backend-cluster-%s_local", s.Name)
 }
 
 func (s *ServiceInfo) shouldSkipDiscoveryAPI(operation string) bool {

@@ -31,9 +31,6 @@ const (
 
 	// Default port for HTTPS.
 	HTTPSDefaultPort = "443"
-
-	// Default port for DNS.
-	DNSDefaultPort = "53"
 )
 
 // ParseURI parses uri into scheme, hostname, port, path with err(if exist).

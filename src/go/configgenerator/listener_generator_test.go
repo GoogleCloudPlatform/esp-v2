@@ -30,6 +30,12 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+var (
+	testProjectName = "bookstore.endpoints.project123.cloud.goog"
+	testApiName     = "endpoints.examples.bookstore.Bookstore"
+	testConfigID    = "2019-03-02r0"
+)
+
 func TestMakeListeners(t *testing.T) {
 	configFile := &smpb.ConfigFile{
 		FileType: smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,

@@ -25,20 +25,8 @@ const (
 	TLSTransportSocket = "envoy.transport_sockets.tls"
 	// AccessFileLogger filter name
 	AccessFileLogger = "envoy.access_loggers.file"
-	// Upstream protocol options
+	// UpstreamProtocolOptions is the xDS extension name for HTTP options.
 	UpstreamProtocolOptions = "envoy.extensions.upstreams.http.v3.HttpProtocolOptions"
-
-	// The metadata server cluster name.
-	MetadataServerClusterName = "metadata-cluster"
-
-	// The token agent server cluster name.
-	TokenAgentClusterName = "token-agent-cluster"
-
-	// The iam server cluster name.
-	IamServerClusterName = "iam-cluster"
-
-	// The service control server cluster name.
-	ServiceControlClusterName = "service-control-cluster"
 
 	IngressListenerName  = "ingress_listener"
 	LoopbackListenerName = "loopback_listener"

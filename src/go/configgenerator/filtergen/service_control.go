@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
 	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
@@ -121,7 +122,7 @@ func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 		ScCallingConfig: makeServiceControlCallingConfig(serviceInfo.Options),
 		ServiceControlUri: &commonpb.HttpUri{
 			Uri:     serviceInfo.ServiceControlURI.String() + "/v1/services",
-			Cluster: util.ServiceControlClusterName,
+			Cluster: clustergen.ServiceControlClusterName,
 			Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 		},
 		GeneratedHeaderPrefix: serviceInfo.Options.GeneratedHeaderPrefix,
@@ -133,7 +134,7 @@ func (g *ServiceControlGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (
 			IamToken: &commonpb.IamTokenInfo{
 				IamUri: &commonpb.HttpUri{
 					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamAccessTokenPath(serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail)),
-					Cluster: util.IamServerClusterName,
+					Cluster: clustergen.IAMServerClusterName,
 					Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
 				},
 				ServiceAccountEmail: serviceInfo.Options.ServiceControlCredentials.ServiceAccountEmail,

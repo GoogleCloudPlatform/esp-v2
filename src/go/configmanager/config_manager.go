@@ -257,7 +257,13 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	m.Infof("making configuration for api: %v", m.serviceInfo.Name)
 
 	var clusterResources, listenerResources []types.Resource
-	clusters, err := gen.MakeClusters(m.serviceInfo)
+
+	clusterGensFactories := gen.GetESPv2ClusterGenFactories()
+	gens, err := gen.NewClusterGeneratorsFromOPConfig(m.serviceInfo.ServiceConfig(), m.serviceInfo.Options, clusterGensFactories)
+	if err != nil {
+		return nil, err
+	}
+	clusters, err := gen.MakeClusters(gens)
 	if err != nil {
 		return nil, err
 	}

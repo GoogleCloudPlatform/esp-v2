@@ -15,10 +15,13 @@
 package clustergen
 
 import (
+	"fmt"
+
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 // LocalBackendCluster is an Envoy cluster to communicate with a local backend
@@ -28,11 +31,48 @@ type LocalBackendCluster struct {
 	GRPCHealth     *helpers.ClusterGRPCHealthCheckConfiger
 }
 
-// NewLocalBackendClusterFromServiceConfig creates a LocalBackendCluster from
-// OP service config + descriptor + ESPv2 options.
-func NewLocalBackendClusterFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) (*LocalBackendCluster, error) {
-	// TODO(nareddyt)
-	return nil, nil
+// NewLocalBackendClustersFromOPConfig creates a LocalBackendCluster from
+// OP service config + descriptor + ESPv2 options. It is a ClusterGeneratorOPFactory.
+func NewLocalBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]ClusterGenerator, error) {
+	scheme, hostname, port, _, err := util.ParseURI(opts.BackendAddress)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing uri: %v", err)
+	}
+
+	// For local backend, user cannot configure http protocol explicitly.
+	// If this is for test only http backend address, use http/1.1 by default.
+	protocol, useTLS, err := util.ParseBackendProtocol(scheme, "")
+	if err != nil {
+		return nil, fmt.Errorf("error parsing local backend protocol: %v", err)
+	}
+
+	if opts.HealthCheckGrpcBackend {
+		if protocol != util.GRPC {
+			return nil, fmt.Errorf("invalid flag --health_check_grpc_backend, backend protocol must be GRPC")
+		}
+	}
+
+	var tls *helpers.ClusterTLSConfiger
+	if useTLS {
+		tls = helpers.NewClusterTLSConfigerFromOPConfig(opts, true)
+	}
+
+	return []ClusterGenerator{
+		&LocalBackendCluster{
+			BackendCluster: &helpers.BaseBackendCluster{
+				ClusterName:            fmt.Sprintf("backend-cluster-%s_local", serviceConfig.GetName()),
+				Hostname:               hostname,
+				Port:                   port,
+				Protocol:               protocol,
+				ClusterConnectTimeout:  opts.ClusterConnectTimeout,
+				MaxRequestsThreshold:   opts.BackendClusterMaxRequests,
+				BackendDnsLookupFamily: opts.BackendDnsLookupFamily,
+				DNS:                    helpers.NewClusterDNSConfigerFromOPConfig(opts),
+				TLS:                    tls,
+			},
+			GRPCHealth: helpers.NewClusterGRPCHealthCheckConfigerFromOPConfig(opts),
+		},
+	}, nil
 }
 
 // GetName implements the ClusterGenerator interface.

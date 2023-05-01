@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -36,17 +36,27 @@ var (
 // ServiceControlCluster is an Envoy cluster to communicate with the remote
 // Service Control v1 server.
 type ServiceControlCluster struct {
-	ServiceControlURI url.URL
+	ServiceControlURL url.URL
 
 	DNS *helpers.ClusterDNSConfiger
 	TLS *helpers.ClusterTLSConfiger
 }
 
-// NewServiceControlClusterFromServiceConfig creates a ServiceControlCluster from
-// OP service config + descriptor + ESPv2 options.
-func NewServiceControlClusterFromServiceConfig(serviceConfig *scpb.Service, opts options.ConfigGeneratorOptions) (*ServiceControlCluster, error) {
-	// TODO(nareddyt)
-	return nil, nil
+// NewServiceControlClustersFromOPConfig creates a ServiceControlCluster from
+// OP service config + descriptor + ESPv2 options. It is a ClusterGeneratorOPFactory.
+func NewServiceControlClustersFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]ClusterGenerator, error) {
+	scURL, err := helpers.ParseServiceControlURLFromOPConfig(serviceConfig, opts)
+	if err != nil {
+		return nil, fmt.Errorf("ParseServiceControlURLFromOPConfig got error: %v", err)
+	}
+
+	return []ClusterGenerator{
+		&ServiceControlCluster{
+			ServiceControlURL: scURL,
+			DNS:               helpers.NewClusterDNSConfigerFromOPConfig(opts),
+			TLS:               helpers.NewClusterTLSConfigerFromOPConfig(opts, false),
+		},
+	}, nil
 }
 
 // GetName implements the ClusterGenerator interface.
@@ -56,9 +66,9 @@ func (c *ServiceControlCluster) GetName() string {
 
 // GenConfig implements the ClusterGenerator interface.
 func (c *ServiceControlCluster) GenConfig() (*clusterpb.Cluster, error) {
-	port, err := strconv.Atoi(c.ServiceControlURI.Port())
+	port, err := strconv.Atoi(c.ServiceControlURL.Port())
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse port from url %+v: %v", c.ServiceControlURI, err)
+		return nil, fmt.Errorf("failed to parse port from url %+v: %v", c.ServiceControlURL, err)
 	}
 
 	connectTimeoutProto := durationpb.New(5 * time.Second)
@@ -68,11 +78,11 @@ func (c *ServiceControlCluster) GenConfig() (*clusterpb.Cluster, error) {
 		ConnectTimeout:       connectTimeoutProto,
 		DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 		ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
-		LoadAssignment:       util.CreateLoadAssignment(c.ServiceControlURI.Hostname(), uint32(port)),
+		LoadAssignment:       util.CreateLoadAssignment(c.ServiceControlURL.Hostname(), uint32(port)),
 	}
 
-	if c.ServiceControlURI.Scheme == "https" {
-		transportSocket, err := c.TLS.MakeTLSConfig(c.ServiceControlURI.Hostname(), nil)
+	if c.ServiceControlURL.Scheme == "https" {
+		transportSocket, err := c.TLS.MakeTLSConfig(c.ServiceControlURL.Hostname(), nil)
 		if err != nil {
 			return nil, err
 		}
