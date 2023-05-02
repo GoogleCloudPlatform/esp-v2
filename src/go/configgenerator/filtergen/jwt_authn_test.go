@@ -12,32 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filtergen
+package filtergen_test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	"github.com/imdario/mergo"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
 )
 
-func TestJwtAuthnFilter(t *testing.T) {
-	testData := []struct {
-		desc                       string
-		fakeServiceConfig          *confpb.Service
-		disableJwksAsyncFetch      bool
-		jwksAsyncFetchFastListener bool
-		jwtCacheSize               uint
-		disableJwtServiceName      bool
-		wantJwtAuthnFilter         string
-	}{
+func TestNewJwtAuthnFilterGensFromOPConfig_GenConfig(t *testing.T) {
+	testData := []SuccessOPTestCase{
 		{
-			desc: "Success. Generate jwt authn filter with default jwt locations with an empty audiences.",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate jwt authn filter with default jwt locations with an empty audiences.",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
@@ -68,8 +61,17 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					GeneratedHeaderPrefix: "X-Endpoint-",
+					HttpRequestTimeout:    30 * time.Second,
+				},
+				JwksCacheDurationInS: 300,
+			},
+			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
 			// Service config AuthProvider.audiences is empty, envoy jwt_authn Provider.audiences is using service name.
-			wantJwtAuthnFilter: `{
+			WantFilterConfigs: []string{
+				`{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -113,11 +115,12 @@ func TestJwtAuthnFilter(t *testing.T) {
     }
 }
 `,
+			},
 		},
 		{
-			desc: "Success. Generate jwt authn filter with default jwt locations with non empty audiences.",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate jwt authn filter with default jwt locations with non empty audiences.",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
@@ -150,9 +153,17 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					GeneratedHeaderPrefix: "X-Endpoint-",
+					HttpRequestTimeout:    30 * time.Second,
+				},
+				JwksCacheDurationInS: 300,
+			},
+			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
 			// Service config AuthProvider has non empty audiences, envoy jwt_authn Provider.audiences uses them directly.
 			// Service config AuthRequirement has non empty audiences, envoy jwt_authn requirement_map uses "provider_and_audiences
-			wantJwtAuthnFilter: `{
+			WantFilterConfigs: []string{`{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -202,11 +213,12 @@ func TestJwtAuthnFilter(t *testing.T) {
     }
 }
 `,
+			},
 		},
 		{
-			desc: "Success. Generate jwt authn filter with disabled service name check and an empty audiences.",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate jwt authn filter with disabled service name check and an empty audiences.",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
@@ -237,10 +249,18 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			disableJwtServiceName: true,
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					GeneratedHeaderPrefix: "X-Endpoint-",
+					HttpRequestTimeout:    30 * time.Second,
+				},
+				JwksCacheDurationInS:               300,
+				DisableJwtAudienceServiceNameCheck: true,
+			},
+			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
 			// With JwtAudienceServiceNameCheck is disabled,
 			// Service config AuthProvider has empty "audiences", and envoy jwt_authn Provider has empty audiences too.
-			wantJwtAuthnFilter: `{
+			WantFilterConfigs: []string{`{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -281,11 +301,12 @@ func TestJwtAuthnFilter(t *testing.T) {
     }
 }
 `,
+			},
 		},
 		{
-			desc: "Success. Generate jwt authn filter with disabled service name check and non empty audiences.",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate jwt authn filter with disabled service name check and non empty audiences.",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
@@ -318,9 +339,17 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			disableJwtServiceName: true,
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					GeneratedHeaderPrefix: "X-Endpoint-",
+					HttpRequestTimeout:    30 * time.Second,
+				},
+				JwksCacheDurationInS:               300,
+				DisableJwtAudienceServiceNameCheck: true,
+			},
+			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
 			// With JwtAudienceServiceNameCheck is disabled, but since "audiences" is not empty, it should not have any impact.
-			wantJwtAuthnFilter: `{
+			WantFilterConfigs: []string{`{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -370,11 +399,12 @@ func TestJwtAuthnFilter(t *testing.T) {
     }
 }
 `,
+			},
 		},
 		{
-			desc: "Success. Generate jwt authn filter with jwt_cache_size and async_fetch fast_listener",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate jwt authn filter with jwt_cache_size and async_fetch fast_listener",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
@@ -405,9 +435,17 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			jwksAsyncFetchFastListener: true,
-			jwtCacheSize:               1000,
-			wantJwtAuthnFilter: `{
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					GeneratedHeaderPrefix: "X-Endpoint-",
+					HttpRequestTimeout:    30 * time.Second,
+				},
+				JwksCacheDurationInS:       300,
+				JwksAsyncFetchFastListener: true,
+				JwtCacheSize:               1000,
+			},
+			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
+			WantFilterConfigs: []string{`{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -456,11 +494,12 @@ func TestJwtAuthnFilter(t *testing.T) {
     }
 }
 `,
+			},
 		},
 		{
-			desc: "Success. Generate jwt authn filter with default locations and disableJwksAsyncFetch",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate jwt authn filter with default locations and disableJwksAsyncFetch",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
@@ -491,8 +530,16 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			disableJwksAsyncFetch: true,
-			wantJwtAuthnFilter: `{
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					GeneratedHeaderPrefix: "X-Endpoint-",
+					HttpRequestTimeout:    30 * time.Second,
+				},
+				JwksCacheDurationInS:  300,
+				DisableJwksAsyncFetch: true,
+			},
+			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
+			WantFilterConfigs: []string{`{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -535,11 +582,12 @@ func TestJwtAuthnFilter(t *testing.T) {
     }
 }
 `,
+			},
 		},
 		{
-			desc: "Success. Generate jwt authn filter with custom jwt locations",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate jwt authn filter with custom jwt locations",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
 						Name: "testapi",
@@ -584,7 +632,15 @@ func TestJwtAuthnFilter(t *testing.T) {
 					},
 				},
 			},
-			wantJwtAuthnFilter: `{
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					GeneratedHeaderPrefix: "X-Endpoint-",
+					HttpRequestTimeout:    30 * time.Second,
+				},
+				JwksCacheDurationInS: 300,
+			},
+			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
+			WantFilterConfigs: []string{`{
     "name": "envoy.filters.http.jwt_authn",
     "typedConfig": {
         "@type": "type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication",
@@ -633,46 +689,11 @@ func TestJwtAuthnFilter(t *testing.T) {
         }
     }
 }`,
+			},
 		},
 	}
 
 	for _, tc := range testData {
-		t.Run(tc.desc, func(t *testing.T) {
-
-			opts := options.DefaultConfigGeneratorOptions()
-			opts.BackendAddress = "grpc://127.0.0.0:80"
-			opts.DisableJwksAsyncFetch = tc.disableJwksAsyncFetch
-			opts.JwksAsyncFetchFastListener = tc.jwksAsyncFetchFastListener
-			opts.DisableJwtAudienceServiceNameCheck = tc.disableJwtServiceName
-			opts.JwtCacheSize = tc.jwtCacheSize
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			gen := NewJwtAuthnGenerator(fakeServiceInfo)
-			if !gen.IsEnabled() {
-				t.Fatal("JwtAuthnGenerator is not enabled, want it to be enabled")
-			}
-
-			filterConfig, err := gen.GenFilterConfig(fakeServiceInfo)
-			if err != nil {
-				t.Fatalf("GenFilterConfig got err %v, want no err", err)
-			}
-
-			httpFilter, err := FilterConfigToHTTPFilter(filterConfig, gen.FilterName())
-			if err != nil {
-				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
-			}
-
-			gotFilter, err := util.ProtoToJson(httpFilter)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if err := util.JsonEqual(tc.wantJwtAuthnFilter, gotFilter); err != nil {
-				t.Errorf("GenFilterConfig has JSON diff\n%v", err)
-			}
-		})
+		tc.RunTest(t, filtergen.NewJwtAuthnFilterGensFromOPConfig)
 	}
 }

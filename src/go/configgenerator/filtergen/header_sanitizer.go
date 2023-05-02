@@ -15,9 +15,10 @@
 package filtergen
 
 import (
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/header_sanitizer"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -28,18 +29,22 @@ const (
 
 type HeaderSanitizerGenerator struct{}
 
+// NewHeaderSanitizerFilterGensFromOPConfig creates a HeaderSanitizerGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewHeaderSanitizerFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	return []FilterGenerator{
+		&HeaderSanitizerGenerator{},
+	}, nil
+}
+
 func (g *HeaderSanitizerGenerator) FilterName() string {
 	return HeaderSanitizerFilterName
 }
 
-func (g *HeaderSanitizerGenerator) IsEnabled() bool {
-	return true
-}
-
-func (g *HeaderSanitizerGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+func (g *HeaderSanitizerGenerator) GenFilterConfig() (proto.Message, error) {
 	return &hspb.FilterConfig{}, nil
 }
 
-func (g *HeaderSanitizerGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
+func (g *HeaderSanitizerGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

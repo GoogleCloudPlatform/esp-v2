@@ -124,7 +124,7 @@ func TestProcessEndpoints(t *testing.T) {
 
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -467,7 +467,7 @@ func TestProcessApiKeyLocations(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://127.0.0.1:80"
-			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1717,7 +1717,7 @@ func TestMethods(t *testing.T) {
 			opts.Healthz = tc.healthz
 			opts.EnableBackendAddressOverride = tc.enableBackendAddressOverride
 			opts.NonGCP = tc.isNonGcp
-			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if tc.wantError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
 					t.Fatalf("Error mismatch \ngot : %v, \nwant: %v", err, tc.wantError)
@@ -1790,7 +1790,7 @@ func TestProcessBackendRuleForHTTPBackend(t *testing.T) {
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
-			_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			_, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 
 			if tc.wantErrString != "" {
 				if err == nil {
@@ -1968,7 +1968,7 @@ func TestProcessBackendRuleForDeadline(t *testing.T) {
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
-			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 
 			if err != nil {
 				t.Errorf("error not expected, got: %v", err)
@@ -2262,7 +2262,7 @@ func TestProcessBackendRuleForIdleTimeout(t *testing.T) {
 
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.StreamIdleTimeout = tc.globalIdleTimeout
-			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 
 			if err != nil {
 				t.Errorf("error not expected, got: %v", err)
@@ -2382,7 +2382,7 @@ func TestProcessBackendRuleForProtocol(t *testing.T) {
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
-			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 
 			if err != nil {
 				t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
@@ -2517,7 +2517,7 @@ func TestProcessBackendRuleForClusterName(t *testing.T) {
 				},
 			}
 			opts := options.DefaultConfigGeneratorOptions()
-			s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+			s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, opts)
 
 			if err != nil {
 				t.Errorf("Test Desc(%s): error not expected, got: %v", tc.desc, err)
@@ -2807,7 +2807,7 @@ func TestProcessBackendRuleForJwtAudience(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.NonGCP = tc.nonGcp
-			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 
 			if err != nil {
 				t.Fatalf("error not expected, got: %v", err)
@@ -2962,7 +2962,7 @@ func TestProcessBackendRuleForRetry(t *testing.T) {
 			opts.BackendRetryNum = tc.backendRetryNum
 			opts.BackendPerTryTimeout = tc.backendPerTryTimeout
 			opts.BackendRetryOnStatusCodes = tc.backendRetryOnStatusCode
-			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			s, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if tc.wantError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
 					t.Fatalf("different error, want: %s, get: %v", tc.wantError, err)
@@ -3048,7 +3048,7 @@ func TestBackendAddressOverride(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = tc.backendAddress
 			opts.EnableBackendAddressOverride = tc.enableBackendAddressOverride
-			s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+			s, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, opts)
 
 			if err != nil {
 				t.Errorf("error not expected, got: %v", err)
@@ -3198,7 +3198,7 @@ func TestProcessQuota(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://127.0.0.1:80"
-			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 
 			if err != nil {
 				if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
@@ -3301,7 +3301,7 @@ func TestProcessEmptyJwksUriByOpenID(t *testing.T) {
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.DisableOidcDiscovery = tc.disableOidcDiscovery
-		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 
 		if tc.wantErr {
 			if err == nil {
@@ -3868,7 +3868,7 @@ func TestProcessAccessToken(t *testing.T) {
 	for _, tc := range testCases {
 		opts := options.DefaultConfigGeneratorOptions()
 		opts.ServiceAccountKey = tc.serviceAccountKey
-		serviceInfo, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, "ConfigID", opts)
+		serviceInfo, err := NewServiceInfoFromServiceConfig(fakeServiceConfig, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -3971,7 +3971,7 @@ func TestProcessUsageRule(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://127.0.0.1:80"
-			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4043,7 +4043,7 @@ func TestProcessServiceControlURL(t *testing.T) {
 				},
 			}
 
-			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.serviceConfigIn, testConfigID, tc.optionsIn)
+			serviceInfo, err := NewServiceInfoFromServiceConfig(tc.serviceConfigIn, tc.optionsIn)
 			if err != nil {
 				t.Fatalf("processServiceControlURL(...) has wrong error, got: %v, want no error", err)
 			}
@@ -4091,7 +4091,7 @@ func TestProcessServiceControlURL_BadInput(t *testing.T) {
 				},
 			}
 
-			_, err := NewServiceInfoFromServiceConfig(tc.serviceConfigIn, testConfigID, tc.optionsIn)
+			_, err := NewServiceInfoFromServiceConfig(tc.serviceConfigIn, tc.optionsIn)
 			if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
 				t.Fatalf("processServiceControlURL(...) has wrong error, got: %v, want: %q", err, tc.wantErr)
 			}

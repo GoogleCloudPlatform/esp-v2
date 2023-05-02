@@ -17,14 +17,14 @@ package filtergen
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	"google.golang.org/protobuf/proto"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
-
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	jwtpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
@@ -39,52 +39,92 @@ const (
 )
 
 type JwtAuthnGenerator struct {
-	// skipFilter indicates if this filter is disabled based on options and config.
-	skipFilter bool
+	// ServiceName is the service config name.
+	ServiceName string
+
+	// AuthConfig is the full authentication config from the OP service config.
+	// TODO(nareddyt): This should be generalized, but since we only use jwt_authn
+	// filter in ESPv2, we can generalize it later.
+	AuthConfig *confpb.Authentication
+
+	// AuthRequiredBySelector maps which selectors require per-route level authn
+	// config.
+	AuthRequiredBySelector map[string]bool
+
+	// General options below.
+
+	HttpRequestTimeout    time.Duration
+	GeneratedHeaderPrefix string
+
+	// JWT Authn specific options below.
+
+	JwksCacheDurationInS               int
+	DisableJwksAsyncFetch              bool
+	JwksAsyncFetchFastListener         bool
+	JwksFetchNumRetries                int
+	JwksFetchRetryBackOffBaseInterval  time.Duration
+	JwksFetchRetryBackOffMaxInterval   time.Duration
+	JwtPadForwardPayloadHeader         bool
+	DisableJwtAudienceServiceNameCheck bool
+	JwtCacheSize                       uint
 }
 
-// NewJwtAuthnGenerator creates the JwtAuthnGenerator with cached config.
-func NewJwtAuthnGenerator(serviceInfo *ci.ServiceInfo) *JwtAuthnGenerator {
-	if serviceInfo.Options.SkipJwtAuthnFilter {
-		return &JwtAuthnGenerator{
-			skipFilter: true,
-		}
+// NewJwtAuthnFilterGensFromOPConfig creates a JwtAuthnGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewJwtAuthnFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	if opts.SkipJwtAuthnFilter {
+		return nil, nil
 	}
 
-	auth := serviceInfo.ServiceConfig().GetAuthentication()
+	auth := serviceConfig.GetAuthentication()
 	if len(auth.GetProviders()) == 0 {
-		return &JwtAuthnGenerator{
-			skipFilter: true,
-		}
+		return nil, nil
 	}
 
-	return &JwtAuthnGenerator{}
+	authRequiredBySelector, err := GetAuthRequiredSelectorsFromOPConfig(serviceConfig, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return []FilterGenerator{
+		&JwtAuthnGenerator{
+			ServiceName:                        serviceConfig.GetName(),
+			AuthConfig:                         auth,
+			AuthRequiredBySelector:             authRequiredBySelector,
+			HttpRequestTimeout:                 opts.HttpRequestTimeout,
+			GeneratedHeaderPrefix:              opts.GeneratedHeaderPrefix,
+			JwksCacheDurationInS:               opts.JwksCacheDurationInS,
+			DisableJwksAsyncFetch:              opts.DisableJwksAsyncFetch,
+			JwksAsyncFetchFastListener:         opts.JwksAsyncFetchFastListener,
+			JwksFetchNumRetries:                opts.JwksFetchNumRetries,
+			JwksFetchRetryBackOffBaseInterval:  opts.JwksFetchRetryBackOffBaseInterval,
+			JwksFetchRetryBackOffMaxInterval:   opts.JwksFetchRetryBackOffMaxInterval,
+			JwtPadForwardPayloadHeader:         opts.JwtPadForwardPayloadHeader,
+			DisableJwtAudienceServiceNameCheck: opts.DisableJwtAudienceServiceNameCheck,
+			JwtCacheSize:                       opts.JwtCacheSize,
+		},
+	}, nil
 }
 
 func (g *JwtAuthnGenerator) FilterName() string {
 	return JWTAuthnFilterName
 }
 
-func (g *JwtAuthnGenerator) IsEnabled() bool {
-	return !g.skipFilter
-}
-
-func (g *JwtAuthnGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
-	if !method.RequireAuth {
+func (g *JwtAuthnGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
+	if authRequired := g.AuthRequiredBySelector[selector]; !authRequired {
 		return nil, nil
 	}
 
 	return &jwtpb.PerRouteConfig{
 		RequirementSpecifier: &jwtpb.PerRouteConfig_RequirementName{
-			RequirementName: method.Operation(),
+			RequirementName: selector,
 		},
 	}, nil
 }
 
-func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
-	auth := serviceInfo.ServiceConfig().GetAuthentication()
+func (g *JwtAuthnGenerator) GenFilterConfig() (proto.Message, error) {
 	providers := make(map[string]*jwtpb.JwtProvider)
-	for _, provider := range auth.GetProviders() {
+	for _, provider := range g.AuthConfig.GetProviders() {
 		addr, err := util.ExtractAddressFromURI(provider.GetJwksUri())
 		if err != nil {
 			return nil, fmt.Errorf("for provider (%v), failed to parse JWKS URI: %v", provider.Id, err)
@@ -101,26 +141,26 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.
 				HttpUpstreamType: &corepb.HttpUri_Cluster{
 					Cluster: clusterName,
 				},
-				Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
+				Timeout: durationpb.New(g.HttpRequestTimeout),
 			},
 			CacheDuration: &durationpb.Duration{
-				Seconds: int64(serviceInfo.Options.JwksCacheDurationInS),
+				Seconds: int64(g.JwksCacheDurationInS),
 			},
 		}
-		if !serviceInfo.Options.DisableJwksAsyncFetch {
+		if !g.DisableJwksAsyncFetch {
 			jwks.AsyncFetch = &jwtpb.JwksAsyncFetch{
-				FastListener: serviceInfo.Options.JwksAsyncFetchFastListener,
+				FastListener: g.JwksAsyncFetchFastListener,
 			}
 		}
-		if serviceInfo.Options.JwksFetchNumRetries > 0 {
+		if g.JwksFetchNumRetries > 0 {
 			// only create a retry policy, evenutally with a backoff if it is required.
 			rp := &corepb.RetryPolicy{
 				NumRetries: &wrapperspb.UInt32Value{
-					Value: uint32(serviceInfo.Options.JwksFetchNumRetries),
+					Value: uint32(g.JwksFetchNumRetries),
 				},
 				RetryBackOff: &corepb.BackoffStrategy{
-					BaseInterval: durationpb.New(serviceInfo.Options.JwksFetchRetryBackOffBaseInterval),
-					MaxInterval:  durationpb.New(serviceInfo.Options.JwksFetchRetryBackOffMaxInterval),
+					BaseInterval: durationpb.New(g.JwksFetchRetryBackOffBaseInterval),
+					MaxInterval:  durationpb.New(g.JwksFetchRetryBackOffMaxInterval),
 				},
 			}
 			jwks.RetryPolicy = rp
@@ -133,26 +173,26 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.
 			},
 			FromHeaders:             fromHeaders,
 			FromParams:              fromParams,
-			ForwardPayloadHeader:    serviceInfo.Options.GeneratedHeaderPrefix + util.JwtAuthnForwardPayloadHeaderSuffix,
+			ForwardPayloadHeader:    g.GeneratedHeaderPrefix + util.JwtAuthnForwardPayloadHeaderSuffix,
 			Forward:                 true,
-			PadForwardPayloadHeader: serviceInfo.Options.JwtPadForwardPayloadHeader,
+			PadForwardPayloadHeader: g.JwtPadForwardPayloadHeader,
 		}
 
 		if len(provider.GetAudiences()) != 0 {
 			for _, a := range strings.Split(provider.GetAudiences(), ",") {
 				jp.Audiences = append(jp.Audiences, strings.TrimSpace(a))
 			}
-		} else if !serviceInfo.Options.DisableJwtAudienceServiceNameCheck {
+		} else if !g.DisableJwtAudienceServiceNameCheck {
 			// No providers specified by user.
 			// For backwards-compatibility with ESPv1, auto-generate audiences.
 			// See b/147834348 for more information on this default behavior.
-			defaultAudience := fmt.Sprintf("https://%v", serviceInfo.Name)
+			defaultAudience := fmt.Sprintf("https://%v", g.ServiceName)
 			jp.Audiences = append(jp.Audiences, defaultAudience)
 		}
 
-		if serviceInfo.Options.JwtCacheSize > 0 {
+		if g.JwtCacheSize > 0 {
 			jp.JwtCacheConfig = &jwtpb.JwtCacheConfig{
-				JwtCacheSize: uint32(serviceInfo.Options.JwtCacheSize),
+				JwtCacheSize: uint32(g.JwtCacheSize),
 			}
 		}
 
@@ -164,7 +204,7 @@ func (g *JwtAuthnGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.
 	}
 
 	requirements := make(map[string]*jwtpb.JwtRequirement)
-	for _, rule := range auth.GetRules() {
+	for _, rule := range g.AuthConfig.GetRules() {
 		if len(rule.GetRequirements()) > 0 {
 			requirements[rule.GetSelector()] = makeJwtRequirement(rule.GetRequirements(), rule.GetAllowWithoutCredential())
 		}
@@ -264,4 +304,27 @@ func makeJwtRequirement(requirements []*confpb.AuthRequirement, allow_missing bo
 	}
 
 	return requires
+}
+
+// GetAuthRequiredSelectorsFromOPConfig returns a list of selectors that require
+// per-method level authn config.
+func GetAuthRequiredSelectorsFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) (map[string]bool, error) {
+	authRequiredMethods := make(map[string]bool)
+
+	auth := serviceConfig.GetAuthentication()
+	for _, rule := range auth.GetRules() {
+		selector := rule.GetSelector()
+		if util.ShouldSkipOPDiscoveryAPI(selector, opts.AllowDiscoveryAPIs) {
+			glog.Warningf("Skip Auth rule %q because discovery API is not supported.", selector)
+			continue
+		}
+
+		if len(rule.GetRequirements()) == 0 {
+			continue
+		}
+
+		authRequiredMethods[selector] = true
+	}
+
+	return authRequiredMethods, nil
 }

@@ -2626,7 +2626,7 @@ func TestMakeRouteConfig(t *testing.T) {
 			opts.EnableHSTS = tc.enableStrictTransportSecurity
 			opts.EnableOperationNameHeader = tc.enableOperationNameHeader
 			opts.DisallowColonInWildcardPathSegment = tc.disallowColonInWildcardPathSegment
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3090,7 +3090,7 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 				}
 			}
 
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4448,7 +4448,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}

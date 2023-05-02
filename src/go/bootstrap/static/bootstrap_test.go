@@ -123,7 +123,7 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			tc.opt_mod(&opts)
 
 			// Function under test
-			gotBootstrap, err := ServiceToBootstrapConfig(s, FakeConfigID, opts)
+			gotBootstrap, err := ServiceToBootstrapConfig(s, opts)
 			if err != nil {
 				t.Fatal(err)
 			}

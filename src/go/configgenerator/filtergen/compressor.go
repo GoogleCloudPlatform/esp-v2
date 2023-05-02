@@ -17,12 +17,13 @@ package filtergen
 import (
 	"fmt"
 
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
 	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
 	comppb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/compressor/v3"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -47,28 +48,30 @@ const (
 
 type CompressorGenerator struct {
 	compressorType CompressorType
-
-	// skipFilter indicates if this filter is disabled based on options and config.
-	skipFilter bool
 }
 
-// NewCompressorGenerator creates the CompressorGenerator with cached config.
-func NewCompressorGenerator(serviceInfo *ci.ServiceInfo, compressorType CompressorType) *CompressorGenerator {
-	return &CompressorGenerator{
-		compressorType: compressorType,
-		skipFilter:     !serviceInfo.Options.EnableResponseCompression,
+// NewCompressorFilterGensFromOPConfig creates a CompressorGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewCompressorFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	if !opts.EnableResponseCompression {
+		return nil, nil
 	}
+
+	return []FilterGenerator{
+		&CompressorGenerator{
+			compressorType: GzipCompressor,
+		},
+		&CompressorGenerator{
+			compressorType: BrotliCompressor,
+		},
+	}, nil
 }
 
 func (g *CompressorGenerator) FilterName() string {
 	return EnvoyCompressorFilterName
 }
 
-func (g *CompressorGenerator) IsEnabled() bool {
-	return !g.skipFilter
-}
-
-func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+func (g *CompressorGenerator) GenFilterConfig() (proto.Message, error) {
 	cfg, name, err := g.getCompressorConfig()
 	if err != nil {
 		return nil, err
@@ -85,7 +88,7 @@ func (g *CompressorGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (prot
 	}, nil
 }
 
-func (g *CompressorGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
+func (g *CompressorGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }
 

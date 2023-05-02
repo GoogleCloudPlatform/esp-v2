@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -60,6 +61,7 @@ type ConfigManager struct {
 	serviceName        string
 	envoyConfigOptions options.ConfigGeneratorOptions
 	serviceInfo        *configinfo.ServiceInfo
+	filterGenParams    filtergen.FactoryParams
 	cache              cache.SnapshotCache
 
 	metadataFetcher         *metadata.MetadataFetcher
@@ -232,7 +234,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 
 	var err error
 	m.curServiceConfig = serviceConfig
-	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, serviceConfig.Id, m.envoyConfigOptions)
+	m.serviceInfo, err = configinfo.NewServiceInfoFromServiceConfig(serviceConfig, m.envoyConfigOptions)
 	if err != nil {
 		return fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
@@ -242,7 +244,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 		if err != nil {
 			m.Infof("metadata server was not reached, skipping GCP Attributes: %v", err)
 		} else {
-			m.serviceInfo.GcpAttributes = attrs
+			m.filterGenParams.GCPAttributes = attrs
 		}
 	}
 
@@ -272,7 +274,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 
 	m.Infof("adding Listeners configuration for api: %v", m.serviceInfo.Name)
-	listeners, err := gen.MakeListeners(m.serviceInfo)
+	listeners, err := gen.MakeListeners(m.serviceInfo, m.filterGenParams)
 	if err != nil {
 		return nil, err
 	}

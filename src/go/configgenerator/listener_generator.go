@@ -35,13 +35,15 @@ import (
 )
 
 // MakeListeners provides dynamic listeners for Envoy
-func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) {
-	filterGenerators, err := MakeFilterGenerators(serviceInfo)
+func MakeListeners(serviceInfo *sc.ServiceInfo, params filtergen.FactoryParams) ([]*listenerpb.Listener, error) {
+	filterGenFactories := GetESPv2FilterGenFactories()
+
+	filterGens, err := NewFilterGeneratorsFromOPConfig(serviceInfo.ServiceConfig(), serviceInfo.Options, filterGenFactories, params)
 	if err != nil {
 		return nil, err
 	}
 
-	listener, err := MakeListener(serviceInfo, filterGenerators, nil)
+	listener, err := MakeListener(serviceInfo, filterGens, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -49,15 +51,11 @@ func MakeListeners(serviceInfo *sc.ServiceInfo) ([]*listenerpb.Listener, error) 
 }
 
 // MakeHttpFilterConfigs generates all enabled HTTP filter configs and returns them (ordered list).
-func MakeHttpFilterConfigs(serviceInfo *sc.ServiceInfo, filterGenerators []FilterGenerator) ([]*hcmpb.HttpFilter, error) {
+func MakeHttpFilterConfigs(serviceInfo *sc.ServiceInfo, filterGenerators []filtergen.FilterGenerator) ([]*hcmpb.HttpFilter, error) {
 	var httpFilters []*hcmpb.HttpFilter
 
 	for _, filterGenerator := range filterGenerators {
-		if !filterGenerator.IsEnabled() {
-			continue
-		}
-
-		filter, err := filterGenerator.GenFilterConfig(serviceInfo)
+		filter, err := filterGenerator.GenFilterConfig()
 		if err != nil {
 			return nil, fmt.Errorf("fail to create config for the filter %q: %v", filterGenerator.FilterName(), err)
 		}
@@ -83,7 +81,7 @@ func MakeHttpFilterConfigs(serviceInfo *sc.ServiceInfo, filterGenerators []Filte
 }
 
 // MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []FilterGenerator, localReplyConfig *hcmpb.LocalReplyConfig) (*listenerpb.Listener, error) {
+func MakeListener(serviceInfo *sc.ServiceInfo, filterGenerators []filtergen.FilterGenerator, localReplyConfig *hcmpb.LocalReplyConfig) (*listenerpb.Listener, error) {
 	httpFilters, err := MakeHttpFilterConfigs(serviceInfo, filterGenerators)
 	if err != nil {
 		return nil, err

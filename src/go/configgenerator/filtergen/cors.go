@@ -15,9 +15,10 @@
 package filtergen
 
 import (
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -26,30 +27,28 @@ const (
 	CORSFilterName = "envoy.filters.http.cors"
 )
 
-type CORSGenerator struct {
-	// skipFilter indicates if this filter is disabled based on options and config.
-	skipFilter bool
-}
+type CORSGenerator struct{}
 
-// NewCORSGenerator creates the CORSGenerator with cached config.
-func NewCORSGenerator(serviceInfo *ci.ServiceInfo) *CORSGenerator {
-	return &CORSGenerator{
-		skipFilter: serviceInfo.Options.CorsPreset != "basic" && serviceInfo.Options.CorsPreset != "cors_with_regex",
+// NewCORSFilterGensFromOPConfig creates a CORSGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewCORSFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	if opts.CorsPreset != "basic" && opts.CorsPreset != "cors_with_regex" {
+		return nil, nil
 	}
+
+	return []FilterGenerator{
+		&CORSGenerator{},
+	}, nil
 }
 
 func (g *CORSGenerator) FilterName() string {
 	return CORSFilterName
 }
 
-func (g *CORSGenerator) IsEnabled() bool {
-	return !g.skipFilter
-}
-
-func (g *CORSGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+func (g *CORSGenerator) GenFilterConfig() (proto.Message, error) {
 	return &corspb.Cors{}, nil
 }
 
-func (g *CORSGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
+func (g *CORSGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

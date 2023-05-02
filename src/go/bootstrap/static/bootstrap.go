@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 
 	gen "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator"
@@ -29,14 +30,14 @@ import (
 // ServiceToBootstrapConfig outputs envoy bootstrap config from service config.
 // id is the service configuration ID. It is generated when deploying
 // service config to ServiceManagement Server, example: 2017-02-13r0.
-func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts options.ConfigGeneratorOptions) (*bootstrappb.Bootstrap, error) {
+func ServiceToBootstrapConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) (*bootstrappb.Bootstrap, error) {
 	bt := &bootstrappb.Bootstrap{
 		Node:           bootstrap.CreateNode(opts.CommonOptions),
 		Admin:          bootstrap.CreateAdmin(opts.CommonOptions),
 		LayeredRuntime: bootstrap.CreateLayeredRuntime(),
 	}
 
-	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, id, opts)
+	serviceInfo, err := sc.NewServiceInfoFromServiceConfig(serviceConfig, opts)
 	if err != nil {
 		return nil, fmt.Errorf("fail to initialize ServiceInfo, %s", err)
 	}
@@ -50,7 +51,7 @@ func ServiceToBootstrapConfig(serviceConfig *confpb.Service, id string, opts opt
 	if err != nil {
 		return nil, err
 	}
-	listeners, err := gen.MakeListeners(serviceInfo)
+	listeners, err := gen.MakeListeners(serviceInfo, filtergen.FactoryParams{})
 	if err != nil {
 		return nil, err
 	}

@@ -15,9 +15,11 @@
 package filtergen
 
 import (
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	grpcwebpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_web/v3"
+	"github.com/golang/glog"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -26,30 +28,33 @@ const (
 	GRPCWebFilterName = "envoy.filters.http.grpc_web"
 )
 
-type GRPCWebGenerator struct {
-	// skipFilter indicates if this filter is disabled based on options and config.
-	skipFilter bool
-}
+type GRPCWebGenerator struct{}
 
-// NewGRPCWebGenerator creates the GRPCWebGenerator with cached config.
-func NewGRPCWebGenerator(serviceInfo *ci.ServiceInfo) *GRPCWebGenerator {
-	return &GRPCWebGenerator{
-		skipFilter: !serviceInfo.GrpcSupportRequired,
+// NewGRPCWebFilterGensFromOPConfig creates a GRPCWebGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewGRPCWebFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	isGRPCSupportRequired, err := IsGRPCSupportRequiredForOPConfig(serviceConfig, opts)
+	if err != nil {
+		return nil, err
 	}
+	if !isGRPCSupportRequired {
+		glog.Infof("gRPC support is NOT required, skip gRPC web filter completely.")
+		return nil, nil
+	}
+
+	return []FilterGenerator{
+		&GRPCWebGenerator{},
+	}, nil
 }
 
 func (g *GRPCWebGenerator) FilterName() string {
 	return GRPCWebFilterName
 }
 
-func (g *GRPCWebGenerator) IsEnabled() bool {
-	return !g.skipFilter
-}
-
-func (g *GRPCWebGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+func (g *GRPCWebGenerator) GenFilterConfig() (proto.Message, error) {
 	return &grpcwebpb.GrpcWeb{}, nil
 }
 
-func (g *GRPCWebGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
+func (g *GRPCWebGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

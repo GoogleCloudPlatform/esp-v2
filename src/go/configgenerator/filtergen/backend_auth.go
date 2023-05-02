@@ -17,14 +17,18 @@ package filtergen
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
+	"github.com/golang/glog"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	bapb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/backend_auth"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 )
@@ -35,38 +39,84 @@ const (
 )
 
 type BackendAuthGenerator struct {
-	// audMap is the list of unique audiences in the config.
-	audMap map[string]bool
+	// UniqueAudiences is the list of unique JWT audiences in the config.
+	UniqueAudiences map[string]bool
+
+	// AudienceBySelector lists the JWT audience for each method.
+	AudienceBySelector map[string]string
+
+	IamURL                  string
+	MetadataURL             string
+	HttpRequestTimeout      time.Duration
+	DependencyErrorBehavior string
+	BackendAuthCredentials  *options.IAMCredentialsOptions
+
+	AccessToken *helpers.FilterAccessTokenConfiger
 }
 
-// NewBackendAuthGenerator creates the BackendAuthGenerator with cached config.
-func NewBackendAuthGenerator(serviceInfo *ci.ServiceInfo) *BackendAuthGenerator {
-	return &BackendAuthGenerator{
-		audMap: getUniqueAudiences(serviceInfo),
+// NewBackendAuthFilterGensFromOPConfig creates a BackendAuthGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewBackendAuthFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	audienceBySelector, uniqueAudiences, err := GetJWTAudiencesBySelectorFromOPConfig(serviceConfig, opts)
+	if err != nil {
+		return nil, err
 	}
+	if len(uniqueAudiences) == 0 {
+		return nil, nil
+	}
+
+	return []FilterGenerator{
+		&BackendAuthGenerator{
+			UniqueAudiences:         uniqueAudiences,
+			AudienceBySelector:      audienceBySelector,
+			IamURL:                  opts.IamURL,
+			MetadataURL:             opts.MetadataURL,
+			HttpRequestTimeout:      opts.HttpRequestTimeout,
+			DependencyErrorBehavior: opts.DependencyErrorBehavior,
+			BackendAuthCredentials:  opts.BackendAuthCredentials,
+			AccessToken:             helpers.NewFilterAccessTokenConfigerFromOPConfig(opts),
+		},
+	}, nil
 }
 
 func (g *BackendAuthGenerator) FilterName() string {
 	return BackendAuthFilterName
 }
 
-func (g *BackendAuthGenerator) IsEnabled() bool {
-	return len(g.audMap) > 0
+func (g *BackendAuthGenerator) MatchAudience(selector string) (string, bool) {
+	if audience, ok := g.AudienceBySelector[selector]; ok {
+		return audience, true
+	}
+
+	// Try matching CORS selector.
+	originalSelector, err := CORSSelectorToSelector(selector)
+	if err != nil {
+		// Ignore error, assume no route match.
+		return "", false
+	}
+
+	if audience, ok := g.AudienceBySelector[originalSelector]; ok {
+		return audience, true
+	}
+
+	// No route match.
+	return "", false
 }
 
-func (g *BackendAuthGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
-	if method.BackendInfo == nil || method.BackendInfo.JwtAudience == "" {
+func (g *BackendAuthGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
+	audience, ok := g.MatchAudience(selector)
+	if !ok {
 		return nil, nil
 	}
 
 	return &bapb.PerRouteFilterConfig{
-		JwtAudience: method.BackendInfo.JwtAudience,
+		JwtAudience: audience,
 	}, nil
 }
 
-func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+func (g *BackendAuthGenerator) GenFilterConfig() (proto.Message, error) {
 	var audList []string
-	for aud := range g.audMap {
+	for aud := range g.UniqueAudiences {
 		audList = append(audList, aud)
 	}
 
@@ -76,32 +126,32 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 		JwtAudienceList: audList,
 	}
 
-	depErrorBehaviorEnum, err := parseDepErrorBehavior(serviceInfo.Options.DependencyErrorBehavior)
+	depErrorBehaviorEnum, err := ParseDepErrorBehavior(g.DependencyErrorBehavior)
 	if err != nil {
 		return nil, err
 	}
 	backendAuthConfig.DepErrorBehavior = depErrorBehaviorEnum
 
-	if serviceInfo.Options.BackendAuthCredentials != nil {
+	if g.BackendAuthCredentials != nil {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_IamToken{
 			IamToken: &commonpb.IamTokenInfo{
 				IamUri: &commonpb.HttpUri{
-					Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.IamURL, util.IamIdentityTokenPath(serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail)),
+					Uri:     fmt.Sprintf("%s%s", g.IamURL, util.IamIdentityTokenPath(g.BackendAuthCredentials.ServiceAccountEmail)),
 					Cluster: clustergen.IAMServerClusterName,
-					Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
+					Timeout: durationpb.New(g.HttpRequestTimeout),
 				},
 				// Currently only support fetching access token from instance metadata
 				// server, not by service account file.
-				AccessToken:         serviceInfo.AccessToken,
-				ServiceAccountEmail: serviceInfo.Options.BackendAuthCredentials.ServiceAccountEmail,
-				Delegates:           serviceInfo.Options.BackendAuthCredentials.Delegates,
+				AccessToken:         g.AccessToken.MakeAccessTokenConfig(),
+				ServiceAccountEmail: g.BackendAuthCredentials.ServiceAccountEmail,
+				Delegates:           g.BackendAuthCredentials.Delegates,
 			}}
 	} else {
 		backendAuthConfig.IdTokenInfo = &bapb.FilterConfig_ImdsToken{
 			ImdsToken: &commonpb.HttpUri{
-				Uri:     fmt.Sprintf("%s%s", serviceInfo.Options.MetadataURL, util.IdentityTokenPath),
+				Uri:     fmt.Sprintf("%s%s", g.MetadataURL, util.IdentityTokenPath),
 				Cluster: clustergen.MetadataServerClusterName,
-				Timeout: durationpb.New(serviceInfo.Options.HttpRequestTimeout),
+				Timeout: durationpb.New(g.HttpRequestTimeout),
 			},
 		}
 	}
@@ -109,13 +159,81 @@ func (g *BackendAuthGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 	return backendAuthConfig, nil
 }
 
-// getUniqueAudiences returns a list of all unique audiences specified in ServiceInfo.
-func getUniqueAudiences(serviceInfo *ci.ServiceInfo) map[string]bool {
-	audMap := make(map[string]bool)
-	for _, method := range serviceInfo.Methods {
-		if method.BackendInfo != nil && method.BackendInfo.JwtAudience != "" {
-			audMap[method.BackendInfo.JwtAudience] = true
+// GetJWTAudiencesBySelectorFromOPConfig returns:
+// 1. A map of selector to JWT audience for the route.
+// 2. A set of all unique JWT audiences (for optimization).
+//
+// Replaces ServiceInfo::ruleToBackendInfo.
+func GetJWTAudiencesBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (map[string]string, map[string]bool, error) {
+	uniqueAudiences := make(map[string]bool)
+	audienceBySelector := make(map[string]string)
+
+	for _, rule := range serviceConfig.GetBackend().GetRules() {
+		if util.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts.AllowDiscoveryAPIs) {
+			glog.Warningf("Skip backend rule %q because discovery API is not supported.", rule.GetSelector())
+			continue
+		}
+
+		jwtAud, err := parseJwtAudFromBackendRule(rule)
+		if err != nil {
+			return nil, nil, fmt.Errorf("fail to parse JWT audience for backend rule %q: %v", rule.GetSelector(), err)
+		}
+
+		if jwtAud != "" && opts.NonGCP {
+			glog.Warningf("Backend authentication is enabled for method %q, "+
+				"but ESPv2 is running on non-GCP. To prevent contacting GCP services, "+
+				"backend authentication is automatically being disabled for this method.",
+				rule.GetSelector())
+			continue
+		}
+
+		if jwtAud != "" {
+			uniqueAudiences[jwtAud] = true
+			audienceBySelector[rule.GetSelector()] = jwtAud
 		}
 	}
-	return audMap
+
+	return audienceBySelector, uniqueAudiences, nil
+}
+
+// parseJwtAudFromBackendRule returns the correct JWT audience for the given BackendRule.
+//
+// Replaces ServiceInfo::determineBackendAuthJwtAud.
+func parseJwtAudFromBackendRule(r *servicepb.BackendRule) (string, error) {
+	//TODO(taoxuy): b/149334660 Check if the scopes for IAM include the path prefix
+	switch r.GetAuthentication().(type) {
+	case *servicepb.BackendRule_JwtAudience:
+		return r.GetJwtAudience(), nil
+	case *servicepb.BackendRule_DisableAuth:
+		if r.GetDisableAuth() {
+			return "", nil
+		}
+		return BackendAddressToJWTAud(r.GetAddress())
+	default:
+		if r.Address == "" {
+			return "", nil
+		}
+		return BackendAddressToJWTAud(r.GetAddress())
+	}
+}
+
+// BackendAddressToJWTAud transforms the backend address into the proper JWT
+// audience.
+//
+// If the backend address's scheme is grpc/grpcs, it is changed to http/https.
+func BackendAddressToJWTAud(address string) (string, error) {
+	scheme, hostname, _, _, err := util.ParseURI(address)
+	if err != nil {
+		return "", fmt.Errorf("error parsing backend address for JWT audience: %v", err)
+	}
+
+	_, useTLS, err := util.ParseBackendProtocol(scheme, "")
+	if err != nil {
+		return "", fmt.Errorf("error parsing backend protocol for JWT audience: %v", err)
+	}
+
+	if useTLS {
+		return fmt.Sprintf("https://%s", hostname), nil
+	}
+	return fmt.Sprintf("http://%s", hostname), nil
 }

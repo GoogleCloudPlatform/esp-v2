@@ -12,31 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filtergen
+package filtergen_test
 
 import (
 	"testing"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	apipb "google.golang.org/genproto/protobuf/api"
 )
 
-func TestHealthCheckFilter(t *testing.T) {
-	testdata := []struct {
-		desc                   string
-		BackendAddress         string
-		healthz                string
-		healthCheckGrpcBackend bool
-		wantHealthCheckFilter  string
-	}{
+func TestNewHealthCheckFilterGensFromOPConfig_GenConfig(t *testing.T) {
+	testdata := []SuccessOPTestCase{
 		{
-			desc:           "Success, generate health check filter for gRPC",
-			BackendAddress: "grpc://127.0.0.1:80",
-			healthz:        "healthz",
-			wantHealthCheckFilter: `{
+			Desc: "Success, generate health check filter for standard /healthz path",
+			OptsIn: options.ConfigGeneratorOptions{
+				Healthz: "/healthz",
+			},
+			WantFilterConfigs: []string{
+				`{
         "name": "envoy.filters.http.health_check",
         "typedConfig": {
           "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
@@ -49,13 +43,40 @@ func TestHealthCheckFilter(t *testing.T) {
           ]
         }
       }`,
+			},
 		},
 		{
-			desc:                   "Success, generate health check filter for gRPC with health check",
-			BackendAddress:         "grpc://127.0.0.1:80",
-			healthz:                "healthz",
-			healthCheckGrpcBackend: true,
-			wantHealthCheckFilter: `{
+			Desc: "Success, generate health check filter where / prefix is automatically added",
+			OptsIn: options.ConfigGeneratorOptions{
+				Healthz: "healthz",
+			},
+			WantFilterConfigs: []string{
+				`{
+        "name": "envoy.filters.http.health_check",
+        "typedConfig": {
+          "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
+          "passThroughMode":false,
+          "headers": [
+            {
+              "stringMatch":{"exact":"/healthz"},
+              "name":":path"
+            }
+          ]
+        }
+      }`,
+			},
+		},
+		{
+			Desc: "Success, generate health check filter for gRPC with health check",
+			OptsIn: options.ConfigGeneratorOptions{
+				Healthz:                "healthz",
+				HealthCheckGrpcBackend: true,
+			},
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+			},
+			WantFilterConfigs: []string{
+				`{
         "name": "envoy.filters.http.health_check",
         "typedConfig": {
           "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
@@ -71,12 +92,15 @@ func TestHealthCheckFilter(t *testing.T) {
           }
         }
       }`,
+			},
 		},
 		{
-			desc:           "Success, generate health check filter for http",
-			BackendAddress: "http://127.0.0.1:80",
-			healthz:        "/",
-			wantHealthCheckFilter: `{
+			Desc: "Success, generate health check filter for root level",
+			OptsIn: options.ConfigGeneratorOptions{
+				Healthz: "/",
+			},
+			WantFilterConfigs: []string{
+				`{
         "name": "envoy.filters.http.health_check",
         "typedConfig": {
           "@type":"type.googleapis.com/envoy.extensions.filters.http.health_check.v3.HealthCheck",
@@ -89,57 +113,11 @@ func TestHealthCheckFilter(t *testing.T) {
           ]
         }
       }`,
-		},
-	}
-
-	fakeServiceConfig := &confpb.Service{
-		Name: testProjectName,
-		Apis: []*apipb.Api{
-			{
-				Name: "endpoints.examples.bookstore.Bookstore",
-				Methods: []*apipb.Method{
-					{
-						Name: "CreateShelf",
-					},
-				},
 			},
 		},
 	}
 
 	for _, tc := range testdata {
-		t.Run(tc.desc, func(t *testing.T) {
-			opts := options.DefaultConfigGeneratorOptions()
-			opts.BackendAddress = tc.BackendAddress
-			opts.Healthz = tc.healthz
-			opts.HealthCheckGrpcBackend = tc.healthCheckGrpcBackend
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, testConfigID, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			gen := NewHealthCheckGenerator(fakeServiceInfo)
-			if !gen.IsEnabled() {
-				t.Fatal("HealthCheckGenerator is not enabled, want it to be enabled")
-			}
-
-			filterConfig, err := gen.GenFilterConfig(fakeServiceInfo)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			httpFilter, err := FilterConfigToHTTPFilter(filterConfig, gen.FilterName())
-			if err != nil {
-				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
-			}
-
-			gotFilter, err := util.ProtoToJson(httpFilter)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if err := util.JsonEqual(tc.wantHealthCheckFilter, gotFilter); err != nil {
-				t.Errorf("GenFilterConfig has JSON diff\n%v", err)
-			}
-		})
+		tc.RunTest(t, filtergen.NewHealthCheckFilterGensFromOPConfig)
 	}
 }

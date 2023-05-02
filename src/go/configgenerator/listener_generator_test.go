@@ -15,6 +15,7 @@ package configgenerator
 import (
 	"testing"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -414,12 +415,12 @@ func TestMakeListeners(t *testing.T) {
 		opts.UnderscoresInHeaders = true
 		opts.DisableTracing = true
 		opts.ConnectionBufferLimitBytes = 1024
-		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+		fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		listeners, err := MakeListeners(fakeServiceInfo)
+		listeners, err := MakeListeners(fakeServiceInfo, filtergen.FactoryParams{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -923,7 +924,7 @@ func TestMakeSchemeHeaderOverride(t *testing.T) {
 			if tc.serverLess {
 				opts.ComputePlatformOverride = util.ServerlessPlatform
 			}
-			si, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
+			si, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}

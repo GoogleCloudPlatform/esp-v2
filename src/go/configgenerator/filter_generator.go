@@ -15,68 +15,57 @@
 package configgenerator
 
 import (
+	"fmt"
+
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
-	"google.golang.org/protobuf/proto"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/golang/glog"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-// FilterGenerator is an interface for objects that generate Envoy filters.
-type FilterGenerator interface {
-
-	// FilterName returns the name of the filter.
-	FilterName() string
-
-	// IsEnabled returns true if the filter config should be generated.
-	// If false, none of the generation methods will be called.
-	IsEnabled() bool
-
-	// GenFilterConfig generates the filter config.
-	//
-	// Return type is the filter's config proto.
-	//
-	// Return (nil, nil) if the filter has no listener-level config, but may
-	// have per-route configurations.
-	GenFilterConfig(*ci.ServiceInfo) (proto.Message, error)
-
-	// GenPerRouteConfig generates the per-route config for the given HTTP route (HTTP pattern).
-	// The MethodInfo that contains the route is also provided.
-	//
-	// Return type is the filter's per-route config proto.
-	//
-	// This method is called on all routes. Return (nil, nil) to indicate the
-	// filter does NOT require a per-route config for the given route.
-	GenPerRouteConfig(*ci.MethodInfo, *httppattern.Pattern) (proto.Message, error)
-}
-
-// MakeFilterGenerators provide of a slice of FilterGenerator in sequence.
-func MakeFilterGenerators(serviceInfo *ci.ServiceInfo) ([]FilterGenerator, error) {
-	return []FilterGenerator{
-		&filtergen.HeaderSanitizerGenerator{},
-		filtergen.NewCORSGenerator(serviceInfo),
+func GetESPv2FilterGenFactories() []filtergen.FilterGeneratorOPFactory {
+	return []filtergen.FilterGeneratorOPFactory{
+		filtergen.NewHeaderSanitizerFilterGensFromOPConfig,
+		filtergen.NewCORSFilterGensFromOPConfig,
 
 		// Health check filter is behind Path Matcher filter, since Service Control
 		// filter needs to get the corresponding rule for health check in order to skip Report
-		filtergen.NewHealthCheckGenerator(serviceInfo),
-		filtergen.NewCompressorGenerator(serviceInfo, filtergen.GzipCompressor),
-		filtergen.NewCompressorGenerator(serviceInfo, filtergen.BrotliCompressor),
-		filtergen.NewJwtAuthnGenerator(serviceInfo),
-		filtergen.NewServiceControlGenerator(serviceInfo),
+		filtergen.NewHealthCheckFilterGensFromOPConfig,
+		filtergen.NewCompressorFilterGensFromOPConfig,
+		filtergen.NewJwtAuthnFilterGensFromOPConfig,
+		filtergen.NewServiceControlFilterGensFromOPConfig,
 
 		// grpc-web filter should be before grpc transcoder filter.
 		// It converts content-type application/grpc-web to application/grpc and
 		// grpc transcoder will bypass requests with application/grpc content type.
 		// Otherwise grpc transcoder will try to transcode a grpc-web request which
 		// will fail.
-		filtergen.NewGRPCWebGenerator(serviceInfo),
-		filtergen.NewGRPCTranscoderGenerator(serviceInfo),
-
-		filtergen.NewBackendAuthGenerator(serviceInfo),
-		filtergen.NewPathRewriteGenerator(serviceInfo),
-		filtergen.NewGRPCMetadataScrubberGenerator(serviceInfo),
+		filtergen.NewGRPCWebFilterGensFromOPConfig,
+		filtergen.NewGRPCTranscoderFilterGensFromOPConfig,
+		filtergen.NewBackendAuthFilterGensFromOPConfig,
+		filtergen.NewPathRewriteFilterGensFromOPConfig,
+		filtergen.NewGRPCMetadataScrubberFilterGensFromOPConfig,
 
 		// Add Envoy Router filter so requests are routed upstream.
 		// Router filter should be the last.
-		&filtergen.RouterGenerator{},
-	}, nil
+		filtergen.NewRouterFilterGensFromOPConfig,
+	}
+}
+
+// NewFilterGeneratorsFromOPConfig creates all required FilterGenerators from
+// OP service config + descriptor + ESPv2 options.
+func NewFilterGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, factories []filtergen.FilterGeneratorOPFactory, params filtergen.FactoryParams) ([]filtergen.FilterGenerator, error) {
+	var gens []filtergen.FilterGenerator
+	for _, factory := range factories {
+		generator, err := factory(serviceConfig, opts, params)
+		if err != nil {
+			return nil, fmt.Errorf("fail to run FilterGeneratorOPFactory: %v", err)
+		}
+		gens = append(gens, generator...)
+	}
+
+	for i, gen := range gens {
+		glog.Infof("FilterGenerator %d is %q", i, gen.FilterName())
+	}
+	return gens, nil
 }

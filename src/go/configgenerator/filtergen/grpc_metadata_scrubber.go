@@ -15,9 +15,10 @@
 package filtergen
 
 import (
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/grpc_metadata_scrubber"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -26,30 +27,28 @@ const (
 	GrpcMetadataScrubberFilterName = "com.google.espv2.filters.http.grpc_metadata_scrubber"
 )
 
-type GRPCMetadataScrubberGenerator struct {
-	// skipFilter indicates if this filter is disabled based on options and config.
-	skipFilter bool
-}
+type GRPCMetadataScrubberGenerator struct{}
 
-// NewGRPCMetadataScrubberGenerator creates the GRPCMetadataScrubberGenerator with cached config.
-func NewGRPCMetadataScrubberGenerator(serviceInfo *ci.ServiceInfo) *GRPCMetadataScrubberGenerator {
-	return &GRPCMetadataScrubberGenerator{
-		skipFilter: !serviceInfo.Options.EnableGrpcForHttp1,
+// NewGRPCMetadataScrubberFilterGensFromOPConfig creates a GRPCMetadataScrubberGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewGRPCMetadataScrubberFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	if !opts.EnableGrpcForHttp1 {
+		return nil, nil
 	}
+
+	return []FilterGenerator{
+		&GRPCMetadataScrubberGenerator{},
+	}, nil
 }
 
 func (g *GRPCMetadataScrubberGenerator) FilterName() string {
 	return GrpcMetadataScrubberFilterName
 }
 
-func (g *GRPCMetadataScrubberGenerator) IsEnabled() bool {
-	return !g.skipFilter
-}
-
-func (g *GRPCMetadataScrubberGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+func (g *GRPCMetadataScrubberGenerator) GenFilterConfig() (proto.Message, error) {
 	return &gmspb.FilterConfig{}, nil
 }
 
-func (g *GRPCMetadataScrubberGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
+func (g *GRPCMetadataScrubberGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }
