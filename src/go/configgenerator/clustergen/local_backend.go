@@ -17,7 +17,7 @@ package clustergen
 import (
 	"fmt"
 
-	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -27,8 +27,8 @@ import (
 // LocalBackendCluster is an Envoy cluster to communicate with a local backend
 // that speaks HTTP (OpenAPI) or gRPC (service config) protocol.
 type LocalBackendCluster struct {
-	BackendCluster *helpers2.BaseBackendCluster
-	GRPCHealth     *helpers2.ClusterGRPCHealthCheckConfiger
+	BackendCluster *helpers.BaseBackendCluster
+	GRPCHealth     *helpers.ClusterGRPCHealthCheckConfiger
 }
 
 // NewLocalBackendClustersFromOPConfig creates a LocalBackendCluster from
@@ -52,14 +52,14 @@ func NewLocalBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts 
 		}
 	}
 
-	var tls *helpers2.ClusterTLSConfiger
+	var tls *helpers.ClusterTLSConfiger
 	if useTLS {
-		tls = helpers2.NewClusterTLSConfigerFromOPConfig(opts, true)
+		tls = helpers.NewClusterTLSConfigerFromOPConfig(opts, true)
 	}
 
 	return []ClusterGenerator{
 		&LocalBackendCluster{
-			BackendCluster: &helpers2.BaseBackendCluster{
+			BackendCluster: &helpers.BaseBackendCluster{
 				ClusterName:            fmt.Sprintf("backend-cluster-%s_local", serviceConfig.GetName()),
 				Hostname:               hostname,
 				Port:                   port,
@@ -67,10 +67,10 @@ func NewLocalBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts 
 				ClusterConnectTimeout:  opts.ClusterConnectTimeout,
 				MaxRequestsThreshold:   opts.BackendClusterMaxRequests,
 				BackendDnsLookupFamily: opts.BackendDnsLookupFamily,
-				DNS:                    helpers2.NewClusterDNSConfigerFromOPConfig(opts),
+				DNS:                    helpers.NewClusterDNSConfigerFromOPConfig(opts),
 				TLS:                    tls,
 			},
-			GRPCHealth: helpers2.NewClusterGRPCHealthCheckConfigerFromOPConfig(opts),
+			GRPCHealth: helpers.NewClusterGRPCHealthCheckConfigerFromOPConfig(opts),
 		},
 	}, nil
 }
@@ -87,7 +87,7 @@ func (c *LocalBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
 		return nil, err
 	}
 
-	if err := helpers2.MaybeAddGRPCHealthCheck(c.GRPCHealth, config); err != nil {
+	if err := helpers.MaybeAddGRPCHealthCheck(c.GRPCHealth, config); err != nil {
 		return nil, err
 	}
 

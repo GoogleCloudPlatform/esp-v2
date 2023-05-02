@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -38,8 +38,8 @@ type IAMCluster struct {
 	IamURL                string
 	ClusterConnectTimeout time.Duration
 
-	DNS *helpers2.ClusterDNSConfiger
-	TLS *helpers2.ClusterTLSConfiger
+	DNS *helpers.ClusterDNSConfiger
+	TLS *helpers.ClusterTLSConfiger
 }
 
 // NewIAMClustersFromOPConfig creates a IAMCluster from
@@ -53,8 +53,8 @@ func NewIAMClustersFromOPConfig(serviceConfig *servicepb.Service, opts options.C
 		&IAMCluster{
 			IamURL:                opts.IamURL,
 			ClusterConnectTimeout: opts.ClusterConnectTimeout,
-			DNS:                   helpers2.NewClusterDNSConfigerFromOPConfig(opts),
-			TLS:                   helpers2.NewClusterTLSConfigerFromOPConfig(opts, false),
+			DNS:                   helpers.NewClusterDNSConfigerFromOPConfig(opts),
+			TLS:                   helpers.NewClusterTLSConfigerFromOPConfig(opts, false),
 		},
 	}, nil
 }
@@ -91,7 +91,7 @@ func (c *IAMCluster) GenConfig() (*clusterpb.Cluster, error) {
 		config.TransportSocket = transportSocket
 	}
 
-	if err := helpers2.MaybeAddDNSResolver(c.DNS, config); err != nil {
+	if err := helpers.MaybeAddDNSResolver(c.DNS, config); err != nil {
 		return nil, err
 	}
 

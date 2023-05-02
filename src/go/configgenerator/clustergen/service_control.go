@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"time"
 
-	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -38,14 +38,14 @@ var (
 type ServiceControlCluster struct {
 	ServiceControlURL url.URL
 
-	DNS *helpers2.ClusterDNSConfiger
-	TLS *helpers2.ClusterTLSConfiger
+	DNS *helpers.ClusterDNSConfiger
+	TLS *helpers.ClusterTLSConfiger
 }
 
 // NewServiceControlClustersFromOPConfig creates a ServiceControlCluster from
 // OP service config + descriptor + ESPv2 options. It is a ClusterGeneratorOPFactory.
 func NewServiceControlClustersFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]ClusterGenerator, error) {
-	scURL, err := helpers2.ParseServiceControlURLFromOPConfig(serviceConfig, opts)
+	scURL, err := helpers.ParseServiceControlURLFromOPConfig(serviceConfig, opts)
 	if err != nil {
 		return nil, fmt.Errorf("ParseServiceControlURLFromOPConfig got error: %v", err)
 	}
@@ -53,8 +53,8 @@ func NewServiceControlClustersFromOPConfig(serviceConfig *servicepb.Service, opt
 	return []ClusterGenerator{
 		&ServiceControlCluster{
 			ServiceControlURL: scURL,
-			DNS:               helpers2.NewClusterDNSConfigerFromOPConfig(opts),
-			TLS:               helpers2.NewClusterTLSConfigerFromOPConfig(opts, false),
+			DNS:               helpers.NewClusterDNSConfigerFromOPConfig(opts),
+			TLS:               helpers.NewClusterTLSConfigerFromOPConfig(opts, false),
 		},
 	}, nil
 }
@@ -89,7 +89,7 @@ func (c *ServiceControlCluster) GenConfig() (*clusterpb.Cluster, error) {
 		config.TransportSocket = transportSocket
 	}
 
-	if err := helpers2.MaybeAddDNSResolver(c.DNS, config); err != nil {
+	if err := helpers.MaybeAddDNSResolver(c.DNS, config); err != nil {
 		return nil, err
 	}
 

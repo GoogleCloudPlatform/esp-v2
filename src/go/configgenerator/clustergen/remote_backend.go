@@ -17,7 +17,7 @@ package clustergen
 import (
 	"fmt"
 
-	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -28,7 +28,7 @@ import (
 // RemoteBackendCluster is an Envoy cluster to communicate with remote backends
 // via dynamic routing. Primarily for API Gateway use case.
 type RemoteBackendCluster struct {
-	BackendCluster *helpers2.BaseBackendCluster
+	BackendCluster *helpers.BaseBackendCluster
 }
 
 // NewRemoteBackendClustersFromOPConfig creates all RemoteBackendCluster from
@@ -105,14 +105,14 @@ func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGenera
 		}
 	}
 
-	var tls *helpers2.ClusterTLSConfiger
+	var tls *helpers.ClusterTLSConfiger
 	if useTLS {
-		tls = helpers2.NewClusterTLSConfigerFromOPConfig(opts, true)
+		tls = helpers.NewClusterTLSConfigerFromOPConfig(opts, true)
 	}
 
 	address := fmt.Sprintf("%v:%v", hostname, port)
 	cluster := &RemoteBackendCluster{
-		BackendCluster: &helpers2.BaseBackendCluster{
+		BackendCluster: &helpers.BaseBackendCluster{
 			ClusterName:            fmt.Sprintf("backend-cluster-%s", address),
 			Hostname:               hostname,
 			Port:                   port,
@@ -120,7 +120,7 @@ func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGenera
 			ClusterConnectTimeout:  opts.ClusterConnectTimeout,
 			MaxRequestsThreshold:   opts.BackendClusterMaxRequests,
 			BackendDnsLookupFamily: opts.BackendDnsLookupFamily,
-			DNS:                    helpers2.NewClusterDNSConfigerFromOPConfig(opts),
+			DNS:                    helpers.NewClusterDNSConfigerFromOPConfig(opts),
 			TLS:                    tls,
 		},
 	}
