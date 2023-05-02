@@ -17,7 +17,7 @@ package clustergen
 import (
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -41,7 +41,7 @@ func NewRemoteBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts
 	dedupClusterNames := make(map[string]bool)
 
 	for _, rule := range serviceConfig.GetBackend().GetRules() {
-		if helpers.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts) {
+		if util.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts.AllowDiscoveryAPIs) {
 			glog.Warningf("Skip backend rule %q because discovery API is not supported.", rule.GetSelector())
 			continue
 		}

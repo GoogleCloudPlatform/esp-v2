@@ -106,7 +106,7 @@ func TestNewTokenAgentClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewTokenAgentClusterFromOPConfig_Disabled(t *testing.T) {
-	testData := []DisabledOPTestCase{
+	testData := []SuccessOPTestCase{
 		{
 			Desc: "Disabled on GCP",
 			OptsIn: options.ConfigGeneratorOptions{

@@ -108,7 +108,7 @@ func TestIMDSClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestIMDSClusterFromOPConfig_Disabled(t *testing.T) {
-	testData := []DisabledOPTestCase{
+	testData := []SuccessOPTestCase{
 		{
 			Desc: "Disabled on non-GCP",
 			OptsIn: options.ConfigGeneratorOptions{

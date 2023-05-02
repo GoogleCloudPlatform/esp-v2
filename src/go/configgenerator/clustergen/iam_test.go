@@ -129,7 +129,7 @@ func TestNewIAMClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewIAMClusterFromOPConfig_Disabled(t *testing.T) {
-	testData := []DisabledOPTestCase{
+	testData := []SuccessOPTestCase{
 		{
 			Desc: "Disabled when no Backend Auth or SC creds are provided",
 			OptsIn: options.ConfigGeneratorOptions{

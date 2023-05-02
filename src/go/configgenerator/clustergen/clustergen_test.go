@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -60,7 +60,6 @@ func (tc *SuccessOPTestCase) RunTest(t *testing.T, factory clustergen.ClusterGen
 		}
 
 		var gotClusters []*clusterpb.Cluster
-
 		for i, gotGenerator := range gotGenerators {
 			gotCluster, err := gotGenerator.GenConfig()
 			if err != nil {
@@ -75,41 +74,8 @@ func (tc *SuccessOPTestCase) RunTest(t *testing.T, factory clustergen.ClusterGen
 	})
 }
 
-// DisabledOPTestCase is the shared struct to test a ClusterGenerator with
-// One Platform config. It checks that the factory function returns a nil
-// ClusterGenerator.
-type DisabledOPTestCase struct {
-	Desc string
-
-	ServiceConfigIn *servicepb.Service
-
-	// OptsIn is the input ESPv2 Options.
-	// Will be merged with defaults.
-	OptsIn options.ConfigGeneratorOptions
-}
-
-// RunTest is a test helper to run the test.
-func (tc *DisabledOPTestCase) RunTest(t *testing.T, factory clustergen.ClusterGeneratorOPFactory) {
-	t.Helper()
-	t.Run(tc.Desc, func(t *testing.T) {
-		opts := options.DefaultConfigGeneratorOptions()
-		if err := mergo.Merge(&opts, tc.OptsIn, mergo.WithOverride); err != nil {
-			t.Fatalf("Merge() of test opts into default opts got err: %v", err)
-		}
-
-		gotGenerator, err := factory(tc.ServiceConfigIn, opts)
-		if err != nil {
-			t.Fatalf("NewXYZClusterFromOPConfig() got error: %v", err)
-		}
-		if gotGenerator != nil {
-			t.Errorf("NewXYZClusterFromOPConfig() got generator, want no generator")
-		}
-	})
-}
-
-// DisabledOPTestCase is the shared struct to test a ClusterGenerator with
-// One Platform config. It checks that the factory function returns a nil
-// ClusterGenerator.
+// FactoryErrorOPTestCase is the shared struct to test a ClusterGenerator with
+// One Platform config. It checks that the factory returns an error.
 type FactoryErrorOPTestCase struct {
 	Desc string
 

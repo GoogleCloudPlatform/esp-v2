@@ -85,7 +85,7 @@ func (c *ClusterTLSConfiger) MakeTLSConfig(hostname string, alpnProtocols []stri
 	}
 
 	return &corepb.TransportSocket{
-		Name:       TLSTransportSockerName,
+		Name: TLSTransportSockerName,
 		ConfigType: &corepb.TransportSocket_TypedConfig{
 			TypedConfig: tlsContext,
 		},
