@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
+	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -34,8 +34,8 @@ type JWTProviderCluster struct {
 	JWKSURI               string
 	ClusterConnectTimeout time.Duration
 
-	DNS *helpers.ClusterDNSConfiger
-	TLS *helpers.ClusterTLSConfiger
+	DNS *helpers2.ClusterDNSConfiger
+	TLS *helpers2.ClusterTLSConfiger
 }
 
 // NewJWTProviderClustersFromOPConfig creates all JWTProviderCluster from
@@ -68,8 +68,8 @@ func NewJWTProviderClustersFromOPConfig(serviceConfig *servicepb.Service, opts o
 			ID:                    provider.GetId(),
 			JWKSURI:               jwksURI,
 			ClusterConnectTimeout: opts.ClusterConnectTimeout,
-			DNS:                   helpers.NewClusterDNSConfigerFromOPConfig(opts),
-			TLS:                   helpers.NewClusterTLSConfigerFromOPConfig(opts, false),
+			DNS:                   helpers2.NewClusterDNSConfigerFromOPConfig(opts),
+			TLS:                   helpers2.NewClusterTLSConfigerFromOPConfig(opts, false),
 		}
 		gens = append(gens, gen)
 	}
@@ -132,7 +132,7 @@ func (c *JWTProviderCluster) GenConfig() (*clusterpb.Cluster, error) {
 		config.TransportSocket = transportSocket
 	}
 
-	if err := helpers.MaybeAddDNSResolver(c.DNS, config); err != nil {
+	if err := helpers2.MaybeAddDNSResolver(c.DNS, config); err != nil {
 		return nil, err
 	}
 

@@ -17,7 +17,7 @@ package clustergen
 import (
 	"fmt"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/helpers"
+	helpers2 "github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -28,7 +28,7 @@ import (
 // RemoteBackendCluster is an Envoy cluster to communicate with remote backends
 // via dynamic routing. Primarily for API Gateway use case.
 type RemoteBackendCluster struct {
-	BackendCluster *helpers.BaseBackendCluster
+	BackendCluster *helpers2.BaseBackendCluster
 }
 
 // NewRemoteBackendClustersFromOPConfig creates all RemoteBackendCluster from
@@ -41,7 +41,7 @@ func NewRemoteBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts
 	dedupClusterNames := make(map[string]bool)
 
 	for _, rule := range serviceConfig.GetBackend().GetRules() {
-		if helpers.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts) {
+		if util.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts.AllowDiscoveryAPIs) {
 			glog.Warningf("Skip backend rule %q because discovery API is not supported.", rule.GetSelector())
 			continue
 		}
@@ -105,14 +105,14 @@ func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGenera
 		}
 	}
 
-	var tls *helpers.ClusterTLSConfiger
+	var tls *helpers2.ClusterTLSConfiger
 	if useTLS {
-		tls = helpers.NewClusterTLSConfigerFromOPConfig(opts, true)
+		tls = helpers2.NewClusterTLSConfigerFromOPConfig(opts, true)
 	}
 
 	address := fmt.Sprintf("%v:%v", hostname, port)
 	cluster := &RemoteBackendCluster{
-		BackendCluster: &helpers.BaseBackendCluster{
+		BackendCluster: &helpers2.BaseBackendCluster{
 			ClusterName:            fmt.Sprintf("backend-cluster-%s", address),
 			Hostname:               hostname,
 			Port:                   port,
@@ -120,7 +120,7 @@ func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGenera
 			ClusterConnectTimeout:  opts.ClusterConnectTimeout,
 			MaxRequestsThreshold:   opts.BackendClusterMaxRequests,
 			BackendDnsLookupFamily: opts.BackendDnsLookupFamily,
-			DNS:                    helpers.NewClusterDNSConfigerFromOPConfig(opts),
+			DNS:                    helpers2.NewClusterDNSConfigerFromOPConfig(opts),
 			TLS:                    tls,
 		},
 	}

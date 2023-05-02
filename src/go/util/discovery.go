@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package helpers
+package util
 
 import (
 	"strings"
-
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 )
 
 const (
@@ -28,6 +26,6 @@ func IsOPDiscoveryAPI(operationName string) bool {
 	return strings.HasPrefix(operationName, discoveryAPIPrefix)
 }
 
-func ShouldSkipOPDiscoveryAPI(operation string, opts options.ConfigGeneratorOptions) bool {
-	return IsOPDiscoveryAPI(operation) && !opts.AllowDiscoveryAPIs
+func ShouldSkipOPDiscoveryAPI(operation string, allowDiscoveryAPIs bool) bool {
+	return IsOPDiscoveryAPI(operation) && !allowDiscoveryAPIs
 }
