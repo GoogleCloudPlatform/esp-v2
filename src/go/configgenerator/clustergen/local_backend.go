@@ -60,7 +60,7 @@ func NewLocalBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts 
 	return []ClusterGenerator{
 		&LocalBackendCluster{
 			BackendCluster: &helpers.BaseBackendCluster{
-				ClusterName:            fmt.Sprintf("backend-cluster-%s_local", serviceConfig.GetName()),
+				ClusterName:            MakeLocalBackendClusterName(serviceConfig),
 				Hostname:               hostname,
 				Port:                   port,
 				Protocol:               protocol,
@@ -92,4 +92,8 @@ func (c *LocalBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
 	}
 
 	return config, nil
+}
+
+func MakeLocalBackendClusterName(serviceConfig *servicepb.Service) string {
+	return fmt.Sprintf("backend-cluster-%s_local", serviceConfig.GetName())
 }

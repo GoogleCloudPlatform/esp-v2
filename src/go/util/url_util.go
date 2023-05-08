@@ -127,6 +127,22 @@ func ParseBackendProtocol(scheme string, httpProtocol string) (BackendProtocol, 
 	}
 }
 
+// IsBackendGRPC returns if the backend address requires gRPC support.
+func IsBackendGRPC(address string) (bool, error) {
+	scheme, _, _, _, err := ParseURI(address)
+	if err != nil {
+		return false, fmt.Errorf("error parsing uri: %v", err)
+	}
+
+	// httpProtocol doesn't matter for `grpc://` scheme.
+	protocol, _, err := ParseBackendProtocol(scheme, "")
+	if err != nil {
+		return false, fmt.Errorf("error parsing local backend protocol: %v", err)
+	}
+
+	return protocol == GRPC, nil
+}
+
 // Note: the path of openID discovery may be https
 var getRemoteContent = func(path string) ([]byte, error) {
 	req, _ := http.NewRequest("GET", path, nil)
