@@ -62,6 +62,7 @@ func NewBackendAuthFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts
 		return nil, err
 	}
 	if len(uniqueAudiences) == 0 {
+		glog.Info("Not adding backend auth filter gens because there are no audiences.")
 		return nil, nil
 	}
 

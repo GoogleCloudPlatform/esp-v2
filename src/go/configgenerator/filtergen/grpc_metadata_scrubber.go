@@ -18,6 +18,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/grpc_metadata_scrubber"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
+	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 )
@@ -33,6 +34,7 @@ type GRPCMetadataScrubberGenerator struct{}
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
 func NewGRPCMetadataScrubberFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
 	if !opts.EnableGrpcForHttp1 {
+		glog.Info("Not adding gRPC metadata scrubber filter gen because the feature is disabled by option.")
 		return nil, nil
 	}
 

@@ -18,6 +18,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
+	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 )
@@ -33,6 +34,7 @@ type CORSGenerator struct{}
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
 func NewCORSFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
 	if opts.CorsPreset != "basic" && opts.CorsPreset != "cors_with_regex" {
+		glog.Infof("Not adding CORS filter gen because the feature is disabled by option, option is currently %q", opts.CorsPreset)
 		return nil, nil
 	}
 

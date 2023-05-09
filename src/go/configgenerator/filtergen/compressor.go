@@ -23,6 +23,7 @@ import (
 	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
 	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
 	comppb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/compressor/v3"
+	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -54,6 +55,7 @@ type CompressorGenerator struct {
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
 func NewCompressorFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
 	if !opts.EnableResponseCompression {
+		glog.Info("Not adding compressor filter gens because the feature is disabled by option.")
 		return nil, nil
 	}
 

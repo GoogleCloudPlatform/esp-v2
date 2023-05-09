@@ -25,6 +25,7 @@ import (
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoytypepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
@@ -45,6 +46,7 @@ type HealthCheckGenerator struct {
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
 func NewHealthCheckFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
 	if opts.Healthz == "" {
+		glog.Info("Not adding health check filter gen because healthz path is not specified.")
 		return nil, nil
 	}
 

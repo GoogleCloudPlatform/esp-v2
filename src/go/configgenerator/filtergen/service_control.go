@@ -83,10 +83,12 @@ type ServiceControlGenerator struct {
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
 func NewServiceControlFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
 	if opts.SkipServiceControlFilter {
+		glog.Infof("Not adding service control (v1) filter gen because the feature is disabled by option.")
 		return nil, nil
 	}
 
 	if serviceConfig.GetControl().GetEnvironment() == "" {
+		glog.Infof("Not adding service control (v1) filter gen because the service control URL is not set in OP config.")
 		return nil, nil
 	}
 
