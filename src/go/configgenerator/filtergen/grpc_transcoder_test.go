@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filtergen
+package filtergen_test
 
 import (
 	"encoding/base64"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
+	"github.com/google/go-cmp/cmp"
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
@@ -34,8 +35,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestTranscoderFilter(t *testing.T) {
-	rawDescriptor, err := proto.Marshal(&descpb.FileDescriptorSet{})
+func TestNewGRPCTranscoderFilterGensFromOPConfig_GenConfig(t *testing.T) {
+	rawDescriptor, err := proto.Marshal(&descpb.FileDescriptorSet{
+		File: []*descpb.FileDescriptorProto{
+			{
+				Name: proto.String("test_file_desciptor_name.proto"),
+			},
+		},
+	})
 	if err != nil {
 		t.Fatalf("Failed to marshal FileDescriptorSet: %v", err)
 	}
@@ -51,28 +58,14 @@ func TestTranscoderFilter(t *testing.T) {
 		t.Fatalf("Failed to marshal source file into any: %v", err)
 	}
 
-	testData := []struct {
-		desc                                          string
-		fakeServiceConfig                             *confpb.Service
-		transcodingAlwaysPrintPrimitiveFields         bool
-		transcodingAlwaysPrintEnumsAsInts             bool
-		transcodingStreamNewLineDelimited             bool
-		transcodingPreserveProtoFieldNames            bool
-		transcodingIgnoreQueryParameters              string
-		transcodingIgnoreUnknownQueryParameters       bool
-		transcodingQueryParametersDisableUnescapePlus bool
-		transcodingStrictRequestValidation            bool
-		transcodingCaseInsensitiveEnumParsing         bool
-		wantTranscoderFilter                          string
-		localHTTPBackendAddress                       string
-	}{
+	testData := []SuccessOPTestCase{
 		{
-			desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
+			ServiceConfigIn: &confpb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "endpoints.examples.bookstore.Bookstore",
 						Methods: []*apipb.Method{
 							{
 								Name: "foo",
@@ -93,7 +86,11 @@ func TestTranscoderFilter(t *testing.T) {
 					},
 				},
 			},
-			wantTranscoderFilter: fmt.Sprintf(`
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress: "grpc://127.0.0.0:80",
+			},
+			WantFilterConfigs: []string{
+				fmt.Sprintf(`
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
@@ -109,19 +106,20 @@ func TestTranscoderFilter(t *testing.T) {
       "printOptions":{},
       "protoDescriptorBin":"%s",
       "services":[
-         "%s"
+         "endpoints.examples.bookstore.Bookstore"
       ]
    }
 }
-      `, fakeProtoDescriptor, testApiName),
+      `, fakeProtoDescriptor),
+			},
 		},
 		{
-			desc: "Success. Generate transcoder filter with custom apiKey locations and custom jwt locations",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate transcoder filter with custom apiKey locations and custom jwt locations",
+			ServiceConfigIn: &confpb.Service{
+				Name: "endpoints.examples.bookstore.Bookstore",
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "endpoints.examples.bookstore.Bookstore",
 						Methods: []*apipb.Method{
 							{
 								Name: "Foo",
@@ -157,7 +155,7 @@ func TestTranscoderFilter(t *testing.T) {
 				SystemParameters: &confpb.SystemParameters{
 					Rules: []*confpb.SystemParameterRule{
 						{
-							Selector: fmt.Sprintf("%s.Foo", testApiName),
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
 							Parameters: []*confpb.SystemParameter{
 								{
 									Name:              "api_key",
@@ -174,7 +172,11 @@ func TestTranscoderFilter(t *testing.T) {
 					},
 				},
 			},
-			wantTranscoderFilter: fmt.Sprintf(`
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress: "grpc://127.0.0.0:80",
+			},
+			WantFilterConfigs: []string{
+				fmt.Sprintf(`
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
@@ -190,19 +192,20 @@ func TestTranscoderFilter(t *testing.T) {
       "printOptions":{},
       "protoDescriptorBin":"%s",
       "services":[
-         "%s"
+         "endpoints.examples.bookstore.Bookstore"
       ]
    }
 }
-      `, fakeProtoDescriptor, testApiName),
+      `, fakeProtoDescriptor),
+			},
 		},
 		{
-			desc: "Success. Generate transcoder filter with print options",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate transcoder filter with print options",
+			ServiceConfigIn: &confpb.Service{
+				Name: "endpoints.examples.bookstore.Bookstore",
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "endpoints.examples.bookstore.Bookstore",
 						Methods: []*apipb.Method{
 							{
 								Name: "foo",
@@ -214,15 +217,19 @@ func TestTranscoderFilter(t *testing.T) {
 					SourceFiles: []*anypb.Any{content},
 				},
 			},
-			transcodingAlwaysPrintPrimitiveFields:         true,
-			transcodingAlwaysPrintEnumsAsInts:             true,
-			transcodingStreamNewLineDelimited:             true,
-			transcodingPreserveProtoFieldNames:            true,
-			transcodingIgnoreQueryParameters:              "parameter_foo,parameter_bar",
-			transcodingIgnoreUnknownQueryParameters:       true,
-			transcodingQueryParametersDisableUnescapePlus: true,
-			transcodingCaseInsensitiveEnumParsing:         true,
-			wantTranscoderFilter: fmt.Sprintf(`
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress:                                "grpc://127.0.0.0:80",
+				TranscodingAlwaysPrintPrimitiveFields:         true,
+				TranscodingAlwaysPrintEnumsAsInts:             true,
+				TranscodingStreamNewLineDelimited:             true,
+				TranscodingPreserveProtoFieldNames:            true,
+				TranscodingIgnoreQueryParameters:              "parameter_foo,parameter_bar",
+				TranscodingIgnoreUnknownQueryParameters:       true,
+				TranscodingQueryParametersDisableUnescapePlus: true,
+				TranscodingCaseInsensitiveEnumParsing:         true,
+			},
+			WantFilterConfigs: []string{
+				fmt.Sprintf(`
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
@@ -245,19 +252,20 @@ func TestTranscoderFilter(t *testing.T) {
       },
       "protoDescriptorBin":"%s",
       "services":[
-         "%s"
+         "endpoints.examples.bookstore.Bookstore"
       ]
    }
 }
-      `, fakeProtoDescriptor, testApiName),
+      `, fakeProtoDescriptor),
+			},
 		},
 		{
-			desc: "Success. Generate transcoder filter with strict request validation",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Success. Generate transcoder filter with strict request validation",
+			ServiceConfigIn: &confpb.Service{
+				Name: "endpoints.examples.bookstore.Bookstore",
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "endpoints.examples.bookstore.Bookstore",
 						Methods: []*apipb.Method{
 							{
 								Name: "foo",
@@ -269,8 +277,12 @@ func TestTranscoderFilter(t *testing.T) {
 					SourceFiles: []*anypb.Any{content},
 				},
 			},
-			transcodingStrictRequestValidation: true,
-			wantTranscoderFilter: fmt.Sprintf(`
+			OptsIn: options.ConfigGeneratorOptions{
+				TranscodingStrictRequestValidation: true,
+				BackendAddress:                     "grpc://127.0.0.0:80",
+			},
+			WantFilterConfigs: []string{
+				fmt.Sprintf(`
 {
    "name":"envoy.filters.http.grpc_json_transcoder",
    "typedConfig":{
@@ -289,96 +301,20 @@ func TestTranscoderFilter(t *testing.T) {
          "rejectUnknownQueryParameters":true
       },
       "services":[
-         "%s"
+         "endpoints.examples.bookstore.Bookstore"
       ]
    }
 }
-      `, fakeProtoDescriptor, testApiName),
+      `, fakeProtoDescriptor),
+			},
 		},
-	}
-
-	for _, tc := range testData {
-		t.Run(tc.desc, func(t *testing.T) {
-			opts := options.DefaultConfigGeneratorOptions()
-			opts.BackendAddress = "grpc://127.0.0.0:80"
-			opts.LocalHTTPBackendAddress = tc.localHTTPBackendAddress
-			opts.TranscodingAlwaysPrintPrimitiveFields = tc.transcodingAlwaysPrintPrimitiveFields
-			opts.TranscodingPreserveProtoFieldNames = tc.transcodingPreserveProtoFieldNames
-			opts.TranscodingStreamNewLineDelimited = tc.transcodingStreamNewLineDelimited
-			opts.TranscodingAlwaysPrintEnumsAsInts = tc.transcodingAlwaysPrintEnumsAsInts
-			opts.TranscodingIgnoreQueryParameters = tc.transcodingIgnoreQueryParameters
-			opts.TranscodingIgnoreUnknownQueryParameters = tc.transcodingIgnoreUnknownQueryParameters
-			opts.TranscodingQueryParametersDisableUnescapePlus = tc.transcodingQueryParametersDisableUnescapePlus
-			opts.TranscodingStrictRequestValidation = tc.transcodingStrictRequestValidation
-			opts.TranscodingCaseInsensitiveEnumParsing = tc.transcodingCaseInsensitiveEnumParsing
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			gen := NewGRPCTranscoderGenerator(fakeServiceInfo)
-			if !gen.IsEnabled() {
-				t.Fatal("GRPCTranscoderGenerator is not enabled, want it to be enabled")
-			}
-
-			filterConfig, err := gen.GenFilterConfig(fakeServiceInfo)
-			if err != nil {
-				t.Fatalf("GenFilterConfig got err %v, want no err", err)
-			}
-
-			if filterConfig == nil && tc.wantTranscoderFilter == "" {
-				// Expected no filter config generated
-				return
-			}
-			if filterConfig == nil {
-				t.Fatal("Got empty filter config.")
-			}
-
-			httpFilter, err := FilterConfigToHTTPFilter(filterConfig, gen.FilterName())
-			if err != nil {
-				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
-			}
-
-			gotFilter, err := util.ProtoToJson(httpFilter)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if err := util.JsonEqual(tc.wantTranscoderFilter, gotFilter); err != nil {
-				t.Errorf("GenFilterConfig has JSON diff\n%v", err)
-			}
-		})
-	}
-}
-
-func TestTranscoderFilter_Disabled(t *testing.T) {
-	rawDescriptor, err := proto.Marshal(&descpb.FileDescriptorSet{})
-	if err != nil {
-		t.Fatalf("Failed to marshal FileDescriptorSet: %v", err)
-	}
-
-	sourceFile := &smpb.ConfigFile{
-		FilePath:     "api_descriptor.pb",
-		FileContents: rawDescriptor,
-		FileType:     smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO,
-	}
-	content, err := anypb.New(sourceFile)
-	if err != nil {
-		t.Fatalf("Failed to marshal source file into any: %v", err)
-	}
-
-	testData := []struct {
-		desc                    string
-		fakeServiceConfig       *confpb.Service
-		localHTTPBackendAddress string
-	}{
 		{
-			desc: "Not generate transcoder filter without protofile",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Not generate transcoder filter without protofile",
+			ServiceConfigIn: &confpb.Service{
+				Name: "endpoints.examples.bookstore.Bookstore",
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "endpoints.examples.bookstore.Bookstore",
 						Methods: []*apipb.Method{
 							{
 								Name: "foo",
@@ -387,14 +323,18 @@ func TestTranscoderFilter_Disabled(t *testing.T) {
 					},
 				},
 			},
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress: "grpc://127.0.0.0:80",
+			},
+			WantFilterConfigs: nil,
 		},
 		{
-			desc: "Not generate transcoder filter with test-only http backend address",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
+			Desc: "Not generate transcoder filter with local http backend address",
+			ServiceConfigIn: &confpb.Service{
+				Name: "endpoints.examples.bookstore.Bookstore",
 				Apis: []*apipb.Api{
 					{
-						Name: testApiName,
+						Name: "endpoints.examples.bookstore.Bookstore",
 						Methods: []*apipb.Method{
 							{
 								Name: "foo",
@@ -406,25 +346,104 @@ func TestTranscoderFilter_Disabled(t *testing.T) {
 					SourceFiles: []*anypb.Any{content},
 				},
 			},
-			localHTTPBackendAddress: "http://127.0.0.1:8080",
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress:          "grpc://127.0.0.0:80",
+				LocalHTTPBackendAddress: "http://127.0.0.1:8080",
+			},
+			WantFilterConfigs: nil,
 		},
+		{
+			Desc: "Not generate transcoder filter when all backends at NOT gRPC",
+			ServiceConfigIn: &confpb.Service{
+				Name: "endpoints.examples.bookstore.Bookstore",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address: "https://remote-backend.com",
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress: "http://127.0.0.0:80",
+			},
+			WantFilterConfigs: nil,
+		},
+		{
+			Desc: "Success. Generate transcoder filter when at least 1 remote backend is gRPC",
+			ServiceConfigIn: &confpb.Service{
+				Name: "endpoints.examples.bookstore.Bookstore",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+				},
+				SourceInfo: &confpb.SourceInfo{
+					SourceFiles: []*anypb.Any{content},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address: "https://remote-backend-1.com",
+						},
+						{
+							Address: "grpcs://remote-backend-2.com",
+						},
+						{
+							Address: "https://remote-backend-3.com",
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress: "http://127.0.0.0:80",
+			},
+			WantFilterConfigs: []string{
+				fmt.Sprintf(`
+{
+   "name":"envoy.filters.http.grpc_json_transcoder",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder",
+      "autoMapping":true,
+      "convertGrpcStatus":true,
+      "queryParamUnescapePlus":true,
+      "ignoredQueryParameters":[
+         "api_key",
+         "key"
+      ],
+      "printOptions":{},
+      "protoDescriptorBin":"%s",
+      "services":[
+         "endpoints.examples.bookstore.Bookstore"
+      ]
+   }
+}
+      `, fakeProtoDescriptor),
+			},
+		},
+		// TODO: discovery APIs and options
 	}
 
 	for _, tc := range testData {
-		t.Run(tc.desc, func(t *testing.T) {
-			opts := options.DefaultConfigGeneratorOptions()
-			opts.BackendAddress = "grpc://127.0.0.0:80"
-			opts.LocalHTTPBackendAddress = tc.localHTTPBackendAddress
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			gen := NewGRPCTranscoderGenerator(fakeServiceInfo)
-			if gen.IsEnabled() {
-				t.Errorf("GRPCTranscoderGenerator is enabled, want it to be disabled")
-			}
-		})
+		tc.RunTest(t, filtergen.NewGRPCTranscoderFilterGensFromOPConfig)
 	}
 }
 
@@ -500,7 +519,7 @@ func TestPreserveDefaultHttpBinding(t *testing.T) {
 			fmt.Println("failed to unmarshal originalHttpRule: ", err)
 		}
 
-		preserveDefaultHttpBinding(got, "/package.name.Service/Method")
+		filtergen.PreserveDefaultHttpBinding(got, "/package.name.Service/Method")
 		want := &ahpb.HttpRule{}
 		if err := prototext.Unmarshal([]byte(tc.wantHttpRule), want); err != nil {
 			fmt.Println("failed to unmarshal wantHttpRule: ", err)
@@ -512,11 +531,11 @@ func TestPreserveDefaultHttpBinding(t *testing.T) {
 	}
 }
 
-func TestUpdateProtoDescriptor(t *testing.T) {
+func TestUpdateProtoDescriptorFromOPConfig(t *testing.T) {
 	testData := []struct {
 		desc      string
 		service   string
-		apiNames  []string
+		opts      options.ConfigGeneratorOptions
 		inDesc    string
 		wantDesc  string
 		wantError string
@@ -532,13 +551,15 @@ func TestUpdateProtoDescriptor(t *testing.T) {
 			// ApiNames is a wrong service name, protoDescriptor is not modified.
 			desc: "Wrong apiName, not override",
 			service: `
+apis {
+	name: "package.name.WrongService"
+}
 http: {
   rules: {
     selector: "package.name.Service.Method"
     post: "/v2/{name=*}"
   }
 }`,
-			apiNames: []string{"package.name.WrongService"},
 			inDesc: `
 file: {
   name: "proto_file_path"
@@ -576,13 +597,15 @@ file: {
 			// ProtoDescriptor doesn't have MethodOptions, the http rule is copied with the default binding added in its additional bindings
 			desc: "Not method options",
 			service: `
+apis {
+	name: "package.name.Service"
+}
 http: {
   rules: {
     selector: "package.name.Service.Method"
     post: "/v2/{name=*}"
   }
 }`,
-			apiNames: []string{"package.name.Service"},
 			inDesc: `
 file: {
   name: "proto_file_path"
@@ -620,13 +643,15 @@ file: {
 			// ProtoDescriptor has an empty MethodOptions, the http rule is copied with the default binding added in its additional bindings
 			desc: "Empty method options",
 			service: `
+apis {
+	name: "package.name.Service"
+}
 http: {
   rules: {
     selector: "package.name.Service.Method"
     post: "/v2/{name=*}"
   }
 }`,
-			apiNames: []string{"package.name.Service"},
 			inDesc: `
 file: {
   name: "proto_file_path"
@@ -666,13 +691,15 @@ file: {
 			// ProtoDescriptor has a different annotation, the http rule is copied with the default binding added in its additional bindings
 			desc: "Basic overwritten case",
 			service: `
+apis {
+	name: "package.name.Service"
+}
 http: {
   rules: {
     selector: "package.name.Service.Method"
     post: "/v2/{name=*}"
   }
 }`,
-			apiNames: []string{"package.name.Service"},
 			inDesc: `
 file: {
   name: "proto_file_path"
@@ -715,13 +742,15 @@ file: {
 			// The http rule has a different service name. It is not copied but the default binding is added if it is absent
 			desc: "Empty http rule as it has different service name",
 			service: `
+apis {
+	name: "package.name.Service"
+}
 http: {
   rules: {
     selector: "package.name.WrongService.Method"
     post: "/v2/{name=*}"
   }
 }`,
-			apiNames: []string{"package.name.Service"},
 			inDesc: `
 file: {
   name: "proto_file_path"
@@ -762,9 +791,11 @@ file: {
 		{
 			// The default http rule will not be added if no http rule is specified, the default binding
 			// will be done in Envoy's json transcoder.
-			desc:     "Default http rule will not be added if no http rule is specified",
-			service:  "",
-			apiNames: []string{"package.name.Service"},
+			desc: "Default http rule will not be added if no http rule is specified",
+			service: `
+apis {
+	name: "package.name.Service"
+}`,
 			inDesc: `
 file: {
   name: "proto_file_path"
@@ -808,7 +839,7 @@ file: {
 				byteDesc, _ = proto.Marshal(fds)
 			}
 
-			gotByteDesc, err := updateProtoDescriptor(serviceConfig, tc.apiNames, byteDesc)
+			gotByteDesc, err := filtergen.UpdateProtoDescriptorFromOPConfig(serviceConfig, tc.opts, byteDesc)
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 				t.Errorf("failed, expected: %s, got: %v", tc.wantError, err)
 			}
@@ -818,7 +849,7 @@ file: {
 
 			if tc.wantDesc != "" {
 				got := &descpb.FileDescriptorSet{}
-				// Not need to check error, gotByteDesc is just marshaled from the updateProtoDescriptor()
+				// Not need to check error, gotByteDesc is just marshaled from the updateProtoDescriptorFromOPConfig()
 				proto.Unmarshal(gotByteDesc, got)
 				want := &descpb.FileDescriptorSet{}
 				if err := prototext.Unmarshal([]byte(tc.wantDesc), want); err != nil {
@@ -828,6 +859,469 @@ file: {
 				if diff := utils.ProtoDiff(want, got); diff != "" {
 					t.Errorf("Result is not the same: diff (-want +got):\n%v", diff)
 				}
+			}
+		})
+	}
+}
+
+func TestGetIgnoredQueryParamsFromOPConfig(t *testing.T) {
+	testData := []struct {
+		desc            string
+		serviceConfigIn *confpb.Service
+		optsIn          options.ConfigGeneratorOptions
+		wantParams      []string
+	}{
+		{
+			desc: "Success. Default jwt locations with --transcoding_ignore_query_params flag",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+						},
+					},
+				},
+			},
+			optsIn: options.ConfigGeneratorOptions{
+				TranscodingIgnoreQueryParameters: "foo,bar",
+			},
+			wantParams: []string{
+				"access_token",
+				"api_key",
+				"bar",
+				"foo",
+				"key",
+			},
+		},
+		{
+			desc: "Success. Custom jwt locations with transcoding_ignore_query_params flag",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Header{
+										Header: "jwt_query_header",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			optsIn: options.ConfigGeneratorOptions{
+				TranscodingIgnoreQueryParameters: "foo,bar",
+			},
+			wantParams: []string{
+				"api_key",
+				"bar",
+				"foo",
+				"jwt_query_param",
+				"key",
+			},
+		},
+		{
+			desc: "Succeed, only header, no query params",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:       "api_key",
+									HttpHeader: "header_name",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantParams: nil,
+		},
+		{
+			desc: "Succeed, only url query",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									UrlQueryParameter: "query_name",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantParams: []string{"query_name"},
+		},
+		{
+			desc: "Succeed, url query plus header",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.echo",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantParams: []string{
+				"query_name_1",
+				"query_name_2",
+			},
+		},
+		{
+			desc: "Succeed, url query plus header for multiple apis with one using default ApiKeyLocation",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "foo",
+							},
+						},
+					},
+					{
+						Name: "2.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "bar",
+							},
+						},
+					},
+					{
+						Name: "3.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "baz",
+							},
+						},
+					},
+				},
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
+						{
+							Selector: "1.echo_api_endpoints_cloudesf_testing_cloud_goog.foo",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+						{
+							Selector: "2.echo_api_endpoints_cloudesf_testing_cloud_goog.bar",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantParams: []string{
+				"api_key",
+				"key",
+				"query_name_1",
+				"query_name_2",
+			},
+		},
+		{
+			desc: "Skip system parameters for discovery APIs and use default parameters",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "google.discovery",
+						Methods: []*apipb.Method{
+							{
+								Name: "GetDiscoveryRest",
+							},
+						},
+					},
+				},
+				SystemParameters: &confpb.SystemParameters{
+					Rules: []*confpb.SystemParameterRule{
+						{
+							Selector: "google.discovery.GetDiscoveryRest",
+							Parameters: []*confpb.SystemParameter{
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_1",
+									UrlQueryParameter: "query_name_1",
+								},
+								{
+									Name:              "api_key",
+									HttpHeader:        "header_name_2",
+									UrlQueryParameter: "query_name_2",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantParams: []string{
+				"api_key",
+				"key",
+			},
+		},
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			gotParamsMap, err := filtergen.GetIgnoredQueryParamsFromOPConfig(tc.serviceConfigIn, tc.optsIn)
+			if err != nil {
+				t.Fatalf("GetIgnoredQueryParamsFromOPConfig() got unexpected error: %v", err)
+			}
+
+			var gotParams []string
+			for param, _ := range gotParamsMap {
+				gotParams = append(gotParams, param)
+			}
+			sort.Strings(gotParams)
+
+			if diff := cmp.Diff(tc.wantParams, gotParams); diff != "" {
+				t.Errorf("GetIgnoredQueryParamsFromOPConfig diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGetIgnoredQueryParamsFromOPConfig_BadInput(t *testing.T) {
+	testData := []struct {
+		desc            string
+		serviceConfigIn *confpb.Service
+		optsIn          options.ConfigGeneratorOptions
+		wantError       string
+	}{
+		{
+			desc: "Failure. Wrong jwt locations setting Query with valuePrefix in the same time",
+			serviceConfigIn: &confpb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
+						Methods: []*apipb.Method{
+							{
+								Name: "echo",
+							},
+						},
+					},
+				},
+				Authentication: &confpb.Authentication{
+					Providers: []*confpb.AuthProvider{
+						{
+							Id:     "auth_provider",
+							Issuer: "issuer-0",
+							JwtLocations: []*confpb.JwtLocation{
+								{
+									In: &confpb.JwtLocation_Query{
+										Query: "jwt_query_param",
+									},
+									ValuePrefix: "jwt_query_header_prefix",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantError: `error processing authentication provider (auth_provider): JwtLocation type [Query] should be set without valuePrefix, but it was set to [jwt_query_header_prefix]`,
+		},
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := filtergen.GetIgnoredQueryParamsFromOPConfig(tc.serviceConfigIn, tc.optsIn)
+			if err == nil {
+				t.Fatalf("GetIgnoredQueryParamsFromOPConfig() got no error, want error to contain %q", tc.wantError)
+			}
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Errorf("GetIgnoredQueryParamsFromOPConfig() got error %v, want error to contain %q", err.Error(), tc.wantError)
+			}
+		})
+	}
+}
+
+func TestGetDisabledSelectorsFromOPConfig(t *testing.T) {
+	testdata := []struct {
+		desc                  string
+		serviceConfigIn       *confpb.Service
+		optsIn                options.ConfigGeneratorOptions
+		wantDisabledSelectors map[string]bool
+	}{
+		{
+			desc: "Nothing is disabled",
+			serviceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "selector_1",
+						},
+						{
+							Selector: "selector_2",
+						},
+					},
+				},
+			},
+			wantDisabledSelectors: map[string]bool{},
+		},
+		{
+			desc: "Non-OpenAPI HTTP backend is disabled",
+			serviceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "selector_1",
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": {
+									Selector: "selector_1",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantDisabledSelectors: map[string]bool{
+				"selector_1": true,
+			},
+		},
+		{
+			desc: "Non-OpenAPI HTTP backend is still transcoded when local backend address override is enabled",
+			serviceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "selector_1",
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": {
+									Selector: "selector_1",
+								},
+							},
+						},
+					},
+				},
+			},
+			optsIn: options.ConfigGeneratorOptions{
+				EnableBackendAddressOverride: true,
+			},
+			wantDisabledSelectors: map[string]bool{},
+		},
+		{
+			desc: "Non-OpenAPI HTTP backend is still transcoded when it's a discovery API",
+			serviceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: "google.discovery.GetDiscoveryRest",
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": {
+									Selector: "google.discovery.GetDiscoveryRest",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantDisabledSelectors: map[string]bool{},
+		},
+	}
+
+	for _, tc := range testdata {
+		t.Run(tc.desc, func(t *testing.T) {
+			gotDisabledSelectors, err := filtergen.GetDisabledSelectorsFromOPConfig(tc.serviceConfigIn, tc.optsIn)
+			if err != nil {
+				t.Fatalf("GetDisabledSelectorsFromOPConfig() got unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(tc.wantDisabledSelectors, gotDisabledSelectors); diff != "" {
+				t.Errorf("GenTranslationInfoFromOPConfig() diff (-want +got):\n%s", diff)
 			}
 		})
 	}

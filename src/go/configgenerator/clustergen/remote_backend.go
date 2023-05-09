@@ -37,9 +37,13 @@ type RemoteBackendCluster struct {
 // Generates multiple clusters, 1 per remote backend. Automatically de-duplicates
 // multiple clusters with the same remote socket address.
 func NewRemoteBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]ClusterGenerator, error) {
+	if opts.EnableBackendAddressOverride {
+		glog.Infof("Skipping create remote backend clusters because backend address override is enabled.")
+		return nil, nil
+	}
+
 	var gens []ClusterGenerator
 	dedupClusterNames := make(map[string]bool)
-
 	for _, rule := range serviceConfig.GetBackend().GetRules() {
 		if util.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts.AllowDiscoveryAPIs) {
 			glog.Warningf("Skip backend rule %q because discovery API is not supported.", rule.GetSelector())
@@ -79,11 +83,6 @@ func httpBackendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGe
 
 // backendRuleToCluster is a shared helper to translate a BackendRule into a RemoteBackendCluster.
 func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGeneratorOptions, isHTTPBackend bool) (*RemoteBackendCluster, error) {
-	if opts.EnableBackendAddressOverride {
-		glog.Infof("Skipping create remote cluster from backend rule %q because backend address override is enabled.", rule.GetSelector())
-		return nil, nil
-	}
-
 	if rule.GetAddress() == "" {
 		glog.Infof("Skip backend rule %q because it does not have dynamic routing address.", rule.GetSelector())
 		return nil, nil

@@ -50,8 +50,8 @@ func NewClusterGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts opt
 		gens = append(gens, generator...)
 	}
 
-	for i, gens := range gens {
-		glog.Infof("ClusterGenerator %d is %q", i, gens.GetName())
+	for i, gen := range gens {
+		glog.Infof("ClusterGenerator %d is %q", i, gen.GetName())
 	}
 	return gens, nil
 }

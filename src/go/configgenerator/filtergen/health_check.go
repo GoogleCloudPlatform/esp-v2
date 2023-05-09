@@ -15,12 +15,18 @@
 package filtergen
 
 import (
-	ci "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"fmt"
+	"strings"
+
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoytypepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	"github.com/golang/glog"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -31,26 +37,38 @@ const (
 )
 
 type HealthCheckGenerator struct {
-	// skipFilter indicates if this filter is disabled based on options and config.
-	skipFilter bool
+	HealthzPath                  string
+	ShouldHealthCheckGrpcBackend bool
+	LocalBackendClusterName      string
 }
 
-// NewHealthCheckGenerator creates the HealthCheckGenerator with cached config.
-func NewHealthCheckGenerator(serviceInfo *ci.ServiceInfo) *HealthCheckGenerator {
-	return &HealthCheckGenerator{
-		skipFilter: serviceInfo.Options.Healthz == "",
+// NewHealthCheckFilterGensFromOPConfig creates a HealthCheckGenerator from
+// OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
+func NewHealthCheckFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+	if opts.Healthz == "" {
+		glog.Info("Not adding health check filter gen because healthz path is not specified.")
+		return nil, nil
 	}
+
+	healthzPath := opts.Healthz
+	if !strings.HasPrefix(healthzPath, "/") {
+		healthzPath = fmt.Sprintf("/%s", healthzPath)
+	}
+
+	return []FilterGenerator{
+		&HealthCheckGenerator{
+			HealthzPath:                  healthzPath,
+			ShouldHealthCheckGrpcBackend: opts.HealthCheckGrpcBackend,
+			LocalBackendClusterName:      clustergen.MakeLocalBackendClusterName(serviceConfig),
+		},
+	}, nil
 }
 
 func (g *HealthCheckGenerator) FilterName() string {
 	return HealthCheckFilterName
 }
 
-func (g *HealthCheckGenerator) IsEnabled() bool {
-	return !g.skipFilter
-}
-
-func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (proto.Message, error) {
+func (g *HealthCheckGenerator) GenFilterConfig() (proto.Message, error) {
 	hcFilterConfig := &hcpb.HealthCheck{
 		PassThroughMode: &wrapperspb.BoolValue{Value: false},
 
@@ -60,7 +78,7 @@ func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 				HeaderMatchSpecifier: &routepb.HeaderMatcher_StringMatch{
 					StringMatch: &matcher.StringMatcher{
 						MatchPattern: &matcher.StringMatcher_Exact{
-							Exact: serviceInfo.Options.Healthz,
+							Exact: g.HealthzPath,
 						},
 					},
 				},
@@ -68,15 +86,15 @@ func (g *HealthCheckGenerator) GenFilterConfig(serviceInfo *ci.ServiceInfo) (pro
 		},
 	}
 
-	if serviceInfo.Options.HealthCheckGrpcBackend {
+	if g.ShouldHealthCheckGrpcBackend {
 		hcFilterConfig.ClusterMinHealthyPercentages = map[string]*envoytypepb.Percent{
-			serviceInfo.LocalBackendCluster.ClusterName: &envoytypepb.Percent{Value: 100.0},
+			g.LocalBackendClusterName: {Value: 100.0},
 		}
 	}
 
 	return hcFilterConfig, nil
 }
 
-func (g *HealthCheckGenerator) GenPerRouteConfig(method *ci.MethodInfo, httpRule *httppattern.Pattern) (proto.Message, error) {
+func (g *HealthCheckGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }

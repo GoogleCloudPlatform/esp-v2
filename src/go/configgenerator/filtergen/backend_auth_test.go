@@ -12,48 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filtergen
+package filtergen_test
 
 import (
-	"strings"
 	"testing"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	apipb "google.golang.org/genproto/protobuf/api"
 )
 
-func TestBackendAuthFilter(t *testing.T) {
-	testdata := []struct {
-		desc                  string
-		iamServiceAccount     string
-		fakeServiceConfig     *confpb.Service
-		delegates             []string
-		depErrorBehavior      string
-		wantBackendAuthFilter string
-		wantError             string
-	}{
+func TestNewBackendAuthFilterGensFromOPConfig_GenConfig(t *testing.T) {
+	testdata := []SuccessOPTestCase{
 		{
-			desc: "Success, generate backend auth filter in general",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: "testapipb",
-						Methods: []*apipb.Method{
-							{
-								Name: "foo",
-							},
-							{
-								Name: "bar",
-							},
-						},
-					},
-				},
+			Desc: "Generate with defaults",
+			ServiceConfigIn: &confpb.Service{
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -75,8 +49,8 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			depErrorBehavior: commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
-			wantBackendAuthFilter: `
+			WantFilterConfigs: []string{
+				`
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
@@ -91,46 +65,11 @@ func TestBackendAuthFilter(t *testing.T) {
    }
 }
 `,
+			},
 		},
 		{
-			desc: "Success, generate backend auth filter with allow Cors",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Endpoints: []*confpb.Endpoint{
-					{
-						Name:      testProjectName,
-						AllowCors: true,
-					},
-				},
-				Apis: []*apipb.Api{
-					{
-						Name: "get_testapi",
-						Methods: []*apipb.Method{
-							{
-								Name: "foo",
-							},
-							{
-								Name: "bar",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{
-					Rules: []*annotationspb.HttpRule{
-						{
-							Selector: "get_testapi.foo",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/foo",
-							},
-						},
-						{
-							Selector: "get_testapi.bar",
-							Pattern: &annotationspb.HttpRule_Get{
-								Get: "/bar",
-							},
-						},
-					},
-				},
+			Desc: "Generate with customized fail open error",
+			ServiceConfigIn: &confpb.Service{
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -152,38 +91,30 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			depErrorBehavior: commonpb.DependencyErrorBehavior_BLOCK_INIT_ON_ANY_ERROR.String(),
-			wantBackendAuthFilter: `{
-        "name":"com.google.espv2.filters.http.backend_auth",
-        "typedConfig":{
-          "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
-          "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
-          "imdsToken":{
-            "cluster":"metadata-cluster",
-            "timeout":"30s",
-            "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
-          },
-          "jwtAudienceList":["bar.com","foo.com"]
-        }
-      }`,
+			OptsIn: options.ConfigGeneratorOptions{
+				DependencyErrorBehavior: commonpb.DependencyErrorBehavior_ALWAYS_INIT.String(),
+			},
+			WantFilterConfigs: []string{
+				`
+{
+   "name":"com.google.espv2.filters.http.backend_auth",
+   "typedConfig":{
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
+      "depErrorBehavior":"ALWAYS_INIT",
+      "imdsToken":{
+          "cluster":"metadata-cluster",
+          "timeout":"30s",
+          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+      },
+      "jwtAudienceList":["bar.com","foo.com"]
+   }
+}
+`,
+			},
 		},
 		{
-			desc:              "Success, set iamIdToken when iam service account is set",
-			iamServiceAccount: "service-account@google.com",
-			delegates:         []string{"delegate_foo", "delegate_bar", "delegate_baz"},
-			depErrorBehavior:  commonpb.DependencyErrorBehavior_ALWAYS_INIT.String(),
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: "testapipb",
-						Methods: []*apipb.Method{
-							{
-								Name: "bar",
-							},
-						},
-					},
-				},
+			Desc: "Set iamIdToken when iam service account is set",
+			ServiceConfigIn: &confpb.Service{
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -197,12 +128,22 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			wantBackendAuthFilter: `
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					BackendAuthCredentials: &options.IAMCredentialsOptions{
+						ServiceAccountEmail: "service-account@google.com",
+						TokenKind:           options.IDToken,
+						Delegates:           []string{"delegate_foo", "delegate_bar", "delegate_baz"},
+					},
+				},
+			},
+			WantFilterConfigs: []string{
+				`
 {
    "name":"com.google.espv2.filters.http.backend_auth",
    "typedConfig":{
       "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
-			"depErrorBehavior":"ALWAYS_INIT",
+			"depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
       "iamToken":{
          "accessToken":{
             "remoteToken":{
@@ -223,22 +164,279 @@ func TestBackendAuthFilter(t *testing.T) {
    }
 }
 `,
+			},
 		},
 		{
-			desc:             "Fail when invalid dependency error behavior is provided",
-			depErrorBehavior: "UNKNOWN_ERROR_BEHAVIOR",
-			fakeServiceConfig: &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: "testapipb",
-						Methods: []*apipb.Method{
-							{
-								Name: "bar",
-							},
+			Desc: "DisableAuth is set to true, no filter config generated",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: true},
 						},
 					},
 				},
+			},
+			WantFilterConfigs: nil,
+		},
+		{
+			Desc: "DisableAuth is set to false, jwt aud is generated (with transformation)",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: false},
+						},
+					},
+				},
+			},
+			WantFilterConfigs: []string{
+				`
+{
+   "name":"com.google.espv2.filters.http.backend_auth",
+   "typedConfig":{
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
+      "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
+      "imdsToken":{
+          "cluster":"metadata-cluster",
+          "timeout":"30s",
+          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+      },
+      "jwtAudienceList":["http://abc.com"]
+   }
+}
+`,
+			},
+		},
+		{
+			Desc: "DisableAuth is empty, jwt aud is generated (with transformation)",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			WantFilterConfigs: []string{
+				`
+{
+   "name":"com.google.espv2.filters.http.backend_auth",
+   "typedConfig":{
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
+      "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
+      "imdsToken":{
+          "cluster":"metadata-cluster",
+          "timeout":"30s",
+          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+      },
+      "jwtAudienceList":["http://abc.com"]
+   }
+}
+`,
+			},
+		},
+		{
+			Desc: "DisableAuth is empty, jwt aud is generated (with HTTPS transformation)",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:  "grpcs://abc.com/api",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			WantFilterConfigs: []string{
+				`
+{
+   "name":"com.google.espv2.filters.http.backend_auth",
+   "typedConfig":{
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
+      "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
+      "imdsToken":{
+          "cluster":"metadata-cluster",
+          "timeout":"30s",
+          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+      },
+      "jwtAudienceList":["https://abc.com"]
+   }
+}
+`,
+			},
+		},
+		{
+			Desc: "JwtAudience is used",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-foo"},
+						},
+					},
+				},
+			},
+			WantFilterConfigs: []string{
+				`
+{
+   "name":"com.google.espv2.filters.http.backend_auth",
+   "typedConfig":{
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
+      "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
+      "imdsToken":{
+          "cluster":"metadata-cluster",
+          "timeout":"30s",
+          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+      },
+      "jwtAudienceList":["audience-foo"]
+   }
+}
+`,
+			},
+		},
+		{
+			Desc: "JwtAudience is set, but non-GCP runtime disables backend auth",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-foo"},
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					NonGCP: true,
+				},
+			},
+			WantFilterConfigs: nil,
+		},
+		{
+			Desc: "Mix all Authentication cases",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "abc.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-foo"},
+						},
+						{
+							Address:        "grpc://def.com/api",
+							Selector:       "def.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-bar"},
+						},
+						{
+							Address:        "grpc://ghi.com/api",
+							Selector:       "ghi.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: false},
+						},
+						{
+							Address:        "grpc://jkl.com/api",
+							Selector:       "jkl.com.api",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_DisableAuth{DisableAuth: true},
+						},
+						{
+							Address:  "grpcs://mno.com/api",
+							Selector: "mno.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			WantFilterConfigs: []string{
+				`
+{
+   "name":"com.google.espv2.filters.http.backend_auth",
+   "typedConfig":{
+      "@type":"type.googleapis.com/espv2.api.envoy.v12.http.backend_auth.FilterConfig",
+      "depErrorBehavior":"BLOCK_INIT_ON_ANY_ERROR",
+      "imdsToken":{
+          "cluster":"metadata-cluster",
+          "timeout":"30s",
+          "uri":"http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/identity"
+      },
+      "jwtAudienceList":["audience-bar", "audience-foo", "http://ghi.com", "https://mno.com"]
+   }
+}
+`,
+			},
+		},
+		{
+			Desc: "Skip for discovery apis",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Address:        "grpc://abc.com/api",
+							Selector:       "google.discovery",
+							Deadline:       10.5,
+							Authentication: &confpb.BackendRule_JwtAudience{JwtAudience: "audience-foo"},
+						},
+					},
+				},
+			},
+			WantFilterConfigs: nil,
+		},
+	}
+
+	for _, tc := range testdata {
+		tc.RunTest(t, filtergen.NewBackendAuthFilterGensFromOPConfig)
+	}
+}
+
+func TestNewBackendAuthFilterGensFromOPConfig_BadInputFactory(t *testing.T) {
+	testdata := []FactoryErrorOPTestCase{
+		{
+			// Should never happen in theory, as API compiler ensures valid address.
+			Desc: "Fail when backend address is invalid",
+			ServiceConfigIn: &confpb.Service{
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector:        "testapipb.bar",
+							Address:         "https://test^^port:80:googleapis.com/#&^#",
+							PathTranslation: confpb.BackendRule_CONSTANT_ADDRESS,
+						},
+					},
+				},
+			},
+			WantFactoryError: `fail to parse JWT audience for backend rule`,
+		},
+	}
+
+	for _, tc := range testdata {
+		tc.RunTest(t, filtergen.NewBackendAuthFilterGensFromOPConfig)
+	}
+}
+
+func TestNewBackendAuthFilterGensFromOPConfig_BadInputFilterGen(t *testing.T) {
+	testdata := []GenConfigErrorOPTestCase{
+		{
+			Desc: "Fail when invalid dependency error behavior is provided",
+			ServiceConfigIn: &confpb.Service{
 				Backend: &confpb.Backend{
 					Rules: []*confpb.BackendRule{
 						{
@@ -252,53 +450,14 @@ func TestBackendAuthFilter(t *testing.T) {
 					},
 				},
 			},
-			wantError: `unknown value for DependencyErrorBehavior (UNKNOWN_ERROR_BEHAVIOR), accepted values are: ["ALWAYS_INIT" "BLOCK_INIT_ON_ANY_ERROR" "UNSPECIFIED"]`,
+			OptsIn: options.ConfigGeneratorOptions{
+				DependencyErrorBehavior: "UNKNOWN_ERROR_BEHAVIOR",
+			},
+			WantGenErrors: []string{`unknown value for DependencyErrorBehavior (UNKNOWN_ERROR_BEHAVIOR), accepted values are: ["ALWAYS_INIT" "BLOCK_INIT_ON_ANY_ERROR" "UNSPECIFIED"]`},
 		},
 	}
 
 	for _, tc := range testdata {
-		t.Run(tc.desc, func(t *testing.T) {
-			opts := options.DefaultConfigGeneratorOptions()
-			opts.BackendAddress = "grpc://127.0.0.1:80"
-			opts.DependencyErrorBehavior = tc.depErrorBehavior
-			if tc.iamServiceAccount != "" {
-				opts.BackendAuthCredentials = &options.IAMCredentialsOptions{
-					ServiceAccountEmail: tc.iamServiceAccount,
-					TokenKind:           options.IDToken,
-					Delegates:           tc.delegates,
-				}
-			}
-
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, testConfigID, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			gen := NewBackendAuthGenerator(fakeServiceInfo)
-			if !gen.IsEnabled() {
-				t.Fatal("BackendAuthGenerator is not enabled, want it to be enabled")
-			}
-
-			filterConfig, err := gen.GenFilterConfig(fakeServiceInfo)
-			if err != nil {
-				if tc.wantError == "" || !strings.Contains(err.Error(), tc.wantError) {
-					t.Fatalf("exepected err (%v), got err (%v)", tc.wantError, err)
-				}
-				return
-			}
-
-			httpFilter, err := FilterConfigToHTTPFilter(filterConfig, gen.FilterName())
-			if err != nil {
-				t.Fatalf("Fail to convert filter config to HTTP filter: %v", err)
-			}
-
-			gotFilter, err := util.ProtoToJson(httpFilter)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err := util.JsonEqual(tc.wantBackendAuthFilter, gotFilter); err != nil {
-				t.Errorf("makeBackendAuthFilter failed,\n %v", err)
-			}
-		})
+		tc.RunTest(t, filtergen.NewBackendAuthFilterGensFromOPConfig)
 	}
 }

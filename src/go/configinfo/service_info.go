@@ -85,7 +85,7 @@ type BackendRoutingCluster struct {
 }
 
 // NewServiceInfoFromServiceConfig returns an instance of ServiceInfo.
-func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, opts options.ConfigGeneratorOptions) (*ServiceInfo, error) {
+func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) (*ServiceInfo, error) {
 	if serviceConfig == nil {
 		return nil, fmt.Errorf("unexpected empty service config")
 	}
@@ -95,7 +95,7 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, id string, o
 
 	serviceInfo := &ServiceInfo{
 		Name:                             serviceConfig.GetName(),
-		ConfigID:                         id,
+		ConfigID:                         serviceConfig.GetId(),
 		serviceConfig:                    serviceConfig,
 		Options:                          opts,
 		Methods:                          make(map[string]*MethodInfo),

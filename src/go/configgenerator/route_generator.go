@@ -40,7 +40,7 @@ const (
 	virtualHostName = "backend"
 )
 
-func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []FilterGenerator) (*routepb.RouteConfiguration, error) {
+func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []filtergen.FilterGenerator) (*routepb.RouteConfiguration, error) {
 	var virtualHosts []*routepb.VirtualHost
 	host := routepb.VirtualHost{
 		Name:    virtualHostName,
@@ -310,15 +310,11 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*corspb.CorsPolicy, []*
 }
 
 // makePerRouteFilterConfig generates the per-route config across all filters for a single method and http rule.
-func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern, filterGenerators []FilterGenerator) (map[string]*anypb.Any, error) {
+func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern, filterGenerators []filtergen.FilterGenerator) (map[string]*anypb.Any, error) {
 	perFilterConfig := make(map[string]*anypb.Any)
 
 	for _, filterGen := range filterGenerators {
-		if !filterGen.IsEnabled() {
-			continue
-		}
-
-		config, err := filterGen.GenPerRouteConfig(method, httpRule)
+		config, err := filterGen.GenPerRouteConfig(method.Operation(), httpRule)
 		if err != nil {
 			return perFilterConfig, fmt.Errorf("failed to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
 		}
@@ -337,7 +333,7 @@ func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppatte
 }
 
 // MakeRouteTable generates the backendRoute and denylistRoute from serviceInfo
-func MakeRouteTable(serviceInfo *configinfo.ServiceInfo, filterGenerators []FilterGenerator) ([]*routepb.Route, []*routepb.Route, error) {
+func MakeRouteTable(serviceInfo *configinfo.ServiceInfo, filterGenerators []filtergen.FilterGenerator) ([]*routepb.Route, []*routepb.Route, error) {
 	var backendRoutes []*routepb.Route
 	var methodNotAllowedRoutes []*routepb.Route
 	httpPatternMethods, err := getSortMethodsByHttpPattern(serviceInfo)

@@ -12,7 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package helpers contains utility structs that operate on any generic cluster,
-// filter, route, etc. They still support high-level config abstractions
-// across multiple other generators.
+// Package helpers contains utility structs that operate on cluster generators.
 package helpers
