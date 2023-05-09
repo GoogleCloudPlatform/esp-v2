@@ -84,29 +84,37 @@ func (g *BackendAuthGenerator) FilterName() string {
 	return BackendAuthFilterName
 }
 
-func (g *BackendAuthGenerator) MatchAudience(selector string) (string, bool) {
+// matchAudience matches the selector to the configured audience.
+// Accounts for CORS selectors.
+func (g *BackendAuthGenerator) matchAudience(selector string) (string, error) {
 	if audience, ok := g.AudienceBySelector[selector]; ok {
-		return audience, true
+		return audience, nil
 	}
 
 	// Try matching CORS selector.
 	originalSelector, err := CORSSelectorToSelector(selector)
 	if err != nil {
-		// Ignore error, assume no route match.
-		return "", false
+		return "", err
+	}
+	if originalSelector == "" {
+		// No route match.
+		return "", nil
 	}
 
 	if audience, ok := g.AudienceBySelector[originalSelector]; ok {
-		return audience, true
+		return audience, nil
 	}
 
 	// No route match.
-	return "", false
+	return "", nil
 }
 
 func (g *BackendAuthGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	audience, ok := g.MatchAudience(selector)
-	if !ok {
+	audience, err := g.matchAudience(selector)
+	if err != nil {
+		return nil, err
+	}
+	if audience == "" {
 		return nil, nil
 	}
 

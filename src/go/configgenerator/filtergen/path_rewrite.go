@@ -72,30 +72,35 @@ func (g *PathRewriteGenerator) GenFilterConfig() (proto.Message, error) {
 	return &prpb.FilterConfig{}, nil
 }
 
-func (g *PathRewriteGenerator) MatchTranslationInfo(selector string) (TranslationInfo, bool) {
+// matchTranslationInfo matches the selector to the configured info.
+// Accounts for CORS selectors.
+func (g *PathRewriteGenerator) matchTranslationInfo(selector string) (TranslationInfo, error) {
 	if translationInfo, ok := g.TranslationInfoBySelector[selector]; ok {
-		return translationInfo, true
+		return translationInfo, nil
 	}
 
 	// Try matching CORS selector.
 	originalSelector, err := CORSSelectorToSelector(selector)
 	if err != nil {
-		// Ignore error, assume no route match.
-		return TranslationInfo{}, false
+		return TranslationInfo{}, err
+	}
+	if originalSelector == "" {
+		// No route match.
+		return TranslationInfo{}, nil
 	}
 
 	if translationInfo, ok := g.TranslationInfoBySelector[originalSelector]; ok {
-		return translationInfo, true
+		return translationInfo, nil
 	}
 
 	// No route match.
-	return TranslationInfo{}, false
+	return TranslationInfo{}, nil
 }
 
 func (g *PathRewriteGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	translationInfo, ok := g.MatchTranslationInfo(selector)
-	if !ok {
-		return nil, nil
+	translationInfo, err := g.matchTranslationInfo(selector)
+	if err != nil {
+		return nil, err
 	}
 
 	if translationInfo.TranslationType == confpb.BackendRule_APPEND_PATH_TO_ADDRESS {
