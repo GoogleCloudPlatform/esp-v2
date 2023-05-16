@@ -51,7 +51,7 @@ func ServiceToBootstrapConfig(serviceConfig *confpb.Service, opts options.Config
 	if err != nil {
 		return nil, err
 	}
-	listeners, err := gen.MakeListeners(serviceInfo, filtergen.FactoryParams{})
+	listeners, err := gen.MakeListeners(serviceInfo, filtergen.ServiceControlOPFactoryParams{})
 	if err != nil {
 		return nil, err
 	}

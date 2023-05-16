@@ -23,7 +23,7 @@ import (
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func GetESPv2FilterGenFactories() []filtergen.FilterGeneratorOPFactory {
+func GetESPv2FilterGenFactories(scParams filtergen.ServiceControlOPFactoryParams) []filtergen.FilterGeneratorOPFactory {
 	return []filtergen.FilterGeneratorOPFactory{
 		filtergen.NewHeaderSanitizerFilterGensFromOPConfig,
 		filtergen.NewCORSFilterGensFromOPConfig,
@@ -33,7 +33,7 @@ func GetESPv2FilterGenFactories() []filtergen.FilterGeneratorOPFactory {
 		filtergen.NewHealthCheckFilterGensFromOPConfig,
 		filtergen.NewCompressorFilterGensFromOPConfig,
 		filtergen.NewJwtAuthnFilterGensFromOPConfig,
-		filtergen.NewServiceControlFilterGensFromOPConfig,
+		filtergen.BindNewServiceControlFilterGensFromOPConfig(scParams),
 
 		// grpc-web filter should be before grpc transcoder filter.
 		// It converts content-type application/grpc-web to application/grpc and
@@ -54,10 +54,10 @@ func GetESPv2FilterGenFactories() []filtergen.FilterGeneratorOPFactory {
 
 // NewFilterGeneratorsFromOPConfig creates all required FilterGenerators from
 // OP service config + descriptor + ESPv2 options.
-func NewFilterGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, factories []filtergen.FilterGeneratorOPFactory, params filtergen.FactoryParams) ([]filtergen.FilterGenerator, error) {
+func NewFilterGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, factories []filtergen.FilterGeneratorOPFactory) ([]filtergen.FilterGenerator, error) {
 	var gens []filtergen.FilterGenerator
 	for _, factory := range factories {
-		generator, err := factory(serviceConfig, opts, params)
+		generator, err := factory(serviceConfig, opts)
 		if err != nil {
 			return nil, fmt.Errorf("fail to run FilterGeneratorOPFactory: %v", err)
 		}

@@ -46,7 +46,7 @@ type TranslationInfo struct {
 
 // NewPathRewriteFilterGensFromOPConfig creates a PathRewriteGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewPathRewriteFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewPathRewriteFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	info, err := GenTranslationInfoFromOPConfig(serviceConfig, opts)
 	if err != nil {
 		return nil, err

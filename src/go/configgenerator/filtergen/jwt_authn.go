@@ -71,7 +71,7 @@ type JwtAuthnGenerator struct {
 
 // NewJwtAuthnFilterGensFromOPConfig creates a JwtAuthnGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewJwtAuthnFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewJwtAuthnFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	if opts.SkipJwtAuthnFilter {
 		glog.Infof("Not adding JWT authn filter gen because the feature is disabled by option.")
 		return nil, nil

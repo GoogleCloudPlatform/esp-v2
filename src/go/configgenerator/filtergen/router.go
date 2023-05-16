@@ -34,7 +34,7 @@ type RouterGenerator struct {
 
 // NewRouterFilterGensFromOPConfig creates a RouterGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewRouterFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewRouterFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	return []FilterGenerator{
 		&RouterGenerator{
 			SuppressEnvoyHeaders: opts.SuppressEnvoyHeaders,

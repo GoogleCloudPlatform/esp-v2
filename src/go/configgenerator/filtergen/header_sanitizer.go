@@ -31,7 +31,7 @@ type HeaderSanitizerGenerator struct{}
 
 // NewHeaderSanitizerFilterGensFromOPConfig creates a HeaderSanitizerGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewHeaderSanitizerFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewHeaderSanitizerFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	return []FilterGenerator{
 		&HeaderSanitizerGenerator{},
 	}, nil

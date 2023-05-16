@@ -3170,28 +3170,6 @@ func TestProcessQuota(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "Typo in operation name does not crash",
-			fakeServiceConfig: &confpb.Service{
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-					},
-				},
-				Quota: &confpb.Quota{
-					MetricRules: []*confpb.MetricRule{
-						{
-							Selector: "endpoints.examples.bookstore.Bookstore.BadOperationName",
-							MetricCosts: map[string]int64{
-								"metric_a": 2,
-								"metric_b": 1,
-							},
-						},
-					},
-				},
-			},
-			wantError: "error processing quota metric rule: selector (endpoints.examples.bookstore.Bookstore.BadOperationName) was not defined in the API",
-		},
 	}
 
 	for _, tc := range testData {

@@ -62,8 +62,25 @@ type GRPCTranscoderGenerator struct {
 
 // NewGRPCTranscoderFilterGensFromOPConfig creates a GRPCTranscoderGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewGRPCTranscoderFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
-	if opts.LocalHTTPBackendAddress != "" {
+func NewGRPCTranscoderFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
+	grpcGen, err := NewGRPCTranscoderFilterGenFromOPConfig(serviceConfig, opts, true)
+	if err != nil {
+		return nil, err
+	}
+	if grpcGen == nil {
+		return nil, nil
+	}
+
+	return []FilterGenerator{
+		grpcGen,
+	}, nil
+}
+
+// NewGRPCTranscoderFilterGenFromOPConfig creates a single GRPCTranscoderGenerator.
+//
+// It also has the option to skip sanity checks on if the generator should be created.
+func NewGRPCTranscoderFilterGenFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, doChecks bool) (*GRPCTranscoderGenerator, error) {
+	if doChecks && opts.LocalHTTPBackendAddress != "" {
 		glog.Warningf("Local http backend address is set to %q; skip transcoder filter completely.", opts.LocalHTTPBackendAddress)
 		return nil, nil
 	}
@@ -72,7 +89,7 @@ func NewGRPCTranscoderFilterGensFromOPConfig(serviceConfig *confpb.Service, opts
 	if err != nil {
 		return nil, err
 	}
-	if !isGRPCSupportRequired {
+	if doChecks && !isGRPCSupportRequired {
 		glog.Infof("gRPC support is NOT required, skip transcoder filter completely.")
 		return nil, nil
 	}
@@ -101,7 +118,7 @@ func NewGRPCTranscoderFilterGensFromOPConfig(serviceConfig *confpb.Service, opts
 		// Log as error instead of warning because error logs will show up even if `--enable_debug` is false.
 		glog.Error("Unable to setup gRPC-JSON transcoding because no proto descriptor was found in the service config. " +
 			"Please use version 2020-01-29 (or later) of the `gcloud_build_image` script. " +
-			"https://github.com/GoogleCloudPlatform/esp-v2/blob/master/docker/serverless/gcloud_build_image")
+			"https://google3/third_party/espv2/source/v12/blob/master/docker/serverless/gcloud_build_image/gcloud_build_image")
 		return nil, nil
 	}
 
@@ -115,31 +132,29 @@ func NewGRPCTranscoderFilterGensFromOPConfig(serviceConfig *confpb.Service, opts
 		return nil, err
 	}
 
-	disabledSelectors, err := GetDisabledSelectorsFromOPConfig(serviceConfig, opts)
+	disabledSelectors, err := GetHTTPBackendSelectorsFromOPConfig(serviceConfig, opts)
 	if err != nil {
 		return nil, err
 	}
 
 	serviceNames := GetAPINamesListFromOPConfig(serviceConfig, opts)
 
-	return []FilterGenerator{
-		&GRPCTranscoderGenerator{
-			ProtoDescriptorBin:                 descriptorBin,
-			ServiceNames:                       serviceNames,
-			IgnoredQueryParams:                 ignoredQueryParams,
-			DisabledSelectors:                  disabledSelectors,
-			IgnoreUnknownQueryParameters:       opts.TranscodingIgnoreUnknownQueryParameters,
-			QueryParametersDisableUnescapePlus: opts.TranscodingQueryParametersDisableUnescapePlus,
-			MatchUnregisteredCustomVerb:        opts.TranscodingMatchUnregisteredCustomVerb,
-			CaseInsensitiveEnumParsing:         opts.TranscodingCaseInsensitiveEnumParsing,
-			StrictRequestValidation:            opts.TranscodingStrictRequestValidation,
-			RejectCollision:                    opts.TranscodingRejectCollision,
-			PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
-				AlwaysPrintPrimitiveFields: opts.TranscodingAlwaysPrintPrimitiveFields,
-				AlwaysPrintEnumsAsInts:     opts.TranscodingAlwaysPrintEnumsAsInts,
-				PreserveProtoFieldNames:    opts.TranscodingPreserveProtoFieldNames,
-				StreamNewlineDelimited:     opts.TranscodingStreamNewLineDelimited,
-			},
+	return &GRPCTranscoderGenerator{
+		ProtoDescriptorBin:                 descriptorBin,
+		ServiceNames:                       serviceNames,
+		IgnoredQueryParams:                 ignoredQueryParams,
+		DisabledSelectors:                  disabledSelectors,
+		IgnoreUnknownQueryParameters:       opts.TranscodingIgnoreUnknownQueryParameters,
+		QueryParametersDisableUnescapePlus: opts.TranscodingQueryParametersDisableUnescapePlus,
+		MatchUnregisteredCustomVerb:        opts.TranscodingMatchUnregisteredCustomVerb,
+		CaseInsensitiveEnumParsing:         opts.TranscodingCaseInsensitiveEnumParsing,
+		StrictRequestValidation:            opts.TranscodingStrictRequestValidation,
+		RejectCollision:                    opts.TranscodingRejectCollision,
+		PrintOptions: &transcoderpb.GrpcJsonTranscoder_PrintOptions{
+			AlwaysPrintPrimitiveFields: opts.TranscodingAlwaysPrintPrimitiveFields,
+			AlwaysPrintEnumsAsInts:     opts.TranscodingAlwaysPrintEnumsAsInts,
+			PreserveProtoFieldNames:    opts.TranscodingPreserveProtoFieldNames,
+			StreamNewlineDelimited:     opts.TranscodingStreamNewLineDelimited,
 		},
 	}, nil
 }
@@ -357,10 +372,10 @@ func GetIgnoredQueryParamsFromOPConfig(serviceConfig *confpb.Service, opts optio
 	return ignoredQueryParams, nil
 }
 
-// GetDisabledSelectorsFromOPConfig returns a list of selectors that the transcoder
+// GetHTTPBackendSelectorsFromOPConfig returns a list of selectors that the transcoder
 // should be completely disabled for. Useful for local (non-OpenAPI) HTTP backend usage.
 // Not really used for ESPv2.
-func GetDisabledSelectorsFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) (map[string]bool, error) {
+func GetHTTPBackendSelectorsFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) (map[string]bool, error) {
 	disabledSelectors := make(map[string]bool)
 	if opts.EnableBackendAddressOverride {
 		glog.Infof("Skipping create grpc transcoding disabled selectors because backend address override is enabled.")

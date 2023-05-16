@@ -61,7 +61,7 @@ type ConfigManager struct {
 	serviceName        string
 	envoyConfigOptions options.ConfigGeneratorOptions
 	serviceInfo        *configinfo.ServiceInfo
-	filterGenParams    filtergen.FactoryParams
+	scParams           filtergen.ServiceControlOPFactoryParams
 	cache              cache.SnapshotCache
 
 	metadataFetcher         *metadata.MetadataFetcher
@@ -244,7 +244,7 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 		if err != nil {
 			m.Infof("metadata server was not reached, skipping GCP Attributes: %v", err)
 		} else {
-			m.filterGenParams.GCPAttributes = attrs
+			m.scParams.GCPAttributes = attrs
 		}
 	}
 
@@ -274,7 +274,7 @@ func (m *ConfigManager) makeSnapshot() (*cache.Snapshot, error) {
 	}
 
 	m.Infof("adding Listeners configuration for api: %v", m.serviceInfo.Name)
-	listeners, err := gen.MakeListeners(m.serviceInfo, m.filterGenParams)
+	listeners, err := gen.MakeListeners(m.serviceInfo, m.scParams)
 	if err != nil {
 		return nil, err
 	}

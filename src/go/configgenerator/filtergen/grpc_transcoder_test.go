@@ -1315,9 +1315,9 @@ func TestGetDisabledSelectorsFromOPConfig(t *testing.T) {
 
 	for _, tc := range testdata {
 		t.Run(tc.desc, func(t *testing.T) {
-			gotDisabledSelectors, err := filtergen.GetDisabledSelectorsFromOPConfig(tc.serviceConfigIn, tc.optsIn)
+			gotDisabledSelectors, err := filtergen.GetHTTPBackendSelectorsFromOPConfig(tc.serviceConfigIn, tc.optsIn)
 			if err != nil {
-				t.Fatalf("GetDisabledSelectorsFromOPConfig() got unexpected error: %v", err)
+				t.Fatalf("GetHTTPBackendSelectorsFromOPConfig() got unexpected error: %v", err)
 			}
 
 			if diff := cmp.Diff(tc.wantDisabledSelectors, gotDisabledSelectors); diff != "" {
