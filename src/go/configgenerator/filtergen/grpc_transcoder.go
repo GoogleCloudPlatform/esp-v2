@@ -78,9 +78,10 @@ func NewGRPCTranscoderFilterGensFromOPConfig(serviceConfig *confpb.Service, opts
 
 // NewGRPCTranscoderFilterGenFromOPConfig creates a single GRPCTranscoderGenerator.
 //
-// It also has the option to skip sanity checks on if the generator should be created.
-func NewGRPCTranscoderFilterGenFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, doChecks bool) (*GRPCTranscoderGenerator, error) {
-	if doChecks && opts.LocalHTTPBackendAddress != "" {
+// It also has the option to skip the filter. If enabled, all checks will occur
+// and filter may not be created. Otherwise, filter is always created.
+func NewGRPCTranscoderFilterGenFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, maybeSkipFilter bool) (*GRPCTranscoderGenerator, error) {
+	if maybeSkipFilter && opts.LocalHTTPBackendAddress != "" {
 		glog.Warningf("Local http backend address is set to %q; skip transcoder filter completely.", opts.LocalHTTPBackendAddress)
 		return nil, nil
 	}
@@ -89,7 +90,7 @@ func NewGRPCTranscoderFilterGenFromOPConfig(serviceConfig *confpb.Service, opts 
 	if err != nil {
 		return nil, err
 	}
-	if doChecks && !isGRPCSupportRequired {
+	if maybeSkipFilter && !isGRPCSupportRequired {
 		glog.Infof("gRPC support is NOT required, skip transcoder filter completely.")
 		return nil, nil
 	}
