@@ -557,7 +557,9 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 		},
 	}
 	for _, tc := range testData {
-		tc.RunTest(t, filtergen.BindNewServiceControlFilterGensFromOPConfig(tc.FactoryParamsIn))
+		tc.RunTest(t, func(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]filtergen.FilterGenerator, error) {
+			return filtergen.NewServiceControlFilterGensFromOPConfig(serviceConfig, opts, tc.FactoryParamsIn)
+		})
 	}
 }
 
