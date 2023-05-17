@@ -35,10 +35,10 @@ import (
 )
 
 // MakeListeners provides dynamic listeners for Envoy
-func MakeListeners(serviceInfo *sc.ServiceInfo, params filtergen.FactoryParams) ([]*listenerpb.Listener, error) {
-	filterGenFactories := GetESPv2FilterGenFactories()
+func MakeListeners(serviceInfo *sc.ServiceInfo, scParams filtergen.ServiceControlOPFactoryParams) ([]*listenerpb.Listener, error) {
+	filterGenFactories := GetESPv2FilterGenFactories(scParams)
 
-	filterGens, err := NewFilterGeneratorsFromOPConfig(serviceInfo.ServiceConfig(), serviceInfo.Options, filterGenFactories, params)
+	filterGens, err := NewFilterGeneratorsFromOPConfig(serviceInfo.ServiceConfig(), serviceInfo.Options, filterGenFactories)
 	if err != nil {
 		return nil, err
 	}

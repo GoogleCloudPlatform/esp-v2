@@ -32,7 +32,7 @@ type CORSGenerator struct{}
 
 // NewCORSFilterGensFromOPConfig creates a CORSGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewCORSFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewCORSFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	if opts.CorsPreset != "basic" && opts.CorsPreset != "cors_with_regex" {
 		glog.Infof("Not adding CORS filter gen because the feature is disabled by option, option is currently %q", opts.CorsPreset)
 		return nil, nil

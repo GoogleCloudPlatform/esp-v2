@@ -33,17 +33,21 @@ import (
 )
 
 func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []struct {
+		SuccessOPTestCase
+		FactoryParamsIn filtergen.ServiceControlOPFactoryParams
+	}{
 		{
-			Desc: "No methods, get access token from imds",
-			ServiceConfigIn: &servicepb.Service{
-				Name: "bookstore.endpoints.project123.cloud.goog",
-				Id:   "2019-03-02r0",
-				Control: &servicepb.Control{
-					Environment: "servicecontrol.googleapis.com",
+			SuccessOPTestCase: SuccessOPTestCase{
+				Desc: "No methods, get access token from imds",
+				ServiceConfigIn: &servicepb.Service{
+					Name: "bookstore.endpoints.project123.cloud.goog",
+					Id:   "2019-03-02r0",
+					Control: &servicepb.Control{
+						Environment: "servicecontrol.googleapis.com",
+					},
 				},
-			},
-			WantFilterConfigs: []string{`
+				WantFilterConfigs: []string{`
 {
    "name":"com.google.espv2.filters.http.service_control",
    "typedConfig":{
@@ -77,26 +81,28 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
    }
 }
 `,
+				},
 			},
 		},
 		{
-			Desc: "No methods, get access token from iam",
-			ServiceConfigIn: &servicepb.Service{
-				Name: "bookstore.endpoints.project123.cloud.goog",
-				Id:   "2019-03-02r0",
-				Control: &servicepb.Control{
-					Environment: "servicecontrol.googleapis.com",
-				},
-			},
-			OptsIn: options.ConfigGeneratorOptions{
-				CommonOptions: options.CommonOptions{
-					ServiceControlCredentials: &options.IAMCredentialsOptions{
-						ServiceAccountEmail: "ServiceControl@iam.com",
-						Delegates:           []string{"delegate_foo", "delegate_bar"},
+			SuccessOPTestCase: SuccessOPTestCase{
+				Desc: "No methods, get access token from iam",
+				ServiceConfigIn: &servicepb.Service{
+					Name: "bookstore.endpoints.project123.cloud.goog",
+					Id:   "2019-03-02r0",
+					Control: &servicepb.Control{
+						Environment: "servicecontrol.googleapis.com",
 					},
 				},
-			},
-			WantFilterConfigs: []string{`
+				OptsIn: options.ConfigGeneratorOptions{
+					CommonOptions: options.CommonOptions{
+						ServiceControlCredentials: &options.IAMCredentialsOptions{
+							ServiceAccountEmail: "ServiceControl@iam.com",
+							Delegates:           []string{"delegate_foo", "delegate_bar"},
+						},
+					},
+				},
+				WantFilterConfigs: []string{`
 {
    "name":"com.google.espv2.filters.http.service_control",
    "typedConfig":{
@@ -144,21 +150,23 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
    }
 }
 `,
+				},
 			},
 		},
 		{
-			Desc: "No methods, get access token from the token agent server",
-			ServiceConfigIn: &servicepb.Service{
-				Name: "bookstore.endpoints.project123.cloud.goog",
-				Id:   "2019-03-02r0",
-				Control: &servicepb.Control{
-					Environment: "servicecontrol.googleapis.com",
+			SuccessOPTestCase: SuccessOPTestCase{
+				Desc: "No methods, get access token from the token agent server",
+				ServiceConfigIn: &servicepb.Service{
+					Name: "bookstore.endpoints.project123.cloud.goog",
+					Id:   "2019-03-02r0",
+					Control: &servicepb.Control{
+						Environment: "servicecontrol.googleapis.com",
+					},
 				},
-			},
-			OptsIn: options.ConfigGeneratorOptions{
-				ServiceAccountKey: "this-is-sa-cred",
-			},
-			WantFilterConfigs: []string{`
+				OptsIn: options.ConfigGeneratorOptions{
+					ServiceAccountKey: "this-is-sa-cred",
+				},
+				WantFilterConfigs: []string{`
 {
    "name":"com.google.espv2.filters.http.service_control",
    "typedConfig":{
@@ -192,43 +200,45 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
    }
 }
 `,
+				},
 			},
 		},
 		{
-			Desc: "No methods, test various options",
-			ServiceConfigIn: &servicepb.Service{
-				Name:              "test-bookstore.endpoints.project123.cloud.goog",
-				Id:                "2023-05-05r1",
-				ProducerProjectId: "cloudesf-testing",
-				Control: &servicepb.Control{
-					Environment: "staging-servicecontrol.googleapis.com",
-				},
-			},
-			OptsIn: options.ConfigGeneratorOptions{
-				CommonOptions: options.CommonOptions{
-					TracingProjectId:      "cloud-api-proxy-testing",
-					HttpRequestTimeout:    2 * time.Minute,
-					GeneratedHeaderPrefix: "X-Test-Header-",
-				},
-				DependencyErrorBehavior:       commonpb.DependencyErrorBehavior_ALWAYS_INIT.String(),
-				ClientIPFromForwardedHeader:   true,
-				LogRequestHeaders:             ":method",
-				LogResponseHeaders:            ":status",
-				LogJwtPayloads:                "my-payload",
-				MinStreamReportIntervalMs:     8000,
-				ComputePlatformOverride:       "ESPv2(Cloud Run)",
-				ScCheckTimeoutMs:              5020,
-				ScQuotaRetries:                8,
-				ServiceControlNetworkFailOpen: false,
-			},
-			FactoryParamsIn: filtergen.FactoryParams{
+			FactoryParamsIn: filtergen.ServiceControlOPFactoryParams{
 				GCPAttributes: &scpb.GcpAttributes{
 					ProjectId: "cloudesf-tenant-project",
 					Zone:      "us-central1c",
 					Platform:  "Cloud Run",
 				},
 			},
-			WantFilterConfigs: []string{`
+			SuccessOPTestCase: SuccessOPTestCase{
+				Desc: "No methods, test various options",
+				ServiceConfigIn: &servicepb.Service{
+					Name:              "test-bookstore.endpoints.project123.cloud.goog",
+					Id:                "2023-05-05r1",
+					ProducerProjectId: "cloudesf-testing",
+					Control: &servicepb.Control{
+						Environment: "staging-servicecontrol.googleapis.com",
+					},
+				},
+				OptsIn: options.ConfigGeneratorOptions{
+					CommonOptions: options.CommonOptions{
+						TracingProjectId:      "cloud-api-proxy-testing",
+						HttpRequestTimeout:    2 * time.Minute,
+						GeneratedHeaderPrefix: "X-Test-Header-",
+					},
+					DependencyErrorBehavior:       commonpb.DependencyErrorBehavior_ALWAYS_INIT.String(),
+					ClientIPFromForwardedHeader:   true,
+					LogRequestHeaders:             ":method",
+					LogResponseHeaders:            ":status",
+					LogJwtPayloads:                "my-payload",
+					MinStreamReportIntervalMs:     8000,
+					ComputePlatformOverride:       "ESPv2(Cloud Run)",
+					ScCheckTimeoutMs:              5020,
+					ScQuotaRetries:                8,
+					ServiceControlNetworkFailOpen: false,
+				},
+				WantFilterConfigs: []string{`
 {
    "name":"com.google.espv2.filters.http.service_control",
    "typedConfig":{
@@ -282,21 +292,23 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
    }
 }
 `,
+				},
 			},
 		},
 		{
-			Desc: "No methods, gRPC backend",
-			ServiceConfigIn: &servicepb.Service{
-				Name: "bookstore.endpoints.project123.cloud.goog",
-				Id:   "2019-03-02r0",
-				Control: &servicepb.Control{
-					Environment: "servicecontrol.googleapis.com",
+			SuccessOPTestCase: SuccessOPTestCase{
+				Desc: "No methods, gRPC backend",
+				ServiceConfigIn: &servicepb.Service{
+					Name: "bookstore.endpoints.project123.cloud.goog",
+					Id:   "2019-03-02r0",
+					Control: &servicepb.Control{
+						Environment: "servicecontrol.googleapis.com",
+					},
 				},
-			},
-			OptsIn: options.ConfigGeneratorOptions{
-				BackendAddress: "grpc://127.0.0.0:80",
-			},
-			WantFilterConfigs: []string{`
+				OptsIn: options.ConfigGeneratorOptions{
+					BackendAddress: "grpc://127.0.0.0:80",
+				},
+				WantFilterConfigs: []string{`
 {
    "name":"com.google.espv2.filters.http.service_control",
    "typedConfig":{
@@ -330,47 +342,49 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
    }
 }
 `,
+				},
 			},
 		},
 		{
-			Desc: "No methods, copy subset of the service config",
-			ServiceConfigIn: &servicepb.Service{
-				Name: "bookstore.endpoints.project123.cloud.goog",
-				Id:   "2019-03-02r0",
-				Control: &servicepb.Control{
-					Environment: "servicecontrol.googleapis.com",
-				},
-				Logs: []*servicepb.LogDescriptor{
-					{
-						Name: "test-logs-1",
+			SuccessOPTestCase: SuccessOPTestCase{
+				Desc: "No methods, copy subset of the service config",
+				ServiceConfigIn: &servicepb.Service{
+					Name: "bookstore.endpoints.project123.cloud.goog",
+					Id:   "2019-03-02r0",
+					Control: &servicepb.Control{
+						Environment: "servicecontrol.googleapis.com",
 					},
-				},
-				Metrics: []*metricpb.MetricDescriptor{
-					{
-						Name: "test-metrics-1",
-					},
-				},
-				MonitoredResources: []*monitoredrespb.MonitoredResourceDescriptor{
-					{
-						Name: "test-monitored-resources-1",
-					},
-				},
-				Monitoring: &servicepb.Monitoring{
-					ProducerDestinations: []*servicepb.Monitoring_MonitoringDestination{
+					Logs: []*servicepb.LogDescriptor{
 						{
-							MonitoredResource: "test-producer-dest-1",
+							Name: "test-logs-1",
+						},
+					},
+					Metrics: []*metricpb.MetricDescriptor{
+						{
+							Name: "test-metrics-1",
+						},
+					},
+					MonitoredResources: []*monitoredrespb.MonitoredResourceDescriptor{
+						{
+							Name: "test-monitored-resources-1",
+						},
+					},
+					Monitoring: &servicepb.Monitoring{
+						ProducerDestinations: []*servicepb.Monitoring_MonitoringDestination{
+							{
+								MonitoredResource: "test-producer-dest-1",
+							},
+						},
+					},
+					Logging: &servicepb.Logging{
+						ProducerDestinations: []*servicepb.Logging_LoggingDestination{
+							{
+								MonitoredResource: "test-producer-dest-2",
+							},
 						},
 					},
 				},
-				Logging: &servicepb.Logging{
-					ProducerDestinations: []*servicepb.Logging_LoggingDestination{
-						{
-							MonitoredResource: "test-producer-dest-2",
-						},
-					},
-				},
-			},
-			WantFilterConfigs: []string{`
+				WantFilterConfigs: []string{`
 {
    "name":"com.google.espv2.filters.http.service_control",
    "typedConfig":{
@@ -432,53 +446,55 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
    }
 }
 `,
+				},
 			},
 		},
 		{
-			Desc: "Success with some method requirements",
-			ServiceConfigIn: &servicepb.Service{
-				Name: "bookstore.endpoints.project123.cloud.goog",
-				Id:   "2019-03-02r0",
-				Control: &servicepb.Control{
-					Environment: "servicecontrol.googleapis.com",
-				},
-				Apis: []*apipb.Api{
-					{
-						Name:    "google.library.Bookstore",
-						Version: "2.0.0",
-						Methods: []*apipb.Method{
-							{
-								Name: "GetShelves",
-							},
-							{
-								Name: "GetBooks",
-							},
-						},
+			SuccessOPTestCase: SuccessOPTestCase{
+				Desc: "Success with some method requirements",
+				ServiceConfigIn: &servicepb.Service{
+					Name: "bookstore.endpoints.project123.cloud.goog",
+					Id:   "2019-03-02r0",
+					Control: &servicepb.Control{
+						Environment: "servicecontrol.googleapis.com",
 					},
-					{
-						// Ignored by default.
-						Name:    "google.discovery",
-						Version: "1.0.0",
-						Methods: []*apipb.Method{
-							{
-								Name: "GetDiscoveryRest",
-							},
-						},
-					},
-				},
-				Quota: &servicepb.Quota{
-					MetricRules: []*servicepb.MetricRule{
+					Apis: []*apipb.Api{
 						{
-							Selector: "google.library.Bookstore.GetBooks",
-							MetricCosts: map[string]int64{
-								"metric_a": 2,
-								"metric_b": 1,
+							Name:    "google.library.Bookstore",
+							Version: "2.0.0",
+							Methods: []*apipb.Method{
+								{
+									Name: "GetShelves",
+								},
+								{
+									Name: "GetBooks",
+								},
+							},
+						},
+						{
+							// Ignored by default.
+							Name:    "google.discovery",
+							Version: "1.0.0",
+							Methods: []*apipb.Method{
+								{
+									Name: "GetDiscoveryRest",
+								},
+							},
+						},
+					},
+					Quota: &servicepb.Quota{
+						MetricRules: []*servicepb.MetricRule{
+							{
+								Selector: "google.library.Bookstore.GetBooks",
+								MetricCosts: map[string]int64{
+									"metric_a": 2,
+									"metric_b": 1,
+								},
 							},
 						},
 					},
 				},
-			},
-			WantFilterConfigs: []string{`
+				WantFilterConfigs: []string{`
 {
    "name":"com.google.espv2.filters.http.service_control",
    "typedConfig":{
@@ -536,11 +552,14 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
    }
 }
 `,
+				},
 			},
 		},
 	}
 	for _, tc := range testData {
-		tc.RunTest(t, filtergen.NewServiceControlFilterGensFromOPConfig)
+		tc.RunTest(t, func(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]filtergen.FilterGenerator, error) {
+			return filtergen.NewServiceControlFilterGensFromOPConfig(serviceConfig, opts, tc.FactoryParamsIn)
+		})
 	}
 }
 

@@ -18,7 +18,6 @@ package filtergen
 
 import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
@@ -47,19 +46,9 @@ type FilterGenerator interface {
 	GenPerRouteConfig(string, *httppattern.Pattern) (proto.Message, error)
 }
 
-// FactoryParams are extra parameters that can be passed down to
-// filter generators. These are parameters that don't fit within OP service
-// config.
-//
-// Other config formats may extend this class to customize parameters. It allows
-// for flexibility in google3.
-type FactoryParams struct {
-	GCPAttributes *scpb.GcpAttributes
-}
-
 // FilterGeneratorOPFactory is the factory function to create an ordered slice
 // of FilterGenerator from One Platform config.
 //
 // The majority of factories will only return 1 FilterGenerator, but they should
 // be encapsulated by a slice for generalization.
-type FilterGeneratorOPFactory func(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error)
+type FilterGeneratorOPFactory func(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error)

@@ -32,7 +32,7 @@ type GRPCWebGenerator struct{}
 
 // NewGRPCWebFilterGensFromOPConfig creates a GRPCWebGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewGRPCWebFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewGRPCWebFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	isGRPCSupportRequired, err := IsGRPCSupportRequiredForOPConfig(serviceConfig, opts)
 	if err != nil {
 		return nil, err

@@ -278,9 +278,9 @@ func (s *ServiceInfo) addGrpcHttpRules() error {
 		}
 		for _, method := range api.GetMethods() {
 			selector := fmt.Sprintf("%s.%s", api.GetName(), method.GetName())
-			mi, err := s.getMethod(selector)
-			if err != nil {
-				return fmt.Errorf("error processing auto-generated gRPC http rule: %v", err)
+			mi := s.Methods[selector]
+			if mi == nil {
+				continue
 			}
 
 			uriTemplate, err := httppattern.ParseUriTemplate(mi.GRPCPath())
@@ -343,11 +343,10 @@ func (s *ServiceInfo) processQuota() error {
 			})
 		}
 
-		mi, err := s.getMethod(metricRule.GetSelector())
-		if err != nil {
-			return fmt.Errorf("error processing quota metric rule: %v", err)
+		mi := s.Methods[metricRule.GetSelector()]
+		if mi != nil {
+			mi.MetricCosts = metricCosts
 		}
-		mi.MetricCosts = metricCosts
 	}
 
 	return nil
@@ -424,9 +423,9 @@ func (s *ServiceInfo) processHttpRule() error {
 			glog.Warningf("Skip http rule %q because discovery API is not supported.", selector)
 			continue
 		}
-		method, err := s.getMethod(rule.GetSelector())
-		if err != nil {
-			return fmt.Errorf("error processing http rule for operation (%v): %v", rule.Selector, err)
+		method := s.Methods[selector]
+		if method == nil {
+			continue
 		}
 
 		if err := s.addHttpRule(method, rule, addedRouteMatchWithOptionsSet, s.Options.DisallowColonInWildcardPathSegment); err != nil {
@@ -448,9 +447,9 @@ func (s *ServiceInfo) processHttpRule() error {
 	// urls except the ones already with options.
 	if s.AllowCors {
 		for _, r := range s.ServiceConfig().GetHttp().GetRules() {
-			method, err := s.getMethod(r.GetSelector())
-			if err != nil {
-				return fmt.Errorf("error processing http rule for operation (%v): %v", r.GetSelector(), err)
+			method := s.Methods[r.GetSelector()]
+			if method == nil {
+				continue
 			}
 
 			for _, httpRule := range method.HttpRule {
@@ -528,16 +527,18 @@ func (s *ServiceInfo) addOptionMethod(originalMethod *MethodInfo, httpRule *http
 func (s *ServiceInfo) processBackendRule() error {
 	backendRoutingClustersMap := make(map[string]string)
 
-	for _, r := range s.ServiceConfig().Backend.GetRules() {
-		selector := r.Selector
+	for _, r := range s.ServiceConfig().GetBackend().GetRules() {
+		selector := r.GetSelector()
 		if s.shouldSkipDiscoveryAPI(selector) {
 			glog.Warningf("Skip backend rule %q because discovery API is not supported.", selector)
 			continue
 		}
-		method, err := s.getMethod(r.GetSelector())
-		if err != nil {
-			return err
+
+		method := s.Methods[selector]
+		if method == nil {
+			continue
 		}
+
 		if r.Address == "" || s.Options.EnableBackendAddressOverride {
 			// Processing a backend rule associated with the local backend.
 			bi, err := s.ruleToBackendInfo(r, "", "", "", s.LocalBackendClusterName(), 0)
@@ -608,9 +609,9 @@ func (s *ServiceInfo) addBackendRuleToMethod(r *confpb.BackendRule, addressToClu
 }
 
 func (s *ServiceInfo) ruleToBackendInfo(r *confpb.BackendRule, scheme string, hostname string, path string, backendClusterName string, port uint32) (*backendInfo, error) {
-	method, err := s.getMethod(r.GetSelector())
-	if err != nil {
-		return nil, err
+	method := s.Methods[r.GetSelector()]
+	if method == nil {
+		return nil, nil
 	}
 
 	// For CONSTANT_ADDRESS, an empty uri will generate an empty path header.
@@ -768,7 +769,7 @@ func (s *ServiceInfo) processUsageRule() error {
 	// methods, they can specify "skip_service_control: false" in their service
 	// config and ESPv2 honors it.
 	for _, methodName := range util.HardCodedSkipServiceControlMethods {
-		if method, err := s.getMethod(methodName); err == nil {
+		if method := s.Methods[methodName]; method != nil {
 			method.SkipServiceControl = true
 		}
 	}
@@ -779,10 +780,12 @@ func (s *ServiceInfo) processUsageRule() error {
 			glog.Warningf("Skip usage rule %q because discovery API is not supported.", selector)
 			continue
 		}
-		method, err := s.getMethod(r.GetSelector())
-		if err != nil {
-			return fmt.Errorf("error processing usage rule for operation (%v): %v", r.Selector, err)
+
+		method := s.Methods[r.GetSelector()]
+		if method == nil {
+			continue
 		}
+
 		method.AllowUnregisteredCalls = r.GetAllowUnregisteredCalls()
 		method.SkipServiceControl = r.GetSkipServiceControl()
 	}
@@ -840,9 +843,9 @@ func (s *ServiceInfo) processApiKeyLocations() error {
 			}
 		}
 
-		method, err := s.getMethod(rule.GetSelector())
-		if err != nil {
-			return fmt.Errorf("error processing system parameter rule for operation (%v): %v", rule.Selector, err)
+		method := s.Methods[rule.GetSelector()]
+		if method == nil {
+			continue
 		}
 
 		s.extractApiKeyLocations(method, apiKeyLocationParameters)
@@ -952,15 +955,6 @@ func (s *ServiceInfo) processTypes() error {
 	return nil
 }
 
-// Get the MethodInfo by full name. Prefer to use this function when getting methods,
-// as it outputs an actionable error message.
-func (s *ServiceInfo) getMethod(name string) (*MethodInfo, error) {
-	if s.Methods[name] == nil {
-		return nil, fmt.Errorf("selector (%v) was not defined in the API", name)
-	}
-	return s.Methods[name], nil
-}
-
 // Get the MethodInfo by full name, and create a new one if not exists.
 // Ideally, all selector name in service config rules should exist in the api
 // aspect, so use getMethod(...) instead.
@@ -997,9 +991,9 @@ func (s *ServiceInfo) processAuthRequirement() error {
 			continue
 		}
 		if len(rule.GetRequirements()) > 0 {
-			mi, err := s.getMethod(rule.GetSelector())
-			if err != nil {
-				return fmt.Errorf("error processing authentication rule for operation (%v): selector not defined in Api.method or Http.rule", rule.GetSelector())
+			mi := s.Methods[rule.GetSelector()]
+			if mi == nil {
+				continue
 			}
 			mi.RequireAuth = true
 		}

@@ -160,17 +160,21 @@ func GetAPINamesSetFromOPConfig(serviceConfig *servicepb.Service, opts options.C
 }
 
 // GetAPINamesListFromOPConfig is the same as GetAPINamesSetFromOPConfig,
-// but returns a slice instead.
+// but returns a slice instead. Preserves original order of APIs in the service config.
 //
 // Replaces ServiceInfo::processApis.
 func GetAPINamesListFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) []string {
-	set := GetAPINamesSetFromOPConfig(serviceConfig, opts)
+	var apiNames []string
 
-	var list []string
-	for name, _ := range set {
-		list = append(list, name)
+	for _, api := range serviceConfig.GetApis() {
+		if util.ShouldSkipOPDiscoveryAPI(api.GetName(), opts.AllowDiscoveryAPIs) {
+			glog.Warningf("Skip API %q because discovery API is not supported.", api.GetName())
+			continue
+		}
+		apiNames = append(apiNames, api.GetName())
 	}
-	return list
+
+	return apiNames
 }
 
 // GetUsageRulesBySelectorFromOPConfig returns a map of selector to usage rule.

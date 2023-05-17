@@ -420,7 +420,7 @@ func TestMakeListeners(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		listeners, err := MakeListeners(fakeServiceInfo, filtergen.FactoryParams{})
+		listeners, err := MakeListeners(fakeServiceInfo, filtergen.ServiceControlOPFactoryParams{})
 		if err != nil {
 			t.Fatal(err)
 		}

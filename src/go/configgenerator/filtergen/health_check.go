@@ -44,7 +44,7 @@ type HealthCheckGenerator struct {
 
 // NewHealthCheckFilterGensFromOPConfig creates a HealthCheckGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewHealthCheckFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewHealthCheckFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	if opts.Healthz == "" {
 		glog.Info("Not adding health check filter gen because healthz path is not specified.")
 		return nil, nil

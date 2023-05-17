@@ -53,7 +53,7 @@ type CompressorGenerator struct {
 
 // NewCompressorFilterGensFromOPConfig creates a CompressorGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
-func NewCompressorFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, params FactoryParams) ([]FilterGenerator, error) {
+func NewCompressorFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	if !opts.EnableResponseCompression {
 		glog.Info("Not adding compressor filter gens because the feature is disabled by option.")
 		return nil, nil

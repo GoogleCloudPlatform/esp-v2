@@ -46,9 +46,6 @@ type SuccessOPTestCase struct {
 	// will most likely be ignored.
 	OptsMergeBehavior func(*mergo.Config)
 
-	// FactoryParamsIn are extra parameters to pass to filter factories.
-	FactoryParamsIn filtergen.FactoryParams
-
 	// WantFilterConfigs is the expected filter config message per generator.
 	// It is an ordered slice. Each element is the JSON representation of the
 	// filter config.
@@ -68,7 +65,7 @@ func (tc *SuccessOPTestCase) RunTest(t *testing.T, factory filtergen.FilterGener
 			t.Fatalf("Merge() of test opts into default opts got err: %v", err)
 		}
 
-		gotGenerators, err := factory(tc.ServiceConfigIn, opts, tc.FactoryParamsIn)
+		gotGenerators, err := factory(tc.ServiceConfigIn, opts)
 		if err != nil {
 			t.Fatalf("NewXYZFilterGensFromOPConfig() got error: %v", err)
 		}
@@ -111,9 +108,6 @@ type FactoryErrorOPTestCase struct {
 	// Will be merged with defaults.
 	OptsIn options.ConfigGeneratorOptions
 
-	// FactoryParamsIn are extra parameters to pass to filter factories.
-	FactoryParamsIn filtergen.FactoryParams
-
 	// WantFactoryError is the error that occurs when `NewXYZFilterGensFromOPConfig()`
 	// is called.
 	WantFactoryError string
@@ -128,7 +122,7 @@ func (tc *FactoryErrorOPTestCase) RunTest(t *testing.T, factory filtergen.Filter
 			t.Fatalf("Merge() of test opts into default opts got err: %v", err)
 		}
 
-		_, err := factory(tc.ServiceConfigIn, opts, tc.FactoryParamsIn)
+		_, err := factory(tc.ServiceConfigIn, opts)
 		if err == nil {
 			t.Fatalf("NewXYZFilterGensFromOPConfig() got no error, want error")
 		}
@@ -150,9 +144,6 @@ type GenConfigErrorOPTestCase struct {
 	// Will be merged with defaults.
 	OptsIn options.ConfigGeneratorOptions
 
-	// FactoryParamsIn are extra parameters to pass to filter factories.
-	FactoryParamsIn filtergen.FactoryParams
-
 	// WantGenErrors are the expected errors from each generator.
 	WantGenErrors []string
 }
@@ -166,7 +157,7 @@ func (tc *GenConfigErrorOPTestCase) RunTest(t *testing.T, factory filtergen.Filt
 			t.Fatalf("Merge() of test opts into default opts got err: %v", err)
 		}
 
-		gotGenerators, err := factory(tc.ServiceConfigIn, opts, tc.FactoryParamsIn)
+		gotGenerators, err := factory(tc.ServiceConfigIn, opts)
 		if err != nil {
 			t.Fatalf("NewXYZFilterGensFromOPConfig() got error: %v", err)
 		}
