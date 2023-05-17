@@ -85,14 +85,6 @@ type ServiceControlOPFactoryParams struct {
 	GCPAttributes *scpb.GcpAttributes
 }
 
-// BindNewServiceControlFilterGensFromOPConfig binds the extra ServiceControlOPFactoryParams
-// to the factory function.
-func BindNewServiceControlFilterGensFromOPConfig(params ServiceControlOPFactoryParams) FilterGeneratorOPFactory {
-	return func(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
-		return NewServiceControlFilterGensFromOPConfig(serviceConfig, opts, params)
-	}
-}
-
 // NewServiceControlFilterGensFromOPConfig creates a ServiceControlGenerator from
 // OP service config + descriptor + ESPv2 options.
 func NewServiceControlFilterGensFromOPConfig(serviceConfig *confpb.Service, opts options.ConfigGeneratorOptions, params ServiceControlOPFactoryParams) ([]FilterGenerator, error) {

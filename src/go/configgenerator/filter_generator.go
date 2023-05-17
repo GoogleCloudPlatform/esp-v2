@@ -33,7 +33,9 @@ func GetESPv2FilterGenFactories(scParams filtergen.ServiceControlOPFactoryParams
 		filtergen.NewHealthCheckFilterGensFromOPConfig,
 		filtergen.NewCompressorFilterGensFromOPConfig,
 		filtergen.NewJwtAuthnFilterGensFromOPConfig,
-		filtergen.BindNewServiceControlFilterGensFromOPConfig(scParams),
+		func(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]filtergen.FilterGenerator, error) {
+			return filtergen.NewServiceControlFilterGensFromOPConfig(serviceConfig, opts, scParams)
+		},
 
 		// grpc-web filter should be before grpc transcoder filter.
 		// It converts content-type application/grpc-web to application/grpc and
