@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/clustergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -29,7 +30,7 @@ import (
 )
 
 func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Success for OpenAPI HTTP backend",
 			ServiceConfigIn: &servicepb.Service{
@@ -93,7 +94,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "mybackend.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "mybackend.com", false),
 					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
@@ -131,7 +132,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
-					TransportSocket:               CreateDefaultTLS(t, "mybackend.com", true),
+					TransportSocket:               clustergentest.CreateDefaultTLS(t, "mybackend.com", true),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
@@ -187,7 +188,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
-					TransportSocket:               CreateDefaultTLS(t, "mybackend.com", true),
+					TransportSocket:               clustergentest.CreateDefaultTLS(t, "mybackend.com", true),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 					HealthChecks: []*corepb.HealthCheck{
 						{
@@ -246,7 +247,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewLocalBackendClusterFromOPConfig_BadInputFactory(t *testing.T) {
-	testData := []FactoryErrorOPTestCase{
+	testData := []clustergentest.FactoryErrorOPTestCase{
 		{
 			Desc: "HealthCheckGrpcBackend but backend protocol not grpc",
 			OptsIn: options.ConfigGeneratorOptions{

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/clustergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -27,7 +28,7 @@ import (
 )
 
 func TestNewTokenAgentClusterFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Success with default options on NonGCP",
 			OptsIn: options.ConfigGeneratorOptions{
@@ -106,7 +107,7 @@ func TestNewTokenAgentClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewTokenAgentClusterFromOPConfig_Disabled(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Disabled on GCP",
 			OptsIn: options.ConfigGeneratorOptions{

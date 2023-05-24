@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	scpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
@@ -34,11 +35,11 @@ import (
 
 func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 	testData := []struct {
-		SuccessOPTestCase
+		filtergentest.SuccessOPTestCase
 		FactoryParamsIn filtergen.ServiceControlOPFactoryParams
 	}{
 		{
-			SuccessOPTestCase: SuccessOPTestCase{
+			SuccessOPTestCase: filtergentest.SuccessOPTestCase{
 				Desc: "No methods, get access token from imds",
 				ServiceConfigIn: &servicepb.Service{
 					Name: "bookstore.endpoints.project123.cloud.goog",
@@ -85,7 +86,7 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
-			SuccessOPTestCase: SuccessOPTestCase{
+			SuccessOPTestCase: filtergentest.SuccessOPTestCase{
 				Desc: "No methods, get access token from iam",
 				ServiceConfigIn: &servicepb.Service{
 					Name: "bookstore.endpoints.project123.cloud.goog",
@@ -154,7 +155,7 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
-			SuccessOPTestCase: SuccessOPTestCase{
+			SuccessOPTestCase: filtergentest.SuccessOPTestCase{
 				Desc: "No methods, get access token from the token agent server",
 				ServiceConfigIn: &servicepb.Service{
 					Name: "bookstore.endpoints.project123.cloud.goog",
@@ -211,7 +212,7 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 					Platform:  "Cloud Run",
 				},
 			},
-			SuccessOPTestCase: SuccessOPTestCase{
+			SuccessOPTestCase: filtergentest.SuccessOPTestCase{
 				Desc: "No methods, test various options",
 				ServiceConfigIn: &servicepb.Service{
 					Name:              "test-bookstore.endpoints.project123.cloud.goog",
@@ -296,7 +297,7 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
-			SuccessOPTestCase: SuccessOPTestCase{
+			SuccessOPTestCase: filtergentest.SuccessOPTestCase{
 				Desc: "No methods, gRPC backend",
 				ServiceConfigIn: &servicepb.Service{
 					Name: "bookstore.endpoints.project123.cloud.goog",
@@ -346,7 +347,7 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
-			SuccessOPTestCase: SuccessOPTestCase{
+			SuccessOPTestCase: filtergentest.SuccessOPTestCase{
 				Desc: "No methods, copy subset of the service config",
 				ServiceConfigIn: &servicepb.Service{
 					Name: "bookstore.endpoints.project123.cloud.goog",
@@ -450,7 +451,7 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
-			SuccessOPTestCase: SuccessOPTestCase{
+			SuccessOPTestCase: filtergentest.SuccessOPTestCase{
 				Desc: "Success with some method requirements",
 				ServiceConfigIn: &servicepb.Service{
 					Name: "bookstore.endpoints.project123.cloud.goog",

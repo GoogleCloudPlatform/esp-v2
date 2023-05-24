@@ -18,11 +18,12 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 )
 
 func TestNewCORSFilterGensFromOPConfig_GenConfig(t *testing.T) {
-	testdata := []SuccessOPTestCase{
+	testdata := []filtergentest.SuccessOPTestCase{
 		{
 			Desc: "Generate with CORS is set to basic mode",
 			OptsIn: options.ConfigGeneratorOptions{
