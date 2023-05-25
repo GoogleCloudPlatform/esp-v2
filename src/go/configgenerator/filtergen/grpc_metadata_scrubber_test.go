@@ -18,12 +18,13 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/imdario/mergo"
 )
 
 func TestNewGRPCMetadataScrubberFilterGensFromOPConfig_GenConfig(t *testing.T) {
-	testdata := []SuccessOPTestCase{
+	testdata := []filtergentest.SuccessOPTestCase{
 		{
 			Desc: "Generate when gRPC for HTTP/1.x is enabled",
 			OptsIn: options.ConfigGeneratorOptions{

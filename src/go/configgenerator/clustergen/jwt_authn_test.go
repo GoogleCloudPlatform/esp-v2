@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/clustergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -28,7 +29,7 @@ import (
 )
 
 func TestNewJWTProviderClustersFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Use https jwksUri and http jwksUri",
 			ServiceConfigIn: &confpb.Service{
@@ -54,7 +55,7 @@ func TestNewJWTProviderClustersFromOPConfig_GenConfig(t *testing.T) {
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "metadata.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "metadata.com", false),
 				},
 				{
 					Name:                 "jwt-provider-cluster-metadata.com:80",
@@ -90,7 +91,7 @@ func TestNewJWTProviderClustersFromOPConfig_GenConfig(t *testing.T) {
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("metadata.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "metadata.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "metadata.com", false),
 				},
 			},
 		},
@@ -140,7 +141,7 @@ func TestNewJWTProviderClustersFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewJWTProviderClustersFromOPConfig_BadInputFactory(t *testing.T) {
-	testData := []FactoryErrorOPTestCase{
+	testData := []clustergentest.FactoryErrorOPTestCase{
 		{
 			Desc: "Could not parse JWKS URI",
 			ServiceConfigIn: &confpb.Service{

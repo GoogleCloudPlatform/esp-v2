@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/clustergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -28,7 +29,7 @@ import (
 )
 
 func TestNewRemoteBackendClustersFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Success for HTTPS backend rules, de-duplicated",
 			ServiceConfigIn: &confpb.Service{
@@ -51,7 +52,7 @@ func TestNewRemoteBackendClustersFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "mybackend.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "mybackend.com", false),
 					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
@@ -107,7 +108,7 @@ func TestNewRemoteBackendClustersFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:       durationpb.New(20 * time.Second),
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend_https.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "mybackend_https.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "mybackend_https.com", false),
 					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
@@ -134,7 +135,7 @@ func TestNewRemoteBackendClustersFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
-					TransportSocket:               CreateDefaultTLS(t, "mybackend.com", true),
+					TransportSocket:               clustergentest.CreateDefaultTLS(t, "mybackend.com", true),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
@@ -193,7 +194,7 @@ func TestNewRemoteBackendClustersFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend_https.com", 443),
-					TransportSocket:               CreateDefaultTLS(t, "mybackend_https.com", true),
+					TransportSocket:               clustergentest.CreateDefaultTLS(t, "mybackend_https.com", true),
 					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
 					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
@@ -221,7 +222,7 @@ func TestNewRemoteBackendClustersFromOPConfig_GenConfig(t *testing.T) {
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("mybackend.run.app", 443),
-					TransportSocket:      CreateDefaultTLS(t, "mybackend.run.app", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "mybackend.run.app", false),
 				},
 			},
 		},
@@ -490,7 +491,7 @@ func TestNewRemoteBackendClustersFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewRemoteBackendClustersFromOPConfig_BadInputFactory(t *testing.T) {
-	testData := []FactoryErrorOPTestCase{
+	testData := []clustergentest.FactoryErrorOPTestCase{
 		{
 			Desc: "Could not parse backend url",
 			ServiceConfigIn: &confpb.Service{

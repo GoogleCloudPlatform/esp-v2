@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/clustergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -27,7 +28,7 @@ import (
 )
 
 func TestNewIAMClusterFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Success, generate iam cluster when backendAuthIamCredential is set",
 			OptsIn: options.ConfigGeneratorOptions{
@@ -44,7 +45,7 @@ func TestNewIAMClusterFromOPConfig_GenConfig(t *testing.T) {
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_STRICT_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "iamcredentials.googleapis.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "iamcredentials.googleapis.com", false),
 				},
 			},
 		},
@@ -64,7 +65,7 @@ func TestNewIAMClusterFromOPConfig_GenConfig(t *testing.T) {
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_STRICT_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "iamcredentials.googleapis.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "iamcredentials.googleapis.com", false),
 				},
 			},
 		},
@@ -105,7 +106,7 @@ func TestNewIAMClusterFromOPConfig_GenConfig(t *testing.T) {
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_STRICT_DNS},
 					LoadAssignment:       util.CreateLoadAssignment("iamcredentials.googleapis.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "iamcredentials.googleapis.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "iamcredentials.googleapis.com", false),
 					DnsResolvers: []*corepb.Address{
 						{
 							Address: &corepb.Address_SocketAddress{
@@ -129,7 +130,7 @@ func TestNewIAMClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewIAMClusterFromOPConfig_Disabled(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Disabled when no Backend Auth or SC creds are provided",
 			OptsIn: options.ConfigGeneratorOptions{

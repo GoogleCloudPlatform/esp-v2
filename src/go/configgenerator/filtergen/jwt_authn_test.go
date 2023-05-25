@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/imdario/mergo"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -26,7 +27,7 @@ import (
 )
 
 func TestNewJwtAuthnFilterGensFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []filtergentest.SuccessOPTestCase{
 		{
 			Desc: "Success. Generate jwt authn filter with default jwt locations with an empty audiences.",
 			ServiceConfigIn: &confpb.Service{

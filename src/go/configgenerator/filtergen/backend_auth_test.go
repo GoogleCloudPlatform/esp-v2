@@ -18,13 +18,14 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
 func TestNewBackendAuthFilterGensFromOPConfig_GenConfig(t *testing.T) {
-	testdata := []SuccessOPTestCase{
+	testdata := []filtergentest.SuccessOPTestCase{
 		{
 			Desc: "Generate with defaults",
 			ServiceConfigIn: &confpb.Service{
@@ -408,7 +409,7 @@ func TestNewBackendAuthFilterGensFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewBackendAuthFilterGensFromOPConfig_BadInputFactory(t *testing.T) {
-	testdata := []FactoryErrorOPTestCase{
+	testdata := []filtergentest.FactoryErrorOPTestCase{
 		{
 			// Should never happen in theory, as API compiler ensures valid address.
 			Desc: "Fail when backend address is invalid",
@@ -433,7 +434,7 @@ func TestNewBackendAuthFilterGensFromOPConfig_BadInputFactory(t *testing.T) {
 }
 
 func TestNewBackendAuthFilterGensFromOPConfig_BadInputFilterGen(t *testing.T) {
-	testdata := []GenConfigErrorOPTestCase{
+	testdata := []filtergentest.GenConfigErrorOPTestCase{
 		{
 			Desc: "Fail when invalid dependency error behavior is provided",
 			ServiceConfigIn: &confpb.Service{

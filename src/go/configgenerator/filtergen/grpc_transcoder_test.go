@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 	"github.com/google/go-cmp/cmp"
@@ -58,7 +59,7 @@ func TestNewGRPCTranscoderFilterGensFromOPConfig_GenConfig(t *testing.T) {
 		t.Fatalf("Failed to marshal source file into any: %v", err)
 	}
 
-	testData := []SuccessOPTestCase{
+	testData := []filtergentest.SuccessOPTestCase{
 		{
 			Desc: "Success. Generate transcoder filter with default apiKey locations and default jwt locations",
 			ServiceConfigIn: &confpb.Service{

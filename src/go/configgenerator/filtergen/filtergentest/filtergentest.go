@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filtergen_test
+// Package filtergentest contains test helpers to test filter generators.
+package filtergentest
 
 import (
 	"strings"
@@ -54,11 +55,11 @@ type SuccessOPTestCase struct {
 
 // RunTest is a test helper to run the test.
 func (tc *SuccessOPTestCase) RunTest(t *testing.T, factory filtergen.FilterGeneratorOPFactory) {
+	t.Helper()
+
 	if tc.OptsMergeBehavior == nil {
 		tc.OptsMergeBehavior = mergo.WithOverride
 	}
-
-	t.Helper()
 	t.Run(tc.Desc, func(t *testing.T) {
 		opts := options.DefaultConfigGeneratorOptions()
 		if err := mergo.Merge(&opts, tc.OptsIn, tc.OptsMergeBehavior); err != nil {

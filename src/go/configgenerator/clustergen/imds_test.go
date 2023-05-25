@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/clustergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -27,7 +28,7 @@ import (
 )
 
 func TestIMDSClusterFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Success with http metadata url and custom options",
 			OptsIn: options.ConfigGeneratorOptions{
@@ -64,7 +65,7 @@ func TestIMDSClusterFromOPConfig_GenConfig(t *testing.T) {
 						Type: clusterpb.Cluster_STRICT_DNS,
 					},
 					LoadAssignment:  util.CreateLoadAssignment("metadata.server.com", 443),
-					TransportSocket: CreateDefaultTLS(t, "metadata.server.com", false),
+					TransportSocket: clustergentest.CreateDefaultTLS(t, "metadata.server.com", false),
 				},
 			},
 		},
@@ -108,7 +109,7 @@ func TestIMDSClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestIMDSClusterFromOPConfig_Disabled(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Disabled on non-GCP",
 			OptsIn: options.ConfigGeneratorOptions{

@@ -1,9 +1,8 @@
-package filtergen_test
+package filtergen
 
 import (
 	"testing"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/google/go-cmp/cmp"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -115,7 +114,7 @@ func TestIsGRPCSupportRequiredForOPConfig(t *testing.T) {
 
 	for _, tc := range testdata {
 		t.Run(tc.desc, func(t *testing.T) {
-			gotIsGRPC, err := filtergen.IsGRPCSupportRequiredForOPConfig(tc.serviceConfigIn, tc.optsIn)
+			gotIsGRPC, err := IsGRPCSupportRequiredForOPConfig(tc.serviceConfigIn, tc.optsIn)
 			if err != nil {
 				t.Fatalf("IsGRPCSupportRequiredForOPConfig() got unexpected error: %v", err)
 			}
@@ -232,7 +231,7 @@ func TestGetUsageRulesBySelectorFromOPConfig(t *testing.T) {
 
 	for _, tc := range testdata {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := filtergen.GetUsageRulesBySelectorFromOPConfig(tc.serviceConfigIn, tc.optsIn)
+			got := GetUsageRulesBySelectorFromOPConfig(tc.serviceConfigIn, tc.optsIn)
 			if diff := cmp.Diff(tc.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("GetUsageRulesBySelectorFromOPConfig() diff (-want +got):\n%s", diff)
 			}
@@ -373,7 +372,7 @@ func TestGetAPIKeySystemParametersBySelectorFromOPConfig(t *testing.T) {
 
 	for _, tc := range testdata {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := filtergen.GetAPIKeySystemParametersBySelectorFromOPConfig(tc.serviceConfigIn, tc.optsIn)
+			got := GetAPIKeySystemParametersBySelectorFromOPConfig(tc.serviceConfigIn, tc.optsIn)
 			if diff := cmp.Diff(tc.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("GetAPIKeySystemParametersBySelectorFromOPConfig() diff (-want +got):\n%s", diff)
 			}

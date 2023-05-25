@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clustergen_test
+// Package clustergentest contains test helpers to test cluster generators.
+package clustergentest
 
 import (
 	"strings"

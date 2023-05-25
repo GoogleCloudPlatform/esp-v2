@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen/clustergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -27,7 +28,7 @@ import (
 )
 
 func TestNewServiceControlClusterFromOPConfig_GenConfig(t *testing.T) {
-	testData := []SuccessOPTestCase{
+	testData := []clustergentest.SuccessOPTestCase{
 		{
 			Desc: "Success with http address",
 			OptsIn: options.ConfigGeneratorOptions{
@@ -55,7 +56,7 @@ func TestNewServiceControlClusterFromOPConfig_GenConfig(t *testing.T) {
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("servicecontrol.googleapis.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "servicecontrol.googleapis.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "servicecontrol.googleapis.com", false),
 				},
 			},
 		},
@@ -72,7 +73,7 @@ func TestNewServiceControlClusterFromOPConfig_GenConfig(t *testing.T) {
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					DnsLookupFamily:      clusterpb.Cluster_V4_ONLY,
 					LoadAssignment:       util.CreateLoadAssignment("servicecontrol.googleapis.com", 443),
-					TransportSocket:      CreateDefaultTLS(t, "servicecontrol.googleapis.com", false),
+					TransportSocket:      clustergentest.CreateDefaultTLS(t, "servicecontrol.googleapis.com", false),
 					DnsResolvers: []*corepb.Address{
 						{
 							Address: &corepb.Address_SocketAddress{
@@ -96,7 +97,7 @@ func TestNewServiceControlClusterFromOPConfig_GenConfig(t *testing.T) {
 }
 
 func TestNewServiceControlClusterFromOPConfig_BadInputFactory(t *testing.T) {
-	testData := []FactoryErrorOPTestCase{
+	testData := []clustergentest.FactoryErrorOPTestCase{
 		{
 			Desc: "Could not parse Service Control URL",
 			OptsIn: options.ConfigGeneratorOptions{
