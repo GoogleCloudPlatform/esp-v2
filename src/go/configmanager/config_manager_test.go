@@ -112,8 +112,8 @@ func TestFetchListeners(t *testing.T) {
 
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = tc.BackendAddress
-			opts.DisableTracing = !tc.enableTracing
-			opts.TracingProjectId = "fake-project-id"
+			opts.CommonOptions.TracingOptions.DisableTracing = !tc.enableTracing
+			opts.CommonOptions.TracingOptions.ProjectId = "fake-project-id"
 			opts.SuppressEnvoyHeaders = !tc.enableDebug
 
 			setFlags(testdata.TestFetchListenersProjectName, testdata.TestFetchListenersConfigID, util.FixedRolloutStrategy, "100ms", "")
@@ -157,8 +157,8 @@ func TestRetryCallServiceManagement(t *testing.T) {
 
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendAddress = "grpc://127.0.0.1:80"
-	opts.TracingProjectId = "fake-project-id"
-	opts.DisableTracing = true
+	opts.CommonOptions.TracingOptions.ProjectId = "fake-project-id"
+	opts.CommonOptions.TracingOptions.DisableTracing = true
 
 	var originalInitMockServer = initMockServer
 	defer func() { initMockServer = originalInitMockServer }()
@@ -302,7 +302,7 @@ func TestFixedModeDynamicRouting(t *testing.T) {
 	marshaler := &jsonpb.Marshaler{}
 	for i, tc := range testData {
 		opts := options.DefaultConfigGeneratorOptions()
-		opts.DisableTracing = true
+		opts.CommonOptions.TracingOptions.DisableTracing = true
 
 		_ = flag.Set("service_json_path", tc.serviceConfigPath)
 
@@ -529,7 +529,7 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 
 	opts := options.DefaultConfigGeneratorOptions()
 	opts.BackendAddress = tc.BackendAddress
-	opts.DisableTracing = true
+	opts.CommonOptions.TracingOptions.DisableTracing = true
 
 	setFlags(testProjectName, testConfigID, util.ManagedRolloutStrategy, "100ms", "")
 

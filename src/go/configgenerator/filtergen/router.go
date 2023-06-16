@@ -38,7 +38,7 @@ func NewRouterFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts opti
 	return []FilterGenerator{
 		&RouterGenerator{
 			SuppressEnvoyHeaders: opts.SuppressEnvoyHeaders,
-			StartChildSpan:       !opts.DisableTracing,
+			StartChildSpan:       !opts.CommonOptions.TracingOptions.DisableTracing,
 		},
 	}, nil
 }

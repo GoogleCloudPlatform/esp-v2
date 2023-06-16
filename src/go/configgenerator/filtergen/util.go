@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -89,6 +90,19 @@ func FilterConfigToHTTPFilter(filter proto.Message, name string) (*hcmpb.HttpFil
 	return &hcmpb.HttpFilter{
 		Name: name,
 		ConfigType: &hcmpb.HttpFilter_TypedConfig{
+			TypedConfig: a,
+		},
+	}, nil
+}
+
+func FilterConfigToNetworkFilter(filter proto.Message, name string) (*listenerpb.Filter, error) {
+	a, err := anypb.New(filter)
+	if err != nil {
+		return nil, fmt.Errorf("fail to marshal filter config to Any for filter %q: %v", name, err)
+	}
+	return &listenerpb.Filter{
+		Name: name,
+		ConfigType: &listenerpb.Filter_TypedConfig{
 			TypedConfig: a,
 		},
 	}, nil

@@ -19,8 +19,6 @@ import "fmt"
 const (
 	// Echo network filter
 	Echo = "envoy.filters.network.echo"
-	// HTTPConnectionManager network filter
-	HTTPConnectionManager = "envoy.filters.network.http_connection_manager"
 	// TLSTransportSocket is Envoy TLS Transport Socket name.
 	TLSTransportSocket = "envoy.transport_sockets.tls"
 	// AccessFileLogger filter name

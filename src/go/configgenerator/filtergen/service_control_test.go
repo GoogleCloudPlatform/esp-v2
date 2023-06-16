@@ -224,7 +224,9 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 				},
 				OptsIn: options.ConfigGeneratorOptions{
 					CommonOptions: options.CommonOptions{
-						TracingProjectId:      "cloud-api-proxy-testing",
+						TracingOptions: &options.TracingOptions{
+							ProjectId: "cloud-api-proxy-testing",
+						},
 						HttpRequestTimeout:    2 * time.Minute,
 						GeneratedHeaderPrefix: "X-Test-Header-",
 					},

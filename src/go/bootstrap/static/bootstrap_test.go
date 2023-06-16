@@ -44,7 +44,9 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "http://127.0.0.1:8082"
-				opt.DisableTracing = true
+				opt.TracingOptions = &options.TracingOptions{
+					DisableTracing: true,
+				}
 				opt.ClientIPFromForwardedHeader = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.ScServiceConfig),
@@ -55,7 +57,9 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "http://127.0.0.1:8082"
-				opt.DisableTracing = true
+				opt.TracingOptions = &options.TracingOptions{
+					DisableTracing: true,
+				}
 				opt.SkipServiceControlFilter = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.AuthServiceConfig),
@@ -66,7 +70,9 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "http://127.0.0.1:8082"
-				opt.DisableTracing = true
+				opt.TracingOptions = &options.TracingOptions{
+					DisableTracing: true,
+				}
 				opt.SkipServiceControlFilter = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.DrServiceConfig),
@@ -77,7 +83,9 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "http://127.0.0.1:8082"
-				opt.DisableTracing = true
+				opt.TracingOptions = &options.TracingOptions{
+					DisableTracing: true,
+				}
 				opt.SkipServiceControlFilter = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.RmServiceConfig),
@@ -88,7 +96,9 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "grpc://127.0.0.1:8082"
-				opt.DisableTracing = true
+				opt.TracingOptions = &options.TracingOptions{
+					DisableTracing: true,
+				}
 				opt.EnableResponseCompression = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.GrpcEchoServiceConfig),
@@ -99,7 +109,9 @@ func TestServiceToBootstrapConfig(t *testing.T) {
 			opt_mod: func(opt *options.ConfigGeneratorOptions) {
 				opt.AdminPort = 0
 				opt.BackendAddress = "http://127.0.0.1:8082"
-				opt.DisableTracing = true
+				opt.TracingOptions = &options.TracingOptions{
+					DisableTracing: true,
+				}
 				opt.SkipServiceControlFilter = true
 			},
 			serviceConfigPath: platform.GetFilePath(platform.SbServiceConfig),
