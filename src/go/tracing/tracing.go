@@ -19,7 +19,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
@@ -52,23 +51,27 @@ func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContex
 	return out, nil
 }
 
-// MaybeFetchTracingProjectID fetches the tenant project ID from IMDS if it is
-// not specified by the user.
-func MaybeFetchTracingProjectID(opts options.CommonOptions, imdsFetcher *metadata.MetadataFetcher) (string, error) {
+// ShouldFetchTracingProjectID determines if we should use tenant project ID
+// from IMDS.
+func ShouldFetchTracingProjectID(opts options.CommonOptions) bool {
+	if opts.TracingOptions.DisableTracing {
+		return false
+	}
 
 	// If user specified a project-id, use that
 	projectId := opts.TracingOptions.ProjectId
 	if projectId != "" {
-		return projectId, nil
+		return false
 	}
 
 	// Otherwise determine project-id automatically
-	glog.Infof("tracing_project_id was not specified, attempting to fetch it from GCP Metadata server")
+	glog.Infof("--tracing_project_id was not specified, attempting to fetch it from GCP Metadata server.")
 	if opts.NonGCP {
-		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
+		glog.Warning("--tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime.")
+		return false
 	}
 
-	return imdsFetcher.FetchProjectId()
+	return true
 }
 
 func createOpenCensusConfig(opts options.TracingOptions) (*tracepb.OpenCensusConfig, error) {
@@ -108,7 +111,8 @@ func createOpenCensusConfig(opts options.TracingOptions) (*tracepb.OpenCensusCon
 // CreateTracing outputs envoy HCM tracing config.
 func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tracing, error) {
 	if opts.ProjectId == "" {
-		return nil, fmt.Errorf("cannot create tracing config because tracing project ID is empty")
+		glog.Warningf("Not adding tracing config because project ID is empty")
+		return nil, nil
 	}
 
 	openCensusConfig, err := createOpenCensusConfig(opts)

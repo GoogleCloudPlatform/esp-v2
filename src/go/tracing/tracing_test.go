@@ -15,7 +15,6 @@
 package tracing
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -152,32 +151,55 @@ func TestNonGcpOpenCensusConfig(t *testing.T) {
 }
 
 // Ensures that the project-id is automatically populated in the tracing config on GCP deployments
-func TestGcpOpenCensusConfig(t *testing.T) {
+func TestShouldFetchTracingProjectID(t *testing.T) {
 	testData := []struct {
-		desc          string
-		wantProjectID string
+		desc string
+		opts options.CommonOptions
+		want bool
 	}{
 		{
-			desc:          "Success with default tracing, project id from metadata",
-			wantProjectID: fakeMetadataProjectId,
+			desc: "No fetch when project ID is specified",
+			opts: options.CommonOptions{
+				TracingOptions: &options.TracingOptions{
+					ProjectId: fakeOptsProjectId,
+				},
+			},
+			want: false,
+		},
+		{
+			desc: "No fetch when non-GCP",
+			opts: options.CommonOptions{
+				NonGCP:         true,
+				TracingOptions: &options.TracingOptions{},
+			},
+			want: false,
+		},
+		{
+			desc: "No fetch when tracing is disabled",
+			opts: options.CommonOptions{
+				TracingOptions: &options.TracingOptions{
+					DisableTracing: true,
+				},
+			},
+			want: false,
+		},
+		{
+			desc: "Fetch by default",
+			opts: options.CommonOptions{
+				TracingOptions: &options.TracingOptions{},
+			},
+			want: true,
 		},
 	}
 
 	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := ShouldFetchTracingProjectID(tc.opts)
 
-		runTest(t, true, func() {
-
-			opts := options.DefaultCommonOptions()
-			gotProjectID, err := MaybeFetchTracingProjectID(opts, metadata.NewMetadataFetcher(opts))
-			if err != nil {
-				t.Fatalf("Test (%s): failed, got err: %v, want no err", tc.desc, err)
-			}
-
-			if gotProjectID != tc.wantProjectID {
-				t.Fatalf("Test (%s): failed, got project ID %q, want ID %q", tc.desc, gotProjectID, tc.wantProjectID)
+			if got != tc.want {
+				t.Fatalf("ShouldFetchTracingProjectID() got %v, want %v", got, tc.want)
 			}
 		})
-
 	}
 }
 
@@ -314,11 +336,11 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			wantError: "invalid trace sampling rate",
 		},
 		{
-			desc: "Error when no project ID is specified",
+			desc: "Empty config when project ID is not specified",
 			opts: options.TracingOptions{
-				SamplingRate: 1,
+				SamplingRate: options.DefaultCommonOptions().TracingOptions.SamplingRate,
 			},
-			wantError: "tracing project ID is empty",
+			wantResult: nil,
 		},
 	}
 
@@ -345,72 +367,6 @@ func TestHcmTracingSampleRate(t *testing.T) {
 				}
 			})
 		})
-	}
-}
-
-// Tests the various cases for automatically determining the project-id in any environment
-func TestDetermineProjectId(t *testing.T) {
-	testData := []struct {
-		desc             string
-		nonGcp           bool
-		tracingProjectId string
-		runServer        bool
-		wantError        string
-		wantResult       string
-	}{
-		{
-			desc:             "tracing_project_id not specified, but successfully discovered",
-			nonGcp:           false,
-			tracingProjectId: "",
-			runServer:        true,
-			wantResult:       fakeMetadataProjectId,
-		},
-		{
-			desc:             "tracing_project_id not specified, and non GCP runtime",
-			nonGcp:           true,
-			tracingProjectId: "",
-			runServer:        false,
-			wantError:        "tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime",
-		},
-		{
-			desc:             "tracing_project_id not specified, and error fetching from metadata server",
-			nonGcp:           false,
-			tracingProjectId: "",
-			runServer:        false,
-			wantError:        " ", // Allow any error message, depends on underlying http client error
-		},
-		{
-			desc:             "tracing_project_id specified, successfully used",
-			nonGcp:           false,
-			tracingProjectId: fakeOptsProjectId,
-			wantResult:       fakeOptsProjectId,
-		},
-	}
-
-	for _, tc := range testData {
-
-		runTest(t, tc.runServer, func() {
-
-			opts := options.DefaultCommonOptions()
-			opts.NonGCP = tc.nonGcp
-			opts.TracingOptions.ProjectId = tc.tracingProjectId
-
-			got, err := MaybeFetchTracingProjectID(opts, metadata.NewMetadataFetcher(opts))
-
-			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-				t.Errorf("Test (%s): failed, got err: %v, want err: %v", tc.desc, err, tc.wantError)
-			}
-
-			if tc.wantError == "" && err != nil {
-				t.Errorf("Test (%s): failed, got err: %v, want no err", tc.desc, err)
-			}
-
-			if !reflect.DeepEqual(got, tc.wantResult) {
-				t.Errorf("Test (%s): failed, got: %v, want: %v", tc.desc, got, tc.wantResult)
-			}
-
-		})
-
 	}
 }
 
