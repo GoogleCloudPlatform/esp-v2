@@ -27,19 +27,7 @@ type CommonOptions struct {
 	AdsNamedPipe          string
 	Node                  string
 	GeneratedHeaderPrefix string
-
-	// Flags for tracing
-	DisableTracing                  bool
-	TracingProjectId                string
-	TracingStackdriverAddress       string
-	TracingSamplingRate             float64
-	TracingIncomingContext          string
-	TracingOutgoingContext          string
-	TracingMaxNumAttributes         int64
-	TracingMaxNumAnnotations        int64
-	TracingMaxNumMessageEvents      int64
-	TracingMaxNumLinks              int64
-	TracingEnableVerboseAnnotations bool
+	TracingOptions        *TracingOptions
 
 	// Flags for metadata
 	NonGCP             bool
@@ -53,6 +41,21 @@ type CommonOptions struct {
 
 	// Whether to disallow colon in the url wildcard path segment.
 	DisallowColonInWildcardPathSegment bool
+}
+
+// TracingOptions are the shared options to create tracing config.
+type TracingOptions struct {
+	DisableTracing           bool
+	ProjectId                string
+	StackdriverAddress       string
+	SamplingRate             float64
+	IncomingContext          string
+	OutgoingContext          string
+	MaxNumAttributes         int64
+	MaxNumAnnotations        int64
+	MaxNumMessageEvents      int64
+	MaxNumLinks              int64
+	EnableVerboseAnnotations bool
 }
 
 // IamTokenKind specifies which type of token to generate using the IAM Credentials API.
@@ -88,16 +91,19 @@ func DefaultCommonOptions() CommonOptions {
 		// b/148454048: This should be at least 20s due to IMDS latency issues with k8s workload identities.
 		HttpRequestTimeout: 30 * time.Second,
 
-		Node:                       "ESPv2",
-		TracingSamplingRate:        0.001,
-		TracingMaxNumAttributes:    32,
-		TracingMaxNumAnnotations:   32,
-		TracingMaxNumMessageEvents: 128,
-		TracingMaxNumLinks:         128,
-		TracingIncomingContext:     "traceparent,x-cloud-trace-context",
-		TracingOutgoingContext:     "traceparent,x-cloud-trace-context",
-		MetadataURL:                "http://169.254.169.254",
-		IamURL:                     "https://iamcredentials.googleapis.com",
-		GeneratedHeaderPrefix:      "X-Endpoint-",
+		Node: "ESPv2",
+		TracingOptions: &TracingOptions{
+			DisableTracing:      false,
+			SamplingRate:        0.001,
+			MaxNumAttributes:    32,
+			MaxNumAnnotations:   32,
+			MaxNumMessageEvents: 128,
+			MaxNumLinks:         128,
+			IncomingContext:     "traceparent,x-cloud-trace-context",
+			OutgoingContext:     "traceparent,x-cloud-trace-context",
+		},
+		MetadataURL:           "http://169.254.169.254",
+		IamURL:                "https://iamcredentials.googleapis.com",
+		GeneratedHeaderPrefix: "X-Endpoint-",
 	}
 }

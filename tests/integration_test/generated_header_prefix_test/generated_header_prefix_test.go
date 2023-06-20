@@ -148,7 +148,7 @@ func TestOperationNameHeader(t *testing.T) {
 	}
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
-			s := env.NewTestEnv(platform.TestGeneratedHeaders, platform.EchoSidecar)
+			s := env.NewTestEnv(platform.TestOperationNameHeader, platform.EchoSidecar)
 
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {

@@ -47,6 +47,10 @@ type SuccessOPTestCase struct {
 	// will most likely be ignored.
 	OptsMergeBehavior func(*mergo.Config)
 
+	// OnlyCheckFilterConfig indicates the WantFilterConfigs only represents
+	// the filter config proto, not the surrounding HTTP filter.
+	OnlyCheckFilterConfig bool
+
 	// WantFilterConfigs is the expected filter config message per generator.
 	// It is an ordered slice. Each element is the JSON representation of the
 	// filter config.
@@ -81,9 +85,12 @@ func (tc *SuccessOPTestCase) RunTest(t *testing.T, factory filtergen.FilterGener
 				t.Fatalf("GenFilterConfig() at generator %d got error: %v", i, err)
 			}
 
-			gotHTTPFilter, err := filtergen.FilterConfigToHTTPFilter(gotConfig, gotGenerator.FilterName())
-			if err != nil {
-				t.Fatalf("Fail to convert filter config to HTTP filter for generator %d: %v", i, err)
+			gotHTTPFilter := gotConfig
+			if !tc.OnlyCheckFilterConfig {
+				gotHTTPFilter, err = filtergen.FilterConfigToHTTPFilter(gotConfig, gotGenerator.FilterName())
+				if err != nil {
+					t.Fatalf("Fail to convert filter config to HTTP filter for generator %d: %v", i, err)
+				}
 			}
 
 			gotJson, err := util.ProtoToJson(gotHTTPFilter)

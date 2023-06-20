@@ -19,7 +19,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
@@ -52,51 +51,52 @@ func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContex
 	return out, nil
 }
 
-func getTracingProjectId(opts options.CommonOptions) (string, error) {
+// ShouldFetchTracingProjectID determines if we should use tenant project ID
+// from IMDS.
+func ShouldFetchTracingProjectID(opts options.CommonOptions) bool {
+	if opts.TracingOptions.DisableTracing {
+		return false
+	}
 
 	// If user specified a project-id, use that
-	projectId := opts.TracingProjectId
+	projectId := opts.TracingOptions.ProjectId
 	if projectId != "" {
-		return projectId, nil
+		return false
 	}
 
 	// Otherwise determine project-id automatically
-	glog.Infof("tracing_project_id was not specified, attempting to fetch it from GCP Metadata server")
+	glog.Infof("--tracing_project_id was not specified, attempting to fetch it from GCP Metadata server.")
 	if opts.NonGCP {
-		return "", fmt.Errorf("tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime")
+		glog.Warning("--tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime.")
+		return false
 	}
 
-	return metadata.NewMetadataFetcher(opts).FetchProjectId()
+	return true
 }
 
-func createOpenCensusConfig(opts options.CommonOptions) (*tracepb.OpenCensusConfig, error) {
-	projectId, err := getTracingProjectId(opts)
-	if err != nil {
-		return nil, err
-	}
-
+func createOpenCensusConfig(opts options.TracingOptions) (*tracepb.OpenCensusConfig, error) {
 	cfg := &tracepb.OpenCensusConfig{
 		TraceConfig: &opencensuspb.TraceConfig{
-			MaxNumberOfAttributes:    opts.TracingMaxNumAttributes,
-			MaxNumberOfAnnotations:   opts.TracingMaxNumAnnotations,
-			MaxNumberOfMessageEvents: opts.TracingMaxNumMessageEvents,
-			MaxNumberOfLinks:         opts.TracingMaxNumLinks,
+			MaxNumberOfAttributes:    opts.MaxNumAttributes,
+			MaxNumberOfAnnotations:   opts.MaxNumAnnotations,
+			MaxNumberOfMessageEvents: opts.MaxNumMessageEvents,
+			MaxNumberOfLinks:         opts.MaxNumLinks,
 		},
 		StackdriverExporterEnabled: true,
-		StackdriverProjectId:       projectId,
+		StackdriverProjectId:       opts.ProjectId,
 	}
 
-	if opts.TracingStackdriverAddress != "" {
-		cfg.StackdriverAddress = opts.TracingStackdriverAddress
+	if opts.StackdriverAddress != "" {
+		cfg.StackdriverAddress = opts.StackdriverAddress
 	}
 
-	if ctx, err := createTraceContexts(opts.TracingIncomingContext); err == nil {
+	if ctx, err := createTraceContexts(opts.IncomingContext); err == nil {
 		cfg.IncomingTraceContext = ctx
 	} else {
 		return nil, err
 	}
 
-	if ctx, err := createTraceContexts(opts.TracingOutgoingContext); err == nil {
+	if ctx, err := createTraceContexts(opts.OutgoingContext); err == nil {
 		cfg.OutgoingTraceContext = ctx
 	} else {
 		return nil, err
@@ -109,7 +109,11 @@ func createOpenCensusConfig(opts options.CommonOptions) (*tracepb.OpenCensusConf
 }
 
 // CreateTracing outputs envoy HCM tracing config.
-func CreateTracing(opts options.CommonOptions) (*hcmpb.HttpConnectionManager_Tracing, error) {
+func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tracing, error) {
+	if opts.ProjectId == "" {
+		glog.Warningf("Not adding tracing config because project ID is empty")
+		return nil, nil
+	}
 
 	openCensusConfig, err := createOpenCensusConfig(opts)
 	if err != nil {
@@ -121,12 +125,12 @@ func CreateTracing(opts options.CommonOptions) (*hcmpb.HttpConnectionManager_Tra
 		return nil, err
 	}
 
-	if opts.TracingSamplingRate < 0.0 || opts.TracingSamplingRate > 1.0 {
-		return nil, fmt.Errorf("invalid trace sampling rate: %v. It must be >= 0.0 and <= 1.0", opts.TracingSamplingRate)
+	if opts.SamplingRate < 0.0 || opts.SamplingRate > 1.0 {
+		return nil, fmt.Errorf("invalid trace sampling rate: %v. It must be >= 0.0 and <= 1.0", opts.SamplingRate)
 	}
 
 	// This results in precision errors. Round percentage to 4 decimal points.
-	percentSampleRate := opts.TracingSamplingRate * 100
+	percentSampleRate := opts.SamplingRate * 100
 	percentSampleRate = math.Round(percentSampleRate*10000) / 10000
 
 	return &hcmpb.HttpConnectionManager_Tracing{
@@ -143,6 +147,6 @@ func CreateTracing(opts options.CommonOptions) (*hcmpb.HttpConnectionManager_Tra
 			Name:       "envoy.tracers.opencensus",
 			ConfigType: &tracepb.Tracing_Http_TypedConfig{TypedConfig: typedConfig},
 		},
-		Verbose: opts.TracingEnableVerboseAnnotations,
+		Verbose: opts.EnableVerboseAnnotations,
 	}, nil
 }

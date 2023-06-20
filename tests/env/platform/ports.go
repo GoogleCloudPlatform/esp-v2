@@ -100,6 +100,7 @@ const (
 	TestMethodOverrideBackendMethod
 	TestMethodOverrideScReport
 	TestMultiGrpcServices
+	TestOperationNameHeader
 	TestPreflightRequestWithAllowCors
 	TestProxyHandleCorsSimpleRequestsBasic
 	TestProxyHandleCorsSimpleRequestsRegex

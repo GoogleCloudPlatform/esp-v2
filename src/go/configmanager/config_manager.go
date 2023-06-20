@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/tokengenerator"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/tracing"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
@@ -242,9 +243,15 @@ func (m *ConfigManager) applyServiceConfig(serviceConfig *confpb.Service) error 
 	if m.metadataFetcher != nil {
 		attrs, err := m.metadataFetcher.FetchGCPAttributes()
 		if err != nil {
-			m.Infof("metadata server was not reached, skipping GCP Attributes: %v", err)
+			m.Warnf("metadata server was not reached, skipping GCP Attributes: %v", err)
 		} else {
 			m.scParams.GCPAttributes = attrs
+		}
+
+		shouldFetchTracingProject := tracing.ShouldFetchTracingProjectID(m.serviceInfo.Options.CommonOptions)
+		if shouldFetchTracingProject {
+			// May still be empty if metadata fetch fails.
+			m.serviceInfo.Options.CommonOptions.TracingOptions.ProjectId = attrs.ProjectId
 		}
 	}
 

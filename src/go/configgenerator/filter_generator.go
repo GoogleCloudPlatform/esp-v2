@@ -23,7 +23,9 @@ import (
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func GetESPv2FilterGenFactories(scParams filtergen.ServiceControlOPFactoryParams) []filtergen.FilterGeneratorOPFactory {
+// MakeHTTPFilterGenFactories creates the HTTP filter generator factories
+// (in order).
+func MakeHTTPFilterGenFactories(scParams filtergen.ServiceControlOPFactoryParams) []filtergen.FilterGeneratorOPFactory {
 	return []filtergen.FilterGeneratorOPFactory{
 		filtergen.NewHeaderSanitizerFilterGensFromOPConfig,
 		filtergen.NewCORSFilterGensFromOPConfig,
