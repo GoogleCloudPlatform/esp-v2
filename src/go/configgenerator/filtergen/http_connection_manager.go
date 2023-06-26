@@ -198,11 +198,6 @@ func (g *HTTPConnectionManagerGenerator) GenFilterConfig() (proto.Message, error
 	jsonStr, _ := util.ProtoToJson(httpConMgr)
 	glog.Infof("HTTP Connection Manager config before adding routes or HTTP filters: %v", jsonStr)
 
-	httpConMgr.HttpFilters = g.HTTPFilterConfigs
-	httpConMgr.RouteSpecifier = &hcmpb.HttpConnectionManager_RouteConfig{
-		RouteConfig: g.RouteConfig,
-	}
-
 	return httpConMgr, nil
 }
 

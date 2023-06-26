@@ -78,25 +78,34 @@ func MakeHttpFilterConfigs(filterGenerators []filtergen.FilterGenerator) ([]*hcm
 }
 
 // MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.FilterGenerator, connectionManagerGen *filtergen.HTTPConnectionManagerGenerator) (*listenerpb.Listener, error) {
-	var err error
-	connectionManagerGen.HTTPFilterConfigs, err = MakeHttpFilterConfigs(httpFilterGenerators)
+func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.FilterGenerator, connectionManagerGen filtergen.FilterGenerator) (*listenerpb.Listener, error) {
+	httpFilterConfigs, err := MakeHttpFilterConfigs(httpFilterGenerators)
 	if err != nil {
 		return nil, err
 	}
 
-	connectionManagerGen.RouteConfig, err = makeRouteConfig(serviceInfo, httpFilterGenerators)
+	routeConfig, err := makeRouteConfig(serviceInfo, httpFilterGenerators)
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
 
 	// HTTP connection manager filter configuration
-	connectionManagerConfig, err := connectionManagerGen.GenFilterConfig()
+	hcmConfig, err := connectionManagerGen.GenFilterConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	networkFilterConfig, err := filtergen.FilterConfigToNetworkFilter(connectionManagerConfig, filtergen.HTTPConnectionManagerFilterName)
+	typedHCMConfig, ok := hcmConfig.(*hcmpb.HttpConnectionManager)
+	if !ok {
+		return nil, fmt.Errorf("HCM generator returned proto config of type %T, want HCM config", hcmConfig)
+	}
+
+	typedHCMConfig.HttpFilters = httpFilterConfigs
+	typedHCMConfig.RouteSpecifier = &hcmpb.HttpConnectionManager_RouteConfig{
+		RouteConfig: routeConfig,
+	}
+
+	networkFilterConfig, err := filtergen.FilterConfigToNetworkFilter(typedHCMConfig, filtergen.HTTPConnectionManagerFilterName)
 	if err != nil {
 		return nil, err
 	}
