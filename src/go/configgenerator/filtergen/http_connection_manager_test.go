@@ -54,7 +54,6 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	},
 	"normalizePath": false,
 	"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
-	"routeConfig": {},
 	"statPrefix": "ingress_http",
 	"upgradeConfigs": [
 		{
@@ -105,7 +104,6 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	},
 	"normalizePath": false,
 	"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
-	"routeConfig": {},
 	"statPrefix": "ingress_http",
 	"upgradeConfigs": [
 		{
@@ -146,7 +144,6 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	},
 	"normalizePath": false,
 	"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
-	"routeConfig": {},
 	"statPrefix": "ingress_http",
 	"tracing":{
 		"clientSampling":{},
@@ -202,7 +199,6 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	},
 	"normalizePath": false,
 	"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
-	"routeConfig": {},
 	"statPrefix": "ingress_http",
 	"upgradeConfigs": [
 		{
@@ -242,7 +238,6 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	},
 	"normalizePath": false,
 	"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
-	"routeConfig": {},
 	"statPrefix": "ingress_http",
 	"upgradeConfigs": [
 		{
