@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	facpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/glog"
@@ -40,8 +39,6 @@ const (
 )
 
 type HTTPConnectionManagerGenerator struct {
-	RouteConfig                    *routepb.RouteConfiguration
-	HTTPFilterConfigs              []*hcmpb.HttpFilter
 	IsSchemeHeaderOverrideRequired bool
 
 	// ESPv2 options
