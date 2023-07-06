@@ -22,6 +22,7 @@ The current implementation of ESPv2 uses [Envoy](https://www.envoyproxy.io/) as 
 
 Google Cloud Endpoints and ESPv2 provide:
 
+
 * **Easy Adoption**: The API service can be implemented in any coding language using any IDLs.
 
 * **Multiple Deployment Modes**: Deploy ESPv2 as a sidecar for local backends or as a reverse proxy for remote backends.
