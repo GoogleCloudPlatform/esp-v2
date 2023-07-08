@@ -36,11 +36,12 @@ RUN wget -O /usr/local/bin/bazelisk https://github.com/bazelbuild/bazelisk/relea
     chmod +x /usr/local/bin/bazelisk
 
 # install clang-14 and associated tools (new envoy)
+# see https://apt.llvm.org/ for exhaustive list of all llvm related packages
 RUN wget -O- https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add - && \
     echo "deb https://apt.llvm.org/buster/ llvm-toolchain-buster-14 main" >> /etc/apt/sources.list && \
     apt-get update && \
     apt-get install -y llvm-14 llvm-14-dev libclang-14-dev clang-14 \
-        lld-14 clang-tools-14 clang-format-14 libc++-dev xz-utils
+        lld-14 clang-tools-14 clang-format-14 libc++-dev xz-utils libclang-rt-14-dev
 
 ENV CC clang-14
 ENV CXX clang++-14
