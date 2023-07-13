@@ -1,3 +1,9 @@
+# Release 2.45.0 13-07-2023
+
+- Update Go version to 1.20 (#831)
+- Update base alpine image to 3.18 (#827)
+- expose --health_check_grpc_backend_no_traffic_interval (#815)
+
 # Release 2.44.0 06-04-2023
 
 - Update Envoy to v1.25.4 (#809)
