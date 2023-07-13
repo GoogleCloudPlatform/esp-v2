@@ -1,11 +1,8 @@
 # Release 2.45.0 13-07-2023
 
 - Update Go version to 1.20 (#831)
-- Add llvm dependency for scudo allocator (#834)
-- fix interface for listener creation (#828)
 - Update base alpine image to 3.18 (#827)
 - expose --health_check_grpc_backend_no_traffic_interval (#815)
-- b/277969940: Upgrade config generator libraries to use golang proto v2 (#814)
 
 # Release 2.44.0 06-04-2023
 
