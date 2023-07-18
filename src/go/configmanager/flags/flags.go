@@ -90,7 +90,8 @@ var (
 	ServiceAccountKey = flag.String("service_account_key", defaults.ServiceAccountKey, `Use the service account key JSON file to access the service control and the
 	service management.  You can also set {creds_key} environment variable to the location of the service account credentials JSON file. If the option is
   omitted, the proxy contacts the metadata service to fetch an access token`)
-	TokenAgentPort = flag.Uint("token_agent_port", defaults.TokenAgentPort, "Port that configmanager use to setup server to provide envoy with access token using service account credential, for accessing servicecontrol.")
+	TokenAgentPort                      = flag.Uint("token_agent_port", defaults.TokenAgentPort, "Port that configmanager use to setup server to provide envoy with access token using service account credential, for accessing servicecontrol.")
+	EnableApplicationDefaultCredentials = flag.Bool("enable_application_default_credentials", defaults.EnableApplicationDefaultCredentials, "Config Manager will use application default credentials if available.")
 
 	// Flags for external calls.
 	DisableOidcDiscovery = flag.Bool("disable_oidc_discovery", defaults.DisableOidcDiscovery, `Disable OpenID Connect Discovery. 
@@ -263,6 +264,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		EnableOperationNameHeader:                     *EnableOperationNameHeader,
 		ServiceAccountKey:                             *ServiceAccountKey,
 		TokenAgentPort:                                *TokenAgentPort,
+		EnableApplicationDefaultCredentials:           *EnableApplicationDefaultCredentials,
 		DisableOidcDiscovery:                          *DisableOidcDiscovery,
 		DependencyErrorBehavior:                       *DependencyErrorBehavior,
 		SkipJwtAuthnFilter:                            *SkipJwtAuthnFilter,

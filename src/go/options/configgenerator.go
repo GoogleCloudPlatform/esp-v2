@@ -82,8 +82,9 @@ type ConfigGeneratorOptions struct {
 	EnableOperationNameHeader bool
 
 	// Flags for non_gcp deployment.
-	ServiceAccountKey string
-	TokenAgentPort    uint
+	ServiceAccountKey                   string
+	TokenAgentPort                      uint
+	EnableApplicationDefaultCredentials bool
 
 	// Flags for external calls.
 	DisableOidcDiscovery    bool
@@ -210,5 +211,6 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		AllowDiscoveryAPIs:                      false,
 		TranscodingRejectCollision:              false,
 		LocalHTTPBackendAddress:                 "",
+		EnableApplicationDefaultCredentials:     false,
 	}
 }
