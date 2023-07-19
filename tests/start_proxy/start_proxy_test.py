@@ -585,6 +585,16 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
+            # Use Application Default Credentials with non-gcp
+            (['--service=test_bookstore.gloud.run',
+              '--backend=http://127.0.0.1', '--version=2019-11-09r0',
+              '--enable_application_default_credentials', '--non_gcp', '--disable_tracing'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'fixed',
+              '--backend_address', 'http://127.0.0.1', '--v', '0',
+              '--service', 'test_bookstore.gloud.run',
+              '--service_config_id', '2019-11-09r0', '--disable_tracing',
+              '--enable_application_default_credentials', '--non_gcp',
+              ]),
             # Tracing enabled when manually specifying project id on non-gcp.
             (['--service=test_bookstore.gloud.run',
               '--backend=http://127.0.0.1', '--version=2019-11-09r0',
@@ -983,7 +993,11 @@ class TestStartProxy(unittest.TestCase):
             ['--version=2019-11-09r0', '--health_check_grpc_backend_service=/foo.bar'],
             # The flag --health_check_grpc_backend_no_traffic_interval requires the flag --health_check_grpc_backend
             ['--version=2019-11-09r0', '--health_check_grpc_backend_no_traffic_interval=1s'],
-            ['--version=2019-11-09r0', '--ssl_client_root_certs_file=/tmp/server.crt', '--ssl_backend_client_root_certs_file=/tmp/server.crt']
+            ['--version=2019-11-09r0', '--ssl_client_root_certs_file=/tmp/server.crt', '--ssl_backend_client_root_certs_file=/tmp/server.crt'],
+            # The flag --service_account_key and --enable_application_default_credentials cannot be supplied at the same time.
+            ['--non_gcp', '--service_account_key=tmp/service_account_key', '--enable_application_default_credentials'],
+            # The flag --non_gcp is set without --service_account_key or --enable_application_default_credentials.
+            ['--non_gcp']
           ]
 
         for flags in testcases:
