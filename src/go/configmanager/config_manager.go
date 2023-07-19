@@ -132,7 +132,7 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 	// accessToken is unavailable from imds and --service_account_key must be
 	// set to generate accessToken.
 	// The inverse is not true. We can still use IMDS on GCP when service account key is specified.
-	if mf == nil && opts.ServiceAccountKey == "" && opts.EnableApplicationDefaultCredentials == false {
+	if mf == nil && opts.ServiceAccountKey == "" && !opts.EnableApplicationDefaultCredentials {
 		return nil, fmt.Errorf("if flag --non_gcp is specified, flag --service_account_key or --enable_application_default_credentials must be specified")
 	}
 
