@@ -839,6 +839,7 @@ environment variable or by passing "-k" flag to this script.
         '''.format(creds_key=GOOGLE_CREDS_KEY))
     parser.add_argument(
         '--enable_application_default_credentials',
+        action='store_true',
         default=False,
         help='''
         Enable application default credentials to communicate with service management APIs. 
@@ -1086,8 +1087,8 @@ def enforce_conflict_args(args):
             return "Flag --version cannot be used together with --service_json_path."
 
     if args.non_gcp:
-        if args.service_account_key is None:
-            return "If --non_gcp is specified, --service_account_key has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
+        if args.service_account_key is None and not args.enable_application_default_credentials:
+            return "If --non_gcp is specified, --service_account_key or --enable_application_default_credentials has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
         if args.service_account_key and args.enable_application_default_credentials:
             return "Only one of --service_account_key or --enable_application_default_credentials can be supplied for credentials at once."
         if not args.tracing_project_id:
@@ -1491,6 +1492,8 @@ def gen_proxy_config(args):
         if args.cors_allow_credentials:
             proxy_conf.append("--cors_allow_credentials")
 
+    if args.enable_application_default_credentials:
+        proxy_conf.append("--enable_application_default_credentials")
     if args.service_account_key:
         proxy_conf.extend(["--service_account_key", args.service_account_key])
     if args.non_gcp:
