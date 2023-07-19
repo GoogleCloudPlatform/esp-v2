@@ -837,7 +837,15 @@ environment variable or by passing "-k" flag to this script.
         the location of the service account credentials JSON file. If the option is
         omitted, the proxy contacts the metadata service to fetch an access token.
         '''.format(creds_key=GOOGLE_CREDS_KEY))
-
+    parser.add_argument(
+        '--enable_application_default_credentials',
+        default=False,
+        help='''
+        Enable application default credentials to communicate with service management APIs. 
+        Google auth libraries use a strategy called Application Default Credentials (ADC) 
+        to detect and select credentials based on environment or context automatically. 
+        For more detail, see: https://google.aip.dev/auth/4110. 
+        ''')
     parser.add_argument(
         '--dns_resolver_addresses',
         help='''
@@ -1080,6 +1088,8 @@ def enforce_conflict_args(args):
     if args.non_gcp:
         if args.service_account_key is None:
             return "If --non_gcp is specified, --service_account_key has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
+        if args.service_account_key and args.enable_application_default_credentials:
+            return "Only one of --service_account_key or --enable_application_default_credentials can be supplied for credentials at once."
         if not args.tracing_project_id:
             # for non gcp case, disable tracing if tracing project id is not provided.
             args.disable_tracing = True
