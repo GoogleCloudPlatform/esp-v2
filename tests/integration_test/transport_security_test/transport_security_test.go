@@ -183,18 +183,22 @@ func TestDownstreamMTLS(t *testing.T) {
 	}{
 		{
 			desc:                  "failure(validate client cert),  client doesn't set up cert",
-			scheme:                "http",
+			scheme:                "https",
 			httpVersions:          []int{1},
+			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
-			wantError:             fmt.Errorf(`tls: unknown certificate authority`),
+			clientRootCertPath:    platform.GetFilePath(platform.ServerCert),
+			wantError:             fmt.Errorf(`tls: certificate required`),
 		},
 		{
 			desc:                  "failure(validate client cert),  client cert is unknown to proxy's root cert",
-			scheme:                "http",
+			scheme:                "https",
 			httpVersions:          []int{1},
+			sslServerCertPath:     platform.GetFilePath(platform.TestDataFolder),
 			sslServerRootCertPath: platform.GetFilePath(platform.DownstreamClientCert),
 			clientCertPath:        platform.GetFilePath(platform.MismatchCert),
 			clientKeyPath:         platform.GetFilePath(platform.MismatchKey),
+			clientRootCertPath:    platform.GetFilePath(platform.ServerCert),
 			wantError:             fmt.Errorf(`tls: unknown certificate authority`),
 		},
 		{
@@ -288,26 +292,20 @@ func TestDownstreamMTLS(t *testing.T) {
 			// FIXME: Use of localhost. Difficult to generate certs with ip addresses.
 			url := fmt.Sprintf("%s://%v:%v/simpleget?key=api-key", tc.scheme, platform.GetLocalhost(), s.Ports().ListenerPort)
 
-			sendTestCall := func(httpsVersion int) {
-				_, resp, err = client.DoHttpsGet(url, httpsVersion, tc.clientRootCertPath, tc.clientCertPath, tc.clientKeyPath)
-				desc := fmt.Sprintf("%s with Http%v", tc.desc, httpsVersion)
-				if tc.wantError == nil {
-					if err != nil {
-						t.Fatal(err)
-					}
-					if !strings.Contains(string(resp), tc.wantResp) {
-						t.Errorf("Test desc (%v) expected: %s, got: %s", desc, tc.wantResp, string(resp))
-					}
-				} else if err != nil && !strings.Contains(err.Error(), tc.wantError.Error()) {
-					t.Errorf("Test (%s): failed\nexpected: %v\ngot: %v", desc, tc.wantError, err)
-				}
-			}
-
 			for _, version := range tc.httpVersions {
-				sendTestCall(version)
+				t.Run(fmt.Sprintf("HTTP version %d", version), func(t *testing.T) {
+					_, resp, err = client.DoHttpsGet(url, version, tc.clientRootCertPath, tc.clientCertPath, tc.clientKeyPath)
+
+					if cmpErr := utils.CompareErrors(err, tc.wantError); cmpErr != nil {
+						t.Fatal(cmpErr)
+					}
+
+					if tc.wantError == nil && tc.wantResp != "" && !strings.Contains(string(resp), tc.wantResp) {
+						t.Errorf("got: %q, want %q", string(resp), tc.wantResp)
+					}
+				})
 			}
 		})
-
 	}
 }
 

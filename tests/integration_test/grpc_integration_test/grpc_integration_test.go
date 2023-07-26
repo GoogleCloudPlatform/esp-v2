@@ -15,6 +15,7 @@
 package grpc_integration_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -57,7 +58,7 @@ func TestGRPC(t *testing.T) {
 		method         string
 		header         http.Header
 		wantResp       string
-		wantError      string
+		wantError      error
 	}{
 		{
 			desc:           "Http1 client health check succeed",
@@ -68,7 +69,7 @@ func TestGRPC(t *testing.T) {
 			desc:           "Http1 client health check fail with wrong path",
 			clientProtocol: "http",
 			method:         "/healthcheck",
-			wantError:      "404 Not Found",
+			wantError:      errors.New("404 Not Found"),
 		},
 		{
 			desc:           "Http2 client health check succeed",
@@ -79,7 +80,7 @@ func TestGRPC(t *testing.T) {
 			desc:           "Http2 client health check fail with wrong path",
 			clientProtocol: "http2",
 			method:         "/healthcheck",
-			wantError:      "404 Not Found",
+			wantError:      errors.New("404 Not Found"),
 		},
 		{
 			desc:           "gRPC client calling gRPC backend",
@@ -122,14 +123,14 @@ func TestGRPC(t *testing.T) {
 			desc:           "Http client calling gRPC backend invalid query parameter, causing transcoding to fail by default",
 			clientProtocol: "http",
 			method:         "/v1/shelves/200?key=api_key&foo=bar",
-			wantError:      "http response status is not 200 OK: 415 Unsupported Media Type", // Transcoder does not send an application/grpc to the backend
+			wantError:      errors.New("http response status is not 200 OK: 415 Unsupported Media Type"), // Transcoder does not send an application/grpc to the backend
 		},
 		{
 			desc:           "gRPC client calling gRPC backend, backend returns gRPC error",
 			clientProtocol: "grpc",
 			method:         "GetShelfInvalid",
 			header:         http.Header{"x-api-key": []string{"api-key"}},
-			wantError:      `code = NotFound`,
+			wantError:      errors.New("code = NotFound"),
 		},
 	}
 
@@ -137,16 +138,12 @@ func TestGRPC(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
-			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %v", tc.desc, tc.wantError, err)
+			if cmpErr := utils.CompareErrors(err, tc.wantError); cmpErr != nil {
+				t.Error(cmpErr)
 			}
 
-			if tc.wantError == "" && err != nil {
-				t.Errorf("Test (%s): got unexpected error: %s", tc.desc, resp)
-			}
-
-			if !strings.Contains(resp, tc.wantResp) {
-				t.Errorf("Test (%s): failed, expected: %s, got: %s", tc.desc, tc.wantResp, resp)
+			if tc.wantError == nil && tc.wantResp != "" && !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Failed, got: %q, want resp to contain substring: %q,", resp, tc.wantResp)
 			}
 		})
 	}
@@ -162,7 +159,7 @@ func TestGrpcConnectionBufferLimit(t *testing.T) {
 		method         string
 		header         http.Header
 		wantResp       string
-		wantError      string
+		wantError      error
 	}{
 		{
 			desc: "Transcoding fails when buffer limit is too small.",
@@ -171,7 +168,7 @@ func TestGrpcConnectionBufferLimit(t *testing.T) {
 			}, utils.CommonArgs()...),
 			clientProtocol: "http",
 			method:         "/v1/shelves/200?key=api-key",
-			wantError:      `500 Internal Server Error`,
+			wantError:      errors.New("500 Internal Server Error"),
 		},
 		{
 			desc: "Transcoding succeeds when buffer limit is higher.",
@@ -194,16 +191,11 @@ func TestGrpcConnectionBufferLimit(t *testing.T) {
 
 			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			resp, err := client.MakeCall(tc.clientProtocol, addr, "GET", tc.method, "", tc.header)
-			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
-				t.Errorf("Failed, expected: %s, got: %v", tc.wantError, err)
+			if cmpErr := utils.CompareErrors(err, tc.wantError); cmpErr != nil {
+				t.Error(cmpErr)
 			}
-
-			if tc.wantError == "" && err != nil {
-				t.Errorf("Got unexpected error: %s", err)
-			}
-
-			if !strings.Contains(resp, tc.wantResp) {
-				t.Errorf("Failed, expected: %s, got: %s", tc.wantResp, resp)
+			if tc.wantError == nil && tc.wantResp != "" && !strings.Contains(resp, tc.wantResp) {
+				t.Errorf("Failed, got: %q, want resp to contain substring: %q,", resp, tc.wantResp)
 			}
 		})
 	}
