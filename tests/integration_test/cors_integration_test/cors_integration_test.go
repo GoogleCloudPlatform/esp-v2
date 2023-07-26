@@ -15,6 +15,7 @@
 package cors_integration_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -204,7 +205,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 	testData := []struct {
 		desc            string
 		reqHeaders      map[string]string
-		wantError       string
+		wantError       error
 		wantRespHeaders map[string]string
 	}{
 		{
@@ -230,7 +231,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Access-Control-Request-Method":  corsRequestMethod,
 				"Access-Control-Request-Headers": corsRequestHeader,
 			},
-			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`,
+			wantError: errors.New(`{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`),
 			wantRespHeaders: map[string]string{
 				"Access-Control-Allow-Origin":      "",
 				"Access-Control-Allow-Methods":     "",
@@ -246,7 +247,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Access-Control-Request-Method":  corsRequestMethod,
 				"Access-Control-Request-Headers": corsRequestHeader,
 			},
-			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`,
+			wantError: errors.New(`{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`),
 			wantRespHeaders: map[string]string{
 				"Access-Control-Allow-Origin":      "",
 				"Access-Control-Allow-Methods":     "",
@@ -262,7 +263,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 				"Origin":                         corsAllowOriginValue,
 				"Access-Control-Request-Headers": corsRequestHeader,
 			},
-			wantError: `{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`,
+			wantError: errors.New(`{"code":400,"message":"The CORS preflight request is missing one (or more) of the following required headers [Origin, Access-Control-Request-Method] or has an unmatched Origin header."}`),
 			wantRespHeaders: map[string]string{
 				"Access-Control-Allow-Origin":      "",
 				"Access-Control-Allow-Methods":     "",
@@ -279,12 +280,8 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 			url := fmt.Sprintf("http://%v:%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo")
 			respHeaders, _, err := utils.DoWithHeaders(url, "OPTIONS", "", tc.reqHeaders)
 
-			if err != nil && tc.wantError == "" {
-				t.Fatal(err)
-			} else if err == nil && tc.wantError != "" {
-				t.Fatalf("Want error, got no error")
-			} else if err != nil && !strings.Contains(err.Error(), tc.wantError) {
-				t.Errorf("\nwant error: %v, \ngot  error: %v", tc.wantError, err)
+			if cmpErr := utils.CompareErrors(err, tc.wantError); cmpErr != nil {
+				t.Error(cmpErr)
 			}
 
 			if respHeaders == nil {

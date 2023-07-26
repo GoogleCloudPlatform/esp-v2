@@ -17,7 +17,6 @@ package compression_test
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -53,7 +52,6 @@ func TestCompressionTranscoded(t *testing.T) {
 		token      string
 		headers    map[string][]string
 		wantResp   string
-		wantErr    string
 		wantDecode string
 	}
 
@@ -103,17 +101,14 @@ func TestCompressionTranscoded(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
 			body, decode, err := client.MakeHttpCallWithDecode(addr, tc.httpMethod, tc.method, tc.token, tc.headers)
-			if tc.wantErr != "" {
-				if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("failed, expected err: %v, got: %v", tc.wantErr, err)
-				}
-			} else {
-				if tc.wantDecode != decode {
-					t.Errorf("failed, decode diff, expected %v, got: %v", tc.wantDecode, decode)
-				}
-				if err := util.JsonEqual(tc.wantResp, body); err != nil {
-					t.Errorf("failed, response body diff, expected %v, got: %v, err: %v", tc.wantResp, body, err)
-				}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.wantDecode != decode {
+				t.Errorf("Failed, got encoding_type: %q, want %q", decode, tc.wantDecode)
+			}
+			if err := util.JsonEqual(tc.wantResp, body); err != nil {
+				t.Errorf("Failed, response body diff, err: %v", err)
 			}
 		})
 	}
