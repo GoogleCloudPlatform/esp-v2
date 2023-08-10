@@ -27,11 +27,14 @@ import (
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	"github.com/google/go-cmp/cmp"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
 	"google.golang.org/protobuf/proto"
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
+	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestMakeRouteConfig(t *testing.T) {
@@ -3116,7 +3119,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 	testData := []struct {
 		desc              string
 		fakeServiceConfig *confpb.Service
-		params            []string
+		optsIn            options.ConfigGeneratorOptions
 		wantRouteConfig   string
 	}{
 		{
@@ -3469,7 +3472,12 @@ func TestMakeFallbackRoute(t *testing.T) {
 				},
 				},
 			},
-			params: []string{"basic", "*", "", "GET,POST,PUT,OPTIONS", "", "", "2m"},
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:       "basic",
+				CorsAllowOrigin:  "*",
+				CorsAllowMethods: "GET,POST,PUT,OPTIONS",
+				CorsMaxAge:       2 * time.Minute,
+			},
 			wantRouteConfig: `
 {
   "name": "local_route",
@@ -3726,7 +3734,12 @@ func TestMakeFallbackRoute(t *testing.T) {
 				},
 				},
 			},
-			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", "", "2m"},
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:       "basic",
+				CorsAllowOrigin:  "http://example.com",
+				CorsAllowMethods: "GET,POST,PUT,OPTIONS",
+				CorsMaxAge:       2 * time.Minute,
+			},
 			wantRouteConfig: `
 {
   "name": "local_route",
@@ -3985,7 +3998,12 @@ func TestMakeFallbackRoute(t *testing.T) {
 				},
 				},
 			},
-			params: []string{"cors_with_regex", "", ".*", "GET,POST,PUT,OPTIONS", "", "", "2m"},
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:           "cors_with_regex",
+				CorsAllowOriginRegex: ".*",
+				CorsAllowMethods:     "GET,POST,PUT,OPTIONS",
+				CorsMaxAge:           2 * time.Minute,
+			},
 			wantRouteConfig: `
 {
   "name": "local_route",
@@ -4434,26 +4452,26 @@ func TestMakeFallbackRoute(t *testing.T) {
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
+			opts.CorsPreset = tc.optsIn.CorsPreset
+			opts.CorsAllowOrigin = tc.optsIn.CorsAllowOrigin
+			opts.CorsAllowOriginRegex = tc.optsIn.CorsAllowOriginRegex
+			opts.CorsAllowMethods = tc.optsIn.CorsAllowMethods
+			opts.CorsAllowHeaders = tc.optsIn.CorsAllowHeaders
+			opts.CorsExposeHeaders = tc.optsIn.CorsExposeHeaders
+			opts.CorsMaxAge = tc.optsIn.CorsMaxAge
 
-			if tc.params != nil {
-				opts.CorsPreset = tc.params[0]
-				opts.CorsAllowOrigin = tc.params[1]
-				opts.CorsAllowOriginRegex = tc.params[2]
-				opts.CorsAllowMethods = tc.params[3]
-				opts.CorsAllowHeaders = tc.params[4]
-				opts.CorsExposeHeaders = tc.params[5]
-				var err error
-				opts.CorsMaxAge, err = time.ParseDuration(tc.params[6])
-				if err != nil {
-					t.Fatal(err)
-				}
-			}
 			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := makeRouteConfig(fakeServiceInfo, nil)
+			filterGenFactories := MakeHTTPFilterGenFactories(filtergen.ServiceControlOPFactoryParams{})
+			filterGens, err := NewFilterGeneratorsFromOPConfig(tc.fakeServiceConfig, opts, filterGenFactories)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, filterGens)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -4472,42 +4490,30 @@ func TestMakeFallbackRoute(t *testing.T) {
 
 func TestMakeRouteConfigForCors(t *testing.T) {
 	testData := []struct {
-		desc string
-		// Test parameters, in the order of "cors_preset", "cors_allow_origin"
-		// "cors_allow_origin_regex", "cors_allow_methods", "cors_allow_headers"
-		// "cors_expose_headers"
-		params           []string
-		allowCredentials bool
-		wantedError      string
-		wantCorsPolicy   *corspb.CorsPolicy
+		desc           string
+		optsIn         options.ConfigGeneratorOptions
+		wantCorsPolicy *corspb.CorsPolicy
 	}{
 		{
 			desc:           "No Cors",
 			wantCorsPolicy: nil,
 		},
 		{
-			desc:        "Incorrect configured basic Cors",
-			params:      []string{"basic", "", `^https?://.+\\.example\\.com\/?$`, "", "", "", "2m"},
-			wantedError: "cors_allow_origin cannot be empty when cors_preset=basic",
-		},
-		{
-			desc:           "No CORS even when other options are set",
-			params:         []string{"", "", "", "GET", "", "", "2m"},
+			desc: "No CORS even when other options are set",
+			optsIn: options.ConfigGeneratorOptions{
+				CorsAllowMethods: "GET",
+				CorsMaxAge:       2 * time.Minute,
+			},
 			wantCorsPolicy: nil,
 		},
 		{
-			desc:        "Incorrect configured regex Cors",
-			params:      []string{"cors_with_regexs", "", `^https?://.+\\.example\\.com\/?$`, "", "", "", "2m"},
-			wantedError: `cors_preset must be either "basic" or "cors_with_regex"`,
-		},
-		{
-			desc:        "Oversize cors origin regex",
-			params:      []string{"cors_with_regex", "", getOverSizeRegexForTest(), "", "Origin,Content-Type,Accept", "", "2m"},
-			wantedError: `invalid cors origin regex: regex program size`,
-		},
-		{
-			desc:   "Correct configured basic Cors, with allow methods",
-			params: []string{"basic", "http://example.com", "", "GET,POST,PUT,OPTIONS", "", "", "2m"},
+			desc: "Correct configured basic Cors, with allow methods",
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:       "basic",
+				CorsAllowOrigin:  "http://example.com",
+				CorsAllowMethods: "GET,POST,PUT,OPTIONS",
+				CorsMaxAge:       2 * time.Minute,
+			},
 			wantCorsPolicy: &corspb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
@@ -4522,8 +4528,13 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			},
 		},
 		{
-			desc:   "Correct configured regex Cors, with allow headers",
-			params: []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "Origin,Content-Type,Accept", "", "2m"},
+			desc: "Correct configured regex Cors, with allow headers",
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:           "cors_with_regex",
+				CorsAllowOriginRegex: "^https?://.+\\\\.example\\\\.com\\/?$",
+				CorsAllowHeaders:     "Origin,Content-Type,Accept",
+				CorsMaxAge:           2 * time.Minute,
+			},
 			wantCorsPolicy: &corspb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
@@ -4540,9 +4551,14 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			},
 		},
 		{
-			desc:             "Correct configured regex Cors, with expose headers",
-			params:           []string{"cors_with_regex", "", `^https?://.+\\.example\\.com\/?$`, "", "", "Content-Length", "2m"},
-			allowCredentials: true,
+			desc: "Correct configured regex Cors, with expose headers",
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:           "cors_with_regex",
+				CorsAllowOriginRegex: "^https?://.+\\\\.example\\\\.com\\/?$",
+				CorsExposeHeaders:    "Content-Length",
+				CorsMaxAge:           2 * time.Minute,
+				CorsAllowCredentials: true,
+			},
 			wantCorsPolicy: &corspb.CorsPolicy{
 				AllowOriginStringMatch: []*matcher.StringMatcher{
 					{
@@ -4561,58 +4577,122 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 	}
 
 	for _, tc := range testData {
-		opts := options.DefaultConfigGeneratorOptions()
-		if tc.params != nil {
-			opts.CorsPreset = tc.params[0]
-			opts.CorsAllowOrigin = tc.params[1]
-			opts.CorsAllowOriginRegex = tc.params[2]
-			opts.CorsAllowMethods = tc.params[3]
-			opts.CorsAllowHeaders = tc.params[4]
-			opts.CorsExposeHeaders = tc.params[5]
-			var err error
-			opts.CorsMaxAge, err = time.ParseDuration(tc.params[6])
+		t.Run(tc.desc, func(t *testing.T) {
+
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.CorsPreset = tc.optsIn.CorsPreset
+			opts.CorsAllowOrigin = tc.optsIn.CorsAllowOrigin
+			opts.CorsAllowOriginRegex = tc.optsIn.CorsAllowOriginRegex
+			opts.CorsAllowMethods = tc.optsIn.CorsAllowMethods
+			opts.CorsAllowHeaders = tc.optsIn.CorsAllowHeaders
+			opts.CorsExposeHeaders = tc.optsIn.CorsExposeHeaders
+			opts.CorsMaxAge = tc.optsIn.CorsMaxAge
+			opts.CorsAllowCredentials = tc.optsIn.CorsAllowCredentials
+
+			fakeServiceConfig := &servicepb.Service{}
+			fakeServiceInfo := &configinfo.ServiceInfo{
+				Name:    "test-api",
+				Options: opts,
+			}
+
+			filterGenFactories := MakeHTTPFilterGenFactories(filtergen.ServiceControlOPFactoryParams{})
+			filterGens, err := NewFilterGeneratorsFromOPConfig(fakeServiceConfig, opts, filterGenFactories)
 			if err != nil {
 				t.Fatal(err)
 			}
-		}
-		opts.CorsAllowCredentials = tc.allowCredentials
 
-		gotRoute, err := makeRouteConfig(&configinfo.ServiceInfo{
-			Name:    "test-api",
-			Options: opts,
-		}, nil)
-		if tc.wantedError != "" {
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, filterGens)
+			if err != nil {
+				t.Fatalf("makeRouteConfig(...) got err %v, want no err", err)
+			}
+
+			gotHost := gotRoute.GetVirtualHosts()
+			if len(gotHost) != 1 {
+				t.Errorf("Test (%v): got expected number of virtual host", tc.desc)
+			}
+
+			corsAny, ok := gotHost[0].TypedPerFilterConfig[filtergen.CORSFilterName]
+			if tc.wantCorsPolicy == nil {
+				if ok {
+					t.Errorf("Test (%v): expect not CORS, but found one", tc.desc)
+				}
+			} else {
+				if !ok {
+					t.Errorf("Test (%v): expect CORS, but found none", tc.desc)
+				} else {
+					gotCors := &corspb.CorsPolicy{}
+					err := corsAny.UnmarshalTo(gotCors)
+					if err != nil {
+						t.Fatalf("Test (%v): UnmarshalTo got err: %v", tc.desc, err)
+					}
+
+					if diff := cmp.Diff(tc.wantCorsPolicy, gotCors, protocmp.Transform()); diff != "" {
+						t.Errorf("makeRouteConfig(...) diff for CORS policy on virtual host (-want +got):\n%s", diff)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestMakeRouteConfigForCors_BadInput(t *testing.T) {
+	testData := []struct {
+		desc        string
+		optsIn      options.ConfigGeneratorOptions
+		wantedError string
+	}{
+		{
+			desc: "Incorrect configured basic Cors",
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset: "basic",
+				// Missing origin, but origin regex configured
+				CorsAllowOriginRegex: "^https?://.+\\\\.example\\\\.com\\/?$",
+				CorsMaxAge:           2 * time.Minute,
+			},
+			wantedError: "cors_allow_origin cannot be empty when cors_preset=basic",
+		},
+		{
+			desc: "Incorrect configured regex Cors",
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:           "cors_with_regexs", // typo
+				CorsAllowOriginRegex: "^https?://.+\\\\.example\\\\.com\\/?$",
+				CorsMaxAge:           2 * time.Minute,
+			},
+			wantedError: `cors_preset must be either "basic" or "cors_with_regex"`,
+		},
+		{
+			desc: "Oversize cors origin regex",
+			optsIn: options.ConfigGeneratorOptions{
+				CorsPreset:           "cors_with_regex",
+				CorsAllowOriginRegex: getOverSizeRegexForTest(),
+				CorsAllowHeaders:     "Origin,Content-Type,Accept",
+				CorsMaxAge:           2 * time.Minute,
+			},
+			wantedError: `invalid cors origin regex: regex program size`,
+		},
+	}
+
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			opts := options.DefaultConfigGeneratorOptions()
+			opts.CorsPreset = tc.optsIn.CorsPreset
+			opts.CorsAllowOrigin = tc.optsIn.CorsAllowOrigin
+			opts.CorsAllowOriginRegex = tc.optsIn.CorsAllowOriginRegex
+			opts.CorsAllowMethods = tc.optsIn.CorsAllowMethods
+			opts.CorsAllowHeaders = tc.optsIn.CorsAllowHeaders
+			opts.CorsExposeHeaders = tc.optsIn.CorsExposeHeaders
+			opts.CorsMaxAge = tc.optsIn.CorsMaxAge
+
+			fakeServiceInfo := &configinfo.ServiceInfo{
+				Name:    "test-api",
+				Options: opts,
+			}
+
+			_, err := makeRouteConfig(fakeServiceInfo, nil)
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
 			}
-			continue
-		}
-
-		gotHost := gotRoute.GetVirtualHosts()
-		if len(gotHost) != 1 {
-			t.Errorf("Test (%v): got expected number of virtual host", tc.desc)
-		}
-
-		corsAny, ok := gotHost[0].TypedPerFilterConfig[filtergen.CORSFilterName]
-		if tc.wantCorsPolicy == nil {
-			if ok {
-				t.Errorf("Test (%v): expect not CORS, but found one", tc.desc)
-			}
-		} else {
-			if !ok {
-				t.Errorf("Test (%v): expect CORS, but found none", tc.desc)
-			} else {
-				gotCors := &corspb.CorsPolicy{}
-				err := corsAny.UnmarshalTo(gotCors)
-				if err != nil {
-					t.Fatalf("Test (%v): UnmarshalTo got err: %v", tc.desc, err)
-				}
-
-				if !proto.Equal(gotCors, tc.wantCorsPolicy) {
-					t.Errorf("Test (%v): CorsPolicy diff, got Cors: %v, want: %v", tc.desc, gotCors, tc.wantCorsPolicy)
-				}
-			}
-		}
+		})
 	}
 }
 

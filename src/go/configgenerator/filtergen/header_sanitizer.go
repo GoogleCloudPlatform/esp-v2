@@ -17,7 +17,6 @@ package filtergen
 import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	hspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/header_sanitizer"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 )
@@ -27,7 +26,9 @@ const (
 	HeaderSanitizerFilterName = "com.google.espv2.filters.http.header_sanitizer"
 )
 
-type HeaderSanitizerGenerator struct{}
+type HeaderSanitizerGenerator struct {
+	NoopFilterGenerator
+}
 
 // NewHeaderSanitizerFilterGensFromOPConfig creates a HeaderSanitizerGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
@@ -43,8 +44,4 @@ func (g *HeaderSanitizerGenerator) FilterName() string {
 
 func (g *HeaderSanitizerGenerator) GenFilterConfig() (proto.Message, error) {
 	return &hspb.FilterConfig{}, nil
-}
-
-func (g *HeaderSanitizerGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	return nil, nil
 }
