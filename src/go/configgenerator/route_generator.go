@@ -32,17 +32,13 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
 	routeName       = "local_route"
 	virtualHostName = "backend"
 )
-
-// perResourceCallback is a callback to generate per-resource config for a
-// specific FilterGenerator.
-type perResourceCallback func(gen filtergen.FilterGenerator) (proto.Message, error)
 
 func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []filtergen.FilterGenerator) (*routepb.RouteConfiguration, error) {
 	var virtualHosts []*routepb.VirtualHost
