@@ -51,15 +51,9 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []fil
 		Domains: []string{"*"},
 	}
 
-	perHostConfig, err := makePerResourceFilterConfig(filterGenerators, func(gen filtergen.FilterGenerator) (proto.Message, error) {
-		config, err := gen.GenPerHostConfig(host.Name)
-		if err != nil {
-			return nil, fmt.Errorf("fail to generate per-host config: %v", err)
-		}
-		return config, nil
-	})
+	perHostConfig, err := makePerVHostFilterConfig(host.Name, filterGenerators)
 	if err != nil {
-		return nil, fmt.Errorf("fail to make per-resource filter config for virtual host %q: %v", host.Name, err)
+		return nil, fmt.Errorf("fail to make per-vHost filter config for virtual host %q: %v", host.Name, err)
 	}
 	host.TypedPerFilterConfig = perHostConfig
 
@@ -318,15 +312,14 @@ func makeRouteCors(serviceInfo *configinfo.ServiceInfo) (*corspb.CorsPolicy, []*
 	return cors, corsRoutes, nil
 }
 
-// makePerResourceFilterConfig generates filter config per-route or per-vHost.
-// Caller is responsible for passing the callback for the corresponding resource.
-func makePerResourceFilterConfig(filterGenerators []filtergen.FilterGenerator, callback perResourceCallback) (map[string]*anypb.Any, error) {
+// makePerRouteFilterConfig generates the per-route config across all filters for a single method and http rule.
+func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppattern.Pattern, filterGenerators []filtergen.FilterGenerator) (map[string]*anypb.Any, error) {
 	perFilterConfig := make(map[string]*anypb.Any)
 
 	for _, filterGen := range filterGenerators {
-		config, err := callback(filterGen)
+		config, err := filterGen.GenPerRouteConfig(method.Operation(), httpRule)
 		if err != nil {
-			return perFilterConfig, fmt.Errorf("fail to generate per-resource config for filter %q: %v", filterGen.FilterName(), err)
+			return perFilterConfig, fmt.Errorf("fail to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
 		}
 		if config == nil {
 			continue
@@ -334,9 +327,32 @@ func makePerResourceFilterConfig(filterGenerators []filtergen.FilterGenerator, c
 
 		perRouteFilterConfig, err := anypb.New(config)
 		if err != nil {
-			return nil, fmt.Errorf("fail to marshal per-resource config to Any for filter %q: %v", filterGen.FilterName(), err)
+			return nil, fmt.Errorf("fail to marshal per-route config to Any for filter %q: %v", filterGen.FilterName(), err)
 		}
 		perFilterConfig[filterGen.FilterName()] = perRouteFilterConfig
+	}
+
+	return perFilterConfig, nil
+}
+
+// makePerVHostFilterConfig generates the per virtual host config across all filters.
+func makePerVHostFilterConfig(vHost string, filterGenerators []filtergen.FilterGenerator) (map[string]*anypb.Any, error) {
+	perFilterConfig := make(map[string]*anypb.Any)
+
+	for _, filterGen := range filterGenerators {
+		config, err := filterGen.GenPerHostConfig(vHost)
+		if err != nil {
+			return perFilterConfig, fmt.Errorf("fail to generate per-vHost config for filter %q: %v", filterGen.FilterName(), err)
+		}
+		if config == nil {
+			continue
+		}
+
+		perVHostFilterConfig, err := anypb.New(config)
+		if err != nil {
+			return nil, fmt.Errorf("fail to marshal per-vHost config to Any for filter %q: %v", filterGen.FilterName(), err)
+		}
+		perFilterConfig[filterGen.FilterName()] = perVHostFilterConfig
 	}
 
 	return perFilterConfig, nil
@@ -383,15 +399,9 @@ func MakeRouteTable(serviceInfo *configinfo.ServiceInfo, filterGenerators []filt
 			}
 			r := makeRoute(routeMatcher, method, useLocalHTTPBackend)
 
-			r.TypedPerFilterConfig, err = makePerResourceFilterConfig(filterGenerators, func(gen filtergen.FilterGenerator) (proto.Message, error) {
-				config, err := gen.GenPerRouteConfig(method.Operation(), httpRule)
-				if err != nil {
-					return nil, fmt.Errorf("fail to generate per-route config: %v", err)
-				}
-				return config, nil
-			})
+			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(method, httpRule, filterGenerators)
 			if err != nil {
-				return nil, nil, fmt.Errorf("fail to make per-resource filter config for operation (%v): %v", operation, err)
+				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation %q: %v", operation, err)
 			}
 
 			if bi.Hostname != "" {
