@@ -33,6 +33,8 @@ const (
 
 type PathRewriteGenerator struct {
 	TranslationInfoBySelector map[string]TranslationInfo
+
+	NoopFilterGenerator
 }
 
 // TranslationInfo captures https://cloud.google.com/endpoints/docs/openapi/openapi-extensions#understanding_path_translation.

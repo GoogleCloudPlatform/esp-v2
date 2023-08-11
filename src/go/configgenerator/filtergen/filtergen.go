@@ -44,6 +44,16 @@ type FilterGenerator interface {
 	// This method is called on all routes. Return (nil, nil) to indicate the
 	// filter does NOT require a per-route config for the given route.
 	GenPerRouteConfig(string, *httppattern.Pattern) (proto.Message, error)
+
+	// GenPerHostConfig generates the per-host config in RDS for the given virtual
+	// host name. Useful in case a filter needs to apply config for the entire
+	// virtual host.
+	//
+	// Return type is the filter's per-host config proto.
+	//
+	// This method is called on all virtual hosts. Return (nil, nil) to indicate the
+	// filter does NOT require a per-host config for the given virtual host.
+	GenPerHostConfig(string) (proto.Message, error)
 }
 
 // FilterGeneratorOPFactory is the factory function to create an ordered slice
@@ -52,3 +62,15 @@ type FilterGenerator interface {
 // The majority of factories will only return 1 FilterGenerator, but they should
 // be encapsulated by a slice for generalization.
 type FilterGeneratorOPFactory func(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error)
+
+// NoopFilterGenerator is a FilterGenerator that provides empty implementation
+// for all optional methods.
+type NoopFilterGenerator struct{}
+
+func (g *NoopFilterGenerator) GenPerRouteConfig(string, *httppattern.Pattern) (proto.Message, error) {
+	return nil, nil
+}
+
+func (g *NoopFilterGenerator) GenPerHostConfig(string) (proto.Message, error) {
+	return nil, nil
+}

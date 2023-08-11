@@ -15,12 +15,17 @@
 package filtergen
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
+	matcherpb "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -28,18 +33,41 @@ const (
 	CORSFilterName = "envoy.filters.http.cors"
 )
 
-type CORSGenerator struct{}
+// CORSGenerator is a FilterGenerator to configure CORS config.
+type CORSGenerator struct {
+	Preset string
+	// AllowOrigin should only be set if preset=basic
+	AllowOrigin string
+	// AllowOriginRegex should only be set if preset=cors_with_regex
+	AllowOriginRegex string
+	MaxAge           time.Duration
+	AllowMethods     string
+	AllowHeaders     string
+	ExposeHeaders    string
+	AllowCredentials bool
+
+	NoopFilterGenerator
+}
 
 // NewCORSFilterGensFromOPConfig creates a CORSGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
 func NewCORSFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
-	if opts.CorsPreset != "basic" && opts.CorsPreset != "cors_with_regex" {
+	if opts.CorsPreset == "" {
 		glog.Infof("Not adding CORS filter gen because the feature is disabled by option, option is currently %q", opts.CorsPreset)
 		return nil, nil
 	}
 
 	return []FilterGenerator{
-		&CORSGenerator{},
+		&CORSGenerator{
+			Preset:           opts.CorsPreset,
+			AllowOrigin:      opts.CorsAllowOrigin,
+			AllowOriginRegex: opts.CorsAllowOriginRegex,
+			MaxAge:           opts.CorsMaxAge,
+			AllowMethods:     opts.CorsAllowMethods,
+			AllowHeaders:     opts.CorsAllowHeaders,
+			ExposeHeaders:    opts.CorsExposeHeaders,
+			AllowCredentials: opts.CorsAllowCredentials,
+		},
 	}, nil
 }
 
@@ -51,6 +79,41 @@ func (g *CORSGenerator) GenFilterConfig() (proto.Message, error) {
 	return &corspb.Cors{}, nil
 }
 
-func (g *CORSGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	return nil, nil
+func (g *CORSGenerator) GenPerHostConfig(vHostName string) (proto.Message, error) {
+	policy := &corspb.CorsPolicy{
+		MaxAge:        strconv.Itoa(int(g.MaxAge.Seconds())),
+		AllowMethods:  g.AllowMethods,
+		AllowHeaders:  g.AllowHeaders,
+		ExposeHeaders: g.ExposeHeaders,
+		AllowCredentials: &wrapperspb.BoolValue{
+			Value: g.AllowCredentials,
+		},
+	}
+
+	switch g.Preset {
+	case "basic":
+		policy.AllowOriginStringMatch = []*matcherpb.StringMatcher{
+			{
+				MatchPattern: &matcherpb.StringMatcher_Exact{
+					Exact: g.AllowOrigin,
+				},
+			},
+		}
+
+	case "cors_with_regex":
+		policy.AllowOriginStringMatch = []*matcherpb.StringMatcher{
+			{
+				MatchPattern: &matcherpb.StringMatcher_SafeRegex{
+					SafeRegex: &matcherpb.RegexMatcher{
+						Regex: g.AllowOriginRegex,
+					},
+				},
+			},
+		}
+
+	default:
+		return nil, fmt.Errorf(`cors_preset must be either "basic" or "cors_with_regex"`)
+	}
+
+	return policy, nil
 }

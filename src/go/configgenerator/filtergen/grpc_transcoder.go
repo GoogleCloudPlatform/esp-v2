@@ -58,6 +58,8 @@ type GRPCTranscoderGenerator struct {
 	StrictRequestValidation            bool
 	RejectCollision                    bool
 	PrintOptions                       *transcoderpb.GrpcJsonTranscoder_PrintOptions
+
+	NoopFilterGenerator
 }
 
 // NewGRPCTranscoderFilterGensFromOPConfig creates a GRPCTranscoderGenerator from

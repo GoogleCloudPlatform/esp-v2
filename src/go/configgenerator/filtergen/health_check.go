@@ -20,7 +20,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	hcpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/health_check/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
@@ -40,6 +39,8 @@ type HealthCheckGenerator struct {
 	HealthzPath                  string
 	ShouldHealthCheckGrpcBackend bool
 	LocalBackendClusterName      string
+
+	NoopFilterGenerator
 }
 
 // NewHealthCheckFilterGensFromOPConfig creates a HealthCheckGenerator from
@@ -93,8 +94,4 @@ func (g *HealthCheckGenerator) GenFilterConfig() (proto.Message, error) {
 	}
 
 	return hcFilterConfig, nil
-}
-
-func (g *HealthCheckGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	return nil, nil
 }

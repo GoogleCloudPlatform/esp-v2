@@ -32,7 +32,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
-	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -46,6 +46,12 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []fil
 		Name:    virtualHostName,
 		Domains: []string{"*"},
 	}
+
+	perHostConfig, err := makePerVHostFilterConfig(host.Name, filterGenerators)
+	if err != nil {
+		return nil, fmt.Errorf("fail to make per-vHost filter config for virtual host %q: %v", host.Name, err)
+	}
+	host.TypedPerFilterConfig = perHostConfig
 
 	// The router will use the first matched route, so the order of routes is important.
 	// Right now, the order of routes are:
@@ -62,19 +68,12 @@ func makeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []fil
 	}
 	host.Routes = backendRoutes
 
-	cors, corsRoutes, err := makeRouteCors(serviceInfo)
+	_, corsRoutes, err := makeRouteCors(serviceInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	if cors != nil {
-		corsAny, err := anypb.New(cors)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling CorsPolicy to Any: %v", err)
-		}
-		host.TypedPerFilterConfig = make(map[string]*anypb.Any)
-		host.TypedPerFilterConfig[filtergen.CORSFilterName] = corsAny
-
+	if len(corsRoutes) > 0 {
 		host.Routes = append(host.Routes, corsRoutes...)
 		for i, corsRoute := range corsRoutes {
 			jsonStr, _ := util.ProtoToJson(corsRoute)
@@ -316,7 +315,7 @@ func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppatte
 	for _, filterGen := range filterGenerators {
 		config, err := filterGen.GenPerRouteConfig(method.Operation(), httpRule)
 		if err != nil {
-			return perFilterConfig, fmt.Errorf("failed to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
+			return perFilterConfig, fmt.Errorf("fail to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
 		}
 		if config == nil {
 			continue
@@ -327,6 +326,29 @@ func makePerRouteFilterConfig(method *configinfo.MethodInfo, httpRule *httppatte
 			return nil, fmt.Errorf("fail to marshal per-route config to Any for filter %q: %v", filterGen.FilterName(), err)
 		}
 		perFilterConfig[filterGen.FilterName()] = perRouteFilterConfig
+	}
+
+	return perFilterConfig, nil
+}
+
+// makePerVHostFilterConfig generates the per virtual host config across all filters.
+func makePerVHostFilterConfig(vHost string, filterGenerators []filtergen.FilterGenerator) (map[string]*anypb.Any, error) {
+	perFilterConfig := make(map[string]*anypb.Any)
+
+	for _, filterGen := range filterGenerators {
+		config, err := filterGen.GenPerHostConfig(vHost)
+		if err != nil {
+			return perFilterConfig, fmt.Errorf("fail to generate per-vHost config for filter %q: %v", filterGen.FilterName(), err)
+		}
+		if config == nil {
+			continue
+		}
+
+		perVHostFilterConfig, err := anypb.New(config)
+		if err != nil {
+			return nil, fmt.Errorf("fail to marshal per-vHost config to Any for filter %q: %v", filterGen.FilterName(), err)
+		}
+		perFilterConfig[filterGen.FilterName()] = perVHostFilterConfig
 	}
 
 	return perFilterConfig, nil
@@ -375,7 +397,7 @@ func MakeRouteTable(serviceInfo *configinfo.ServiceInfo, filterGenerators []filt
 
 			r.TypedPerFilterConfig, err = makePerRouteFilterConfig(method, httpRule, filterGenerators)
 			if err != nil {
-				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation (%v): %v", operation, err)
+				return nil, nil, fmt.Errorf("fail to make per-route filter config for operation %q: %v", operation, err)
 			}
 
 			if bi.Hostname != "" {
