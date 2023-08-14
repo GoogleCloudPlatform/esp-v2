@@ -51,14 +51,9 @@ func NewHealthCheckFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts
 		return nil, nil
 	}
 
-	healthzPath := opts.Healthz
-	if !strings.HasPrefix(healthzPath, "/") {
-		healthzPath = fmt.Sprintf("/%s", healthzPath)
-	}
-
 	return []FilterGenerator{
 		&HealthCheckGenerator{
-			HealthzPath:                  healthzPath,
+			HealthzPath:                  opts.Healthz,
 			ShouldHealthCheckGrpcBackend: opts.HealthCheckGrpcBackend,
 			LocalBackendClusterName:      clustergen.MakeLocalBackendClusterName(serviceConfig),
 		},
@@ -70,6 +65,11 @@ func (g *HealthCheckGenerator) FilterName() string {
 }
 
 func (g *HealthCheckGenerator) GenFilterConfig() (proto.Message, error) {
+	healthzPath := g.HealthzPath
+	if !strings.HasPrefix(healthzPath, "/") {
+		healthzPath = fmt.Sprintf("/%s", healthzPath)
+	}
+
 	hcFilterConfig := &hcpb.HealthCheck{
 		PassThroughMode: &wrapperspb.BoolValue{Value: false},
 
@@ -79,7 +79,7 @@ func (g *HealthCheckGenerator) GenFilterConfig() (proto.Message, error) {
 				HeaderMatchSpecifier: &routepb.HeaderMatcher_StringMatch{
 					StringMatch: &matcher.StringMatcher{
 						MatchPattern: &matcher.StringMatcher_Exact{
-							Exact: g.HealthzPath,
+							Exact: healthzPath,
 						},
 					},
 				},
