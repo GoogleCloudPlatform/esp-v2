@@ -35,6 +35,8 @@ func MaybeAddHSTSHeader(c *RouteHSTSConfiger, route *routepb.Route) {
 }
 
 // MakeHSTSConfig creates the response headers to add to the route.
+//
+// Forked from `route_generator.go`
 func (c *RouteHSTSConfiger) MakeHSTSConfig() []*corepb.HeaderValueOption {
 	return []*corepb.HeaderValueOption{
 		{

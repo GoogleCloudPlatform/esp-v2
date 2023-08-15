@@ -56,6 +56,9 @@ func NewHealthCheckRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts 
 	}, nil
 }
 
+// GenRouteConfig implements interface RouteGenerator.
+//
+// Forked from `service_info.go: processHttpRule()`.
 func (g *HealthCheckGenerator) GenRouteConfig() ([]*routepb.Route, error) {
 	healthzPath := g.HealthzPath
 	if !strings.HasPrefix(healthzPath, "/") {

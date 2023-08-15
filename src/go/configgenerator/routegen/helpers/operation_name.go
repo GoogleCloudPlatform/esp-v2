@@ -42,6 +42,8 @@ func MaybeAddOperationNameHeader(c *RouteOperationNameConfiger, route *routepb.R
 }
 
 // MakeOperationNameConfig creates the response headers to add to the route.
+//
+// Forked from `route_generator.go`
 func (c *RouteOperationNameConfiger) MakeOperationNameConfig(operation string) []*corepb.HeaderValueOption {
 	return []*corepb.HeaderValueOption{
 		{

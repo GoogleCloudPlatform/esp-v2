@@ -36,6 +36,8 @@ func MaybeAddDeadlines(c *RouteDeadlineConfiger, routeAction *routepb.RouteActio
 }
 
 // Calculates the stream idle timeout based on the response deadline for that route and the global stream idle timeout.
+//
+// Forked from `service_info.go`
 func calculateStreamIdleTimeout(operationDeadline time.Duration, streamIdleTimeout time.Duration) time.Duration {
 	// If the deadline and stream idle timeout have the exact same timeout,
 	// the error code returned to the client is inconsistent based on which event is processed first.

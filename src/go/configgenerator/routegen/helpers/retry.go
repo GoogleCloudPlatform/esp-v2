@@ -51,6 +51,8 @@ func MaybeAddRetryPolicy(c *RouteRetryConfiger, routeAction *routepb.RouteAction
 }
 
 // MakeRetryConfig creates the backend retry config.
+//
+// Forked from `service_info.go` and `route_generator.go`
 func (c *RouteRetryConfiger) MakeRetryConfig() (*routepb.RetryPolicy, error) {
 	retryOns := c.RetryOns
 	retryNum := c.RetryNum
@@ -86,6 +88,10 @@ func (c *RouteRetryConfiger) MakeRetryConfig() (*routepb.RetryPolicy, error) {
 	return retryPolicy, nil
 }
 
+// parseRetriableStatusCodes parses the user-specified status code flag for
+// retry config.
+//
+// Forked from `service_info.go`
 func parseRetriableStatusCodes(statusCodes string) ([]uint32, error) {
 	codeList := strings.Split(statusCodes, ",")
 	var codes []uint32

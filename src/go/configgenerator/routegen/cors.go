@@ -46,6 +46,9 @@ func NewCORSRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts options
 	}, nil
 }
 
+// GenRouteConfig implements interface RouteGenerator.
+//
+// Forked from `route_generator.go: makeRouteCors()
 func (g *CORSGenerator) GenRouteConfig() ([]*routepb.Route, error) {
 	originMatcher := &routepb.HeaderMatcher{
 		Name: "origin",

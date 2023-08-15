@@ -34,6 +34,8 @@ type MethodCfg struct {
 }
 
 // GenRoutesForMethod generates the route config for the given URI template.
+//
+// Forked from `route_generator.go: makeRoute()`
 func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*routepb.Route, error) {
 	routeMatchers, err := makeBackedRouteMatchers(methodCfg.HTTPRule, r.DisallowColonInWildcardPathSegment)
 	if err != nil {
@@ -77,6 +79,8 @@ func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*rou
 
 // makeBackedRouteMatchers creates all route matchers for a single HTTP rule.
 // This only consists of routes that will be forwarded to the backend.
+//
+// Forked from `route_generator.go: makeHttpRouteMatchers()`
 func makeBackedRouteMatchers(httpRule *httppattern.Pattern, disallowColonInWildcardPathSegment bool) ([]*routepb.RouteMatch, error) {
 	if httpRule == nil {
 		return nil, fmt.Errorf("httpRule is nil")
