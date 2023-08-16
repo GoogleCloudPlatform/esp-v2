@@ -32,7 +32,7 @@ import (
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	typepb "google.golang.org/genproto/protobuf/ptype"
-	filtergen "github.com/GoogleCloudPlatform/espv2/source/v12/src/go/configgenerator/filtergen/filtergen"
+	filtergen "github.com/GoogleCloudPlatform/espv2/source/v12/src/go/configgenerator/filtergen"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
