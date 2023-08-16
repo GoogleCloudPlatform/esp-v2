@@ -52,6 +52,8 @@ type BackendAuthGenerator struct {
 	BackendAuthCredentials  *options.IAMCredentialsOptions
 
 	AccessToken *helpers.FilterAccessTokenConfiger
+
+	NoopFilterGenerator
 }
 
 // NewBackendAuthFilterGensFromOPConfig creates a BackendAuthGenerator from

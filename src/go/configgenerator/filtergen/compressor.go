@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	brpb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/brotli/compressor/v3"
 	gzippb "github.com/envoyproxy/go-control-plane/envoy/extensions/compression/gzip/compressor/v3"
@@ -49,6 +48,8 @@ const (
 
 type CompressorGenerator struct {
 	compressorType CompressorType
+
+	NoopFilterGenerator
 }
 
 // NewCompressorFilterGensFromOPConfig creates a CompressorGenerator from
@@ -88,10 +89,6 @@ func (g *CompressorGenerator) GenFilterConfig() (proto.Message, error) {
 			TypedConfig: ca,
 		},
 	}, nil
-}
-
-func (g *CompressorGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	return nil, nil
 }
 
 func (g *CompressorGenerator) getCompressorConfig() (proto.Message, string, error) {

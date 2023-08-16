@@ -67,6 +67,8 @@ type JwtAuthnGenerator struct {
 	JwtPadForwardPayloadHeader         bool
 	DisableJwtAudienceServiceNameCheck bool
 	JwtCacheSize                       uint
+
+	NoopFilterGenerator
 }
 
 // NewJwtAuthnFilterGensFromOPConfig creates a JwtAuthnGenerator from

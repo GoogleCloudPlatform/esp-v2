@@ -17,7 +17,6 @@ package filtergen
 import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	gmspb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/grpc_metadata_scrubber"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
@@ -28,7 +27,9 @@ const (
 	GrpcMetadataScrubberFilterName = "com.google.espv2.filters.http.grpc_metadata_scrubber"
 )
 
-type GRPCMetadataScrubberGenerator struct{}
+type GRPCMetadataScrubberGenerator struct {
+	NoopFilterGenerator
+}
 
 // NewGRPCMetadataScrubberFilterGensFromOPConfig creates a GRPCMetadataScrubberGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
@@ -49,8 +50,4 @@ func (g *GRPCMetadataScrubberGenerator) FilterName() string {
 
 func (g *GRPCMetadataScrubberGenerator) GenFilterConfig() (proto.Message, error) {
 	return &gmspb.FilterConfig{}, nil
-}
-
-func (g *GRPCMetadataScrubberGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	return nil, nil
 }
