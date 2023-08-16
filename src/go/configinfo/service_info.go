@@ -32,7 +32,6 @@ import (
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	typepb "google.golang.org/genproto/protobuf/ptype"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -165,7 +164,6 @@ func NewServiceInfoFromServiceConfig(serviceConfig *confpb.Service, opts options
 	if err := serviceInfo.processServiceControlURL(); err != nil {
 		return nil, err
 	}
-	filtergen.SetCorsOperationDelimiter(opts)
 
 	return serviceInfo, nil
 }
@@ -205,6 +203,11 @@ func (s *ServiceInfo) buildBackendFromAddress(address string) error {
 // Returns the pointer of the ServiceConfig that this API belongs to.
 func (s *ServiceInfo) ServiceConfig() *confpb.Service {
 	return s.serviceConfig
+}
+
+// Returns the pointer of the Configgenerator options that this API belongs to.
+func (s *ServiceInfo) ServiceConfig() *options.ConfigGeneratorOptions {
+	return s.Options
 }
 
 func (s *ServiceInfo) processEmptyJwksUriByOpenID() error {
