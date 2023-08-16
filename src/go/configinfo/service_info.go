@@ -206,7 +206,7 @@ func (s *ServiceInfo) ServiceConfig() *confpb.Service {
 }
 
 // Returns the pointer of the Configgenerator options that this API belongs to.
-func (s *ServiceInfo) ServiceConfig() *options.ConfigGeneratorOptions {
+func (s *ServiceInfo) ServiceConfig() options.ConfigGeneratorOptions {
 	return s.Options
 }
 
