@@ -20,7 +20,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/tracing"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	acpb "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	facpb "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
@@ -52,6 +51,8 @@ type HTTPConnectionManagerGenerator struct {
 	UnderscoresInHeaders         bool
 	EnableGrpcForHttp1           bool
 	TracingOptions               *options.TracingOptions
+
+	NoopFilterGenerator
 }
 
 // NewHTTPConnectionManagerGenFromOPConfig creates a HTTPConnectionManagerGenerator from
@@ -196,10 +197,6 @@ func (g *HTTPConnectionManagerGenerator) GenFilterConfig() (proto.Message, error
 	glog.Infof("HTTP Connection Manager config before adding routes or HTTP filters: %v", jsonStr)
 
 	return httpConMgr, nil
-}
-
-func (g *HTTPConnectionManagerGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	return nil, nil
 }
 
 // IsSchemeHeaderOverrideRequiredForOPConfig fixes b/221072669:

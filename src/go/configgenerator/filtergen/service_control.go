@@ -77,6 +77,8 @@ type ServiceControlGenerator struct {
 	MethodRequirements []*scpb.Requirement
 	CallingConfig      *scpb.ServiceControlCallingConfig
 	GCPAttributes      *scpb.GcpAttributes
+
+	NoopFilterGenerator
 }
 
 // ServiceControlOPFactoryParams are extra params that don't fit within OP

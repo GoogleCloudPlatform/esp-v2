@@ -16,7 +16,6 @@ package filtergen
 
 import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	grpcwebpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/grpc_web/v3"
 	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -28,7 +27,9 @@ const (
 	GRPCWebFilterName = "envoy.filters.http.grpc_web"
 )
 
-type GRPCWebGenerator struct{}
+type GRPCWebGenerator struct {
+	NoopFilterGenerator
+}
 
 // NewGRPCWebFilterGensFromOPConfig creates a GRPCWebGenerator from
 // OP service config + descriptor + ESPv2 options. It is a FilterGeneratorOPFactory.
@@ -53,8 +54,4 @@ func (g *GRPCWebGenerator) FilterName() string {
 
 func (g *GRPCWebGenerator) GenFilterConfig() (proto.Message, error) {
 	return &grpcwebpb.GrpcWeb{}, nil
-}
-
-func (g *GRPCWebGenerator) GenPerRouteConfig(selector string, httpRule *httppattern.Pattern) (proto.Message, error) {
-	return nil, nil
 }
