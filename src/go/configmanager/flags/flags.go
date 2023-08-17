@@ -30,14 +30,15 @@ var (
 	defaults = options.DefaultConfigGeneratorOptions()
 
 	// Cors related configurations.
-	CorsAllowCredentials = flag.Bool("cors_allow_credentials", defaults.CorsAllowCredentials, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")
-	CorsAllowHeaders     = flag.String("cors_allow_headers", defaults.CorsAllowHeaders, "set Access-Control-Allow-Headers to the specified HTTP headers")
-	CorsAllowMethods     = flag.String("cors_allow_methods", defaults.CorsAllowMethods, "set Access-Control-Allow-Methods to the specified HTTP methods")
-	CorsAllowOrigin      = flag.String("cors_allow_origin", defaults.CorsAllowOrigin, "set Access-Control-Allow-Origin to a specific origin")
-	CorsAllowOriginRegex = flag.String("cors_allow_origin_regex", defaults.CorsAllowOriginRegex, "set Access-Control-Allow-Origin to a regular expression")
-	CorsExposeHeaders    = flag.String("cors_expose_headers", defaults.CorsExposeHeaders, "set Access-Control-Expose-Headers to the specified headers")
-	CorsMaxAge           = flag.Duration("cors_max_age", defaults.CorsMaxAge, "set Access-Control-Max-Age response header for CORS preflight request.")
-	CorsPreset           = flag.String("cors_preset", defaults.CorsPreset, `enable CORS support, must be either "basic" or "cors_with_regex"`)
+	CorsAllowCredentials   = flag.Bool("cors_allow_credentials", defaults.CorsAllowCredentials, "whether include the Access-Control-Allow-Credentials header with the value true in responses or not")
+	CorsAllowHeaders       = flag.String("cors_allow_headers", defaults.CorsAllowHeaders, "set Access-Control-Allow-Headers to the specified HTTP headers")
+	CorsAllowMethods       = flag.String("cors_allow_methods", defaults.CorsAllowMethods, "set Access-Control-Allow-Methods to the specified HTTP methods")
+	CorsAllowOrigin        = flag.String("cors_allow_origin", defaults.CorsAllowOrigin, "set Access-Control-Allow-Origin to a specific origin")
+	CorsAllowOriginRegex   = flag.String("cors_allow_origin_regex", defaults.CorsAllowOriginRegex, "set Access-Control-Allow-Origin to a regular expression")
+	CorsExposeHeaders      = flag.String("cors_expose_headers", defaults.CorsExposeHeaders, "set Access-Control-Expose-Headers to the specified headers")
+	CorsMaxAge             = flag.Duration("cors_max_age", defaults.CorsMaxAge, "set Access-Control-Max-Age response header for CORS preflight request.")
+	CorsPreset             = flag.String("cors_preset", defaults.CorsPreset, `enable CORS support, must be either "basic" or "cors_with_regex"`)
+	CorsOperationDelimiter = flag.String("cors_operation_delimiter", defaults.CorsOperationDelimiter, "Delimiter for cors operations")
 
 	// Backend routing configurations.
 	BackendDnsLookupFamily = flag.String("backend_dns_lookup_family", defaults.BackendDnsLookupFamily, `Define the dns lookup family for all backends. The options are "auto", "v4only", "v6only", "v4preferred" and "all". The default is "v4preferred". "auto" is a legacy name, it behaves as "v6preferred".`)
@@ -236,6 +237,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		CorsExposeHeaders:                             *CorsExposeHeaders,
 		CorsMaxAge:                                    *CorsMaxAge,
 		CorsPreset:                                    *CorsPreset,
+		CorsOperationDelimiter:                        *CorsOperationDelimiter,
 		BackendDnsLookupFamily:                        *BackendDnsLookupFamily,
 		ClusterConnectTimeout:                         *ClusterConnectTimeout,
 		StreamIdleTimeout:                             *StreamIdleTimeout,
