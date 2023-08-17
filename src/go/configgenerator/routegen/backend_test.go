@@ -634,6 +634,459 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
 }
 `,
 		},
+		{
+			// In this test, the route configs will be in the order of
+			//    GET /foo/bar
+			//    * /foo/bar,
+			//    GET /foo/*
+			//    GET /foo/*/bar
+			//    GET /foo/**/bar
+			//    GET /foo/**:verb
+			//    GET /foo/**
+			Desc: "Order route match config",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+							{
+								Name: "Bar",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/foo/**",
+							},
+							AdditionalBindings: []*annotationspb.HttpRule{
+								{
+									Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+									Pattern: &annotationspb.HttpRule_Get{
+										Get: "/foo/*",
+									},
+								},
+								{
+									Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+									Pattern: &annotationspb.HttpRule_Get{
+										Get: "/foo/**/bar",
+									},
+								},
+							},
+						},
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Bar",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/foo/**:verb",
+							},
+							AdditionalBindings: []*annotationspb.HttpRule{
+								{
+									Selector: "endpoints.examples.bookstore.Bookstore.Bar",
+									Pattern: &annotationspb.HttpRule_Get{
+										Get: "/foo/bar",
+									},
+								},
+								{
+									Selector: "endpoints.examples.bookstore.Bookstore.Bar",
+									Pattern: &annotationspb.HttpRule_Get{
+										Get: "/foo/*/bar",
+									},
+								},
+								{
+									Selector: "endpoints.examples.bookstore.Bookstore.Bar",
+									Pattern: &annotationspb.HttpRule_Custom{
+										Custom: &annotationspb.CustomHttpPattern{
+											Path: "/foo/bar",
+											Kind: "*",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{},
+			WantHostConfig: `
+{
+  "routes":[
+    {
+      "decorator":{
+        "operation":"ingress Bar"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "path":"/foo/bar"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Bar",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Bar"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "path":"/foo/bar/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Bar",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Bar"
+      },
+      "match":{
+        "path":"/foo/bar"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Bar",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Bar"
+      },
+      "match":{
+        "path":"/foo/bar/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Bar",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Foo"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "safeRegex":{
+          "regex":"^/foo/[^\\/]+\\/?$"
+        }
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Foo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Bar"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "safeRegex":{
+          "regex":"^/foo/[^\\/]+/bar\\/?$"
+        }
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Bar",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Foo"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "safeRegex":{
+          "regex":"^/foo/.*/bar\\/?$"
+        }
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Foo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Bar"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "safeRegex":{
+          "regex":"^/foo/.*\\/?:verb$"
+        }
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Bar",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Foo"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "safeRegex":{
+          "regex":"^/foo/.*\\/?$"
+        }
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Foo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    }
+  ]
+}
+`,
+		},
+		{
+			Desc: "gRPC support required",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
+					{
+						Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+						Pattern: &annotationspb.HttpRule_Get{
+							Get: "/echo",
+						},
+					},
+				},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{
+				BackendAddress: "grpc://grpc-backend:8080",
+			},
+			WantHostConfig: `
+{
+  "routes":[
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    }
+  ]
+}
+`,
+		},
 	}
 	for _, tc := range testdata {
 		tc.RunTest(t, routegen.NewBackendRouteGensFromOPConfig)
