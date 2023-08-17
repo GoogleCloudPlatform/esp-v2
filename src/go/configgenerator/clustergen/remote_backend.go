@@ -112,7 +112,7 @@ func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGenera
 	address := fmt.Sprintf("%v:%v", hostname, port)
 	cluster := &RemoteBackendCluster{
 		BackendCluster: &helpers.BaseBackendCluster{
-			ClusterName:            fmt.Sprintf("backend-cluster-%s", address),
+			ClusterName:            RemoteAddressToClusterName(address),
 			Hostname:               hostname,
 			Port:                   port,
 			Protocol:               protocol,
@@ -147,4 +147,10 @@ func (c *RemoteBackendCluster) GetName() string {
 // GenConfig implements the ClusterGenerator interface.
 func (c *RemoteBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
 	return c.BackendCluster.GenBaseConfig()
+}
+
+// RemoteAddressToClusterName returns the corresponding remote backend cluster
+// for the remote address.
+func RemoteAddressToClusterName(address string) string {
+	return fmt.Sprintf("backend-cluster-%s", address)
 }

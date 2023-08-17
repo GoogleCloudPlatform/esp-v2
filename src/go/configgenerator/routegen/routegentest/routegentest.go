@@ -92,6 +92,41 @@ func (tc *SuccessOPTestCase) RunTest(t *testing.T, factory routegen.RouteGenerat
 	})
 }
 
+// FactoryErrorOPTestCase is the shared struct to test a RouteGenerator with
+// One Platform config. It checks that the factory returns an error.
+type FactoryErrorOPTestCase struct {
+	Desc string
+
+	ServiceConfigIn *servicepb.Service
+
+	// OptsIn is the input ESPv2 Options.
+	// Will be merged with defaults.
+	OptsIn options.ConfigGeneratorOptions
+
+	// WantFactoryError is the error that occurs when `NewXYZRouteGensFromOPConfig()`
+	// is called.
+	WantFactoryError string
+}
+
+// RunTest is a test helper to run the test.
+func (tc *FactoryErrorOPTestCase) RunTest(t *testing.T, factory routegen.RouteGeneratorOPFactory) {
+	t.Helper()
+	t.Run(tc.Desc, func(t *testing.T) {
+		opts := options.DefaultConfigGeneratorOptions()
+		if err := mergo.Merge(&opts, tc.OptsIn, mergo.WithOverride); err != nil {
+			t.Fatalf("Merge() of test opts into default opts got err: %v", err)
+		}
+
+		_, err := factory(tc.ServiceConfigIn, opts)
+		if err == nil {
+			t.Fatalf("NewXYZRouteGensFromOPConfig() got no error, want error")
+		}
+		if !strings.Contains(err.Error(), tc.WantFactoryError) {
+			t.Errorf("NewXYZRouteGensFromOPConfig() got error %q, want error to contain %q", err.Error(), tc.WantFactoryError)
+		}
+	})
+}
+
 // GenConfigErrorOPTestCase is the shared struct to test a RouteGenerator with
 // One Platform config. It checks that the factory is successful, but the route
 // generation returns an error.
