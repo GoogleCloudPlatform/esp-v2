@@ -67,6 +67,11 @@ type FilterGeneratorOPFactory func(serviceConfig *servicepb.Service, opts option
 // for all optional methods.
 type NoopFilterGenerator struct{}
 
+// CorsUtility is a struct to hold utilities for cors operation.
+type CorsUtility struct {
+	corsOperationDelimiter string
+}
+
 func (g *NoopFilterGenerator) GenPerRouteConfig(string, *httppattern.Pattern) (proto.Message, error) {
 	return nil, nil
 }
