@@ -49,6 +49,7 @@ type BackendAuthGenerator struct {
 	MetadataURL             string
 	HttpRequestTimeout      time.Duration
 	DependencyErrorBehavior string
+	CORSOperationDelimiter  string
 	BackendAuthCredentials  *options.IAMCredentialsOptions
 
 	AccessToken *helpers.FilterAccessTokenConfiger
@@ -77,6 +78,7 @@ func NewBackendAuthFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts
 			HttpRequestTimeout:      opts.HttpRequestTimeout,
 			DependencyErrorBehavior: opts.DependencyErrorBehavior,
 			BackendAuthCredentials:  opts.BackendAuthCredentials,
+			CORSOperationDelimiter:  opts.CorsOperationDelimiter,
 			AccessToken:             helpers.NewFilterAccessTokenConfigerFromOPConfig(opts),
 		},
 	}, nil
@@ -94,7 +96,7 @@ func (g *BackendAuthGenerator) matchAudience(selector string) (string, error) {
 	}
 
 	// Try matching CORS selector.
-	originalSelector, err := CORSSelectorToSelector(selector)
+	originalSelector, err := CORSSelectorToSelector(selector, g.CORSOperationDelimiter)
 	if err != nil {
 		return "", err
 	}

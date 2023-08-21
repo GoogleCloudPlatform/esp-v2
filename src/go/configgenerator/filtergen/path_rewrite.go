@@ -32,6 +32,8 @@ const (
 )
 
 type PathRewriteGenerator struct {
+	CORSOperationDelimiter string
+
 	TranslationInfoBySelector map[string]TranslationInfo
 
 	NoopFilterGenerator
@@ -61,6 +63,7 @@ func NewPathRewriteFilterGensFromOPConfig(serviceConfig *confpb.Service, opts op
 
 	return []FilterGenerator{
 		&PathRewriteGenerator{
+			CORSOperationDelimiter:    opts.CorsOperationDelimiter,
 			TranslationInfoBySelector: info,
 		},
 	}, nil
@@ -82,7 +85,7 @@ func (g *PathRewriteGenerator) matchTranslationInfo(selector string) (Translatio
 	}
 
 	// Try matching CORS selector.
-	originalSelector, err := CORSSelectorToSelector(selector)
+	originalSelector, err := CORSSelectorToSelector(selector, g.CORSOperationDelimiter)
 	if err != nil {
 		return TranslationInfo{}, err
 	}
