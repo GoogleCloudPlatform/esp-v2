@@ -2,8 +2,10 @@ package helpers
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -23,21 +25,38 @@ type BackendRouteGenerator struct {
 	DeadlineCfg                        *RouteDeadlineConfiger
 }
 
+// NewBackendRouteGeneratorFromOPConfig creates a BackendRouteGenerator from
+// ESPv2 options.
+func NewBackendRouteGeneratorFromOPConfig(opts options.ConfigGeneratorOptions) *BackendRouteGenerator {
+	return &BackendRouteGenerator{
+		DisallowColonInWildcardPathSegment: opts.DisallowColonInWildcardPathSegment,
+		RetryCfg:                           NewRouteRetryConfigerFromOPConfig(opts),
+		HSTSCfg:                            NewRouteHSTSConfigerFromOPConfig(opts),
+		OperationNameCfg:                   NewRouteOperationNameConfigerFromOPConfig(opts),
+		DeadlineCfg:                        NewRouteDeadlineConfigerFromOPConfig(opts),
+	}
+}
+
 // MethodCfg is all the config needed to generate routes for a single
 // One Platform operation (RPC method).
 type MethodCfg struct {
 	OperationName      string
-	MethodShortName    string
 	BackendClusterName string
+	HostRewrite        string
 	Deadline           time.Duration
-	HTTPRule           *httppattern.Pattern
+	HTTPPattern        *httppattern.Pattern
 }
 
 // GenRoutesForMethod generates the route config for the given URI template.
 //
 // Forked from `route_generator.go: makeRoute()`
 func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*routepb.Route, error) {
-	routeMatchers, err := makeBackedRouteMatchers(methodCfg.HTTPRule, r.DisallowColonInWildcardPathSegment)
+	methodName, err := selectorToMethodName(methodCfg.OperationName)
+	if err != nil {
+		return nil, fmt.Errorf("fail to parse method short name from selector %q: %v", methodCfg.OperationName, err)
+	}
+
+	routeMatchers, err := makeBackedRouteMatchers(methodCfg.HTTPPattern, r.DisallowColonInWildcardPathSegment)
 	if err != nil {
 		return nil, fmt.Errorf("fail to make backend route matchers for operation %q: %v", methodCfg.OperationName, err)
 	}
@@ -48,6 +67,12 @@ func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*rou
 			ClusterSpecifier: &routepb.RouteAction_Cluster{
 				Cluster: methodCfg.BackendClusterName,
 			},
+		}
+
+		if methodCfg.HostRewrite != "" {
+			routeAction.HostRewriteSpecifier = &routepb.RouteAction_HostRewriteLiteral{
+				HostRewriteLiteral: methodCfg.HostRewrite,
+			}
 		}
 
 		MaybeAddDeadlines(r.DeadlineCfg, routeAction, methodCfg.Deadline)
@@ -64,7 +89,7 @@ func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*rou
 			Decorator: &routepb.Decorator{
 				// TODO(taoxuy@): check if the generated span name length less than the limit.
 				// Note we don't add ApiName to reduce the length of the span name.
-				Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, methodCfg.MethodShortName),
+				Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, methodName),
 			},
 		}
 
@@ -153,4 +178,14 @@ func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 			Path: path,
 		},
 	}
+}
+
+func selectorToMethodName(selector string) (string, error) {
+	split := strings.Split(selector, ".")
+	if len(split) < 2 {
+		return "", fmt.Errorf("unexpected split, got split array %#v, want at least 2 items", split)
+	}
+
+	// Method name is the last element in the selector.
+	return split[len(split)-1], nil
 }
