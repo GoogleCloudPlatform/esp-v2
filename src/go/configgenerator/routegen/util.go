@@ -145,6 +145,7 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 		return httpPatternsBySelector, nil
 	}
 
+	// Add gRPC paths for gRPC backends.
 	for _, api := range serviceConfig.GetApis() {
 		if util.ShouldSkipOPDiscoveryAPI(api.GetName(), opts.AllowDiscoveryAPIs) {
 			glog.Warningf("Skip API %q because discovery API is not supported.", api.GetName())

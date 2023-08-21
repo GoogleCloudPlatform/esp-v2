@@ -118,9 +118,6 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
 							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: servicepb.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &servicepb.BackendRule_JwtAudience{
-								JwtAudience: "bar.com",
-							},
 						},
 					},
 				},
@@ -187,9 +184,6 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
 							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: servicepb.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &servicepb.BackendRule_JwtAudience{
-								JwtAudience: "bar.com",
-							},
 						},
 					},
 				},
@@ -285,9 +279,6 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
 							Selector:        "endpoints.examples.bookstore.Bookstore.ListShelves",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: servicepb.BackendRule_APPEND_PATH_TO_ADDRESS,
-							Authentication: &servicepb.BackendRule_JwtAudience{
-								JwtAudience: "bar.com",
-							},
 						},
 					},
 				},
@@ -397,17 +388,11 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
 							Selector:        "testapi.foo",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: servicepb.BackendRule_CONSTANT_ADDRESS,
-							Authentication: &servicepb.BackendRule_JwtAudience{
-								JwtAudience: "foo.com",
-							},
 						},
 						{
 							Selector:        "testapi.bar",
 							Address:         "https://testapipb.com/foo",
 							PathTranslation: servicepb.BackendRule_APPEND_PATH_TO_ADDRESS,
-							Authentication: &servicepb.BackendRule_JwtAudience{
-								JwtAudience: "bar.com",
-							},
 						},
 					},
 				},
@@ -551,7 +536,7 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
 							},
 							AdditionalBindings: []*annotationspb.HttpRule{
 								{
-									Selector: "testapi.foo",
+									Selector: "ignored.selector", // never set by API compiler
 									Pattern: &annotationspb.HttpRule_Get{
 										Get: "/foo/{abc=*}",
 									},
@@ -1086,6 +1071,183 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
   ]
 }
 `,
+		},
+		{
+			Desc: "Remote backend is not used because local address override is enabled",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
+							Address:         "https://testapipb.com/foo",
+							PathTranslation: servicepb.BackendRule_CONSTANT_ADDRESS,
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
+									Path: "/v1/{book_name=*}/test/**",
+									Kind: "*",
+								},
+							},
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{
+				EnableBackendAddressOverride: true,
+			},
+			WantHostConfig: `
+{
+  "routes":[
+    {
+      "decorator":{
+        "operation":"ingress Foo"
+      },
+      "match":{
+        "safeRegex":{
+          "regex":"^/v1/[^\\/]+/test/.*\\/?$"
+        }
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Foo",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    }
+  ]
+}
+`,
+		},
+	}
+	for _, tc := range testdata {
+		tc.RunTest(t, routegen.NewBackendRouteGensFromOPConfig)
+	}
+}
+func TestNewBackendRouteGensFromOPConfig_BadInputFactory(t *testing.T) {
+	testdata := []routegentest.FactoryErrorOPTestCase{
+		{
+			Desc: "invalid http rule",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo////???#$$%/",
+							},
+						},
+					},
+				},
+			},
+			OptsIn:           options.ConfigGeneratorOptions{},
+			WantFactoryError: "invalid uri template",
+		},
+		{
+			Desc: "duplicate http rule",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo",
+							},
+							AdditionalBindings: []*annotationspb.HttpRule{
+								{
+									Pattern: &annotationspb.HttpRule_Get{
+										Get: "/echo",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			OptsIn:           options.ConfigGeneratorOptions{},
+			WantFactoryError: "duplicate http pattern",
+		},
+		{
+			Desc: "invalid remote backend",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Foo",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Selector:        "endpoints.examples.bookstore.Bookstore.Foo",
+							Address:         "foos://testapipb.com/foo",
+							PathTranslation: servicepb.BackendRule_CONSTANT_ADDRESS,
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Foo",
+							Pattern: &annotationspb.HttpRule_Custom{
+								Custom: &annotationspb.CustomHttpPattern{
+									Path: "/v1/{book_name=*}/test/**",
+									Kind: "*",
+								},
+							},
+						},
+					},
+				},
+			},
+			OptsIn:           options.ConfigGeneratorOptions{},
+			WantFactoryError: "unknown backend scheme",
 		},
 	}
 	for _, tc := range testdata {
