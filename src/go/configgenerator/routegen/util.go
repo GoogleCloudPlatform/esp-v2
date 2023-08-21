@@ -44,7 +44,7 @@ type BackendClusterSpecifier struct {
 // Forks `service_info.go: processBackendRule()`
 func ParseBackendClusterBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (map[string]*BackendClusterSpecifier, error) {
 	selectors := ParseSelectorsFromOPConfig(serviceConfig, opts)
-	backendRuleBySelector := GetBackendRuleBySelectorFromOPConfig(serviceConfig, opts)
+	backendRuleBySelector := PrecomputeBackendRuleBySelectorFromOPConfig(serviceConfig, opts)
 
 	backendClusterBySelector := make(map[string]*BackendClusterSpecifier)
 	for _, selector := range selectors {
@@ -88,9 +88,9 @@ func determineBackendClusterForSelector(selector string, backendRuleBySelector m
 	}, nil
 }
 
-// GetBackendRuleBySelectorFromOPConfig pre-processes the service config to
+// PrecomputeBackendRuleBySelectorFromOPConfig pre-processes the service config to
 // return a map of selector to the corresponding backend rule.
-func GetBackendRuleBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) map[string]*servicepb.BackendRule {
+func PrecomputeBackendRuleBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) map[string]*servicepb.BackendRule {
 	backendRuleBySelector := make(map[string]*servicepb.BackendRule)
 
 	for _, rule := range serviceConfig.GetBackend().GetRules() {
@@ -114,7 +114,7 @@ func GetBackendRuleBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts
 // Forked from `service_info.go: processHttpRule()`
 // and `service_info.go: addGrpcHttpRules()`
 func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (map[string][]*httppattern.Pattern, error) {
-	httpRuleBySelector := GetHTTPRuleBySelectorFromOPConfig(serviceConfig, opts)
+	httpRuleBySelector := PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig, opts)
 	httpPatternsBySelector := make(map[string][]*httppattern.Pattern)
 
 	for selector, rule := range httpRuleBySelector {
@@ -233,9 +233,9 @@ func parseHttpRule(rule *annotationspb.HttpRule) (*httpRuleParseOutput, error) {
 	}
 }
 
-// GetHTTPRuleBySelectorFromOPConfig pre-processes the service config to return
+// PrecomputeHTTPRuleBySelectorFromOPConfig pre-processes the service config to return
 // a map of selector to the corresponding HTTP rule.
-func GetHTTPRuleBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) map[string]*annotationspb.HttpRule {
+func PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) map[string]*annotationspb.HttpRule {
 	httpRuleBySelector := make(map[string]*annotationspb.HttpRule)
 
 	for _, rule := range serviceConfig.GetHttp().GetRules() {

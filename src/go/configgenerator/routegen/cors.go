@@ -28,7 +28,7 @@ type CORSGenerator struct {
 }
 
 // NewCORSRouteGensFromOPConfig creates CORSGenerator
-// from OP service config + descriptor + ESPv2 options.
+// from OP service config + ESPv2 options.
 // It is a RouteGeneratorOPFactory.
 func NewCORSRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]RouteGenerator, error) {
 	if opts.CorsPreset == "" {

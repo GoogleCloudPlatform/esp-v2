@@ -20,7 +20,7 @@ type BackendGenerator struct {
 }
 
 // NewBackendRouteGensFromOPConfig creates BackendGenerator
-// from OP service config + descriptor + ESPv2 options.
+// from OP service config + ESPv2 options.
 // It is a RouteGeneratorOPFactory.
 func NewBackendRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]RouteGenerator, error) {
 	httpPatternsBySelector, err := ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig, opts)
@@ -61,7 +61,7 @@ func (g *BackendGenerator) GenRouteConfig() ([]*routepb.Route, error) {
 			OperationName:      selector,
 			BackendClusterName: backendCluster.Name,
 			HostRewrite:        backendCluster.HostName,
-			// TODO(nareddyt)
+			// TODO(nareddyt): Set deadline and idle timeouts from backend rule
 			Deadline:    util.DefaultResponseDeadline,
 			HTTPPattern: httpPattern.Pattern,
 		}

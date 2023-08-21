@@ -36,6 +36,8 @@ import (
 )
 
 // ServiceInfo contains service level information.
+//
+// TODO(b/288170480): Remove file and clean up all doc references.
 type ServiceInfo struct {
 	Name     string
 	ConfigID string

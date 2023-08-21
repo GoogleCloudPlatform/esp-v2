@@ -29,7 +29,7 @@ type HealthCheckGenerator struct {
 }
 
 // NewHealthCheckRouteGensFromOPConfig creates HealthCheckGenerator
-// from OP service config + descriptor + ESPv2 options.
+// from OP service config + ESPv2 options.
 // It is a RouteGeneratorOPFactory.
 func NewHealthCheckRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]RouteGenerator, error) {
 	if opts.Healthz == "" {
