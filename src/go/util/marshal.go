@@ -76,10 +76,14 @@ var UnmarshalBytesToPbMessage = func(input []byte, output proto.Message) error {
 	return nil
 }
 
-// UnmarshalServiceConfig converts service config in JSON to proto
+// UnmarshalServiceConfig converts service config in JSON to proto.
+// Allows unknown fields.
 func UnmarshalServiceConfig(config []byte) (*confpb.Service, error) {
 	var serviceConfig confpb.Service
-	if err := protojson.Unmarshal(config, &serviceConfig); err != nil {
+	unmarshaller := protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+	if err := unmarshaller.Unmarshal(config, &serviceConfig); err != nil {
 		return nil, fmt.Errorf("fail to unmarshal serviceConfig: %s", err)
 	}
 	return &serviceConfig, nil
