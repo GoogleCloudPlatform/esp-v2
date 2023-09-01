@@ -1,4 +1,5 @@
 {
+  "an-unknown-field-foobar": true,
   "apis": [
     {
       "methods": [
