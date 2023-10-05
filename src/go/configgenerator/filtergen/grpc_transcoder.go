@@ -26,7 +26,6 @@ import (
 	"github.com/golang/glog"
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/protobuf/proto"
 	protov2 "google.golang.org/protobuf/proto"
 	descpb "google.golang.org/protobuf/types/descriptorpb"
@@ -97,35 +96,14 @@ func NewGRPCTranscoderFilterGenFromOPConfig(serviceConfig *confpb.Service, opts 
 		return nil, nil
 	}
 
-	var descriptorBin []byte
-	foundDescriptor := false
+	descBin, err := GetDescriptorBinFromOPConfig(serviceConfig)
 
-	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
-		configFile := &smpb.ConfigFile{}
-		err := sourceFile.UnmarshalTo(configFile)
-		if err != nil {
-			continue
-		}
-
-		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
-			foundDescriptor = true
-			descriptorBin = configFile.GetFileContents()
-		}
-	}
-
-	// Cannot check `descriptorBin == nil` because many tests use empty descriptor
-	// to verify transcoding.
-	if !foundDescriptor {
-		// b/148605552: Previous versions of the `gcloud_build_image` script did not download the proto descriptor.
-		// We cannot ensure that users have the latest version of the script, so notify them via non-fatal logs.
-		// Log as error instead of warning because error logs will show up even if `--enable_debug` is false.
-		glog.Error("Unable to setup gRPC-JSON transcoding because no proto descriptor was found in the service config. " +
-			"Please use version 2020-01-29 (or later) of the `gcloud_build_image` script. " +
-			"https://google3/third_party/espv2/source/v12/blob/master/docker/serverless/gcloud_build_image/gcloud_build_image")
+	if err != nil {
+		glog.Error("Unable to setup gRPC-JSON transcoding because no proto descriptor was found in the service config.")
 		return nil, nil
 	}
 
-	descriptorBin, err = UpdateProtoDescriptorFromOPConfig(serviceConfig, opts, descriptorBin)
+	descBin, err = UpdateProtoDescriptorFromOPConfig(serviceConfig, opts, descBin)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +121,7 @@ func NewGRPCTranscoderFilterGenFromOPConfig(serviceConfig *confpb.Service, opts 
 	serviceNames := GetAPINamesListFromOPConfig(serviceConfig, opts)
 
 	return &GRPCTranscoderGenerator{
-		ProtoDescriptorBin:                 descriptorBin,
+		ProtoDescriptorBin:                 descBin,
 		ServiceNames:                       serviceNames,
 		IgnoredQueryParams:                 ignoredQueryParams,
 		DisabledSelectors:                  disabledSelectors,

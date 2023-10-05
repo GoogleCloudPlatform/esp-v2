@@ -29,6 +29,8 @@ import (
 	apipb "google.golang.org/genproto/protobuf/api"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 var (
@@ -250,4 +252,29 @@ func GetAPIKeySystemParametersBySelectorFromOPConfig(serviceConfig *servicepb.Se
 	}
 
 	return apiKeySystemParametersBySelector
+}
+
+// GetDescriptorBinFromOPConfig returns the descriptor bytes extracted from the
+// OP service config.
+func GetDescriptorBinFromOPConfig(serviceConfig *servicepb.Service) ([]byte, error) {
+	foundDescriptor := false
+	descriptorBin := []byte{}
+
+	for _, sourceFile := range serviceConfig.GetSourceInfo().GetSourceFiles() {
+		configFile := &smpb.ConfigFile{}
+		err := sourceFile.UnmarshalTo(configFile)
+		if err != nil {
+			continue
+		}
+		if configFile.GetFileType() == smpb.ConfigFile_FILE_DESCRIPTOR_SET_PROTO {
+			foundDescriptor = true
+			descriptorBin = configFile.GetFileContents()
+		}
+	}
+
+	// Cannot check `descriptorBin == nil` because many tests use empty descriptor.
+	if !foundDescriptor {
+		return nil, fmt.Errorf("failed to get descriptor bin from OP config")
+	}
+	return descriptorBin, nil
 }
