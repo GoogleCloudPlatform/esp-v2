@@ -7,18 +7,12 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/google/go-cmp/cmp"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	apipb "google.golang.org/genproto/protobuf/api"
-	"google.golang.org/protobuf/testing/protocmp"
-
 	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
-
-	"google.golang.org/protobuf/types/known/anypb"
-
-	descpb "google.golang.org/protobuf/types/descriptorpb"
-
-	// "google3/third_party/golang/protobuf/v2/proto/proto"
-
+	apipb "google.golang.org/genproto/protobuf/api"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
+	descpb "google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // validDescriptors is a list of fake file descriptors for testing.
@@ -440,7 +434,7 @@ func setupInvalidSourceFileContent(rawDescriptor []byte) *anypb.Any {
 	return content
 }
 
-func TestGetDescriptorBinFromOPConfig(t *testing.T) {
+func TestGetDescriptorBinFromOPConfigSuccessCase(t *testing.T) {
 	rawDescriptor, err := proto.Marshal(validDescriptors)
 	if err != nil {
 		t.Fatalf("Failed to marshal FileDescriptorSet: %v", err)
@@ -456,87 +450,68 @@ func TestGetDescriptorBinFromOPConfig(t *testing.T) {
 		t.Fatalf("Failed to setup source file content: %v", err)
 	}
 
-	invalidContentwithInvalidProto := setupInvalidSourceFileContent(invalidRawDescriptor)
-
 	testdata := []struct {
-		Desc            string
-		ServiceConfigIn *servicepb.Service
-		DescriptorBin   []byte
-		WantError       bool
+		desc            string
+		serviceConfigIn *servicepb.Service
+		descriptorBin   []byte
 	}{
 		{
-			Desc: "Successfully extracted the descriptor bytes from the OP service config.",
-			ServiceConfigIn: &servicepb.Service{
+			desc: "Successfully extracted the descriptor bytes from the OP service config.",
+			serviceConfigIn: &servicepb.Service{
 				Name: "bookstore.endpoints.project123.cloud.goog",
-				Apis: []*apipb.Api{
-					{
-						Name: "Anotherlibrary",
-						Methods: []*apipb.Method{
-							{
-								Name: "ListBooks",
-							},
-						},
-					},
-				},
 				SourceInfo: &servicepb.SourceInfo{
 					SourceFiles: []*anypb.Any{content},
 				},
 			},
-			DescriptorBin: rawDescriptor,
-			WantError:     false,
+			descriptorBin: rawDescriptor,
 		},
 		{
-			Desc: "Failure in extracting descriptor bytes from the OP service config. Valid content with invalid proto.",
-			ServiceConfigIn: &servicepb.Service{
+			desc: "Success in extracting descriptor bytes from the OP service config. Valid content with invalid proto.",
+			serviceConfigIn: &servicepb.Service{
 				Name: "bookstore.endpoints.project123.cloud.goog",
-				Apis: []*apipb.Api{
-					{
-						Name: "Anotherlibrary",
-						Methods: []*apipb.Method{
-							{
-								Name: "ListBooks",
-							},
-						},
-					},
-				},
 				SourceInfo: &servicepb.SourceInfo{
 					SourceFiles: []*anypb.Any{validContentwithInvalidProto},
 				},
 			},
-			WantError: false,
+			descriptorBin: invalidRawDescriptor,
 		},
+	}
+	for _, tc := range testdata {
+		t.Run(tc.desc, func(t *testing.T) {
+			descriptorBin, err := GetDescriptorBinFromOPConfig(tc.serviceConfigIn)
+			if err != nil {
+				t.Fatalf("GetDescriptorBinFromOPConfig() got error: %v", err)
+			}
+			if diff := cmp.Diff(tc.descriptorBin, descriptorBin); diff != "" {
+				t.Fatalf("GetDescriptorBinFromOPConfig() got invalid descriptor. Got %v, want %v", descriptorBin, tc.descriptorBin)
+			}
+		})
+	}
+}
+
+func TestGetDescriptorBinFromOPConfigFailureCase(t *testing.T) {
+	invalidRawDescriptor := []byte("invalid_random_descriptor")
+	invalidContentwithInvalidProto := setupInvalidSourceFileContent(invalidRawDescriptor)
+
+	testdata := []struct {
+		desc            string
+		serviceConfigIn *servicepb.Service
+	}{
 		{
-			Desc: "Failure in extracting descriptor bytes from the OP service config. Invalid content with invalid proto.",
-			ServiceConfigIn: &servicepb.Service{
+			desc: "Failure in extracting descriptor bytes from the OP service config. Invalid content with invalid proto.",
+			serviceConfigIn: &servicepb.Service{
 				Name: "bookstore.endpoints.project123.cloud.goog",
-				Apis: []*apipb.Api{
-					{
-						Name: "Anotherlibrary",
-						Methods: []*apipb.Method{
-							{
-								Name: "ListBooks",
-							},
-						},
-					},
-				},
 				SourceInfo: &servicepb.SourceInfo{
 					SourceFiles: []*anypb.Any{invalidContentwithInvalidProto},
 				},
 			},
-			WantError: true,
 		},
 	}
 	for _, tc := range testdata {
-		t.Run(tc.Desc, func(t *testing.T) {
-			descriptorBin, err := GetDescriptorBinFromOPConfig(tc.ServiceConfigIn)
-			if tc.WantError && err == nil {
-				t.Fatalf("GetDescriptorBinFromOPConfig() got error: %v, want error presence: %v", err, tc.WantError)
-			}
-			if !tc.WantError && err != nil {
-				t.Fatalf("GetDescriptorBinFromOPConfig() got error: %v", err)
-			}
-			if diff := cmp.Diff(tc.DescriptorBin, descriptorBin); err != nil && diff != "" {
-				t.Fatalf("GetDescriptorBinFromOPConfig() got invalid descriptor. Got %v, want %v", descriptorBin, tc.DescriptorBin)
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := GetDescriptorBinFromOPConfig(tc.serviceConfigIn)
+			if err == nil {
+				t.Fatalf("GetDescriptorBinFromOPConfig() got error: %v, want nil", err)
 			}
 		})
 	}
