@@ -932,6 +932,19 @@ environment variable or by passing "-k" flag to this script.
         in grpc-json transcoding. This is to support HTML 2.0<https://tools.ietf.org/html/rfc1866#section-8.2.1>.
         Set this flag to true to disable this feature.
         ''')
+
+    parser.add_argument(
+        '--transcoding_match_unregistered_custom_verb', action='store_true',
+        help='''
+        According to the http template[1], the custom verb is `":" LITERAL` at the end of http template.
+
+        For a request with `/foo/bar:baz` and `:baz` is not registered in any url_template, here is the behavior change
+         - By default, `:baz` will not be treated as custom verb, so it will match `/foo/{x=*}`.
+         - If the flag is provided, `:baz` is treated as custom verb, so it will NOT match `/foo/{x=*}` since the template doesn't use any custom verb.
+
+        [1](https://github.com/googleapis/googleapis/blob/master/google/api/http.proto#L226-L231)
+        ''')
+
     parser.add_argument(
         '--disallow_colon_in_wildcard_path_segment', action='store_true',
         help='''
@@ -1449,6 +1462,9 @@ def gen_proxy_config(args):
 
     if args.transcoding_query_parameters_disable_unescape_plus:
         proxy_conf.append("--transcoding_query_parameters_disable_unescape_plus")
+
+    if args.transcoding_match_unregistered_custom_verb:
+        proxy_conf.append("--transcoding_match_unregistered_custom_verb")
 
     if args.disallow_colon_in_wildcard_path_segment:
         proxy_conf.append("--disallow_colon_in_wildcard_path_segment")
