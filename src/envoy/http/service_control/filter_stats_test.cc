@@ -17,10 +17,10 @@
 #include "test/mocks/server/mocks.h"
 #include "test/test_common/utility.h"
 
+using ::absl::OkStatus;
+using absl::Status;
+using absl::StatusCode;
 using ::Envoy::Server::Configuration::MockFactoryContext;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 using ::testing::_;
 
 namespace espv2 {

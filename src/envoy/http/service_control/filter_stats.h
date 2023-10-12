@@ -94,9 +94,8 @@ struct ServiceControlFilterStats {
   CallStatusStats report_;
 
   // Collect service control call status.
-  static void collectCallStatus(
-      CallStatusStats& filter_stats,
-      const ::google::protobuf::util::StatusCode& code);
+  static void collectCallStatus(CallStatusStats& filter_stats,
+                                const absl::StatusCode& code);
 
   // Create a stat struct.
   static ServiceControlFilterStats create(const std::string& prefix,

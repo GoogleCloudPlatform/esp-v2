@@ -29,6 +29,9 @@
 #include "src/api_proxy/utils/version.h"
 #include "utils/distribution_helper.h"
 
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
@@ -43,9 +46,6 @@ using ::google::api::servicecontrol::v1::QuotaError;
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::protobuf::Map;
 using ::google::protobuf::Timestamp;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 using ::google::service_control_client::DistributionHelper;
 
 namespace espv2 {
@@ -922,8 +922,7 @@ void FillLogEntry(const ReportRequestInfo& info, const std::string& name,
     (*fields)[kLogFieldNameJwtPayloads].set_string_value(info.jwt_payloads);
   }
   if (!info.status.ok() && info.status.message().length() > 0) {
-    (*fields)[kLogFieldNameErrorCause].set_string_value(
-        info.status.message().as_string());
+    (*fields)[kLogFieldNameErrorCause].set_string_value(info.status.message());
   }
 
   if (info.grpc_response_code.has_value()) {

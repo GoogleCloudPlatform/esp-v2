@@ -17,9 +17,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
+using ::absl::OkStatus;
+using absl::Status;
+using absl::StatusCode;
 
 namespace espv2 {
 namespace envoy {

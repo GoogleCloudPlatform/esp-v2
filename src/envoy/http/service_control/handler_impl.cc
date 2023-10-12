@@ -30,6 +30,9 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 using Envoy::Http::CustomHeaders;
 using Envoy::Http::CustomInlineHeaderRegistry;
 using Envoy::Http::RegisterCustomInlineHeader;
@@ -39,9 +42,6 @@ using ::espv2::api_proxy::service_control::OperationInfo;
 using ::espv2::api_proxy::service_control::QuotaResponseInfo;
 using ::espv2::api_proxy::service_control::ScResponseError;
 using ::espv2::api_proxy::service_control::ScResponseErrorType;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 namespace {
 RegisterCustomInlineHeader<CustomInlineHeaderRegistry::Type::RequestHeaders>

@@ -34,6 +34,9 @@ namespace http_filters {
 namespace service_control {
 namespace {
 
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 using Envoy::Http::MockStreamDecoderFilterCallbacks;
 using Envoy::Http::TestRequestHeaderMapImpl;
 using Envoy::Http::TestRequestTrailerMapImpl;
@@ -51,9 +54,6 @@ using ::espv2::api_proxy::service_control::ScResponseErrorType;
 using ::espv2::api_proxy::service_control::api_key::ApiKeyState;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
 using ::google::protobuf::TextFormat;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 using ::testing::_;
 using ::testing::ByMove;
 using ::testing::MockFunction;
@@ -162,8 +162,8 @@ requirements {
 class HandlerTest : public ::testing::Test {
  protected:
   HandlerTest()
-      : stats_(ServiceControlFilterStats::create(Envoy::EMPTY_STRING,
-                                                 mock_stats_scope_)) {}
+      : stats_(ServiceControlFilterStats::create(
+            Envoy::EMPTY_STRING, *mock_stats_scope_.rootScope())) {}
 
   ~HandlerTest() {}
 

@@ -115,9 +115,8 @@ bool IamTokenInfo::parseAccessToken(absl::string_view response,
                                     TokenResult* ret) const {
   // Parse the JSON into a proto.
   ::google::protobuf::Struct response_pb;
-  ::google::protobuf::util::Status parse_status =
-      ::google::protobuf::util::JsonStringToMessage(std::string(response),
-                                                    &response_pb);
+  absl::Status parse_status = ::google::protobuf::util::JsonStringToMessage(
+      std::string(response), &response_pb);
   if (!parse_status.ok()) {
     ENVOY_LOG(error, "Parsing response failed: {}", parse_status.ToString());
     return false;
@@ -159,9 +158,8 @@ bool IamTokenInfo::parseIdentityToken(absl::string_view response,
                                       TokenResult* ret) const {
   // Parse the JSON into a proto.
   ::google::protobuf::Struct response_pb;
-  ::google::protobuf::util::Status parse_status =
-      ::google::protobuf::util::JsonStringToMessage(std::string(response),
-                                                    &response_pb);
+  absl::Status parse_status = ::google::protobuf::util::JsonStringToMessage(
+      std::string(response), &response_pb);
   if (!parse_status.ok()) {
     ENVOY_LOG(error, "Parsing response failed: {}", parse_status.ToString());
     return false;

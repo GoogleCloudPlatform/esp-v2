@@ -17,11 +17,15 @@
 #include <algorithm>
 
 #include "src/api_proxy/service_control/request_builder.h"
+#include "src/api_proxy/service_control/request_info.h"
 
 namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 using ::google::api::LabelDescriptor;
 using ::google::api::LogDescriptor;
 using ::google::api::Logging;
@@ -32,9 +36,6 @@ using ::google::api::Monitoring;
 using ::google::api::Monitoring_MonitoringDestination;
 using ::google::api::Service;
 using ::google::protobuf::RepeatedPtrField;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 Status LogsMetricsLoader::Load(const Service& service,
                                std::set<std::string>* logs,

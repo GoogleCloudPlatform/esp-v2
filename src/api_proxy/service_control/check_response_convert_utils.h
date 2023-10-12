@@ -28,11 +28,11 @@ namespace service_control {
 // subtracted from this CheckResponse.
 // project_id is used when generating error message for project_id related
 // failures.
-::google::protobuf::util::Status ConvertCheckResponse(
+absl::Status ConvertCheckResponse(
     const ::google::api::servicecontrol::v1::CheckResponse& response,
     const std::string& service_name, CheckResponseInfo* check_response_info);
 
-::google::protobuf::util::Status ConvertAllocateQuotaResponse(
+absl::Status ConvertAllocateQuotaResponse(
     const ::google::api::servicecontrol::v1::AllocateQuotaResponse& response,
     const std::string& service_name, QuotaResponseInfo* quota_response_info);
 

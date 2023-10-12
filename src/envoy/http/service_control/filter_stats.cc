@@ -16,8 +16,8 @@
 
 #include "google/protobuf/stubs/status.h"
 
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
+using ::absl::Status;
+using ::absl::StatusCode;
 
 namespace espv2 {
 namespace envoy {

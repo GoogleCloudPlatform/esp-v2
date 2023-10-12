@@ -50,24 +50,24 @@ class RequestBuilder final {
   // set to label.
   // FillCheckRequest function should copy the strings pointed by info.
   // These buffers may be freed after the FillCheckRequest call.
-  ::google::protobuf::util::Status FillCheckRequest(
+  absl::Status FillCheckRequest(
       const CheckRequestInfo& info,
       ::google::api::servicecontrol::v1::CheckRequest* request) const;
 
-  ::google::protobuf::util::Status FillAllocateQuotaRequest(
+  absl::Status FillAllocateQuotaRequest(
       const QuotaRequestInfo& info,
       ::google::api::servicecontrol::v1::AllocateQuotaRequest* request) const;
 
   // Fills the CheckRequest protobuf from info.
   // FillReportRequest function should copy the strings pointed by info.
   // These buffers may be freed after the FillReportRequest call.
-  ::google::protobuf::util::Status FillReportRequest(
+  absl::Status FillReportRequest(
       const ReportRequestInfo& info,
       ::google::api::servicecontrol::v1::ReportRequest* request) const;
 
   // Append a new consumer project Operations to the ReportRequest, if customer
   // project id from the CheckResponse is not empty
-  ::google::protobuf::util::Status AppendByConsumerOperations(
+  absl::Status AppendByConsumerOperations(
       const ReportRequestInfo& info,
       ::google::api::servicecontrol::v1::ReportRequest* request,
       ::google::protobuf::Timestamp current_time) const;

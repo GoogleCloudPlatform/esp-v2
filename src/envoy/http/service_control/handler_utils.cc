@@ -35,11 +35,11 @@
 #include "source/extensions/filters/http/well_known_names.h"
 #include "src/api_proxy/service_control/request_builder.h"
 
+using ::absl::StatusCode;
 using ::espv2::api::envoy::v12::http::service_control::ApiKeyLocation;
 using ::espv2::api::envoy::v12::http::service_control::Service;
 using ::espv2::api_proxy::service_control::LatencyInfo;
 using ::espv2::api_proxy::service_control::protocol::Protocol;
-using ::google::protobuf::util::StatusCode;
 
 namespace espv2 {
 namespace envoy {

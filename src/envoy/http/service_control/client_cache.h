@@ -16,7 +16,7 @@
 
 #include "api/envoy/v12/http/service_control/config.pb.h"
 #include "envoy/event/dispatcher.h"
-#include "envoy/tracing/http_tracer.h"
+#include "envoy/tracing/tracer.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "include/service_control_client.h"
 #include "source/common/common/logger.h"
@@ -77,14 +77,14 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
   // Ownership of CheckResponse is passed to this function.
   // The function will always call CheckDoneFunc.
   void handleCheckResponse(
-      const ::google::protobuf::util::Status& http_status,
+      const absl::Status& http_status,
       ::google::api::servicecontrol::v1::CheckResponse* response,
       CheckDoneFunc on_done);
 
   // Ownership of AllocateQuotaResponse is passed to this function.
   // The function will always call QuotaDoneFunction.
   void handleQuotaOnDone(
-      const ::google::protobuf::util::Status& http_status,
+      const absl::Status& http_status,
       ::google::api::servicecontrol::v1::AllocateQuotaResponse* response,
       QuotaDoneFunc on_done);
 
@@ -93,12 +93,12 @@ class ClientCache : public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
           filter_config);
 
   void collectCallStatus(CallStatusStats& filter_stats,
-                         const ::google::protobuf::util::StatusCode& code);
+                         const absl::StatusCode& code);
 
   template <class Response>
-  static ::google::protobuf::util::Status processScCallTransportStatus(
-      const ::google::protobuf::util::Status& status, Response* resp,
-      const std::string& body);
+  static absl::Status processScCallTransportStatus(const absl::Status& status,
+                                                   Response* resp,
+                                                   const std::string& body);
 
   const ::espv2::api::envoy::v12::http::service_control::Service& config_;
 

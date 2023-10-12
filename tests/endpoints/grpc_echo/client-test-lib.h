@@ -31,12 +31,12 @@ enum JsonOptions {
 
 // Converts a protobuf into a JSON string. The options field is a OR'd set of
 // the available JsonOptions.
-::google::protobuf::util::Status JsonToProto(const std::string &json,
+absl::Status JsonToProto(const std::string &json,
                                               ::google::protobuf::Message *message);
 
 // Converts a protobuf into a JSON string and writes it into the output stream.
 // The options parameter is an OR'd set of the available JsonOptions.
-::google::protobuf::util::Status ProtoToJson(const ::google::protobuf::Message& message,
+absl::Status ProtoToJson(const ::google::protobuf::Message& message,
                    ::google::protobuf::io::ZeroCopyOutputStream* json,
                    int options);
 

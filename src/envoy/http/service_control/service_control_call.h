@@ -16,7 +16,7 @@
 
 #include "api/envoy/v12/http/service_control/config.pb.h"
 #include "envoy/common/pure.h"
-#include "envoy/tracing/http_tracer.h"
+#include "envoy/tracing/tracer.h"
 #include "src/envoy/http/service_control/service_control_callback_func.h"
 
 namespace espv2 {

@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "google/api/quota.pb.h"
 #include "google/protobuf/stubs/status.h"
@@ -205,10 +206,10 @@ struct ReportRequestInfo : public OperationInfo {
 
   // The gRPC response code, in the canonical RPC code range.
   // Only valid when frontend protocol is gRPC.
-  absl::optional<::google::protobuf::util::StatusCode> grpc_response_code;
+  absl::optional<absl::StatusCode> grpc_response_code;
 
   // The response status.
-  ::google::protobuf::util::Status status;
+  absl::Status status;
 
   // Original request URL.
   std::string url;

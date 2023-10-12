@@ -25,12 +25,12 @@ namespace service_control {
 
 namespace {
 
+using ::absl::Status;
 using ::google::api::LabelDescriptor;
 using ::google::api::LogDescriptor;
 using ::google::api::MetricDescriptor;
 using ::google::api::Service;
 using ::google::protobuf::RepeatedPtrField;
-using ::google::protobuf::util::Status;
 
 using ::testing::_;
 using ::testing::Eq;

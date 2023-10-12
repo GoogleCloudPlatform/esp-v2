@@ -21,15 +21,15 @@ namespace api_proxy {
 namespace service_control {
 namespace {
 
+using ::absl::OkStatus;
+using absl::Status;
+using absl::StatusCode;
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckError_Code;
 using ::google::api::servicecontrol::v1::CheckError_Code_Name;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::api::servicecontrol::v1::
     CheckResponse_ConsumerInfo_ConsumerType;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 class CheckResponseConverterTest : public ::testing::Test {
  protected:

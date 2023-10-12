@@ -24,10 +24,10 @@ namespace envoy {
 namespace http_filters {
 namespace service_control {
 
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 using ::espv2::api::envoy::v12::http::service_control::FilterConfig;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
 using ::espv2::api_proxy::service_control::QuotaResponseInfo;
