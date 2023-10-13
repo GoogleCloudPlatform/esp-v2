@@ -69,39 +69,39 @@ build-race: format
 
 build-envoy-asan:
 	@echo "--> building envoy (compilation_mode=fastbuild)"
-	bazel build --config=clang-asan //src/envoy:envoy
+	bazelisk build --config=clang-asan //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-envoy-tsan:
 	@echo "--> building envoy (compilation_mode=fastbuild)"
-	bazel build --config=clang-tsan  //src/envoy:envoy
+	bazelisk build --config=clang-tsan  //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 
 build-envoy:
 	@echo "--> building envoy (compilation_mode=release)"
-	bazel build --config=clang-release //src/envoy:envoy
+	bazelisk build --config=clang-release //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-envoy-debug:
 	@echo "--> building envoy (compilation_mode=debug)"
-	bazel build --config=debug //src/envoy:envoy
+	bazelisk build --config=debug //src/envoy:envoy
 	@cp -f bazel-bin/src/envoy/envoy bin/
 
 build-grpc-echo:
 	@echo "--> building grpc-echo"
-	@bazel build  //tests/endpoints/grpc_echo:grpc-test-client
-	@bazel build  //tests/endpoints/grpc_echo:grpc-test-server
-	@bazel build  //tests/endpoints/grpc_echo:grpc-test_descriptor
+	@bazelisk build  //tests/endpoints/grpc_echo:grpc-test-client
+	@bazelisk build  //tests/endpoints/grpc_echo:grpc-test-server
+	@bazelisk build  //tests/endpoints/grpc_echo:grpc-test_descriptor
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-client bin/grpc_echo_client
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test-server bin/grpc_echo_server
 	@cp -f bazel-bin/tests/endpoints/grpc_echo/grpc-test.descriptor tests/endpoints/grpc_echo/proto/api_descriptor.pb
 
 build-grpc-bookstore:
 	@echo "--> building bookstore-grpc"
-	@bazel build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor
+	@bazelisk build tests/endpoints/bookstore_grpc/proto:bookstore_descriptor
 	@cp -f bazel-bin/tests/endpoints/bookstore_grpc/proto/bookstore.descriptor tests/endpoints/bookstore_grpc/proto/api_descriptor.pb
-	@bazel build @com_google_protobuf//:protoc
+	@bazelisk build @com_google_protobuf//:protoc
 	@bazel-bin/external/com_google_protobuf/protoc -I tests/endpoints/bookstore_grpc/proto/v1 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_google_googleapis \
 	  -I tests/endpoints/bookstore_grpc/proto/ tests/endpoints/bookstore_grpc/proto/v1/bookstore.proto --go_out=plugins=grpc:tests/endpoints/bookstore_grpc/proto/v1/
 	@bazel-bin/external/com_google_protobuf/protoc -I tests/endpoints/bookstore_grpc/proto/v2 -I bazel-esp-v2/external/com_google_protobuf/src -I bazel-esp-v2/external/com_google_googleapis \
@@ -110,10 +110,10 @@ build-grpc-bookstore:
 
 build-grpc-interop:
 	@echo "--> building the grpc-interop-test client and server"
-	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_client
-	@bazel build @com_github_grpc_grpc//test/cpp/interop:metrics_client
-	@bazel build @com_github_grpc_grpc//test/cpp/interop:interop_server
-	@bazel build @com_github_grpc_grpc//test/cpp/interop:stress_test
+	@bazelisk build @com_github_grpc_grpc//test/cpp/interop:interop_client
+	@bazelisk build @com_github_grpc_grpc//test/cpp/interop:metrics_client
+	@bazelisk build @com_github_grpc_grpc//test/cpp/interop:interop_server
+	@bazelisk build @com_github_grpc_grpc//test/cpp/interop:stress_test
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_client bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/metrics_client bin/
 	@cp -f bazel-bin/external/com_github_grpc_grpc/test/cpp/interop/interop_server bin/
@@ -158,15 +158,15 @@ test-debug: format
 
 test-envoy: clang-format
 	@echo "--> running envoy's unit tests"
-	bazel test //src/...
+	bazelisk test //src/...
 
 test-envoy-asan: clang-format
 	@echo "--> running envoy's unit tests (asan)"
-	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) bazel test --config=clang-asan  --test_output=errors //src/...
+	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) bazelisk test --config=clang-asan  --test_output=errors //src/...
 
 test-envoy-tsan: clang-format
 	@echo "--> running envoy's unit tests (tsan)"
-	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) bazel test --config=clang-tsan  --test_output=errors  //src/...
+	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) bazelisk test --config=clang-tsan  --test_output=errors  //src/...
 
 .PHONY: integration-test-run-sequential integration-test-run-parallel integration-test integration-test-asan integration-test-tsan integration-debug
 integration-test-run-sequential:
