@@ -16,7 +16,6 @@
 
 #include "envoy/stats/scope.h"
 #include "envoy/stats/stats_macros.h"
-#include "google/protobuf/stubs/status.h"
 
 namespace espv2 {
 namespace envoy {

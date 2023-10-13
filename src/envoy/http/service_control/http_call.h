@@ -18,7 +18,6 @@
 #include "envoy/common/pure.h"
 #include "envoy/tracing/tracer.h"
 #include "envoy/upstream/cluster_manager.h"
-#include "google/protobuf/stubs/status.h"
 
 namespace espv2 {
 namespace envoy {

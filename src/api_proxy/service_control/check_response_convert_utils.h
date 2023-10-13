@@ -17,7 +17,6 @@
 #include "absl/strings/str_cat.h"
 #include "google/api/servicecontrol/v1/quota_controller.pb.h"
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
-#include "google/protobuf/stubs/status.h"
 #include "src/api_proxy/service_control/request_info.h"
 
 namespace espv2 {

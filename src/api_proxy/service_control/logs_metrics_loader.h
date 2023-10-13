@@ -18,7 +18,6 @@
 
 #include "absl/status/status.h"
 #include "google/api/service.pb.h"
-#include "google/protobuf/stubs/status.h"
 #include "gtest/gtest_prod.h"
 
 namespace espv2 {

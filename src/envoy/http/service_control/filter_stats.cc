@@ -14,8 +14,6 @@
 
 #include "src/envoy/http/service_control/filter_stats.h"
 
-#include "google/protobuf/stubs/status.h"
-
 using ::absl::Status;
 using ::absl::StatusCode;
 

@@ -21,7 +21,6 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "google/api/quota.pb.h"
-#include "google/protobuf/stubs/status.h"
 
 namespace espv2 {
 namespace api_proxy {

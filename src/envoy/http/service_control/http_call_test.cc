@@ -20,7 +20,6 @@
 #include "envoy/http/async_client.h"
 #include "gmock/gmock.h"
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
-#include "google/protobuf/stubs/status.h"
 #include "gtest/gtest.h"
 #include "source/common/http/headers.h"
 #include "source/common/http/message_impl.h"
