@@ -29,7 +29,6 @@
 #include "google/protobuf/util/type_resolver_util.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "tests/endpoints/grpc_echo/client-test-lib.h"
-// #include "src/api_manager/utils/marshalling.h"
 
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::protobuf::util::MessageDifferencer;
@@ -79,7 +78,7 @@ std::string GetTypeUrl(const Message &message) {
 absl::Status FromProto(
     const absl::Status &proto_status) {
   if (proto_status.ok()) {
-    return ::google::protobuf::util::OkStatus();
+    return absl::OkStatus();
   }
   return proto_status;
 }
@@ -97,7 +96,7 @@ absl::Status JsonToProto(const std::string &json,
     return FromProto(status);
   }
   if (message->ParseFromString(binary)) {
-    return ::google::protobuf::util::OkStatus();
+    return absl::OkStatus();
   }
   return absl::Status(
       absl::StatusCode::kInternal,
