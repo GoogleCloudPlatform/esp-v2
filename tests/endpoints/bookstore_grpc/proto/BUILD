@@ -1,6 +1,3 @@
-load("@com_google_protobuf//:protobuf.bzl", "cc_proto_library")
-load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
-
 exports_files([
     "api_descriptor.pb",
 ])
