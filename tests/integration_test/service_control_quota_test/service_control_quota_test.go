@@ -134,7 +134,7 @@ func TestServiceControlQuota(t *testing.T) {
 					},
 				},
 			},
-			wantError: `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:API key not valid. Please pass a valid API key."}`,
+			wantError: `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT: API key not valid. Please pass a valid API key."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),
@@ -514,7 +514,7 @@ func TestServiceControlQuotaExhausted(t *testing.T) {
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeCloudTokenLongClaims,
 			httpMethod:     "GET",
-			httpCallError:  `429 Too Many Requests, {"code":429,"message":"RESOURCE_EXHAUSTED"}`,
+			httpCallError:  `429 Too Many Requests, {"code":429,"message":"RESOURCE_EXHAUSTED: "}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:                      utils.ESPv2Version(),

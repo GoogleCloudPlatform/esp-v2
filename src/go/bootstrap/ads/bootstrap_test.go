@@ -70,6 +70,7 @@ func TestCreateBootstrapConfig(t *testing.T) {
          {
             "name": "static-runtime",
             "staticLayer": {
+              "envoy.reloadable_features.prohibit_route_refresh_after_response_headers_sent": false,
               "re2.max_program_size.error_level":1000
             }
          }
@@ -170,6 +171,7 @@ func TestCreateBootstrapConfig(t *testing.T) {
          {
             "name": "static-runtime",
             "staticLayer": {
+              "envoy.reloadable_features.prohibit_route_refresh_after_response_headers_sent": false,
               "re2.max_program_size.error_level":1000
             }
          }

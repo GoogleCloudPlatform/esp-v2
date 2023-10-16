@@ -35,6 +35,11 @@ func CreateLayeredRuntime() *bootstrappb.LayeredRuntime {
 									NumberValue: 1000,
 								},
 							},
+							"envoy.reloadable_features.prohibit_route_refresh_after_response_headers_sent": {
+								Kind: &structpb.Value_BoolValue{
+									BoolValue: false,
+								},
+							},
 						},
 					},
 				},

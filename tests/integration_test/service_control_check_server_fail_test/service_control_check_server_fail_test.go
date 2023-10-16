@@ -64,7 +64,7 @@ func TestServiceControlCheckServerFailFlag(t *testing.T) {
 			respCode:        403,
 			respBody:        "service control service is not enabled",
 			wantRetry:       1,
-			wantError: `500 Internal Server Error, {"code":500,"message":"INTERNAL:Calling Google Service Control API failed with: 403 and body: service control service is not enabled
+			wantError: `500 Internal Server Error, {"code":500,"message":"INTERNAL: Calling Google Service Control API failed with: 403 and body: service control service is not enabled
 "}`,
 		},
 		{
@@ -74,7 +74,7 @@ func TestServiceControlCheckServerFailFlag(t *testing.T) {
 			respCode:        403,
 			respBody:        "service control service is not enabled",
 			wantRetry:       1,
-			wantError: `500 Internal Server Error, {"code":500,"message":"INTERNAL:Calling Google Service Control API failed with: 403 and body: service control service is not enabled
+			wantError: `500 Internal Server Error, {"code":500,"message":"INTERNAL: Calling Google Service Control API failed with: 403 and body: service control service is not enabled
 "}`,
 		},
 		{
@@ -84,7 +84,7 @@ func TestServiceControlCheckServerFailFlag(t *testing.T) {
 			respCode:        503,
 			respBody:        "gateway error",
 			wantRetry:       4,
-			wantError: `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: gateway error
+			wantError: `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE: Calling Google Service Control API failed with: 503 and body: gateway error
 "}`,
 		},
 		{

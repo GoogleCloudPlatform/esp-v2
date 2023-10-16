@@ -72,7 +72,7 @@ plans {
         }
         expected_status {
           code: 16
-          details: "UNAUTHENTICATED:Method doesn\'t allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."
+          details: "UNAUTHENTICATED: Method doesn\'t allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."
         }
       }
     }
@@ -85,7 +85,7 @@ plans {
         count: 100
         expected_status {
           code: 16
-          details: "UNAUTHENTICATED:Method doesn\'t allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."
+          details: "UNAUTHENTICATED: Method doesn\'t allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."
         }
       }
     }
