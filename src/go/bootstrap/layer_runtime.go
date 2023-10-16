@@ -35,8 +35,8 @@ func CreateLayeredRuntime() *bootstrappb.LayeredRuntime {
 									NumberValue: 1000,
 								},
 							},
-							// Our service control v2 filter will call route() in log time
-							// but it is possible that the route isn't set for early local reply,
+							// Our service control filter may call route() in log time
+							// but it is possible that the route isn't set with early local reply,
 							// which triggers an ENVOY_BUG, so we use this flag to workaround.
 							// For more context, see https://github.com/envoyproxy/envoy/issues/28626.
 							"envoy.reloadable_features.prohibit_route_refresh_after_response_headers_sent": {
