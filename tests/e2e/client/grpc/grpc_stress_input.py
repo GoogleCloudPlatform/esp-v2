@@ -52,7 +52,7 @@ flags.DEFINE_boolean('use_ssl', False, 'If true, use SSL to connect.')
 #                   ' API consumer identity to call this API.')
 
 kNoApiKeyError = (
-    'UNAUTHENTICATED:Method doesn\'t allow unregistered callers '
+    'UNAUTHENTICATED: Method doesn\'t allow unregistered callers '
     '(callers without established identity). Please use API Key or'
     ' other form of API consumer identity to call this API.')
 

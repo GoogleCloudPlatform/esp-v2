@@ -68,7 +68,7 @@ class ApiProxyBookstoreTest(ApiProxyClientTest):
                 self.assertEqual(r.status_code, 401)
                 try:
                     rpcStatus = json.loads(r.text)
-                    self.assertEqual(rpcStatus, json.loads('{"code":401,"message":"UNAUTHENTICATED:Method '
+                    self.assertEqual(rpcStatus, json.loads('{"code":401,"message":"UNAUTHENTICATED: Method '
                                                            'doesn\'t allow unregistered callers (callers '
                                                            'without established identity). Please use API '
                                                            'Key or other form of API consumer identity to '
