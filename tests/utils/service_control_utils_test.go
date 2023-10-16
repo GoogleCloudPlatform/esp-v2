@@ -515,7 +515,7 @@ operations: <
       fields: <
         key: "response_code_detail"
         value: <
-          string_value: "service_control_check_call_error{UNAVAILABLE}"
+          string_value: "service_control_check_call_error"
         >
       >
     >
@@ -793,7 +793,7 @@ func TestCreateReport(t *testing.T) {
 		LogMessage:                   "Method: ListShelves",
 		ResponseCode:                 503,
 		StatusCode:                   "14",
-		ResponseCodeDetail:           "service_control_check_call_error{UNAVAILABLE}",
+		ResponseCodeDetail:           "service_control_check_call_error",
 	})
 
 	want := scpb.ReportRequest{}
@@ -1223,7 +1223,7 @@ operations: <
       fields: <
         key: "response_code_detail"
         value: <
-          string_value: "service_control_check_call_error{UNAVAILABLE}"
+          string_value: "service_control_check_call_error"
         >
       >
     >
@@ -1295,7 +1295,7 @@ operations: <
       fields: <
         key: "response_code_detail"
         value: <
-          string_value: "service_control_check_call_error{UNAVAILABLE}"
+          string_value: "service_control_check_call_error"
         >
       >
     >
@@ -1367,7 +1367,7 @@ operations: <
       fields: <
         key: "response_code_detail"
         value: <
-          string_value: "service_control_check_call_error{UNAVAILABLE}"
+          string_value: "service_control_check_call_error"
         >
       >
     >
@@ -1638,7 +1638,7 @@ func TestCreateAggregateReport(t *testing.T) {
 		HttpMethod:                   "GET",
 		LogMessage:                   "Method: ListShelves",
 		ResponseCode:                 503,
-		ResponseCodeDetail:           "service_control_check_call_error{UNAVAILABLE}",
+		ResponseCodeDetail:           "service_control_check_call_error",
 		StatusCode:                   "14",
 	})
 
