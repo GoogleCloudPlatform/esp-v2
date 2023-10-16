@@ -44,6 +44,12 @@ func CreateLayeredRuntime() *bootstrappb.LayeredRuntime {
 									BoolValue: false,
 								},
 							},
+							// Enable an Envoy vulnerability mitigation. For details, please see b/299661830.
+							"http.max_requests_per_io_cycle": {
+								Kind: &structpb.Value_NumberValue{
+									NumberValue: 1,
+								},
+							},
 						},
 					},
 				},
