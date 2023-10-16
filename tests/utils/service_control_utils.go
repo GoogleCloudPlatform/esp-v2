@@ -19,6 +19,7 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -296,6 +297,13 @@ func makeNumberValue(v int) *structpb.Value {
 	return &structpb.Value{Kind: &structpb.Value_NumberValue{float64(v)}}
 }
 
+// For responseCodeDetail in form of FOO{BAR}, this method only keeps FOO.
+func sanitizeResponseCodeDetail(raw string) string {
+	if idx := strings.Index(raw, "{"); idx != -1 {
+		return raw[:idx]
+	}
+	return raw
+}
 func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	httpRequest := &scpb.HttpRequest{}
 	httpRequest.Status = int32(er.ResponseCode)
@@ -317,7 +325,8 @@ func createLogEntry(er *ExpectedReport) *scpb.LogEntry {
 	pl["api_method"] = makeStringValue(er.ApiMethod)
 	pl["api_key_state"] = makeStringValue(er.ApiKeyState)
 	if er.ResponseCodeDetail != "" {
-		pl["response_code_detail"] = makeStringValue(er.ResponseCodeDetail)
+		pl["response_code_detail"] = makeStringValue(sanitizeResponseCodeDetail(er.ResponseCodeDetail))
+
 	} else {
 		pl["response_code_detail"] = makeStringValue("via_upstream")
 	}
@@ -605,6 +614,9 @@ func stripRandomFields(op *scpb.Operation, n int64) error {
 		l.HttpRequest.Latency = nil
 		l.HttpRequest.RequestSize = 0
 		l.HttpRequest.ResponseSize = 0
+		if l.GetStructPayload() != nil && l.GetStructPayload().Fields["response_code_detail"] != nil {
+			l.GetStructPayload().Fields["response_code_detail"] = makeStringValue(sanitizeResponseCodeDetail(l.GetStructPayload().Fields["response_code_detail"].GetStringValue()))
+		}
 	}
 
 	return nil
