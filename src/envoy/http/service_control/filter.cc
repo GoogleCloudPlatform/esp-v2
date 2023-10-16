@@ -82,9 +82,8 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
   return Envoy::Http::FilterHeadersStatus::StopIteration;
 }
 
-void ServiceControlFilter::onCheckDone(
-    const ::google::protobuf::util::Status& status,
-    absl::string_view rc_detail) {
+void ServiceControlFilter::onCheckDone(const absl::Status& status,
+                                       absl::string_view rc_detail) {
   if (!status.ok()) {
     // protobuf::util::Status.error_code is the same as Envoy GrpcStatus
     // This cast is safe.
@@ -136,7 +135,7 @@ void ServiceControlFilter::log(
     const Envoy::Http::RequestHeaderMap* request_headers,
     const Envoy::Http::ResponseHeaderMap* response_headers,
     const Envoy::Http::ResponseTrailerMap* response_trailers,
-    const Envoy::StreamInfo::StreamInfo&) {
+    const Envoy::StreamInfo::StreamInfo&, Envoy::AccessLog::AccessLogType) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
     if (!request_headers) return;

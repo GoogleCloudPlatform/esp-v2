@@ -136,7 +136,7 @@ func TestServiceControlWithTLS(t *testing.T) {
 			port:      platform.TestServiceControlTLSWithValidCert,
 			certPath:  platform.GetFilePath(platform.MismatchCert),
 			keyPath:   platform.GetFilePath(platform.MismatchKey),
-			wantError: "UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure",
+			wantError: "UNAVAILABLE: Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: remote connection failure",
 		},
 	}
 

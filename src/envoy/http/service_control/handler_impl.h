@@ -94,8 +94,7 @@ class ServiceControlHandlerImpl
   bool hasApiKey() const { return !api_key_.empty(); }
 
   void onCheckResponse(
-      Envoy::Http::RequestHeaderMap& headers,
-      const ::google::protobuf::util::Status& status,
+      Envoy::Http::RequestHeaderMap& headers, const absl::Status& status,
       const ::espv2::api_proxy::service_control::CheckResponseInfo&
           response_info);
 
@@ -130,7 +129,7 @@ class ServiceControlHandlerImpl
 
   CheckDoneCallback* check_callback_{};
   ::espv2::api_proxy::service_control::CheckResponseInfo check_response_info_;
-  ::google::protobuf::util::Status check_status_;
+  absl::Status check_status_;
 
   // The response code detail.
   std::string rc_detail_;

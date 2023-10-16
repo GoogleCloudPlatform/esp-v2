@@ -33,9 +33,9 @@ namespace service_control {
 namespace {
 
 namespace gasv1 = ::google::api::servicecontrol::v1;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 
 const char kFakeVersion[] = "TEST.0.0";
 

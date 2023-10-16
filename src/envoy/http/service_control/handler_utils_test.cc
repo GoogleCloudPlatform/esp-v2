@@ -293,9 +293,9 @@ TEST(ServiceControlUtils, FillLatency) {
   };
 
   const std::chrono::nanoseconds zero = std::chrono::nanoseconds(0);
-  testing::NiceMock<Envoy::Stats::MockIsolatedStatsStore> mock_stats_scope;
-  ServiceControlFilterStats stats(
-      ServiceControlFilterStats::create(Envoy::EMPTY_STRING, mock_stats_scope));
+  testing::NiceMock<Envoy::Stats::MockStore> mock_stats_scope;
+  ServiceControlFilterStats stats(ServiceControlFilterStats::create(
+      Envoy::EMPTY_STRING, mock_stats_scope.mockScope()));
 
   const std::vector<TestCase> test_cases = {
       // Test: If the stream has not ended, all stay their defaults.

@@ -33,6 +33,9 @@ namespace http_filters {
 namespace service_control {
 namespace test {
 
+using ::absl::OkStatus;
+using absl::Status;
+using absl::StatusCode;
 using ::espv2::api::envoy::v12::http::service_control::FilterConfig;
 using ::espv2::api::envoy::v12::http::service_control::Service;
 using ::espv2::api_proxy::service_control::CheckResponseInfo;
@@ -48,9 +51,6 @@ using ::google::api::servicecontrol::v1::QuotaError;
 using ::google::api::servicecontrol::v1::QuotaError_Code;
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::api::servicecontrol::v1::ReportResponse;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 using ::testing::_;
 using ::testing::InSequence;

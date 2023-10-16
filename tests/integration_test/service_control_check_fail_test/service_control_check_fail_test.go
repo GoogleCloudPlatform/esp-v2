@@ -76,7 +76,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					},
 				},
 			},
-			wantError: `403 Forbidden, {"code":403,"message":"PERMISSION_DENIED:API echo-api.endpoints.cloudesf-testing.cloud.goog is not enabled for the project."}`,
+			wantError: `403 Forbidden, {"code":403,"message":"PERMISSION_DENIED: API echo-api.endpoints.cloudesf-testing.cloud.goog is not enabled for the project."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),
@@ -122,7 +122,7 @@ func TestServiceControlCheckError(t *testing.T) {
 					},
 				},
 			},
-			wantError: `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:API key not valid. Please pass a valid API key."}`,
+			wantError: `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT: API key not valid. Please pass a valid API key."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),
@@ -177,7 +177,7 @@ func TestServiceControlCheckError(t *testing.T) {
 			// Note: first request is from Config Manager, second is from Envoy.
 			wantRequestsToMetaServer: &expectedRequestCount{util.AccessTokenPath, 2},
 			wantRequestsToProvider:   &expectedRequestCount{provider, 1},
-			wantError:                `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:Client project not valid. Please pass a valid project."}`,
+			wantError:                `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT: Client project not valid. Please pass a valid project."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedCheck{
 					Version:         utils.ESPv2Version(),

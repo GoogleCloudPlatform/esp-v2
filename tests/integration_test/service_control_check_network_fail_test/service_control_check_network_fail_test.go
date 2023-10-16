@@ -55,7 +55,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			method:            "/v1/shelves/100?key=api-key-1",
 			serviceControlURL: "http://unavaliable_service_control_server_name",
 			allocatedPort:     platform.TestServiceControlCheckWrongServerName,
-			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: no healthy upstream"}`,
+			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE: Calling Google Service Control API failed with: 503 and body: no healthy upstream"}`,
 		},
 		{
 			desc:              "Failed. When the service control is not set up, the request will be rejected by 500 Internal Server Error",
@@ -64,7 +64,7 @@ func TestServiceControlCheckNetworkFail(t *testing.T) {
 			method:            "/v1/shelves/100?key=api-key-2",
 			serviceControlURL: fmt.Sprintf("http://%v:28753", platform.GetLoopbackAddress()),
 			allocatedPort:     platform.TestServiceControlCheckWrongServerName,
-			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: connection failure, transport failure reason: delayed connect error: 111"}`,
+			wantError:         `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE: Calling Google Service Control API failed with: 503 and body: upstream connect error or disconnect/reset before headers. reset reason: remote connection failure, transport failure reason: delayed connect error: 111"}`,
 		},
 	}
 
@@ -122,7 +122,7 @@ func TestServiceControlCheckTimeout(t *testing.T) {
 		clientProtocol: "http",
 		httpMethod:     "GET",
 		method:         "/v1/shelves/100?key=api-key-2",
-		wantError:      `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 503 and body: no healthy upstream"}`,
+		wantError:      `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE: Calling Google Service Control API failed with: 503 and body: no healthy upstream"}`,
 	}
 
 	s.ServiceControlServer.ResetRequestCount()
@@ -205,7 +205,7 @@ func TestServiceControlNetworkFailFlagForTimeout(t *testing.T) {
 			httpMethod:      "GET",
 			method:          "/v1/shelves?key=api-key",
 			token:           testdata.FakeCloudTokenLongClaims,
-			wantError:       `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:Calling Google Service Control API failed with: 504 and body: upstream request timeout"}`,
+			wantError:       `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE: Calling Google Service Control API failed with: 504 and body: upstream request timeout"}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:         utils.ESPv2Version(),
@@ -320,7 +320,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeCloudTokenLongClaims,
-			wantError:      `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE:One or more Google Service Control backends are unavailable."}`,
+			wantError:      `503 Service Unavailable, {"code":503,"message":"UNAVAILABLE: One or more Google Service Control backends are unavailable."}`,
 		},
 		{
 			desc:            "Failed, even though service_control_network_fail_open is set as true, non-5xx check error won't be ignored.",
@@ -336,7 +336,7 @@ func TestServiceControlNetworkFailFlagForUnavailableCheckResponse(t *testing.T) 
 			httpMethod:     "GET",
 			method:         "/v1/shelves?key=api-key",
 			token:          testdata.FakeCloudTokenLongClaims,
-			wantError:      `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT:Client project not valid. Please pass a valid project."}`,
+			wantError:      `400 Bad Request, {"code":400,"message":"INVALID_ARGUMENT: Client project not valid. Please pass a valid project."}`,
 		},
 	}
 

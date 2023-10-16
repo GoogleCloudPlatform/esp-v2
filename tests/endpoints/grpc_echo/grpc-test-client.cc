@@ -23,7 +23,7 @@ using ::google::protobuf::Message;
 using ::google::protobuf::TextFormat;
 using ::google::protobuf::io::IstreamInputStream;
 using ::google::protobuf::io::OstreamOutputStream;
-using ::google::protobuf::util::Status;
+using ::absl::Status;
 using ::google::protobuf::util::TypeResolver;
 
 namespace {

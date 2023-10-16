@@ -35,6 +35,8 @@ EXTENSIONS = {
     "envoy.filters.http.header_to_metadata": "//source/extensions/filters/http/header_to_metadata:config",
     "envoy.stat_sinks.metrics_service": "//source/extensions/stat_sinks/metrics_service:config",
     "envoy.stat_sinks.statsd": "//source/extensions/stat_sinks/statsd:config",
+    "envoy.config_mux.grpc_mux_factory": "//source/extensions/config_subscription/grpc:grpc_subscription_lib",
+    "envoy.health_checkers.grpc": "//source/extensions/health_checkers/grpc:health_checker_lib",
 }
 
 EXTENSION_CONFIG_VISIBILITY = ["//visibility:public"]

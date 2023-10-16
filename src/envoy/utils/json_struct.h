@@ -31,14 +31,12 @@ class JsonStruct {
  public:
   JsonStruct(const google::protobuf::Struct& pb_struct) : struct_(pb_struct) {}
 
-  ::google::protobuf::util::Status getString(const std::string& key,
-                                             std::string* value);
+  absl::Status getString(const std::string& key, std::string* value);
 
-  ::google::protobuf::util::Status getInteger(const std::string& key,
-                                              int* value);
+  absl::Status getInteger(const std::string& key, int* value);
 
-  ::google::protobuf::util::Status getTimestamp(
-      const std::string& key, ::google::protobuf::Timestamp* value);
+  absl::Status getTimestamp(const std::string& key,
+                            ::google::protobuf::Timestamp* value);
 
  private:
   const ::google::protobuf::Struct& struct_;

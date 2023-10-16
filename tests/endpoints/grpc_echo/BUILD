@@ -77,6 +77,8 @@ genrule(
         "@com_github_googleapis_googleapis//google/api/servicecontrol/v1:operation.proto",
         "@com_github_googleapis_googleapis//google/api:annotations.proto",
         "@com_github_googleapis_googleapis//google/api:client.proto",
+        "@com_github_googleapis_googleapis//google/api:launch_stage.proto",
+        "@com_github_googleapis_googleapis//google/api:distribution.proto",
         "@com_github_googleapis_googleapis//google/api:http.proto",
         "@com_github_googleapis_googleapis//google/logging/type:log_severity.proto",
         "@com_github_googleapis_googleapis//google/type:money.proto",

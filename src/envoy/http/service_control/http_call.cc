@@ -25,13 +25,13 @@
 #include "source/common/http/utility.h"
 #include "source/common/tracing/http_tracer_impl.h"
 
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 using Envoy::Http::CustomHeaders;
 using Envoy::Http::CustomInlineHeaderRegistry;
 using Envoy::Http::RegisterCustomInlineHeader;
 using ::espv2::api::envoy::v12::http::common::HttpUri;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 namespace espv2 {
 namespace envoy {

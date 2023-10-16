@@ -16,8 +16,8 @@
 
 #include <functional>
 
+#include "absl/status/status.h"
 #include "google/api/service.pb.h"
-#include "google/protobuf/stubs/status.h"
 #include "gtest/gtest_prod.h"
 
 namespace espv2 {
@@ -26,9 +26,10 @@ namespace service_control {
 
 class LogsMetricsLoader final {
  public:
-  static ::google::protobuf::util::Status Load(
-      const ::google::api::Service& service, std::set<std::string>* logs,
-      std::set<std::string>* metrics, std::set<std::string>* labels);
+  static absl::Status Load(const ::google::api::Service& service,
+                           std::set<std::string>* logs,
+                           std::set<std::string>* metrics,
+                           std::set<std::string>* labels);
 
  private:
   LogsMetricsLoader(std::function<bool(const ::google::api::LabelDescriptor&)>
@@ -38,24 +39,24 @@ class LogsMetricsLoader final {
       : label_supported_(label_supported),
         metric_supported_(metric_supported) {}
 
-  ::google::protobuf::util::Status AddLabels(
+  absl::Status AddLabels(
       const ::google::protobuf::RepeatedPtrField<
           ::google::api::LabelDescriptor>& descriptors,
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);
 
-  ::google::protobuf::util::Status AddLogLabels(
+  absl::Status AddLogLabels(
       const ::google::protobuf::RepeatedPtrField<::google::api::LogDescriptor>&
           descriptors,
       const std::string& log_name,
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);
 
-  ::google::protobuf::util::Status AddMonitoredResourceLabels(
+  absl::Status AddMonitoredResourceLabels(
       const ::google::protobuf::RepeatedPtrField<
           ::google::api::MonitoredResourceDescriptor>& descriptors,
       const std::string& monitored_resource_name,
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);
 
-  ::google::protobuf::util::Status AddLoggingDestinations(
+  absl::Status AddLoggingDestinations(
       const ::google::protobuf::RepeatedPtrField<
           ::google::api::Logging_LoggingDestination>& destinations,
       const ::google::protobuf::RepeatedPtrField<
@@ -65,7 +66,7 @@ class LogsMetricsLoader final {
       std::set<std::string>* logs,
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);
 
-  ::google::protobuf::util::Status AddMonitoringDestinations(
+  absl::Status AddMonitoringDestinations(
       const ::google::protobuf::RepeatedPtrField<
           ::google::api::Monitoring_MonitoringDestination>& destinations,
       const ::google::protobuf::RepeatedPtrField<
@@ -75,9 +76,10 @@ class LogsMetricsLoader final {
       std::map<std::string, const ::google::api::MetricDescriptor&>* metrics,
       std::map<std::string, const ::google::api::LabelDescriptor&>* labels);
 
-  ::google::protobuf::util::Status LoadLogsMetrics(
-      const ::google::api::Service& service, std::set<std::string>* logs,
-      std::set<std::string>* metrics, std::set<std::string>* labels);
+  absl::Status LoadLogsMetrics(const ::google::api::Service& service,
+                               std::set<std::string>* logs,
+                               std::set<std::string>* metrics,
+                               std::set<std::string>* labels);
 
   std::function<bool(const ::google::api::LabelDescriptor&)> label_supported_;
   std::function<bool(const ::google::api::MetricDescriptor&)> metric_supported_;

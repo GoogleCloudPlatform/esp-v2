@@ -27,11 +27,11 @@
 #include "test/mocks/tracing/mocks.h"
 #include "test/test_common/utility.h"
 
+using ::absl::OkStatus;
+using ::absl::Status;
+using ::absl::StatusCode;
 using Envoy::Http::MockStreamDecoderFilterCallbacks;
 using Envoy::Server::Configuration::MockFactoryContext;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 using ::testing::_;
 using ::testing::ByMove;
 using ::testing::Invoke;
@@ -48,8 +48,8 @@ const Status kBadStatus(StatusCode::kUnauthenticated, "test");
 class ServiceControlFilterTest : public ::testing::Test {
  protected:
   ServiceControlFilterTest()
-      : stats_(ServiceControlFilterStats::create(Envoy::EMPTY_STRING,
-                                                 mock_stats_scope_)),
+      : stats_(ServiceControlFilterStats::create(
+            Envoy::EMPTY_STRING, *mock_stats_scope_.rootScope())),
         req_headers_{{":method", "GET"}, {":path", "/bar"}} {}
 
   void SetUp() override {
@@ -152,8 +152,8 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
           Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
   EXPECT_CALL(
       mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::Unauthorized, "UNAUTHENTICATED:test", _,
-                     _, "service_control_check_error{API_KEY_INVALID}"));
+      sendLocalReply(Envoy::Http::Code::Unauthorized, "UNAUTHENTICATED: test",
+                     _, _, "service_control_check_error{API_KEY_INVALID}"));
 
   EXPECT_EQ(Envoy::Http::FilterHeadersStatus::StopIteration,
             filter_->decodeHeaders(req_headers_, true));
@@ -209,8 +209,8 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
 
   EXPECT_CALL(
       mock_decoder_callbacks_,
-      sendLocalReply(Envoy::Http::Code::Unauthorized, "UNAUTHENTICATED:test", _,
-                     _, "service_control_check_error{API_KEY_INVALID}"));
+      sendLocalReply(Envoy::Http::Code::Unauthorized, "UNAUTHENTICATED: test",
+                     _, _, "service_control_check_error{API_KEY_INVALID}"));
   stored_check_done_callback->onCheckDone(
       kBadStatus, "service_control_check_error{API_KEY_INVALID}");
 }
@@ -221,14 +221,16 @@ TEST_F(ServiceControlFilterTest, LogWithoutHandlerOrHeaders) {
 
   // Filter has no handler. If it tries to callReport, it will seg fault
   filter_->log(nullptr, &resp_headers_, &resp_trailer_,
-               mock_decoder_callbacks_.stream_info_);
+               mock_decoder_callbacks_.stream_info_,
+               Envoy::AccessLog::AccessLogType::NotSet);
 }
 
 TEST_F(ServiceControlFilterTest, LogWithoutHandler) {
   // Test: When a Filter has no Handler yet, another is created for log()
   EXPECT_CALL(*mock_handler_, callReport(_, _, _, _));
   filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
-               mock_decoder_callbacks_.stream_info_);
+               mock_decoder_callbacks_.stream_info_,
+               Envoy::AccessLog::AccessLogType::NotSet);
 }
 
 TEST_F(ServiceControlFilterTest, LogWithHandler) {
@@ -239,7 +241,8 @@ TEST_F(ServiceControlFilterTest, LogWithHandler) {
   EXPECT_CALL(mock_handler_factory_, createHandler(_, _, _)).Times(0);
   EXPECT_CALL(*mock_handler_, callReport(_, _, _, _));
   filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
-               mock_decoder_callbacks_.stream_info_);
+               mock_decoder_callbacks_.stream_info_,
+               Envoy::AccessLog::AccessLogType::NotSet);
 }
 
 TEST_F(ServiceControlFilterTest, DecodeHelpersWhileStopped) {

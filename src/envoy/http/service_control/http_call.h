@@ -16,9 +16,8 @@
 
 #include "api/envoy/v12/http/common/base.pb.h"
 #include "envoy/common/pure.h"
-#include "envoy/tracing/http_tracer.h"
+#include "envoy/tracing/tracer.h"
 #include "envoy/upstream/cluster_manager.h"
-#include "google/protobuf/stubs/status.h"
 
 namespace espv2 {
 namespace envoy {
@@ -27,9 +26,8 @@ namespace service_control {
 
 class HttpCall {
  public:
-  using DoneFunc =
-      std::function<void(const ::google::protobuf::util::Status& status,
-                         const std::string& response_body)>;
+  using DoneFunc = std::function<void(const absl::Status& status,
+                                      const std::string& response_body)>;
 
   virtual ~HttpCall() {}
   /*

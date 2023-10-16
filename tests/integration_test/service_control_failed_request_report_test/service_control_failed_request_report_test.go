@@ -277,7 +277,7 @@ func TestServiceControlFailedRequestReport(t *testing.T) {
 			clientProtocol: "http",
 			httpMethod:     "GET",
 			method:         "/v1/shelves/0/books/0",
-			httpCallError:  `401 Unauthorized, {"code":401,"message":"UNAUTHENTICATED:Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."}`,
+			httpCallError:  `401 Unauthorized, {"code":401,"message":"UNAUTHENTICATED: Method doesn't allow unregistered callers (callers without established identity). Please use API Key or other form of API consumer identity to call this API."}`,
 			wantScRequests: []interface{}{
 				&utils.ExpectedReport{
 					Version:            utils.ESPv2Version(),

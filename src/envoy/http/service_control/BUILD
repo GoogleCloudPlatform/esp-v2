@@ -27,7 +27,7 @@ envoy_cc_library(
     deps = [
         ":service_control_callback_func_lib",
         "//api/envoy/v12/http/service_control:config_proto_cc_proto",
-        "@envoy//envoy/tracing:http_tracer_interface",
+        "@envoy//envoy/tracing:tracer_interface",
     ],
 )
 

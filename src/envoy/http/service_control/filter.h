@@ -54,10 +54,11 @@ class ServiceControlFilter
   void log(const Envoy::Http::RequestHeaderMap* request_headers,
            const Envoy::Http::ResponseHeaderMap* response_headers,
            const Envoy::Http::ResponseTrailerMap* response_trailers,
-           const Envoy::StreamInfo::StreamInfo& stream_info) override;
+           const Envoy::StreamInfo::StreamInfo& stream_info,
+           Envoy::AccessLog::AccessLogType access_log_type) override;
 
   // For Handler::CheckDoneCallback, called when callCheck() is done
-  void onCheckDone(const ::google::protobuf::util::Status& status,
+  void onCheckDone(const absl::Status& status,
                    absl::string_view rc_detail) override;
 
  private:

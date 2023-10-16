@@ -29,7 +29,6 @@
 #include "google/protobuf/util/type_resolver_util.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "tests/endpoints/grpc_echo/client-test-lib.h"
-// #include "src/api_manager/utils/marshalling.h"
 
 using ::google::api::servicecontrol::v1::ReportRequest;
 using ::google::protobuf::util::MessageDifferencer;
@@ -76,35 +75,35 @@ std::string GetTypeUrl(const Message &message) {
          message.GetDescriptor()->full_name();
 }
 
-::google::protobuf::util::Status FromProto(
-    const ::google::protobuf::util::Status &proto_status) {
+absl::Status FromProto(
+    const absl::Status &proto_status) {
   if (proto_status.ok()) {
-    return ::google::protobuf::util::OkStatus();
+    return absl::OkStatus();
   }
   return proto_status;
 }
 }  // namespace
 
-::google::protobuf::util::Status JsonToProto(const std::string &json,
+absl::Status JsonToProto(const std::string &json,
                                              Message *message) {
   ::google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
   std::string binary;
-  ::google::protobuf::util::Status status =
+  absl::Status status =
       ::google::protobuf::util::JsonToBinaryString(
           GetTypeResolver(), GetTypeUrl(*message), json, &binary, options);
   if (!status.ok()) {
     return FromProto(status);
   }
   if (message->ParseFromString(binary)) {
-    return ::google::protobuf::util::OkStatus();
+    return absl::OkStatus();
   }
-  return ::google::protobuf::util::Status(
-      ::google::protobuf::util::StatusCode::kInternal,
+  return absl::Status(
+      absl::StatusCode::kInternal,
       "Unable to parse bytes generated from JsonToBinaryString as proto.");
 }
 
-::google::protobuf::util::Status ProtoToJson(
+absl::Status ProtoToJson(
     const Message &message, ::google::protobuf::io::ZeroCopyOutputStream *json,
     int options) {
   ::google::protobuf::util::JsonPrintOptions json_options;
@@ -118,7 +117,7 @@ std::string GetTypeUrl(const Message &message) {
   std::string binary = message.SerializeAsString();
   ::google::protobuf::io::ArrayInputStream binary_stream(binary.data(),
                                                          binary.size());
-  ::google::protobuf::util::Status status =
+  absl::Status status =
       ::google::protobuf::util::BinaryToJsonStream(
           GetTypeResolver(), GetTypeUrl(message), &binary_stream, json,
           json_options);

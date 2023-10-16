@@ -18,15 +18,15 @@ namespace espv2 {
 namespace api_proxy {
 namespace service_control {
 
+using ::absl::OkStatus;
+using absl::Status;
+using absl::StatusCode;
 using ::google::api::servicecontrol::v1::CheckError;
 using ::google::api::servicecontrol::v1::CheckError_Code;
 using ::google::api::servicecontrol::v1::CheckError_Code_Name;
 using ::google::api::servicecontrol::v1::CheckResponse;
 using ::google::api::servicecontrol::v1::
     CheckResponse_ConsumerInfo_ConsumerType;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 Status ConvertCheckResponse(const CheckResponse& check_response,
                             const std::string& service_name,

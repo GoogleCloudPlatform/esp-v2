@@ -34,7 +34,7 @@ namespace path_rewrite {
 class FilterTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    filter_config_ = std::make_shared<FilterConfig>("", scope_);
+    filter_config_ = std::make_shared<FilterConfig>("", *scope_.rootScope());
     mock_route_ = std::make_shared<NiceMock<Envoy::Router::MockRoute>>();
 
     filter_ = std::make_unique<Filter>(filter_config_);

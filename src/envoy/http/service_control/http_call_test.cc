@@ -20,7 +20,6 @@
 #include "envoy/http/async_client.h"
 #include "gmock/gmock.h"
 #include "google/api/servicecontrol/v1/service_controller.pb.h"
-#include "google/protobuf/stubs/status.h"
 #include "gtest/gtest.h"
 #include "source/common/http/headers.h"
 #include "source/common/http/message_impl.h"
@@ -45,13 +44,13 @@ using ::testing::Invoke;
 using ::testing::MockFunction;
 using ::testing::Return;
 
+using ::absl::OkStatus;
+using absl::Status;
+using absl::StatusCode;
 using ::Envoy::Http::ResponseMessageImpl;
 using ::espv2::api::envoy::v12::http::common::HttpUri;
 using ::google::api::servicecontrol::v1::CheckRequest;
 using ::google::api::servicecontrol::v1::CheckResponse;
-using ::google::protobuf::util::OkStatus;
-using ::google::protobuf::util::Status;
-using ::google::protobuf::util::StatusCode;
 
 class HttpCallTest : public testing::Test {
  protected:
@@ -138,7 +137,7 @@ class HttpCallTest : public testing::Test {
   }
 
   // Callback for HttpCall. Expectations must be set by each test
-  MockFunction<void(const ::google::protobuf::util::Status& status,
+  MockFunction<void(const absl::Status& status,
                     const std::string& response_body)>
       mock_done_fn_;
 

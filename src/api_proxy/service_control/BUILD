@@ -16,6 +16,7 @@ envoy_basic_cc_library(
         "request_info.h",
     ],
     deps = [
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:optional",
     ],
 )
@@ -88,6 +89,7 @@ envoy_basic_cc_library(
     deps = [
         ":request_builder_lib",
         "@com_github_googleapis_googleapis//google/api:service_cc_proto",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_prod",
     ],
 )
