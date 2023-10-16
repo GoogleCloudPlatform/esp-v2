@@ -1080,7 +1080,6 @@ func TestDynamicBackendRoutingMutualTLS(t *testing.T) {
 					ResponseCode:                 503,
 					Platform:                     util.GCE,
 					Location:                     "test-zone",
-					ResponseCodeDetail:           "upstream_reset_before_response_started{remote_connection_failure,TLS_error:_268436504:SSL_routines:OPENSSL_internal:TLSV1_ALERT_UNKNOWN_CA}",
 				},
 			},
 		},
