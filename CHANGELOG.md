@@ -1,3 +1,10 @@
+# Release 2.46.0 17-10-2023
+
+- enable mitigation for CVE-2020-TBD (#862)
+- update Envoy to 1.27.1 (#860)
+- feat: Add transcoding_match_unregistered_custom_verb to start_proxy.py (#856)
+- feat: Add support for application default credentials (#837)
+
 # Release 2.45.0 13-07-2023
 
 - Update Go version to 1.20 (#831)
