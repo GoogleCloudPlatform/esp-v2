@@ -19,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -48,6 +49,9 @@ type SuccessOPTestCase struct {
 	// will most likely be ignored.
 	OptsMergeBehavior func(*mergo.Config)
 
+	// Additional per-route configurations to generate.
+	FilterGens []filtergen.FilterGenerator
+
 	// WantHostConfig is the expected virtual host config, in JSON.
 	// Only the routes are populated and verified against the generated routes.
 	WantHostConfig string
@@ -66,19 +70,18 @@ func (tc *SuccessOPTestCase) RunTest(t *testing.T, factory routegen.RouteGenerat
 			t.Fatalf("Merge() of test opts into default opts got err: %v", err)
 		}
 
-		gotGenerators, err := factory(tc.ServiceConfigIn, opts)
+		gotGenerator, err := factory(tc.ServiceConfigIn, opts)
 		if err != nil {
-			t.Fatalf("NewXYZRouteGensFromOPConfig() got error: %v", err)
+			t.Fatalf("NewXYZRouteGenFromOPConfig() got error: %v", err)
 		}
 
 		gotHost := &routepb.VirtualHost{}
-		for i, gotGenerator := range gotGenerators {
-			gotRoutes, err := gotGenerator.GenRouteConfig()
+		if gotGenerator != nil {
+			gotRoutes, err := gotGenerator.GenRouteConfig(tc.FilterGens)
 			if err != nil {
-				t.Fatalf("GenRouteConfig() at generator %d got error: %v", i, err)
+				t.Fatalf("GenRouteConfig() got error: %v", err)
 			}
-
-			gotHost.Routes = append(gotHost.Routes, gotRoutes...)
+			gotHost.Routes = gotRoutes
 		}
 
 		gotJson, err := util.ProtoToJson(gotHost)
@@ -103,7 +106,7 @@ type FactoryErrorOPTestCase struct {
 	// Will be merged with defaults.
 	OptsIn options.ConfigGeneratorOptions
 
-	// WantFactoryError is the error that occurs when `NewXYZRouteGensFromOPConfig()`
+	// WantFactoryError is the error that occurs when `NewXYZRouteGenFromOPConfig()`
 	// is called.
 	WantFactoryError string
 }
@@ -119,10 +122,10 @@ func (tc *FactoryErrorOPTestCase) RunTest(t *testing.T, factory routegen.RouteGe
 
 		_, err := factory(tc.ServiceConfigIn, opts)
 		if err == nil {
-			t.Fatalf("NewXYZRouteGensFromOPConfig() got no error, want error")
+			t.Fatalf("NewXYZRouteGenFromOPConfig() got no error, want error")
 		}
 		if !strings.Contains(err.Error(), tc.WantFactoryError) {
-			t.Errorf("NewXYZRouteGensFromOPConfig() got error %q, want error to contain %q", err.Error(), tc.WantFactoryError)
+			t.Errorf("NewXYZRouteGenFromOPConfig() got error %q, want error to contain %q", err.Error(), tc.WantFactoryError)
 		}
 	})
 }
@@ -149,8 +152,11 @@ type GenConfigErrorOPTestCase struct {
 	// will most likely be ignored.
 	OptsMergeBehavior func(*mergo.Config)
 
-	// WantGenErrors are the expected errors from each generator.
-	WantGenErrors []string
+	// Additional per-route configurations to generate.
+	FilterGens []filtergen.FilterGenerator
+
+	// WantGenErrors is the expected error from the generator.
+	WantGenError string
 }
 
 // RunTest is a test helper to run the test.
@@ -166,19 +172,17 @@ func (tc *GenConfigErrorOPTestCase) RunTest(t *testing.T, factory routegen.Route
 			t.Fatalf("Merge() of test opts into default opts got err: %v", err)
 		}
 
-		gotGenerators, err := factory(tc.ServiceConfigIn, opts)
+		gotGenerator, err := factory(tc.ServiceConfigIn, opts)
 		if err != nil {
-			t.Fatalf("NewXYZRouteGensFromOPConfig() got error: %v", err)
+			t.Fatalf("NewXYZRouteGenFromOPConfig() got error: %v", err)
 		}
 
-		for i, gotGenerator := range gotGenerators {
-			_, err := gotGenerator.GenRouteConfig()
-			if err == nil {
-				t.Fatalf("GenRouteConfig() for generator %d got no error, want error", i)
-			}
-			if !strings.Contains(err.Error(), tc.WantGenErrors[i]) {
-				t.Errorf("GenRouteConfig() for generator %d got error %q, want error to contain %q", i, err.Error(), tc.WantGenErrors[i])
-			}
+		_, err = gotGenerator.GenRouteConfig(tc.FilterGens)
+		if err == nil {
+			t.Fatalf("GenRouteConfig() got no error, want error")
+		}
+		if !strings.Contains(err.Error(), tc.WantGenError) {
+			t.Errorf("GenRouteConfig() got error %q, want error to contain %q", err.Error(), tc.WantGenError)
 		}
 	})
 }

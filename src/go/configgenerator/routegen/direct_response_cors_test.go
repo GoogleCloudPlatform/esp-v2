@@ -11,7 +11,7 @@ import (
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func TestNewCORSRouteGensFromOPConfig(t *testing.T) {
+func TestNewCORSRouteGenFromOPConfig(t *testing.T) {
 	testdata := []routegentest.SuccessOPTestCase{
 		{
 			Desc: "cors default allow_origin=* routes",
@@ -242,11 +242,11 @@ func TestNewCORSRouteGensFromOPConfig(t *testing.T) {
 	}
 
 	for _, tc := range testdata {
-		tc.RunTest(t, routegen.NewCORSRouteGensFromOPConfig)
+		tc.RunTest(t, routegen.NewDirectResponseCORSRouteGenFromOPConfig)
 	}
 }
 
-func TestNewCORSRouteGensFromOPConfig_BadInputRouteGen(t *testing.T) {
+func TestNewCORSRouteGenFromOPConfig_BadInputRouteGen(t *testing.T) {
 	testdata := []routegentest.GenConfigErrorOPTestCase{
 		{
 			Desc:            "Incorrect preset",
@@ -255,9 +255,7 @@ func TestNewCORSRouteGensFromOPConfig_BadInputRouteGen(t *testing.T) {
 				CorsPreset: "foo_bar",
 			},
 			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
-			WantGenErrors: []string{
-				`cors_preset must be either "basic" or "cors_with_regex"`,
-			},
+			WantGenError:      `cors_preset must be either "basic" or "cors_with_regex"`,
 		},
 		{
 			Desc:            "Incorrect configured basic Cors",
@@ -269,9 +267,7 @@ func TestNewCORSRouteGensFromOPConfig_BadInputRouteGen(t *testing.T) {
 				CorsMaxAge:           2 * time.Minute,
 			},
 			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
-			WantGenErrors: []string{
-				"cors_allow_origin cannot be empty when cors_preset=basic",
-			},
+			WantGenError:      "cors_allow_origin cannot be empty when cors_preset=basic",
 		},
 		{
 			Desc:            "Incorrect configured regex Cors",
@@ -282,9 +278,7 @@ func TestNewCORSRouteGensFromOPConfig_BadInputRouteGen(t *testing.T) {
 				CorsMaxAge:           2 * time.Minute,
 			},
 			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
-			WantGenErrors: []string{
-				`error parsing regexp`,
-			},
+			WantGenError:      `error parsing regexp`,
 		},
 		{
 			Desc:            "Oversize cors origin regex",
@@ -296,14 +290,12 @@ func TestNewCORSRouteGensFromOPConfig_BadInputRouteGen(t *testing.T) {
 				CorsMaxAge:           2 * time.Minute,
 			},
 			OptsMergeBehavior: mergo.WithOverwriteWithEmptyValue,
-			WantGenErrors: []string{
-				`invalid cors origin regex: regex program size`,
-			},
+			WantGenError:      `invalid cors origin regex: regex program size`,
 		},
 	}
 
 	for _, tc := range testdata {
-		tc.RunTest(t, routegen.NewCORSRouteGensFromOPConfig)
+		tc.RunTest(t, routegen.NewDirectResponseCORSRouteGenFromOPConfig)
 	}
 }
 

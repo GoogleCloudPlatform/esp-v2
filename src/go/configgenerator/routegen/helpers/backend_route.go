@@ -5,11 +5,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	matcherpb "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // BackendRouteGenerator generates routes that forward request to the backend.
@@ -50,19 +52,19 @@ type MethodCfg struct {
 // GenRoutesForMethod generates the route config for the given URI template.
 //
 // Forked from `route_generator.go: makeRoute()`
-func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*routepb.Route, error) {
-	methodName, err := selectorToMethodName(methodCfg.OperationName)
+func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg, filterGens []filtergen.FilterGenerator) ([]*routepb.Route, error) {
+	methodName, err := SelectorToMethodName(methodCfg.OperationName)
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse method short name from selector %q: %v", methodCfg.OperationName, err)
 	}
 
-	routeMatchers, err := makeBackedRouteMatchers(methodCfg.HTTPPattern, r.DisallowColonInWildcardPathSegment)
+	routeMatchers, err := MakePerMethodRouteMatchers(methodCfg.HTTPPattern, r.DisallowColonInWildcardPathSegment)
 	if err != nil {
-		return nil, fmt.Errorf("fail to make backend route matchers for operation %q: %v", methodCfg.OperationName, err)
+		return nil, fmt.Errorf("fail to make backend per-method route matchers for operation %q: %v", methodCfg.OperationName, err)
 	}
 
 	var routes []*routepb.Route
-	for _, routeMatcher := range routeMatchers {
+	for i, routeMatcher := range routeMatchers {
 		routeAction := &routepb.RouteAction{
 			ClusterSpecifier: &routepb.RouteAction_Cluster{
 				Cluster: methodCfg.BackendClusterName,
@@ -80,9 +82,14 @@ func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*rou
 			return nil, err
 		}
 
+		perFilterConfig, err := makePerRouteFilterConfig(methodCfg.OperationName, methodCfg.HTTPPattern, filterGens)
+		if err != nil {
+			return nil, fmt.Errorf("fail to make per-route filter config for route matcher %d: %v", i, err)
+		}
+
 		route := &routepb.Route{
 			Name:  methodCfg.OperationName,
-			Match: routeMatcher,
+			Match: routeMatcher.RouteMatch,
 			Action: &routepb.Route_Route{
 				Route: routeAction,
 			},
@@ -91,6 +98,7 @@ func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*rou
 				// Note we don't add ApiName to reduce the length of the span name.
 				Operation: fmt.Sprintf("%s %s", util.SpanNamePrefix, methodName),
 			},
+			TypedPerFilterConfig: perFilterConfig,
 		}
 
 		MaybeAddHSTSHeader(r.HSTSCfg, route)
@@ -102,56 +110,21 @@ func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg) ([]*rou
 	return routes, nil
 }
 
-// makeBackedRouteMatchers creates all route matchers for a single HTTP rule.
-// This only consists of routes that will be forwarded to the backend.
-//
-// Forked from `route_generator.go: makeHttpRouteMatchers()`
-func makeBackedRouteMatchers(httpRule *httppattern.Pattern, disallowColonInWildcardPathSegment bool) ([]*routepb.RouteMatch, error) {
-	if httpRule == nil {
-		return nil, fmt.Errorf("httpRule is nil")
-	}
+type RouteMatchWrapper struct {
+	*routepb.RouteMatch
+	UriTemplate string
+}
 
-	type routeMatchWrapper struct {
-		*routepb.RouteMatch
-		UriTemplate string
-	}
-
-	// Create matcher with header match for `:path`.
-	var routeMatchWrappers []*routeMatchWrapper
-	if httpRule.UriTemplate.IsExactMatch() {
-		pathNoTrailingSlash := httpRule.UriTemplate.ExactMatchString(false)
-		pathWithTrailingSlash := httpRule.UriTemplate.ExactMatchString(true)
-
-		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
-			RouteMatch:  makeHttpExactPathRouteMatcher(pathNoTrailingSlash),
-			UriTemplate: pathNoTrailingSlash,
-		})
-
-		if pathWithTrailingSlash != pathNoTrailingSlash {
-			routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
-				RouteMatch:  makeHttpExactPathRouteMatcher(pathWithTrailingSlash),
-				UriTemplate: pathWithTrailingSlash,
-			})
-		}
-	} else {
-		routeMatchWrappers = append(routeMatchWrappers, &routeMatchWrapper{
-			RouteMatch: &routepb.RouteMatch{
-				PathSpecifier: &routepb.RouteMatch_SafeRegex{
-					SafeRegex: &matcherpb.RegexMatcher{
-						Regex: httpRule.UriTemplate.Regex(disallowColonInWildcardPathSegment),
-					},
-				},
-			},
-			UriTemplate: httpRule.UriTemplate.Regex(disallowColonInWildcardPathSegment),
-		})
-
+// MakePerMethodRouteMatchers creates all route matchers for a single HTTP rule.
+func MakePerMethodRouteMatchers(httpRule *httppattern.Pattern, disallowColonInWildcardPathSegment bool) ([]*RouteMatchWrapper, error) {
+	routeMatchers, err := MakeRouteMatchers(httpRule, disallowColonInWildcardPathSegment)
+	if err != nil {
+		return nil, fmt.Errorf("fail to make backend route matchers: %v", err)
 	}
 
 	// Add on header match for `:method`.
-	var routeMatchers []*routepb.RouteMatch
-	for _, routeMatch := range routeMatchWrappers {
+	for _, routeMatch := range routeMatchers {
 		routeMatcher := routeMatch.RouteMatch
-		routeMatchers = append(routeMatchers, routeMatcher)
 
 		if httpRule.HttpMethod != httppattern.HttpMethodWildCard {
 			routeMatcher.Headers = []*routepb.HeaderMatcher{
@@ -172,6 +145,47 @@ func makeBackedRouteMatchers(httpRule *httppattern.Pattern, disallowColonInWildc
 	return routeMatchers, nil
 }
 
+// MakeRouteMatchers creates all route matchers for a single HTTP rule.
+// Does not add on :method matchers.
+func MakeRouteMatchers(httpRule *httppattern.Pattern, disallowColonInWildcardPathSegment bool) ([]*RouteMatchWrapper, error) {
+	if httpRule == nil {
+		return nil, fmt.Errorf("httpRule is nil")
+	}
+
+	// Create matcher with header match for `:path`.
+	var routeMatchWrappers []*RouteMatchWrapper
+	if httpRule.UriTemplate.IsExactMatch() {
+		pathNoTrailingSlash := httpRule.UriTemplate.ExactMatchString(false)
+		pathWithTrailingSlash := httpRule.UriTemplate.ExactMatchString(true)
+
+		routeMatchWrappers = append(routeMatchWrappers, &RouteMatchWrapper{
+			RouteMatch:  makeHttpExactPathRouteMatcher(pathNoTrailingSlash),
+			UriTemplate: pathNoTrailingSlash,
+		})
+
+		if pathWithTrailingSlash != pathNoTrailingSlash {
+			routeMatchWrappers = append(routeMatchWrappers, &RouteMatchWrapper{
+				RouteMatch:  makeHttpExactPathRouteMatcher(pathWithTrailingSlash),
+				UriTemplate: pathWithTrailingSlash,
+			})
+		}
+	} else {
+		routeMatchWrappers = append(routeMatchWrappers, &RouteMatchWrapper{
+			RouteMatch: &routepb.RouteMatch{
+				PathSpecifier: &routepb.RouteMatch_SafeRegex{
+					SafeRegex: &matcherpb.RegexMatcher{
+						Regex: httpRule.UriTemplate.Regex(disallowColonInWildcardPathSegment),
+					},
+				},
+			},
+			UriTemplate: httpRule.UriTemplate.Regex(disallowColonInWildcardPathSegment),
+		})
+
+	}
+
+	return routeMatchWrappers, nil
+}
+
 func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 	return &routepb.RouteMatch{
 		PathSpecifier: &routepb.RouteMatch_Path{
@@ -180,7 +194,8 @@ func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 	}
 }
 
-func selectorToMethodName(selector string) (string, error) {
+// SelectorToMethodName returns the Method short name from the selector.
+func SelectorToMethodName(selector string) (string, error) {
 	split := strings.Split(selector, ".")
 	if len(split) < 2 {
 		return "", fmt.Errorf("unexpected split, got split array %#v, want at least 2 items", split)
@@ -188,4 +203,39 @@ func selectorToMethodName(selector string) (string, error) {
 
 	// Method name is the last element in the selector.
 	return split[len(split)-1], nil
+}
+
+// SelectorToAPIName returns the API name of the selector.
+func SelectorToAPIName(selector string) (string, error) {
+	split := strings.Split(selector, ".")
+	if len(split) < 2 {
+		return "", fmt.Errorf("unexpected split, got split array %#v, want at least 2 items", split)
+	}
+
+	// API name is everything except method name joined together.
+	return strings.Join(split[:len(split)-1], "."), nil
+}
+
+// makePerRouteFilterConfig generates the per-route config across all filters
+// for a single method and http rule.
+func makePerRouteFilterConfig(operation string, httpRule *httppattern.Pattern, filterGens []filtergen.FilterGenerator) (map[string]*anypb.Any, error) {
+	perFilterConfig := make(map[string]*anypb.Any)
+
+	for _, filterGen := range filterGens {
+		config, err := filterGen.GenPerRouteConfig(operation, httpRule)
+		if err != nil {
+			return perFilterConfig, fmt.Errorf("fail to generate per-route config for filter %q: %v", filterGen.FilterName(), err)
+		}
+		if config == nil {
+			continue
+		}
+
+		perRouteFilterConfig, err := anypb.New(config)
+		if err != nil {
+			return nil, fmt.Errorf("fail to marshal per-route config to Any for filter %q: %v", filterGen.FilterName(), err)
+		}
+		perFilterConfig[filterGen.FilterName()] = perRouteFilterConfig
+	}
+
+	return perFilterConfig, nil
 }

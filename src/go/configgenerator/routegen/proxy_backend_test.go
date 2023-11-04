@@ -11,7 +11,7 @@ import (
 	apipb "google.golang.org/genproto/protobuf/api"
 )
 
-func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
+func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
 	testdata := []routegentest.SuccessOPTestCase{
 		{
 			Desc: "Happy path simple OpenAPI service",
@@ -1141,10 +1141,10 @@ func TestNewBackendRouteGensFromOPConfig(t *testing.T) {
 		},
 	}
 	for _, tc := range testdata {
-		tc.RunTest(t, routegen.NewBackendRouteGensFromOPConfig)
+		tc.RunTest(t, routegen.NewProxyBackendRouteGenFromOPConfig)
 	}
 }
-func TestNewBackendRouteGensFromOPConfig_BadInputFactory(t *testing.T) {
+func TestNewBackendRouteGenFromOPConfig_BadInputFactory(t *testing.T) {
 	testdata := []routegentest.FactoryErrorOPTestCase{
 		{
 			Desc: "invalid http rule",
@@ -1251,6 +1251,6 @@ func TestNewBackendRouteGensFromOPConfig_BadInputFactory(t *testing.T) {
 		},
 	}
 	for _, tc := range testdata {
-		tc.RunTest(t, routegen.NewBackendRouteGensFromOPConfig)
+		tc.RunTest(t, routegen.NewProxyBackendRouteGenFromOPConfig)
 	}
 }

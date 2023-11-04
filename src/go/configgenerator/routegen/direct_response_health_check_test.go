@@ -10,7 +10,7 @@ import (
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-func TestNewHealthCheckRouteGensFromOPConfig(t *testing.T) {
+func TestNewHealthCheckRouteGenFromOPConfig(t *testing.T) {
 	testdata := []routegentest.SuccessOPTestCase{
 		{
 			Desc: "disabled by default",
@@ -479,6 +479,6 @@ func TestNewHealthCheckRouteGensFromOPConfig(t *testing.T) {
 	}
 
 	for _, tc := range testdata {
-		tc.RunTest(t, routegen.NewHealthCheckRouteGensFromOPConfig)
+		tc.RunTest(t, routegen.NewDirectResponseHealthCheckRouteGenFromOPConfig)
 	}
 }

@@ -3,6 +3,7 @@ package routegen
 import (
 	"fmt"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -11,18 +12,20 @@ import (
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-// BackendGenerator is a RouteGenerator to configure routes to the local
+// ProxyBackendGenerator is a RouteGenerator to configure routes to the local
 // or remote backend service.
-type BackendGenerator struct {
-	HTTPPatterns             *httppattern.MethodSlice
+type ProxyBackendGenerator struct {
+	HTTPPatterns             httppattern.MethodSlice
 	BackendClusterBySelector map[string]*BackendClusterSpecifier
 	BackendRouteGen          *helpers.BackendRouteGenerator
+
+	*NoopRouteGenerator
 }
 
-// NewBackendRouteGensFromOPConfig creates BackendGenerator
+// NewProxyBackendRouteGenFromOPConfig creates ProxyBackendGenerator
 // from OP service config + ESPv2 options.
 // It is a RouteGeneratorOPFactory.
-func NewBackendRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]RouteGenerator, error) {
+func NewProxyBackendRouteGenFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (RouteGenerator, error) {
 	httpPatternsBySelector, err := ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig, opts)
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse http patterns from OP config: %v", err)
@@ -38,19 +41,22 @@ func NewBackendRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts opti
 		return nil, fmt.Errorf("fail to parse backend cluster specifiers from OP config: %v", err)
 	}
 
-	return []RouteGenerator{
-		&BackendGenerator{
-			HTTPPatterns:             httpPatterns,
-			BackendClusterBySelector: backendClusterBySelector,
-			BackendRouteGen:          helpers.NewBackendRouteGeneratorFromOPConfig(opts),
-		},
+	return &ProxyBackendGenerator{
+		HTTPPatterns:             *httpPatterns,
+		BackendClusterBySelector: backendClusterBySelector,
+		BackendRouteGen:          helpers.NewBackendRouteGeneratorFromOPConfig(opts),
 	}, nil
 }
 
+// RouteType implements interface RouteGenerator.
+func (g *ProxyBackendGenerator) RouteType() string {
+	return "backend_routes"
+}
+
 // GenRouteConfig implements interface RouteGenerator.
-func (g *BackendGenerator) GenRouteConfig() ([]*routepb.Route, error) {
+func (g *ProxyBackendGenerator) GenRouteConfig(filterGens []filtergen.FilterGenerator) ([]*routepb.Route, error) {
 	var routes []*routepb.Route
-	for _, httpPattern := range *g.HTTPPatterns {
+	for _, httpPattern := range g.HTTPPatterns {
 		selector := httpPattern.Operation
 		backendCluster := g.BackendClusterBySelector[selector]
 		if backendCluster == nil {
@@ -65,14 +71,19 @@ func (g *BackendGenerator) GenRouteConfig() ([]*routepb.Route, error) {
 			Deadline:    util.DefaultResponseDeadline,
 			HTTPPattern: httpPattern.Pattern,
 		}
-		methodRoutes, err := g.BackendRouteGen.GenRoutesForMethod(methodCfg)
+		methodRoutes, err := g.BackendRouteGen.GenRoutesForMethod(methodCfg, filterGens)
 		if err != nil {
-			return nil, fmt.Errorf("fail to generate routes for operation %q: %v", selector, err)
+			return nil, fmt.Errorf("fail to generate routes for operation %q with HTTP pattern %q: %v", selector, httpPattern.String(), err)
 		}
 		routes = append(routes, methodRoutes...)
 	}
 
 	return routes, nil
+}
+
+// AffectedHTTPPatterns implements interface RouteGenerator.
+func (g *ProxyBackendGenerator) AffectedHTTPPatterns() httppattern.MethodSlice {
+	return g.HTTPPatterns
 }
 
 // sortHttpPatterns implements go/esp-v2-route-match-ordering-implementation.
