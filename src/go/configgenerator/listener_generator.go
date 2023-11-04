@@ -84,7 +84,7 @@ func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.
 		return nil, err
 	}
 
-	routeConfig, err := MakeRouteConfig(serviceInfo, httpFilterGenerators)
+	routeConfig, err := makeRouteConfig(serviceInfo, httpFilterGenerators)
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}

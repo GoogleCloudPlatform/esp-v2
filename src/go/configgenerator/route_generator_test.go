@@ -2885,7 +2885,7 @@ func TestMakeRouteConfig(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, nil)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, nil)
 			if tc.wantedError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 					t.Fatalf("expected err: %v, got: %v", tc.wantedError, err)
@@ -2901,7 +2901,7 @@ func TestMakeRouteConfig(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
-				t.Errorf("MakeRouteConfig failed, \n %v", err)
+				t.Errorf("makeRouteConfig failed, \n %v", err)
 			}
 		})
 	}
@@ -3349,7 +3349,7 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, nil)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3360,7 +3360,7 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
-				t.Errorf("MakeRouteConfig failed, \n %v", err)
+				t.Errorf("makeRouteConfig failed, \n %v", err)
 			}
 		})
 	}
@@ -4722,7 +4722,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, filterGens)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, filterGens)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -4733,7 +4733,7 @@ func TestMakeFallbackRoute(t *testing.T) {
 			}
 
 			if err := util.JsonEqual(tc.wantRouteConfig, gotConfig); err != nil {
-				t.Errorf("Test(%s): MakeRouteConfig failed, \n %v", tc.desc, err)
+				t.Errorf("Test(%s): makeRouteConfig failed, \n %v", tc.desc, err)
 			}
 		})
 	}
@@ -4852,9 +4852,9 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, filterGens)
+			gotRoute, err := makeRouteConfig(fakeServiceInfo, filterGens)
 			if err != nil {
-				t.Fatalf("MakeRouteConfig(...) got err %v, want no err", err)
+				t.Fatalf("makeRouteConfig(...) got err %v, want no err", err)
 			}
 
 			gotHost := gotRoute.GetVirtualHosts()
@@ -4878,7 +4878,7 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 					}
 
 					if diff := cmp.Diff(tc.wantCorsPolicy, gotCors, protocmp.Transform()); diff != "" {
-						t.Errorf("MakeRouteConfig(...) diff for CORS policy on virtual host (-want +got):\n%s", diff)
+						t.Errorf("makeRouteConfig(...) diff for CORS policy on virtual host (-want +got):\n%s", diff)
 					}
 				}
 			}
@@ -4939,7 +4939,7 @@ func TestMakeRouteConfigForCors_BadInput(t *testing.T) {
 				Options: opts,
 			}
 
-			_, err := MakeRouteConfig(fakeServiceInfo, nil)
+			_, err := makeRouteConfig(fakeServiceInfo, nil)
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
 			}
@@ -5056,7 +5056,7 @@ func TestHeadersToAdd(t *testing.T) {
 		opts.AddResponseHeaders = tc.addResponseHeaders
 		opts.AppendResponseHeaders = tc.appendResponseHeaders
 
-		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
+		gotRoute, err := makeRouteConfig(&configinfo.ServiceInfo{
 			Name:    "test-api",
 			Options: opts,
 		}, nil)
@@ -5067,24 +5067,24 @@ func TestHeadersToAdd(t *testing.T) {
 			continue
 		}
 		if err != nil {
-			t.Fatalf("Test (%s): MakeRouteConfig got error: %v", tc.desc, err)
+			t.Fatalf("Test (%s): makeRouteConfig got error: %v", tc.desc, err)
 		}
 
 		if len(tc.wantedRequestHeaders) != len(gotRoute.RequestHeadersToAdd) {
-			t.Errorf("Test (%v): MakeRouteConfig failed, RequestHeadersAdd diff len: %v, want: %v", tc.desc, len(gotRoute.RequestHeadersToAdd), len(tc.wantedRequestHeaders))
+			t.Errorf("Test (%v): makeRouteConfig failed, RequestHeadersAdd diff len: %v, want: %v", tc.desc, len(gotRoute.RequestHeadersToAdd), len(tc.wantedRequestHeaders))
 		} else {
 			for idx, want := range tc.wantedRequestHeaders {
 				if !proto.Equal(gotRoute.RequestHeadersToAdd[idx], want) {
-					t.Errorf("Test (%v): MakeRouteConfig failed, RequestHeadersAdd(%v): %v, want: %v", tc.desc, idx, gotRoute.RequestHeadersToAdd[idx], want)
+					t.Errorf("Test (%v): makeRouteConfig failed, RequestHeadersAdd(%v): %v, want: %v", tc.desc, idx, gotRoute.RequestHeadersToAdd[idx], want)
 				}
 			}
 		}
 		if len(tc.wantedResponseHeaders) != len(gotRoute.ResponseHeadersToAdd) {
-			t.Errorf("Test (%v): MakeRouteConfig failed, ResponseHeadersAdd diff len: %v, want: %v", tc.desc, len(gotRoute.ResponseHeadersToAdd), len(tc.wantedResponseHeaders))
+			t.Errorf("Test (%v): makeRouteConfig failed, ResponseHeadersAdd diff len: %v, want: %v", tc.desc, len(gotRoute.ResponseHeadersToAdd), len(tc.wantedResponseHeaders))
 		} else {
 			for idx, want := range tc.wantedResponseHeaders {
 				if !proto.Equal(gotRoute.ResponseHeadersToAdd[idx], want) {
-					t.Errorf("Test (%v): MakeRouteConfig failed, ResponeHeadersToAdd(%v): %v, want: %v", tc.desc, idx, gotRoute.ResponseHeadersToAdd[idx], want)
+					t.Errorf("Test (%v): makeRouteConfig failed, ResponeHeadersToAdd(%v): %v, want: %v", tc.desc, idx, gotRoute.ResponseHeadersToAdd[idx], want)
 				}
 			}
 		}
