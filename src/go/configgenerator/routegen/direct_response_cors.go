@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -14,8 +15,8 @@ import (
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
-// CORSGenerator is a RouteGenerator to configure CORS routes.
-type CORSGenerator struct {
+// DirectResponseCORSGenerator is a RouteGenerator to configure CORS routes.
+type DirectResponseCORSGenerator struct {
 	Preset string
 	// AllowOrigin should only be set if preset=basic
 	AllowOrigin string
@@ -25,31 +26,36 @@ type CORSGenerator struct {
 	// LocalBackendClusterName is the name of the local backend cluster to apply
 	// CORS policies to.
 	LocalBackendClusterName string
+
+	*NoopRouteGenerator
 }
 
-// NewCORSRouteGensFromOPConfig creates CORSGenerator
+// NewDirectResponseCORSRouteGenFromOPConfig creates DirectResponseCORSGenerator
 // from OP service config + ESPv2 options.
 // It is a RouteGeneratorOPFactory.
-func NewCORSRouteGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]RouteGenerator, error) {
+func NewDirectResponseCORSRouteGenFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (RouteGenerator, error) {
 	if opts.CorsPreset == "" {
-		glog.Infof("Not adding CORS route gen because the feature is disabled by option, option is currently %q", opts.CorsPreset)
+		glog.Infof("Not adding Direct Response CORS route gen because the feature is disabled by option, option is currently %q", opts.CorsPreset)
 		return nil, nil
 	}
 
-	return []RouteGenerator{
-		&CORSGenerator{
-			Preset:                  opts.CorsPreset,
-			AllowOrigin:             opts.CorsAllowOrigin,
-			AllowOriginRegex:        opts.CorsAllowOriginRegex,
-			LocalBackendClusterName: clustergen.MakeLocalBackendClusterName(serviceConfig),
-		},
+	return &DirectResponseCORSGenerator{
+		Preset:                  opts.CorsPreset,
+		AllowOrigin:             opts.CorsAllowOrigin,
+		AllowOriginRegex:        opts.CorsAllowOriginRegex,
+		LocalBackendClusterName: clustergen.MakeLocalBackendClusterName(serviceConfig),
 	}, nil
+}
+
+// RouteType implements interface RouteGenerator.
+func (g *DirectResponseCORSGenerator) RouteType() string {
+	return "cors_routes"
 }
 
 // GenRouteConfig implements interface RouteGenerator.
 //
 // Forked from `route_generator.go: makeRouteCors()
-func (g *CORSGenerator) GenRouteConfig() ([]*routepb.Route, error) {
+func (g *DirectResponseCORSGenerator) GenRouteConfig([]filtergen.FilterGenerator) ([]*routepb.Route, error) {
 	originMatcher := &routepb.HeaderMatcher{
 		Name: "origin",
 	}
