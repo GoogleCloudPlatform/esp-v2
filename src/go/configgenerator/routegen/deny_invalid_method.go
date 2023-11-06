@@ -11,6 +11,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 )
 
@@ -31,6 +32,11 @@ type DenyInvalidMethodGenerator struct {
 // from OP service config + ESPv2 options.
 // It is a RouteGeneratorOPFactory.
 func NewDenyInvalidMethodRouteGenFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, wrappedGenFactories []RouteGeneratorOPFactory) (RouteGenerator, error) {
+	if len(wrappedGenFactories) == 0 {
+		glog.Warning("No wrapped route generators provided to method not allowed generator, disabling.")
+		return nil, nil
+	}
+
 	wrappedGens, err := NewRouteGeneratorsFromOPConfig(serviceConfig, opts, wrappedGenFactories)
 	if err != nil {
 		return nil, fmt.Errorf("while creating method not allowed routes, could not create underlying wrapped routes, failed with error: %v", err)
