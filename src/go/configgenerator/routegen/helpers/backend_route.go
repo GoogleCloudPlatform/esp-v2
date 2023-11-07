@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
@@ -53,7 +52,7 @@ type MethodCfg struct {
 //
 // Forked from `route_generator.go: makeRoute()`
 func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg, filterGens []filtergen.FilterGenerator) ([]*routepb.Route, error) {
-	methodName, err := SelectorToMethodName(methodCfg.OperationName)
+	methodName, err := util.SelectorToMethodName(methodCfg.OperationName)
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse method short name from selector %q: %v", methodCfg.OperationName, err)
 	}
@@ -192,28 +191,6 @@ func makeHttpExactPathRouteMatcher(path string) *routepb.RouteMatch {
 			Path: path,
 		},
 	}
-}
-
-// SelectorToMethodName returns the Method short name from the selector.
-func SelectorToMethodName(selector string) (string, error) {
-	split := strings.Split(selector, ".")
-	if len(split) < 2 {
-		return "", fmt.Errorf("unexpected split, got split array %#v, want at least 2 items", split)
-	}
-
-	// Method name is the last element in the selector.
-	return split[len(split)-1], nil
-}
-
-// SelectorToAPIName returns the API name of the selector.
-func SelectorToAPIName(selector string) (string, error) {
-	split := strings.Split(selector, ".")
-	if len(split) < 2 {
-		return "", fmt.Errorf("unexpected split, got split array %#v, want at least 2 items", split)
-	}
-
-	// API name is everything except method name joined together.
-	return strings.Join(split[:len(split)-1], "."), nil
 }
 
 // makePerRouteFilterConfig generates the per-route config across all filters

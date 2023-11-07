@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
@@ -74,11 +73,11 @@ func (g *ProxyCORSGenerator) GenRouteConfig(filterGens []filtergen.FilterGenerat
 				seenUriTemplatesInRoute[dedupUriTemplate] = true
 
 				originalSelector := httpPattern.Operation
-				methodShortName, err := helpers.SelectorToMethodName(originalSelector)
+				methodShortName, err := util.SelectorToMethodName(originalSelector)
 				if err != nil {
 					return nil, err
 				}
-				apiName, err := helpers.SelectorToAPIName(originalSelector)
+				apiName, err := util.SelectorToAPIName(originalSelector)
 				if err != nil {
 					return nil, err
 				}

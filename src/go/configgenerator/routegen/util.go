@@ -36,6 +36,10 @@ func ParseSelectorsFromOPConfig(serviceConfig *servicepb.Service, opts options.C
 type BackendClusterSpecifier struct {
 	Name     string
 	HostName string
+
+	// HTTPBackend is filled in if the backend rule has an associated HTTP backend.
+	// In this case, all HTTP routes must redirect to this backend.
+	HTTPBackend *BackendClusterSpecifier
 }
 
 // ParseBackendClusterBySelectorFromOPConfig parses the service config into a
@@ -58,6 +62,8 @@ func ParseBackendClusterBySelectorFromOPConfig(serviceConfig *servicepb.Service,
 	return backendClusterBySelector, nil
 }
 
+// First return value is normal backend cluster.
+// Second one is the HTTP backend (if supported).
 func determineBackendClusterForSelector(selector string, backendRuleBySelector map[string]*servicepb.BackendRule, serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (*BackendClusterSpecifier, error) {
 	localCluster := &BackendClusterSpecifier{
 		Name: clustergen.MakeLocalBackendClusterName(serviceConfig),
@@ -72,10 +78,35 @@ func determineBackendClusterForSelector(selector string, backendRuleBySelector m
 		return localCluster, nil
 	}
 
+	// Check for HTTP backend.
+	httpBackendRule := clustergen.IsHTTPBackendEnabled(backendRule)
+	if httpBackendRule != nil && !util.IsOPDiscoveryAPI(selector) {
+		if httpBackendRule.GetAddress() == "" {
+			return nil, fmt.Errorf("HTTP backend rule for selector %q has empty address", selector)
+		}
+
+		httpBackend, err := makeBackendClusterSpecifierFromRule(httpBackendRule)
+		if err != nil {
+			return nil, fmt.Errorf("fail while processing HTTP backend rule for selector %q: %v", selector, err)
+		}
+
+		localCluster.HTTPBackend = httpBackend
+	}
+
 	if backendRule.GetAddress() == "" {
 		return localCluster, nil
 	}
 
+	normalBackend, err := makeBackendClusterSpecifierFromRule(backendRule)
+	if err != nil {
+		return nil, fmt.Errorf("fail while processing normal (non-HTTP) backend rule for selector %q: %v", selector, err)
+	}
+	normalBackend.HTTPBackend = localCluster.HTTPBackend
+
+	return normalBackend, nil
+}
+
+func makeBackendClusterSpecifierFromRule(backendRule *servicepb.BackendRule) (*BackendClusterSpecifier, error) {
 	_, hostname, port, _, err := util.ParseURI(backendRule.GetAddress())
 	if err != nil {
 		return nil, fmt.Errorf("error parsing remote backend rule's address: %v", err)

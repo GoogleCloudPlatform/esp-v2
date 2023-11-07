@@ -2910,14 +2910,48 @@ func TestMakeRouteConfig(t *testing.T) {
 
 func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 	tests := []struct {
-		name               string
-		httpBackendAddress string
-		wantRouteConfig    string
+		name            string
+		serviceConfig   *servicepb.Service
+		wantRouteConfig string
 	}{
 		{
-			"With http backend address",
-			"https://http-backend:8081",
-			`
+			name: "With http backend address",
+			serviceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: fmt.Sprintf("%s.Echo", testApiName),
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo",
+							},
+						},
+					},
+				},
+				Backend: &confpb.Backend{
+					Rules: []*confpb.BackendRule{
+						{
+							Selector: fmt.Sprintf("%s.Echo", testApiName),
+							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
+								"http": {
+									Address: "https://http-backend:8081",
+								},
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `
 {
   "name": "local_route",
   "virtualHosts": [
@@ -3110,9 +3144,31 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 `,
 		},
 		{
-			"Without http backend address",
-			"",
-			`
+			name: "Without http backend address",
+			serviceConfig: &confpb.Service{
+				Name: testProjectName,
+				Apis: []*apipb.Api{
+					{
+						Name: testApiName,
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: fmt.Sprintf("%s.Echo", testApiName),
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo",
+							},
+						},
+					},
+				},
+			},
+			wantRouteConfig: `
 {
   "name": "local_route",
   "virtualHosts": [
@@ -3308,44 +3364,8 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://grpc-backend:8080"
-			opts.LocalHTTPBackendAddress = tc.httpBackendAddress
 
-			fakeServiceConfig := &confpb.Service{
-				Name: testProjectName,
-				Apis: []*apipb.Api{
-					{
-						Name: testApiName,
-						Methods: []*apipb.Method{
-							{
-								Name: "Echo",
-							},
-						},
-					},
-				},
-				Http: &annotationspb.Http{Rules: []*annotationspb.HttpRule{
-					{
-						Selector: fmt.Sprintf("%s.Echo", testApiName),
-						Pattern: &annotationspb.HttpRule_Get{
-							Get: "/echo",
-						},
-					},
-				},
-				},
-			}
-			if tc.httpBackendAddress != "" {
-				fakeServiceConfig.Backend = &confpb.Backend{
-					Rules: []*confpb.BackendRule{
-						{
-							Selector: fmt.Sprintf("%s.Echo", testApiName),
-							OverridesByRequestProtocol: map[string]*confpb.BackendRule{
-								"http": &confpb.BackendRule{Address: tc.httpBackendAddress},
-							},
-						},
-					},
-				}
-			}
-
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, opts)
+			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.serviceConfig, opts)
 			if err != nil {
 				t.Fatal(err)
 			}
