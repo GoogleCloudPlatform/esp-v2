@@ -13,7 +13,6 @@ import (
 // backend routes.
 type RouteDeadlineConfiger struct {
 	GlobalStreamIdleTimeout time.Duration
-	// TODO(nareddyt): Options to disable this for gRPC streaming methods, etc.
 }
 
 // NewRouteDeadlineConfigerFromOPConfig creates a RouteDeadlineConfiger from
@@ -25,14 +24,43 @@ func NewRouteDeadlineConfigerFromOPConfig(opts options.ConfigGeneratorOptions) *
 }
 
 // MaybeAddDeadlines adds the generated deadline config to the route action.
-func MaybeAddDeadlines(c *RouteDeadlineConfiger, routeAction *routepb.RouteAction, deadline time.Duration) {
+func MaybeAddDeadlines(c *RouteDeadlineConfiger, routeAction *routepb.RouteAction, deadline time.Duration, isStreaming bool) {
 	if c == nil {
 		return
 	}
 
-	streamIdleTimeout := calculateStreamIdleTimeout(deadline, c.GlobalStreamIdleTimeout)
-	routeAction.Timeout = durationpb.New(deadline)
-	routeAction.IdleTimeout = durationpb.New(streamIdleTimeout)
+	newDeadline, idleTimeout := c.CalcIdleTimeout(deadline, isStreaming)
+	routeAction.Timeout = durationpb.New(newDeadline)
+	routeAction.IdleTimeout = durationpb.New(idleTimeout)
+}
+
+// CalcIdleTimeout will return the correct idle timeout based on method properties.
+//
+// Forked from `service_info.go`
+func (c *RouteDeadlineConfiger) CalcIdleTimeout(deadline time.Duration, isStreaming bool) (time.Duration, time.Duration) {
+	// Response timeouts are not compatible with streaming methods (documented in Envoy).
+	// This applies to methods with a streaming upstream OR downstream.
+	var idleTimeout time.Duration
+	if isStreaming {
+		if deadline <= 0 {
+			// When the backend deadline is unspecified , calculate the streamIdleTimeout based on max{defaultTimeout, globalStreamIdleTimeout} .
+			idleTimeout = calculateStreamIdleTimeout(util.DefaultResponseDeadline, c.GlobalStreamIdleTimeout)
+		} else {
+			// User configured deadline serves as the stream idle timeout.
+			idleTimeout = deadline
+		}
+		deadline = 0
+	} else {
+		if deadline <= 0 {
+			// If no deadline specified by the user, explicitly use default.
+			deadline = util.DefaultResponseDeadline
+		}
+
+		// Allow per-route response deadlines to override the global stream idle timeout.
+		idleTimeout = calculateStreamIdleTimeout(deadline, c.GlobalStreamIdleTimeout)
+	}
+
+	return deadline, idleTimeout
 }
 
 // Calculates the stream idle timeout based on the response deadline for that route and the global stream idle timeout.

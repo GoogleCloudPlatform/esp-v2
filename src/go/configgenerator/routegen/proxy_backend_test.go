@@ -1139,6 +1139,463 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
 }
 `,
 		},
+		{
+			Desc: "Happy path testing deadlines for normal backend",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{},
+			WantHostConfig: `
+{
+  "routes":[
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"10.500s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"10.500s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"10.500s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"10.500s"
+      }
+    }
+  ]
+}
+`,
+		},
+		{
+			Desc: "Happy path testing deadlines for normal and HTTP backend",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name: "Echo",
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Deadline: 10.5,
+							OverridesByRequestProtocol: map[string]*servicepb.BackendRule{
+								"http": {
+									Address:  "http://http.abc.com/api/",
+									Deadline: 20.5,
+								},
+							},
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{},
+			WantHostConfig: `
+{
+  "routes":[
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-http.abc.com:80",
+        "hostRewriteLiteral":"http.abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"20.500s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-http.abc.com:80",
+        "hostRewriteLiteral":"http.abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"20.500s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"10.500s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"10.500s"
+      }
+    }
+  ]
+}
+`,
+		},
+		{
+			Desc: "Happy path testing deadline & idle timeout for normal backend with streaming RPC",
+			ServiceConfigIn: &servicepb.Service{
+				Name: "bookstore.endpoints.project123.cloud.goog",
+				Apis: []*apipb.Api{
+					{
+						Name: "endpoints.examples.bookstore.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name:             "Echo",
+								RequestStreaming: true,
+							},
+						},
+					},
+				},
+				Http: &annotationspb.Http{
+					Rules: []*annotationspb.HttpRule{
+						{
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Pattern: &annotationspb.HttpRule_Get{
+								Get: "/echo",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			OptsIn: options.ConfigGeneratorOptions{},
+			WantHostConfig: `
+{
+  "routes":[
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"10.500s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"0s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"GET"
+            }
+          }
+        ],
+        "path":"/echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"10.500s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"0s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"10.500s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"0s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Echo"
+      },
+      "match":{
+        "headers":[
+          {
+            "name":":method",
+            "stringMatch":{
+              "exact":"POST"
+            }
+          }
+        ],
+        "path":"/endpoints.examples.bookstore.Bookstore/Echo/"
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Echo",
+      "route":{
+        "cluster":"backend-cluster-abc.com:80",
+        "hostRewriteLiteral":"abc.com",
+        "idleTimeout":"10.500s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"0s"
+      }
+    }
+  ]
+}
+`,
+		},
 	}
 	for _, tc := range testdata {
 		tc.RunTest(t, routegen.NewProxyBackendRouteGenFromOPConfig)

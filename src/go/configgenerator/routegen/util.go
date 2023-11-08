@@ -2,6 +2,8 @@ package routegen
 
 import (
 	"fmt"
+	"math"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
@@ -11,6 +13,7 @@ import (
 	"github.com/golang/glog"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 // ParseSelectorsFromOPConfig returns a list of selectors in the config.
@@ -80,7 +83,7 @@ func determineBackendClusterForSelector(selector string, backendRuleBySelector m
 
 	// Check for HTTP backend.
 	httpBackendRule := clustergen.IsHTTPBackendEnabled(backendRule)
-	if httpBackendRule != nil && !util.IsOPDiscoveryAPI(selector) {
+	if httpBackendRule != nil && !util.ShouldSkipOPDiscoveryAPI(selector, opts.AllowDiscoveryAPIs) {
 		if httpBackendRule.GetAddress() == "" {
 			return nil, fmt.Errorf("HTTP backend rule for selector %q has empty address", selector)
 		}
@@ -278,4 +281,61 @@ func PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig *servicepb.Service, 
 	}
 
 	return httpRuleBySelector
+}
+
+type DeadlineSpecifier struct {
+	Deadline            time.Duration
+	HTTPBackendDeadline time.Duration
+}
+
+// ParseDeadlineSelectorFromOPConfig parses deadline by selector.
+//
+// Forked from service_info.go::ruleToBackendInfo()
+func ParseDeadlineSelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) map[string]*DeadlineSpecifier {
+	deadlineBySelector := make(map[string]*DeadlineSpecifier)
+	for _, rule := range serviceConfig.GetBackend().GetRules() {
+		specifier := &DeadlineSpecifier{
+			Deadline: parseDeadline(rule),
+		}
+
+		// Check for HTTP backend.
+		httpBackendRule := clustergen.IsHTTPBackendEnabled(rule)
+		if httpBackendRule != nil && !util.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts.AllowDiscoveryAPIs) {
+			specifier.HTTPBackendDeadline = parseDeadline(httpBackendRule)
+		}
+
+		deadlineBySelector[rule.GetSelector()] = specifier
+	}
+	return deadlineBySelector
+}
+
+func parseDeadline(rule *servicepb.BackendRule) time.Duration {
+	if rule.GetDeadline() <= 0 {
+		if rule.GetDeadline() < 0 {
+			glog.Warningf("Negative deadline of %v specified for method %v. "+
+				"Using default deadline %v instead.", rule.GetDeadline(), rule.GetSelector(), util.DefaultResponseDeadline)
+		}
+		// User did not specify it.
+		return 0
+	}
+
+	// The backend deadline from the BackendRule is a float64 that represents seconds.
+	// But float64 has a large precision, so we must explicitly lower the precision.
+	// For the purposes of a network proxy, round the deadline to the nearest millisecond.
+	deadlineMs := int64(math.Round(rule.GetDeadline() * 1000))
+	return time.Duration(deadlineMs) * time.Millisecond
+}
+
+// ParseMethodBySelectorFromOPConfig returns a map of selector to the API method.
+func ParseMethodBySelectorFromOPConfig(serviceConfig *servicepb.Service) map[string]*apipb.Method {
+	methodBySelector := make(map[string]*apipb.Method)
+
+	for _, api := range serviceConfig.GetApis() {
+		for _, method := range api.GetMethods() {
+			selector := filtergen.MethodToSelector(api, method)
+			methodBySelector[selector] = method
+		}
+	}
+
+	return methodBySelector
 }

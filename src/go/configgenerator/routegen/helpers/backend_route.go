@@ -45,6 +45,7 @@ type MethodCfg struct {
 	BackendClusterName string
 	HostRewrite        string
 	Deadline           time.Duration
+	IsStreaming        bool
 	HTTPPattern        *httppattern.Pattern
 }
 
@@ -76,7 +77,7 @@ func (r *BackendRouteGenerator) GenRoutesForMethod(methodCfg *MethodCfg, filterG
 			}
 		}
 
-		MaybeAddDeadlines(r.DeadlineCfg, routeAction, methodCfg.Deadline)
+		MaybeAddDeadlines(r.DeadlineCfg, routeAction, methodCfg.Deadline, methodCfg.IsStreaming)
 		if err := MaybeAddRetryPolicy(r.RetryCfg, routeAction); err != nil {
 			return nil, err
 		}

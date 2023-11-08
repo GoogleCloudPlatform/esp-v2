@@ -2,6 +2,7 @@ package routegen
 
 import (
 	"testing"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -739,6 +740,181 @@ func TestParseHTTPPatternsBySelectorFromOPConfig(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("ParseHTTPPatternsBySelectorFromOPConfig(...) diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestParseDeadlineSelectorFromOPConfig(t *testing.T) {
+	testdata := []struct {
+		desc          string
+		serviceConfig *servicepb.Service
+		opts          options.ConfigGeneratorOptions
+		want          map[string]*DeadlineSpecifier
+	}{
+		{
+			desc: "Mixed deadlines across multiple backend rules",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+					{
+						Name: "cnn.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+							OverridesByRequestProtocol: map[string]*servicepb.BackendRule{
+								"http": {
+									Address:  "http://http.abc.com/api/",
+									Deadline: 20.5,
+								},
+							},
+						},
+						{
+							Address:  "grpc://cnn.com/api/",
+							Selector: "cnn.com.api",
+							Deadline: 20,
+						},
+					},
+				},
+			},
+			want: map[string]*DeadlineSpecifier{
+				"abc.com.api": {
+					Deadline:            10*time.Second + 500*time.Millisecond,
+					HTTPBackendDeadline: 20*time.Second + 500*time.Millisecond,
+				},
+				"cnn.com.api": {
+					Deadline: 20 * time.Second,
+				},
+			},
+		},
+		{
+			desc: "Deadline with high precision is rounded to milliseconds",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 30.0009, // 30s 0.9ms
+						},
+					},
+				},
+			},
+			want: map[string]*DeadlineSpecifier{
+				"abc.com.api": {
+					Deadline: 30*time.Second + 1*time.Millisecond,
+				},
+			},
+		},
+		{
+			desc: "Deadline that is non-positive is overridden to default",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: -10.5,
+						},
+					},
+				},
+			},
+			want: map[string]*DeadlineSpecifier{
+				"abc.com.api": {
+					Deadline: 0,
+				},
+			},
+		},
+		{
+			desc: "Missing deadline",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name: "api",
+							},
+						},
+					},
+				},
+			},
+			want: map[string]*DeadlineSpecifier{},
+		},
+		{
+			desc: "Deadlines parsed like normal for streaming methods",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "abc.com",
+						Methods: []*apipb.Method{
+							{
+								Name:              "api",
+								ResponseStreaming: true,
+							},
+						},
+					},
+				},
+				Backend: &servicepb.Backend{
+					Rules: []*servicepb.BackendRule{
+						{
+							Address:  "grpc://abc.com/api/",
+							Selector: "abc.com.api",
+							Deadline: 10.5,
+						},
+					},
+				},
+			},
+			want: map[string]*DeadlineSpecifier{
+				"abc.com.api": {
+					Deadline: 10*time.Second + 500*time.Millisecond,
+				},
+			},
+		},
+	}
+
+	for _, tc := range testdata {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := ParseDeadlineSelectorFromOPConfig(tc.serviceConfig, tc.opts)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("ParseDeadlineSelectorFromOPConfig(...) diff (-want +got):\n%s", diff)
 			}
 		})
 	}

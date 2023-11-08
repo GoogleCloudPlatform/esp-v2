@@ -94,13 +94,12 @@ func (g *ProxyCORSGenerator) GenRouteConfig(filterGens []filtergen.FilterGenerat
 
 				// Update backend selectors. This ensures CORS routes are proxied to
 				// remote backend clusters.
-				cluster := g.ProxyBackendGenerator.BackendClusterBySelector[originalSelector]
-				g.ProxyBackendGenerator.BackendClusterBySelector[genOperation] = cluster
+				g.ProxyBackendGenerator.CloneConfigsBySelector(originalSelector, genOperation)
 			}
 		}
 	}
 
-	// Override the backend HTTP patterns, so proxy CORS routes are generated.
+	// Override the backend HTTP patterns, so only proxy CORS routes are generated.
 	g.ProxyBackendGenerator.HTTPPatterns = corsHTTPPatterns
 	return g.ProxyBackendGenerator.GenRouteConfig(filterGens)
 }
