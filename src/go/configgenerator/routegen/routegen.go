@@ -61,10 +61,10 @@ func (g *NoopRouteGenerator) AffectedHTTPPatterns() httppattern.MethodSlice {
 // OP service config + descriptor + ESPv2 options.
 func NewRouteGeneratorsFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, factories []RouteGeneratorOPFactory) ([]RouteGenerator, error) {
 	var gens []RouteGenerator
-	for _, factory := range factories {
+	for i, factory := range factories {
 		generator, err := factory(serviceConfig, opts)
 		if err != nil {
-			return nil, fmt.Errorf("fail to run RouteGeneratorOPFactory: %v", err)
+			return nil, fmt.Errorf("fail to run RouteGeneratorOPFactory index %d: %v", i, err)
 		}
 		if generator != nil {
 			gens = append(gens, generator)

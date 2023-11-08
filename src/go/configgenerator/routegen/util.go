@@ -148,10 +148,16 @@ func PrecomputeBackendRuleBySelectorFromOPConfig(serviceConfig *servicepb.Servic
 // Forked from `service_info.go: processHttpRule()`
 // and `service_info.go: addGrpcHttpRules()`
 func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (map[string][]*httppattern.Pattern, error) {
+	selectors := ParseSelectorsFromOPConfig(serviceConfig, opts)
 	httpRuleBySelector := PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig, opts)
 	httpPatternsBySelector := make(map[string][]*httppattern.Pattern)
 
-	for selector, rule := range httpRuleBySelector {
+	for _, selector := range selectors {
+		rule, ok := httpRuleBySelector[selector]
+		if !ok {
+			continue
+		}
+
 		pattern, err := httpRuleToHTTPPattern(rule)
 		if err != nil {
 			return nil, fmt.Errorf("fail to process http rule for operation %q: %v", selector, err)
@@ -313,7 +319,7 @@ func parseDeadline(rule *servicepb.BackendRule) time.Duration {
 	if rule.GetDeadline() <= 0 {
 		if rule.GetDeadline() < 0 {
 			glog.Warningf("Negative deadline of %v specified for method %v. "+
-				"Using default deadline %v instead.", rule.GetDeadline(), rule.GetSelector(), util.DefaultResponseDeadline)
+					"Using default deadline %v instead.", rule.GetDeadline(), rule.GetSelector(), util.DefaultResponseDeadline)
 		}
 		// User did not specify it.
 		return 0
