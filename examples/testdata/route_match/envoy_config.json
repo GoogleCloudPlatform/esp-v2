@@ -306,7 +306,7 @@
                                 "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                                 "constantPath": {
                                   "path": "/shelves",
-                                  "urlTemplate": "/libraries/{library_id=*}/shelves/{shelf_id=*}"
+                                  "urlTemplate": "/libraries/{library_id=*}/shelves/{shelfId=*}"
                                 }
                               }
                             }
@@ -523,7 +523,7 @@
                                 "@type": "type.googleapis.com/espv2.api.envoy.v12.http.path_rewrite.PerRouteFilterConfig",
                                 "constantPath": {
                                   "path": "/shelves",
-                                  "urlTemplate": "/libraries/{library_id=*}/shelves/{shelf_id=*}"
+                                  "urlTemplate": "/libraries/{library_id=*}/shelves/{shelfId=*}"
                                 }
                               }
                             }

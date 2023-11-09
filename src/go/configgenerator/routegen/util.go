@@ -150,15 +150,19 @@ func PrecomputeBackendRuleBySelectorFromOPConfig(serviceConfig *servicepb.Servic
 func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (map[string][]*httppattern.Pattern, error) {
 	selectors := ParseSelectorsFromOPConfig(serviceConfig, opts)
 	httpRuleBySelector := PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig, opts)
-	httpPatternsBySelector := make(map[string][]*httppattern.Pattern)
+	snakeToJson, err := ComputeSnakeToJsonMapping(serviceConfig)
+	if err != nil {
+		return nil, fmt.Errorf("fail to compute snake_case to camelCase field mappings: %v", err)
+	}
 
+	httpPatternsBySelector := make(map[string][]*httppattern.Pattern)
 	for _, selector := range selectors {
 		rule, ok := httpRuleBySelector[selector]
 		if !ok {
 			continue
 		}
 
-		pattern, err := httpRuleToHTTPPattern(rule)
+		pattern, err := httpRuleToHTTPPattern(rule, snakeToJson)
 		if err != nil {
 			return nil, fmt.Errorf("fail to process http rule for operation %q: %v", selector, err)
 		}
@@ -169,7 +173,7 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 		// when interpret the http rules from the descriptor. Therefore, no need to
 		// check for nested additional_bindings.
 		for i, additionalRule := range rule.AdditionalBindings {
-			additionalPattern, err := httpRuleToHTTPPattern(additionalRule)
+			additionalPattern, err := httpRuleToHTTPPattern(additionalRule, snakeToJson)
 			if err != nil {
 				return nil, fmt.Errorf("fail to process http rule's additional_binding at index %d for operation %q: %v", i, selector, err)
 			}
@@ -214,7 +218,7 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 	return httpPatternsBySelector, nil
 }
 
-func httpRuleToHTTPPattern(rule *annotationspb.HttpRule) (*httppattern.Pattern, error) {
+func httpRuleToHTTPPattern(rule *annotationspb.HttpRule, snakeToJson map[string]string) (*httppattern.Pattern, error) {
 	parsedRule, err := parseHttpRule(rule)
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse http rule: %v", err)
@@ -224,6 +228,8 @@ func httpRuleToHTTPPattern(rule *annotationspb.HttpRule) (*httppattern.Pattern, 
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse http rule path into uri template: %v", err)
 	}
+
+	uriTemplate.ReplaceVariableField(snakeToJson)
 
 	return &httppattern.Pattern{
 		HttpMethod:  parsedRule.method,
@@ -345,4 +351,29 @@ func ParseMethodBySelectorFromOPConfig(serviceConfig *servicepb.Service) map[str
 	}
 
 	return methodBySelector
+}
+
+// ComputeSnakeToJsonMapping computes a mapping from snake_case to camelCase
+// for variable field bindings.
+func ComputeSnakeToJsonMapping(serviceConfig *servicepb.Service) (map[string]string, error) {
+	snakeToJson := make(map[string]string)
+	for _, typeProto := range serviceConfig.GetTypes() {
+		for _, field := range typeProto.GetFields() {
+			if field.Name != field.JsonName {
+				if prevJsonName, ok := snakeToJson[field.GetName()]; ok {
+					if prevJsonName != field.GetJsonName() {
+						// Duplicate snake name with mismatching JSON name.
+						// This will cause an error in path matcher variable bindings.
+						// Disallow it.
+						return nil, fmt.Errorf("detected two types with same snake_name (%v) but mistmatching json_name (%v, %v)", field.GetName(), field.GetJsonName(), prevJsonName)
+					}
+				}
+
+				// Unique entry.
+				snakeToJson[field.GetName()] = field.GetJsonName()
+			}
+		}
+	}
+
+	return snakeToJson, nil
 }
