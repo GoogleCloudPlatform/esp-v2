@@ -15,6 +15,8 @@
 package util
 
 import (
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -164,4 +166,26 @@ func MaybeTruncateSpanName(spanName string) string {
 var HardCodedSkipServiceControlMethods = []string{
 	"grpc.health.v1.Health.Check",
 	"grpc.health.v1.Health.Watch",
+}
+
+// SelectorToMethodName returns the Method short name from the selector.
+func SelectorToMethodName(selector string) (string, error) {
+	split := strings.Split(selector, ".")
+	if len(split) < 2 {
+		return "", fmt.Errorf("unexpected split, got split array %#v, want at least 2 items", split)
+	}
+
+	// Method name is the last element in the selector.
+	return split[len(split)-1], nil
+}
+
+// SelectorToAPIName returns the API name of the selector.
+func SelectorToAPIName(selector string) (string, error) {
+	split := strings.Split(selector, ".")
+	if len(split) < 2 {
+		return "", fmt.Errorf("unexpected split, got split array %#v, want at least 2 items", split)
+	}
+
+	// API name is everything except method name joined together.
+	return strings.Join(split[:len(split)-1], "."), nil
 }

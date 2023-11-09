@@ -69,15 +69,11 @@ func NewRemoteBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts
 // httpBackendRuleToCluster creates a RemoteBackendCluster for non-OpenAPI HTTP backend support.
 // This is not used by ESPv2.
 func httpBackendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGeneratorOptions) (*RemoteBackendCluster, error) {
-	httpBackendRule := rule.GetOverridesByRequestProtocol()[util.HTTPBackendProtocolKey]
+	httpBackendRule := IsHTTPBackendEnabled(rule)
 	if httpBackendRule == nil {
 		return nil, nil
 	}
 
-	// TODO(yangshuo): remove this after the API compiler ensures it.
-	httpBackendRule.Selector = rule.GetSelector()
-
-	glog.Infof("Selector %q has HTTP backend rule", rule.GetSelector())
 	return backendRuleToCluster(httpBackendRule, opts, true)
 }
 
@@ -153,4 +149,19 @@ func (c *RemoteBackendCluster) GenConfig() (*clusterpb.Cluster, error) {
 // for the remote address.
 func RemoteAddressToClusterName(address string) string {
 	return fmt.Sprintf("backend-cluster-%s", address)
+}
+
+// IsHTTPBackendEnabled returns the sub-backend rule if the backend rule has an
+// associated HTTP backend.
+func IsHTTPBackendEnabled(rule *servicepb.BackendRule) *servicepb.BackendRule {
+	httpBackendRule := rule.GetOverridesByRequestProtocol()[util.HTTPBackendProtocolKey]
+	if httpBackendRule == nil {
+		return nil
+	}
+
+	// TODO(yangshuo): remove this mutation after the API compiler ensures it.
+	httpBackendRule.Selector = rule.GetSelector()
+
+	glog.Infof("Selector %q has HTTP backend rule", rule.GetSelector())
+	return httpBackendRule
 }

@@ -18,7 +18,9 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"strings"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -172,6 +174,20 @@ func (u *UriTemplate) Regex(disallowColonInWildcardPathSegment bool) string {
 	}
 
 	return "^" + regex.String() + "$"
+}
+
+func (u *UriTemplate) IsGRPCPathForOperation(selector string) (bool, error) {
+	methodShortName, err := util.SelectorToMethodName(selector)
+	if err != nil {
+		return false, err
+	}
+	apiName, err := util.SelectorToAPIName(selector)
+	if err != nil {
+		return false, err
+	}
+
+	expectedPath := fmt.Sprintf("/%v/%v", apiName, methodShortName)
+	return strings.HasPrefix(u.Origin, expectedPath), nil
 }
 
 // `generateVariableBindingSyntax` tries to recover the following syntax with

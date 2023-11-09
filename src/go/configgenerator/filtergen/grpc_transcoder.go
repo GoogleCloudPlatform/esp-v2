@@ -235,9 +235,10 @@ func UpdateProtoDescriptorFromOPConfig(serviceConfig *confpb.Service, opts optio
 
 			for _, method := range service.GetMethod() {
 				sel := fmt.Sprintf("%s.%s", apiName, method.GetName())
-				if rule, ok := ruleMap[sel]; ok {
-					json, _ := util.ProtoToJson(rule)
-					glog.Info("Set http.rule: ", json)
+				if constRule, ok := ruleMap[sel]; ok {
+					// Clone rule so modifications do not affect input service config.
+					rule := proto.Clone(constRule).(*ahpb.HttpRule)
+					glog.Info("Set http.rule: #+v", rule)
 					if method.GetOptions() == nil {
 						method.Options = &descpb.MethodOptions{}
 					}

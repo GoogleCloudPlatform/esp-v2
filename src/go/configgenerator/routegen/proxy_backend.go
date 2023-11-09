@@ -6,10 +6,10 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 // ProxyBackendGenerator is a RouteGenerator to configure routes to the local
@@ -17,6 +17,8 @@ import (
 type ProxyBackendGenerator struct {
 	HTTPPatterns             httppattern.MethodSlice
 	BackendClusterBySelector map[string]*BackendClusterSpecifier
+	DeadlineBySelector       map[string]*DeadlineSpecifier
+	MethodBySelector         map[string]*apipb.Method
 	BackendRouteGen          *helpers.BackendRouteGenerator
 
 	*NoopRouteGenerator
@@ -33,7 +35,7 @@ func NewProxyBackendRouteGenFromOPConfig(serviceConfig *servicepb.Service, opts 
 
 	httpPatterns, err := sortHttpPatterns(httpPatternsBySelector)
 	if err != nil {
-		return nil, fmt.Errorf("fail to sort http patterns: %v", err)
+		return nil, fmt.Errorf("fail to sort http patterns (%+v), got err: %v", httpPatternsBySelector, err)
 	}
 
 	backendClusterBySelector, err := ParseBackendClusterBySelectorFromOPConfig(serviceConfig, opts)
@@ -44,6 +46,8 @@ func NewProxyBackendRouteGenFromOPConfig(serviceConfig *servicepb.Service, opts 
 	return &ProxyBackendGenerator{
 		HTTPPatterns:             *httpPatterns,
 		BackendClusterBySelector: backendClusterBySelector,
+		DeadlineBySelector:       ParseDeadlineSelectorFromOPConfig(serviceConfig, opts),
+		MethodBySelector:         ParseMethodBySelectorFromOPConfig(serviceConfig),
 		BackendRouteGen:          helpers.NewBackendRouteGeneratorFromOPConfig(opts),
 	}, nil
 }
@@ -58,19 +62,48 @@ func (g *ProxyBackendGenerator) GenRouteConfig(filterGens []filtergen.FilterGene
 	var routes []*routepb.Route
 	for _, httpPattern := range g.HTTPPatterns {
 		selector := httpPattern.Operation
-		backendCluster := g.BackendClusterBySelector[selector]
-		if backendCluster == nil {
+
+		method, ok := g.MethodBySelector[selector]
+		if !ok {
+			return nil, fmt.Errorf("could not find any API method for selector %q", selector)
+		}
+
+		backendCluster, ok := g.BackendClusterBySelector[selector]
+		if !ok {
 			return nil, fmt.Errorf("could not find any backend cluster for selector %q", selector)
+		}
+
+		deadlineSpecifier, ok := g.DeadlineBySelector[selector]
+		if !ok {
+			deadlineSpecifier = &DeadlineSpecifier{
+				Deadline: 0,
+			}
 		}
 
 		methodCfg := &helpers.MethodCfg{
 			OperationName:      selector,
 			BackendClusterName: backendCluster.Name,
 			HostRewrite:        backendCluster.HostName,
-			// TODO(nareddyt): Set deadline and idle timeouts from backend rule
-			Deadline:    util.DefaultResponseDeadline,
-			HTTPPattern: httpPattern.Pattern,
+			Deadline:           deadlineSpecifier.Deadline,
+			IsStreaming:        method.GetRequestStreaming() || method.GetResponseStreaming(),
+			HTTPPattern:        httpPattern.Pattern,
 		}
+
+		if backendCluster.HTTPBackend != nil {
+			// Special support for HTTP backend.
+			isGrpc, err := httpPattern.IsGRPCPathForOperation(selector)
+			if err != nil {
+				return nil, err
+			}
+
+			if !isGrpc {
+				methodCfg.BackendClusterName = backendCluster.HTTPBackend.Name
+				methodCfg.HostRewrite = backendCluster.HTTPBackend.HostName
+				methodCfg.Deadline = deadlineSpecifier.HTTPBackendDeadline
+				methodCfg.IsStreaming = false
+			}
+		}
+
 		methodRoutes, err := g.BackendRouteGen.GenRoutesForMethod(methodCfg, filterGens)
 		if err != nil {
 			return nil, fmt.Errorf("fail to generate routes for operation %q with HTTP pattern %q: %v", selector, httpPattern.String(), err)
@@ -84,6 +117,25 @@ func (g *ProxyBackendGenerator) GenRouteConfig(filterGens []filtergen.FilterGene
 // AffectedHTTPPatterns implements interface RouteGenerator.
 func (g *ProxyBackendGenerator) AffectedHTTPPatterns() httppattern.MethodSlice {
 	return g.HTTPPatterns
+}
+
+// CloneConfigsBySelector clones all configs that apply to selector `from` so
+// that the same configs apply to selector `to`.
+func (g *ProxyBackendGenerator) CloneConfigsBySelector(from string, to string) {
+	cluster, ok := g.BackendClusterBySelector[from]
+	if ok {
+		g.BackendClusterBySelector[to] = cluster
+	}
+
+	deadline, ok := g.DeadlineBySelector[from]
+	if ok {
+		g.DeadlineBySelector[to] = deadline
+	}
+
+	method, ok := g.MethodBySelector[from]
+	if ok {
+		g.MethodBySelector[to] = method
+	}
 }
 
 // sortHttpPatterns implements go/esp-v2-route-match-ordering-implementation.

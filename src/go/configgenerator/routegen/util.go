@@ -2,6 +2,9 @@ package routegen
 
 import (
 	"fmt"
+	"math"
+	"strings"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
@@ -11,6 +14,8 @@ import (
 	"github.com/golang/glog"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
+	typepb "google.golang.org/genproto/protobuf/ptype"
 )
 
 // ParseSelectorsFromOPConfig returns a list of selectors in the config.
@@ -36,6 +41,10 @@ func ParseSelectorsFromOPConfig(serviceConfig *servicepb.Service, opts options.C
 type BackendClusterSpecifier struct {
 	Name     string
 	HostName string
+
+	// HTTPBackend is filled in if the backend rule has an associated HTTP backend.
+	// In this case, all HTTP routes must redirect to this backend.
+	HTTPBackend *BackendClusterSpecifier
 }
 
 // ParseBackendClusterBySelectorFromOPConfig parses the service config into a
@@ -58,6 +67,8 @@ func ParseBackendClusterBySelectorFromOPConfig(serviceConfig *servicepb.Service,
 	return backendClusterBySelector, nil
 }
 
+// First return value is normal backend cluster.
+// Second one is the HTTP backend (if supported).
 func determineBackendClusterForSelector(selector string, backendRuleBySelector map[string]*servicepb.BackendRule, serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (*BackendClusterSpecifier, error) {
 	localCluster := &BackendClusterSpecifier{
 		Name: clustergen.MakeLocalBackendClusterName(serviceConfig),
@@ -72,10 +83,35 @@ func determineBackendClusterForSelector(selector string, backendRuleBySelector m
 		return localCluster, nil
 	}
 
+	// Check for HTTP backend.
+	httpBackendRule := clustergen.IsHTTPBackendEnabled(backendRule)
+	if httpBackendRule != nil && !util.ShouldSkipOPDiscoveryAPI(selector, opts.AllowDiscoveryAPIs) {
+		if httpBackendRule.GetAddress() == "" {
+			return nil, fmt.Errorf("HTTP backend rule for selector %q has empty address", selector)
+		}
+
+		httpBackend, err := makeBackendClusterSpecifierFromRule(httpBackendRule)
+		if err != nil {
+			return nil, fmt.Errorf("fail while processing HTTP backend rule for selector %q: %v", selector, err)
+		}
+
+		localCluster.HTTPBackend = httpBackend
+	}
+
 	if backendRule.GetAddress() == "" {
 		return localCluster, nil
 	}
 
+	normalBackend, err := makeBackendClusterSpecifierFromRule(backendRule)
+	if err != nil {
+		return nil, fmt.Errorf("fail while processing normal (non-HTTP) backend rule for selector %q: %v", selector, err)
+	}
+	normalBackend.HTTPBackend = localCluster.HTTPBackend
+
+	return normalBackend, nil
+}
+
+func makeBackendClusterSpecifierFromRule(backendRule *servicepb.BackendRule) (*BackendClusterSpecifier, error) {
 	_, hostname, port, _, err := util.ParseURI(backendRule.GetAddress())
 	if err != nil {
 		return nil, fmt.Errorf("error parsing remote backend rule's address: %v", err)
@@ -114,11 +150,27 @@ func PrecomputeBackendRuleBySelectorFromOPConfig(serviceConfig *servicepb.Servic
 // Forked from `service_info.go: processHttpRule()`
 // and `service_info.go: addGrpcHttpRules()`
 func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (map[string][]*httppattern.Pattern, error) {
+	selectors := ParseSelectorsFromOPConfig(serviceConfig, opts)
 	httpRuleBySelector := PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig, opts)
-	httpPatternsBySelector := make(map[string][]*httppattern.Pattern)
+	selectorToJsonMappings, err := ComputeSnakeToJsonMapping(serviceConfig)
+	if err != nil {
+		return nil, fmt.Errorf("fail to compute snake_case to camelCase field mappings: %v", err)
+	}
 
-	for selector, rule := range httpRuleBySelector {
-		pattern, err := httpRuleToHTTPPattern(rule)
+	httpPatternsBySelector := make(map[string][]*httppattern.Pattern)
+	for _, selector := range selectors {
+		rule, ok := httpRuleBySelector[selector]
+		if !ok {
+			continue
+		}
+
+		snakeToJson, ok := selectorToJsonMappings[selector]
+		if !ok {
+			// No mappings is OK.
+			snakeToJson = make(map[string]string)
+		}
+
+		pattern, err := httpRuleToHTTPPattern(rule, snakeToJson)
 		if err != nil {
 			return nil, fmt.Errorf("fail to process http rule for operation %q: %v", selector, err)
 		}
@@ -129,7 +181,7 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 		// when interpret the http rules from the descriptor. Therefore, no need to
 		// check for nested additional_bindings.
 		for i, additionalRule := range rule.AdditionalBindings {
-			additionalPattern, err := httpRuleToHTTPPattern(additionalRule)
+			additionalPattern, err := httpRuleToHTTPPattern(additionalRule, snakeToJson)
 			if err != nil {
 				return nil, fmt.Errorf("fail to process http rule's additional_binding at index %d for operation %q: %v", i, selector, err)
 			}
@@ -174,7 +226,7 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 	return httpPatternsBySelector, nil
 }
 
-func httpRuleToHTTPPattern(rule *annotationspb.HttpRule) (*httppattern.Pattern, error) {
+func httpRuleToHTTPPattern(rule *annotationspb.HttpRule, snakeToJson map[string]string) (*httppattern.Pattern, error) {
 	parsedRule, err := parseHttpRule(rule)
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse http rule: %v", err)
@@ -184,6 +236,8 @@ func httpRuleToHTTPPattern(rule *annotationspb.HttpRule) (*httppattern.Pattern, 
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse http rule path into uri template: %v", err)
 	}
+
+	uriTemplate.ReplaceVariableField(snakeToJson)
 
 	return &httppattern.Pattern{
 		HttpMethod:  parsedRule.method,
@@ -247,4 +301,113 @@ func PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig *servicepb.Service, 
 	}
 
 	return httpRuleBySelector
+}
+
+type DeadlineSpecifier struct {
+	Deadline            time.Duration
+	HTTPBackendDeadline time.Duration
+}
+
+// ParseDeadlineSelectorFromOPConfig parses deadline by selector.
+// Only contains selectors that have backend rules.
+//
+// Forked from service_info.go::ruleToBackendInfo()
+func ParseDeadlineSelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) map[string]*DeadlineSpecifier {
+	deadlineBySelector := make(map[string]*DeadlineSpecifier)
+	for _, rule := range serviceConfig.GetBackend().GetRules() {
+		specifier := &DeadlineSpecifier{
+			Deadline: parseDeadline(rule),
+		}
+
+		// Check for HTTP backend.
+		httpBackendRule := clustergen.IsHTTPBackendEnabled(rule)
+		if httpBackendRule != nil && !util.ShouldSkipOPDiscoveryAPI(rule.GetSelector(), opts.AllowDiscoveryAPIs) {
+			specifier.HTTPBackendDeadline = parseDeadline(httpBackendRule)
+		}
+
+		deadlineBySelector[rule.GetSelector()] = specifier
+	}
+	return deadlineBySelector
+}
+
+func parseDeadline(rule *servicepb.BackendRule) time.Duration {
+	if rule.GetDeadline() <= 0 {
+		if rule.GetDeadline() < 0 {
+			glog.Warningf("Negative deadline of %v specified for method %v. "+
+				"Using default deadline %v instead.", rule.GetDeadline(), rule.GetSelector(), util.DefaultResponseDeadline)
+		}
+		// User did not specify it.
+		return 0
+	}
+
+	// The backend deadline from the BackendRule is a float64 that represents seconds.
+	// But float64 has a large precision, so we must explicitly lower the precision.
+	// For the purposes of a network proxy, round the deadline to the nearest millisecond.
+	deadlineMs := int64(math.Round(rule.GetDeadline() * 1000))
+	return time.Duration(deadlineMs) * time.Millisecond
+}
+
+// ParseMethodBySelectorFromOPConfig returns a map of selector to the API method.
+func ParseMethodBySelectorFromOPConfig(serviceConfig *servicepb.Service) map[string]*apipb.Method {
+	methodBySelector := make(map[string]*apipb.Method)
+
+	for _, api := range serviceConfig.GetApis() {
+		for _, method := range api.GetMethods() {
+			selector := filtergen.MethodToSelector(api, method)
+			methodBySelector[selector] = method
+		}
+	}
+
+	return methodBySelector
+}
+
+func ComputeTypesByTypeName(serviceConfig *servicepb.Service) map[string]*typepb.Type {
+	typesByTypeName := make(map[string]*typepb.Type)
+	for _, t := range serviceConfig.GetTypes() {
+		typesByTypeName[t.GetName()] = t
+	}
+	return typesByTypeName
+}
+
+// ComputeSnakeToJsonMapping computes a mapping from snake_case to camelCase
+// for variable field bindings. It is keyed by selector -> snake -> json.
+func ComputeSnakeToJsonMapping(serviceConfig *servicepb.Service) (map[string]map[string]string, error) {
+	typesByTypeName := ComputeTypesByTypeName(serviceConfig)
+	methodsBySelector := ParseMethodBySelectorFromOPConfig(serviceConfig)
+
+	selectorToMapping := make(map[string]map[string]string)
+	for selector, method := range methodsBySelector {
+		if !strings.HasPrefix(method.GetRequestTypeUrl(), util.TypeUrlPrefix) {
+			glog.Warningf("For operation (%v), request type name (%v) is in an unexpected format. Not processing it.", selector, method.GetRequestTypeUrl())
+			continue
+		}
+
+		requestTypeName := strings.TrimPrefix(method.GetRequestTypeUrl(), util.TypeUrlPrefix)
+		requestType, ok := typesByTypeName[requestTypeName]
+		if !ok {
+			glog.Warningf("error processing types for operation (%v): could not find type with name (%v)", selector, requestTypeName)
+			continue
+		}
+
+		snakeToJson := make(map[string]string)
+		for _, field := range requestType.GetFields() {
+			if field.Name != field.JsonName {
+				if prevJsonName, ok := snakeToJson[field.GetName()]; ok {
+					if prevJsonName != field.GetJsonName() {
+						// Duplicate snake name with mismatching JSON name.
+						// This will cause an error in path matcher variable bindings.
+						// Disallow it.
+						return nil, fmt.Errorf("while processing types for operation %q, detected two types with same snake_name (%v) but mistmatching json_name (%v, %v)", selector, field.GetName(), field.GetJsonName(), prevJsonName)
+					}
+				}
+
+				// Unique entry.
+				snakeToJson[field.GetName()] = field.GetJsonName()
+			}
+		}
+
+		selectorToMapping[selector] = snakeToJson
+	}
+
+	return selectorToMapping, nil
 }
