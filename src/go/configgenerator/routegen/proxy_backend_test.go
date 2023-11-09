@@ -1605,8 +1605,8 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
 						Name: "endpoints.examples.bookstore.Bookstore",
 						Methods: []*apipb.Method{
 							{
-								Name:             "Echo",
-								RequestStreaming: true,
+								Name:              "Echo",
+								ResponseStreaming: true,
 							},
 						},
 					},
@@ -1621,14 +1621,7 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
 						},
 					},
 				},
-				Backend: &servicepb.Backend{
-					Rules: []*servicepb.BackendRule{
-						{
-							Address:  "grpc://abc.com/api/",
-							Selector: "endpoints.examples.bookstore.Bookstore.Echo",
-						},
-					},
-				},
+				// Missing backend rules.
 			},
 			OptsIn: options.ConfigGeneratorOptions{},
 			WantHostConfig: `
@@ -1651,8 +1644,7 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
       },
       "name":"endpoints.examples.bookstore.Bookstore.Echo",
       "route":{
-        "cluster":"backend-cluster-abc.com:80",
-        "hostRewriteLiteral":"abc.com",
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
         "idleTimeout":"300s",
         "retryPolicy":{
           "numRetries":1,
@@ -1678,62 +1670,7 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
       },
       "name":"endpoints.examples.bookstore.Bookstore.Echo",
       "route":{
-        "cluster":"backend-cluster-abc.com:80",
-        "hostRewriteLiteral":"abc.com",
-        "idleTimeout":"300s",
-        "retryPolicy":{
-          "numRetries":1,
-          "retryOn":"reset,connect-failure,refused-stream"
-        },
-        "timeout":"0s"
-      }
-    },
-    {
-      "decorator":{
-        "operation":"ingress Echo"
-      },
-      "match":{
-        "headers":[
-          {
-            "name":":method",
-            "stringMatch":{
-              "exact":"POST"
-            }
-          }
-        ],
-        "path":"/endpoints.examples.bookstore.Bookstore/Echo"
-      },
-      "name":"endpoints.examples.bookstore.Bookstore.Echo",
-      "route":{
-        "cluster":"backend-cluster-abc.com:80",
-        "hostRewriteLiteral":"abc.com",
-        "idleTimeout":"300s",
-        "retryPolicy":{
-          "numRetries":1,
-          "retryOn":"reset,connect-failure,refused-stream"
-        },
-        "timeout":"0s"
-      }
-    },
-    {
-      "decorator":{
-        "operation":"ingress Echo"
-      },
-      "match":{
-        "headers":[
-          {
-            "name":":method",
-            "stringMatch":{
-              "exact":"POST"
-            }
-          }
-        ],
-        "path":"/endpoints.examples.bookstore.Bookstore/Echo/"
-      },
-      "name":"endpoints.examples.bookstore.Bookstore.Echo",
-      "route":{
-        "cluster":"backend-cluster-abc.com:80",
-        "hostRewriteLiteral":"abc.com",
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
         "idleTimeout":"300s",
         "retryPolicy":{
           "numRetries":1,

@@ -49,17 +49,17 @@ func (c *RouteDeadlineConfiger) CalcIdleTimeout(deadline time.Duration, isStream
 			// User configured deadline serves as the stream idle timeout.
 			idleTimeout = deadline
 		}
-		deadline = 0
-	} else {
-		if deadline <= 0 {
-			// If no deadline specified by the user, explicitly use default.
-			deadline = util.DefaultResponseDeadline
-		}
 
-		// Allow per-route response deadlines to override the global stream idle timeout.
-		idleTimeout = calculateStreamIdleTimeout(deadline, c.GlobalStreamIdleTimeout)
+		return 0, idleTimeout
 	}
 
+	if deadline <= 0 {
+		// If no deadline specified by the user, explicitly use default.
+		deadline = util.DefaultResponseDeadline
+	}
+
+	// Allow per-route response deadlines to override the global stream idle timeout.
+	idleTimeout = calculateStreamIdleTimeout(deadline, c.GlobalStreamIdleTimeout)
 	return deadline, idleTimeout
 }
 

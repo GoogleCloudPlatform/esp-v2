@@ -295,6 +295,7 @@ type DeadlineSpecifier struct {
 }
 
 // ParseDeadlineSelectorFromOPConfig parses deadline by selector.
+// Only contains selectors that have backend rules.
 //
 // Forked from service_info.go::ruleToBackendInfo()
 func ParseDeadlineSelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) map[string]*DeadlineSpecifier {
