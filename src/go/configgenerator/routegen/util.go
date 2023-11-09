@@ -3,6 +3,7 @@ package routegen
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/clustergen"
@@ -14,6 +15,7 @@ import (
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
+	typepb "google.golang.org/genproto/protobuf/ptype"
 )
 
 // ParseSelectorsFromOPConfig returns a list of selectors in the config.
@@ -150,7 +152,7 @@ func PrecomputeBackendRuleBySelectorFromOPConfig(serviceConfig *servicepb.Servic
 func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) (map[string][]*httppattern.Pattern, error) {
 	selectors := ParseSelectorsFromOPConfig(serviceConfig, opts)
 	httpRuleBySelector := PrecomputeHTTPRuleBySelectorFromOPConfig(serviceConfig, opts)
-	snakeToJson, err := ComputeSnakeToJsonMapping(serviceConfig)
+	selectorToJsonMappings, err := ComputeSnakeToJsonMapping(serviceConfig)
 	if err != nil {
 		return nil, fmt.Errorf("fail to compute snake_case to camelCase field mappings: %v", err)
 	}
@@ -160,6 +162,12 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 		rule, ok := httpRuleBySelector[selector]
 		if !ok {
 			continue
+		}
+
+		snakeToJson, ok := selectorToJsonMappings[selector]
+		if !ok {
+			// No mappings is OK.
+			snakeToJson = make(map[string]string)
 		}
 
 		pattern, err := httpRuleToHTTPPattern(rule, snakeToJson)
@@ -353,19 +361,43 @@ func ParseMethodBySelectorFromOPConfig(serviceConfig *servicepb.Service) map[str
 	return methodBySelector
 }
 
+func ComputeTypesByTypeName(serviceConfig *servicepb.Service) map[string]*typepb.Type {
+	typesByTypeName := make(map[string]*typepb.Type)
+	for _, t := range serviceConfig.GetTypes() {
+		typesByTypeName[t.GetName()] = t
+	}
+	return typesByTypeName
+}
+
 // ComputeSnakeToJsonMapping computes a mapping from snake_case to camelCase
-// for variable field bindings.
-func ComputeSnakeToJsonMapping(serviceConfig *servicepb.Service) (map[string]string, error) {
-	snakeToJson := make(map[string]string)
-	for _, typeProto := range serviceConfig.GetTypes() {
-		for _, field := range typeProto.GetFields() {
+// for variable field bindings. It is keyed by selector -> snake -> json.
+func ComputeSnakeToJsonMapping(serviceConfig *servicepb.Service) (map[string]map[string]string, error) {
+	typesByTypeName := ComputeTypesByTypeName(serviceConfig)
+	methodsBySelector := ParseMethodBySelectorFromOPConfig(serviceConfig)
+
+	selectorToMapping := make(map[string]map[string]string)
+	for selector, method := range methodsBySelector {
+		if !strings.HasPrefix(method.GetRequestTypeUrl(), util.TypeUrlPrefix) {
+			glog.Warningf("For operation (%v), request type name (%v) is in an unexpected format. Not processing it.", selector, method.GetRequestTypeUrl())
+			continue
+		}
+
+		requestTypeName := strings.TrimPrefix(method.GetRequestTypeUrl(), util.TypeUrlPrefix)
+		requestType, ok := typesByTypeName[requestTypeName]
+		if !ok {
+			glog.Warningf("error processing types for operation (%v): could not find type with name (%v)", selector, requestTypeName)
+			continue
+		}
+
+		snakeToJson := make(map[string]string)
+		for _, field := range requestType.GetFields() {
 			if field.Name != field.JsonName {
 				if prevJsonName, ok := snakeToJson[field.GetName()]; ok {
 					if prevJsonName != field.GetJsonName() {
 						// Duplicate snake name with mismatching JSON name.
 						// This will cause an error in path matcher variable bindings.
 						// Disallow it.
-						return nil, fmt.Errorf("detected two types with same snake_name (%v) but mistmatching json_name (%v, %v)", field.GetName(), field.GetJsonName(), prevJsonName)
+						return nil, fmt.Errorf("while processing types for operation %q, detected two types with same snake_name (%v) but mistmatching json_name (%v, %v)", selector, field.GetName(), field.GetJsonName(), prevJsonName)
 					}
 				}
 
@@ -373,7 +405,9 @@ func ComputeSnakeToJsonMapping(serviceConfig *servicepb.Service) (map[string]str
 				snakeToJson[field.GetName()] = field.GetJsonName()
 			}
 		}
+
+		selectorToMapping[selector] = snakeToJson
 	}
 
-	return snakeToJson, nil
+	return selectorToMapping, nil
 }

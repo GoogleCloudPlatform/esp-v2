@@ -11,6 +11,7 @@ import (
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	apipb "google.golang.org/genproto/protobuf/api"
+	ptypepb "google.golang.org/genproto/protobuf/ptype"
 )
 
 func TestParseSelectorsFromOPConfig(t *testing.T) {
@@ -915,6 +916,258 @@ func TestParseDeadlineSelectorFromOPConfig(t *testing.T) {
 			got := ParseDeadlineSelectorFromOPConfig(tc.serviceConfig, tc.opts)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("ParseDeadlineSelectorFromOPConfig(...) diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestComputeSnakeToJsonMapping(t *testing.T) {
+	testdata := []struct {
+		desc          string
+		serviceConfig *servicepb.Service
+		want          map[string]map[string]string
+	}{
+		{
+			desc: "Success for single type with multiple distinct fields",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "google.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name:           "CreateShelf",
+								RequestTypeUrl: "type.googleapis.com/CreateShelvesRequest",
+							},
+						},
+					},
+				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "x_y",
+								JsonName: "xY",
+							},
+						},
+					},
+				},
+			},
+			want: map[string]map[string]string{
+				"google.Bookstore.CreateShelf": {
+					"foo_bar": "fooBar",
+					"x_y":     "xY",
+				},
+			},
+		},
+		{
+			desc: "Success for single type with multiple duplicated fields, which can be de-duped",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "google.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name:           "CreateShelf",
+								RequestTypeUrl: "type.googleapis.com/CreateShelvesRequest",
+							},
+						},
+					},
+				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+				},
+			},
+			want: map[string]map[string]string{
+				"google.Bookstore.CreateShelf": {
+					"foo_bar": "fooBar",
+				},
+			},
+		},
+		{
+			desc: "Success for single type with multiple non-conflicting fields",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "google.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name:           "CreateShelf",
+								RequestTypeUrl: "type.googleapis.com/CreateShelvesRequest",
+							},
+						},
+					},
+				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{
+							{
+								// This one is ignored, its doesn't map anything.
+								Name:     "fooBar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+				},
+			},
+			want: map[string]map[string]string{
+				"google.Bookstore.CreateShelf": {
+					"foo_bar": "fooBar",
+				},
+			},
+		},
+		{
+			desc: "Success for multiple types with distinct fields",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "google.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name:           "CreateShelf",
+								RequestTypeUrl: "type.googleapis.com/CreateShelvesRequest",
+							},
+							{
+								Name:           "CreateBook",
+								RequestTypeUrl: "type.googleapis.com/CreateBookRequest",
+							},
+						},
+					},
+				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+							{
+								Name:     "x_y",
+								JsonName: "xY",
+							},
+						},
+					},
+					{
+						Name: "CreateBookRequest",
+						Fields: []*ptypepb.Field{
+							{
+								// This one will be ignored, the names match.
+								Name:     "baz",
+								JsonName: "baz",
+							},
+							{
+								Name:     "a_b",
+								JsonName: "aB",
+							},
+						},
+					},
+					{
+						Name: "google.protobuf.Empty",
+						// This will be ignored, no fields at all.
+						Fields: []*ptypepb.Field{},
+					},
+					{
+						// This will be ignored, it's not directly any operation's request type.
+						Name: "Library",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "lib_name",
+								JsonName: "libName",
+							},
+						},
+					},
+				},
+			},
+			want: map[string]map[string]string{
+				"google.Bookstore.CreateShelf": {
+					"foo_bar": "fooBar",
+					"x_y":     "xY",
+				},
+				"google.Bookstore.CreateBook": {
+					"a_b": "aB",
+				},
+			},
+		},
+		{
+			desc: "Success for multiple types with conflicting fields across types, but no conflicts within a single type",
+			serviceConfig: &servicepb.Service{
+				Apis: []*apipb.Api{
+					{
+						Name: "google.Bookstore",
+						Methods: []*apipb.Method{
+							{
+								Name:           "CreateShelf",
+								RequestTypeUrl: "type.googleapis.com/CreateShelvesRequest",
+							},
+							{
+								Name:           "CreateBook",
+								RequestTypeUrl: "type.googleapis.com/CreateBookRequest",
+							},
+						},
+					},
+				},
+				Types: []*ptypepb.Type{
+					{
+						Name: "CreateShelvesRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "foo-bar",
+							},
+						},
+					},
+					{
+						Name: "CreateBookRequest",
+						Fields: []*ptypepb.Field{
+							{
+								Name:     "foo_bar",
+								JsonName: "fooBar",
+							},
+						},
+					},
+				},
+			},
+			want: map[string]map[string]string{
+				"google.Bookstore.CreateShelf": {
+					"foo_bar": "foo-bar",
+				},
+				"google.Bookstore.CreateBook": {
+					"foo_bar": "fooBar",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testdata {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := ComputeSnakeToJsonMapping(tc.serviceConfig)
+			if err != nil {
+				t.Fatalf("ComputeSnakeToJsonMapping(...) got err: %v, want no err", err)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("ComputeSnakeToJsonMapping(...) diff (-want +got):\n%s", diff)
 			}
 		})
 	}
