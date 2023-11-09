@@ -6,7 +6,6 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen/helpers"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util/httppattern"
 	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
@@ -77,7 +76,7 @@ func (g *ProxyBackendGenerator) GenRouteConfig(filterGens []filtergen.FilterGene
 		deadlineSpecifier, ok := g.DeadlineBySelector[selector]
 		if !ok {
 			deadlineSpecifier = &DeadlineSpecifier{
-				Deadline: util.DefaultResponseDeadline,
+				Deadline: 0,
 			}
 		}
 

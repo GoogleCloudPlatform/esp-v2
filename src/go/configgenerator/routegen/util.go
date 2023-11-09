@@ -319,7 +319,7 @@ func parseDeadline(rule *servicepb.BackendRule) time.Duration {
 	if rule.GetDeadline() <= 0 {
 		if rule.GetDeadline() < 0 {
 			glog.Warningf("Negative deadline of %v specified for method %v. "+
-					"Using default deadline %v instead.", rule.GetDeadline(), rule.GetSelector(), util.DefaultResponseDeadline)
+				"Using default deadline %v instead.", rule.GetDeadline(), rule.GetSelector(), util.DefaultResponseDeadline)
 		}
 		// User did not specify it.
 		return 0
