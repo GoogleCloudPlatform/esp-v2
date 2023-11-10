@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen"
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -40,7 +41,13 @@ func MakeListeners(serviceInfo *sc.ServiceInfo, scParams filtergen.ServiceContro
 		return nil, err
 	}
 
-	listener, err := MakeListener(serviceInfo, filterGens, connectionManager)
+	routeGenFactories := MakeRouteGenFactories()
+	routeGens, err := routegen.NewRouteGeneratorsFromOPConfig(serviceInfo.ServiceConfig(), serviceInfo.Options, routeGenFactories)
+	if err != nil {
+		return nil, err
+	}
+
+	listener, err := MakeListener(serviceInfo, filterGens, connectionManager, routeGens)
 	if err != nil {
 		return nil, err
 	}
@@ -77,14 +84,16 @@ func MakeHttpFilterConfigs(filterGenerators []filtergen.FilterGenerator) ([]*hcm
 	return httpFilters, nil
 }
 
-// MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.FilterGenerator, connectionManagerGen filtergen.FilterGenerator) (*listenerpb.Listener, error) {
+// MakeListener provides a dynamic listener for Envoy.
+// Allows dependency injection of FilterGenerator and RouteGenerator for
+// internal use.
+func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.FilterGenerator, connectionManagerGen filtergen.FilterGenerator, routeGenerators []routegen.RouteGenerator) (*listenerpb.Listener, error) {
 	httpFilterConfigs, err := MakeHttpFilterConfigs(httpFilterGenerators)
 	if err != nil {
 		return nil, err
 	}
 
-	routeConfig, err := MakeRouteConfig(serviceInfo, httpFilterGenerators)
+	routeConfig, err := MakeRouteConfig(serviceInfo.Options, httpFilterGenerators, routeGenerators)
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}

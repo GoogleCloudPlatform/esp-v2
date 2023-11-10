@@ -20,7 +20,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -55,22 +54,7 @@ func MakeRouteGenFactories() []routegen.RouteGeneratorOPFactory {
 
 // MakeRouteConfig creates the virtual host and route table with the default
 // route generators for ESPv2.
-func MakeRouteConfig(serviceInfo *configinfo.ServiceInfo, filterGenerators []filtergen.FilterGenerator) (*routepb.RouteConfiguration, error) {
-	routeGenFactories := MakeRouteGenFactories()
-
-	routeGens, err := routegen.NewRouteGeneratorsFromOPConfig(serviceInfo.ServiceConfig(), serviceInfo.Options, routeGenFactories)
-	if err != nil {
-		return nil, err
-	}
-
-	return MakeRouteConfigWithGens(serviceInfo.Options, filterGenerators, routeGens)
-}
-
-// MakeRouteConfigWithGens is a version of MakeRouteConfig that allows injection
-// of different route generators that are not the default.
-//
-// Useful when extending the config generator internally.
-func MakeRouteConfigWithGens(opts options.ConfigGeneratorOptions, filterGenerators []filtergen.FilterGenerator, routeGenerators []routegen.RouteGenerator) (*routepb.RouteConfiguration, error) {
+func MakeRouteConfig(opts options.ConfigGeneratorOptions, filterGenerators []filtergen.FilterGenerator, routeGenerators []routegen.RouteGenerator) (*routepb.RouteConfiguration, error) {
 	host := &routepb.VirtualHost{
 		Name:    virtualHostName,
 		Domains: []string{"*"},

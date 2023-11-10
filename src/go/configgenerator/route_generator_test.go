@@ -21,10 +21,11 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
-	"github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	routepb "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	corspb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/cors/v3"
 	matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	"github.com/google/go-cmp/cmp"
@@ -36,6 +37,18 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
+
+// makeRouteConfigWithDefaults is a test helper to call MakeRouteConfig.
+func makeRouteConfigWithDefaults(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions, filterGens []filtergen.FilterGenerator) (*routepb.RouteConfiguration, error) {
+	routeGenFactories := MakeRouteGenFactories()
+
+	routeGens, err := routegen.NewRouteGeneratorsFromOPConfig(serviceConfig, opts, routeGenFactories)
+	if err != nil {
+		return nil, fmt.Errorf("fail to create route generators from factories: %v", err)
+	}
+
+	return MakeRouteConfig(opts, filterGens, routeGens)
+}
 
 func TestMakeRouteConfig(t *testing.T) {
 	testData := []struct {
@@ -2881,12 +2894,8 @@ func TestMakeRouteConfig(t *testing.T) {
 			opts.EnableOperationNameHeader = tc.enableOperationNameHeader
 			opts.DisallowColonInWildcardPathSegment = tc.disallowColonInWildcardPathSegment
 			opts.Healthz = tc.healthz
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, nil)
+			gotRoute, err := makeRouteConfigWithDefaults(tc.fakeServiceConfig, opts, nil)
 			if tc.wantedError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 					t.Fatalf("expected err: %v, got: %v", tc.wantedError, err)
@@ -3365,12 +3374,7 @@ func TestMakeRouteForBothGrpcAndHttpRoute_WithHttpBackend(t *testing.T) {
 			opts := options.DefaultConfigGeneratorOptions()
 			opts.BackendAddress = "grpc://grpc-backend:8080"
 
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.serviceConfig, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, nil)
+			gotRoute, err := makeRouteConfigWithDefaults(tc.serviceConfig, opts, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4732,18 +4736,13 @@ func TestMakeFallbackRoute(t *testing.T) {
 			opts.CorsExposeHeaders = tc.optsIn.CorsExposeHeaders
 			opts.CorsMaxAge = tc.optsIn.CorsMaxAge
 
-			fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(tc.fakeServiceConfig, opts)
-			if err != nil {
-				t.Fatal(err)
-			}
-
 			filterGenFactories := MakeHTTPFilterGenFactories(filtergen.ServiceControlOPFactoryParams{})
 			filterGens, err := NewFilterGeneratorsFromOPConfig(tc.fakeServiceConfig, opts, filterGenFactories)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, filterGens)
+			gotRoute, err := makeRouteConfigWithDefaults(tc.fakeServiceConfig, opts, filterGens)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -4862,18 +4861,13 @@ func TestMakeRouteConfigForCors(t *testing.T) {
 			opts.CorsAllowCredentials = tc.optsIn.CorsAllowCredentials
 
 			fakeServiceConfig := &servicepb.Service{}
-			fakeServiceInfo := &configinfo.ServiceInfo{
-				Name:    "test-api",
-				Options: opts,
-			}
-
 			filterGenFactories := MakeHTTPFilterGenFactories(filtergen.ServiceControlOPFactoryParams{})
 			filterGens, err := NewFilterGeneratorsFromOPConfig(fakeServiceConfig, opts, filterGenFactories)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			gotRoute, err := MakeRouteConfig(fakeServiceInfo, filterGens)
+			gotRoute, err := makeRouteConfigWithDefaults(fakeServiceConfig, opts, filterGens)
 			if err != nil {
 				t.Fatalf("MakeRouteConfig(...) got err %v, want no err", err)
 			}
@@ -4955,12 +4949,11 @@ func TestMakeRouteConfigForCors_BadInput(t *testing.T) {
 			opts.CorsExposeHeaders = tc.optsIn.CorsExposeHeaders
 			opts.CorsMaxAge = tc.optsIn.CorsMaxAge
 
-			fakeServiceInfo := &configinfo.ServiceInfo{
-				Name:    "test-api",
-				Options: opts,
+			fakeServiceConfig := &servicepb.Service{
+				Name: "test-api",
 			}
 
-			_, err := MakeRouteConfig(fakeServiceInfo, nil)
+			_, err := makeRouteConfigWithDefaults(fakeServiceConfig, opts, nil)
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
 			}
@@ -5077,10 +5070,11 @@ func TestHeadersToAdd(t *testing.T) {
 		opts.AddResponseHeaders = tc.addResponseHeaders
 		opts.AppendResponseHeaders = tc.appendResponseHeaders
 
-		gotRoute, err := MakeRouteConfig(&configinfo.ServiceInfo{
-			Name:    "test-api",
-			Options: opts,
-		}, nil)
+		fakeServiceConfig := &servicepb.Service{
+			Name: "test-api",
+		}
+
+		gotRoute, err := makeRouteConfigWithDefaults(fakeServiceConfig, opts, nil)
 		if tc.wantedError != "" {
 			if err == nil || !strings.Contains(err.Error(), tc.wantedError) {
 				t.Errorf("Test (%s): expected err: %v, got: %v", tc.desc, tc.wantedError, err)
