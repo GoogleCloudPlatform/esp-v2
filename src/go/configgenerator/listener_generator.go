@@ -18,7 +18,9 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/routegen"
 	sc "github.com/GoogleCloudPlatform/esp-v2/src/go/configinfo"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listenerpb "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
@@ -40,7 +42,13 @@ func MakeListeners(serviceInfo *sc.ServiceInfo, scParams filtergen.ServiceContro
 		return nil, err
 	}
 
-	listener, err := MakeListener(serviceInfo, filterGens, connectionManager)
+	routeGenFactories := MakeRouteGenFactories()
+	routeGens, err := routegen.NewRouteGeneratorsFromOPConfig(serviceInfo.ServiceConfig(), serviceInfo.Options, routeGenFactories)
+	if err != nil {
+		return nil, err
+	}
+
+	listener, err := MakeListener(serviceInfo.Options, filterGens, connectionManager, routeGens)
 	if err != nil {
 		return nil, err
 	}
@@ -77,14 +85,16 @@ func MakeHttpFilterConfigs(filterGenerators []filtergen.FilterGenerator) ([]*hcm
 	return httpFilters, nil
 }
 
-// MakeListener provides a dynamic listener for Envoy
-func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.FilterGenerator, connectionManagerGen filtergen.FilterGenerator) (*listenerpb.Listener, error) {
+// MakeListener provides a dynamic listener for Envoy.
+// Allows dependency injection of FilterGenerator and RouteGenerator for
+// internal use.
+func MakeListener(opts options.ConfigGeneratorOptions, httpFilterGenerators []filtergen.FilterGenerator, connectionManagerGen filtergen.FilterGenerator, routeGenerators []routegen.RouteGenerator) (*listenerpb.Listener, error) {
 	httpFilterConfigs, err := MakeHttpFilterConfigs(httpFilterGenerators)
 	if err != nil {
 		return nil, err
 	}
 
-	routeConfig, err := MakeRouteConfig(serviceInfo, httpFilterGenerators)
+	routeConfig, err := MakeRouteConfig(opts, httpFilterGenerators, routeGenerators)
 	if err != nil {
 		return nil, fmt.Errorf("makeHttpConnectionManagerRouteConfig got err: %s", err)
 	}
@@ -116,13 +126,13 @@ func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.
 		},
 	}
 
-	if serviceInfo.Options.SslServerCertPath != "" {
+	if opts.SslServerCertPath != "" {
 		transportSocket, err := util.CreateDownstreamTransportSocket(
-			serviceInfo.Options.SslServerCertPath,
-			serviceInfo.Options.SslServerRootCertPath,
-			serviceInfo.Options.SslMinimumProtocol,
-			serviceInfo.Options.SslMaximumProtocol,
-			serviceInfo.Options.SslServerCipherSuites,
+			opts.SslServerCertPath,
+			opts.SslServerRootCertPath,
+			opts.SslMinimumProtocol,
+			opts.SslMaximumProtocol,
+			opts.SslServerCipherSuites,
 		)
 		if err != nil {
 			return nil, err
@@ -135,9 +145,9 @@ func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.
 		Address: &corepb.Address{
 			Address: &corepb.Address_SocketAddress{
 				SocketAddress: &corepb.SocketAddress{
-					Address: serviceInfo.Options.ListenerAddress,
+					Address: opts.ListenerAddress,
 					PortSpecifier: &corepb.SocketAddress_PortValue{
-						PortValue: uint32(serviceInfo.Options.ListenerPort),
+						PortValue: uint32(opts.ListenerPort),
 					},
 				},
 			},
@@ -145,9 +155,9 @@ func MakeListener(serviceInfo *sc.ServiceInfo, httpFilterGenerators []filtergen.
 		FilterChains: []*listenerpb.FilterChain{filterChain},
 	}
 
-	if serviceInfo.Options.ConnectionBufferLimitBytes >= 0 {
+	if opts.ConnectionBufferLimitBytes >= 0 {
 		listener.PerConnectionBufferLimitBytes = &wrapperspb.UInt32Value{
-			Value: uint32(serviceInfo.Options.ConnectionBufferLimitBytes),
+			Value: uint32(opts.ConnectionBufferLimitBytes),
 		}
 	}
 
