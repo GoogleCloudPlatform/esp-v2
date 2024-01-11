@@ -26,7 +26,7 @@ filter_chains:
 See the
 [Config Manager documentation][Config Manager] for more details.
 
-[bootstrap]: https://www.envoyproxy.io/docs/envoy/latest/api-v2/config/bootstrap/v2/bootstrap.proto#config-bootstrap-v2-bootstrap
+[bootstrap]: https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/bootstrap/v3/bootstrap.proto#config-bootstrap-v2-bootstrap
 [Config Manager]: ../go/README.md
 [Envoy filter example]: https://github.com/envoyproxy/envoy-filter-example
 [Envoy Home]: https://www.envoyproxy.io/
