@@ -53,7 +53,13 @@ type MetadataFetcher struct {
 	// metadata updates and stores Metadata from GCE.
 	tokenInfo tokenInfo
 	// audience -> tokenInfo.
-	audToToken sync.Map
+	audToToken  sync.Map
+	retryConfig util.RetryConfig
+}
+
+var MetadataFetcherRetryConfig = util.RetryConfig{
+	RetryNum:      5,
+	RetryInterval: time.Millisecond * 20,
 }
 
 // Allows for unit tests to inject a mock constructor
@@ -63,8 +69,9 @@ var (
 			client: http.Client{
 				Timeout: opts.HttpRequestTimeout,
 			},
-			baseUrl: opts.MetadataURL,
-			timeNow: time.Now,
+			baseUrl:     opts.MetadataURL,
+			timeNow:     time.Now,
+			retryConfig: MetadataFetcherRetryConfig,
 		}
 	}
 )
@@ -76,7 +83,22 @@ func (mf *MetadataFetcher) createUrl(suffix string) string {
 func (mf *MetadataFetcher) getMetadata(path string) ([]byte, error) {
 	req, _ := http.NewRequest("GET", path, nil)
 	req.Header.Add("Metadata-Flavor", "Google")
-	resp, err := mf.client.Do(req)
+	var resp *http.Response
+	var err error
+
+	for attempts := 0; ; attempts++ {
+		resp, err = mf.client.Do(req)
+		if err == nil {
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return ioutil.ReadAll(resp.Body)
+			}
+		}
+		if attempts+1 == mf.retryConfig.RetryNum {
+			break
+		}
+		time.Sleep(mf.retryConfig.RetryInterval)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +135,6 @@ func (mf *MetadataFetcher) FetchAccessToken() (string, time.Duration, error) {
 	return mf.tokenInfo.accessToken, expires, nil
 }
 
-// TODO(kyuc): perhaps we need some retry logic and timeout?
 func (mf *MetadataFetcher) fetchMetadata(key string) (string, error) {
 	body, err := mf.getMetadata(mf.createUrl(key))
 	if err != nil {

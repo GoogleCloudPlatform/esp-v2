@@ -18,27 +18,30 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 // Creates a mock metadata fetcher and returns the mock instance
-func NewMockMetadataFetcher(baseUrl string, now time.Time) *MetadataFetcher {
+func NewMockMetadataFetcher(baseUrl string, now time.Time, retryConfig util.RetryConfig) *MetadataFetcher {
 	return &MetadataFetcher{
 		baseUrl: baseUrl,
 		timeNow: func() time.Time {
 			return now
 		},
+		retryConfig: retryConfig,
 	}
 }
 
 // Injects the mock constructor into source code. Mock metadata fetcher only created
 // when source code calls constructor.
-func SetMockMetadataFetcher(baseUrl string, now time.Time) {
+func SetMockMetadataFetcher(baseUrl string, now time.Time, retryConfig util.RetryConfig) {
 	NewMetadataFetcher = func(opts options.CommonOptions) *MetadataFetcher {
 		return &MetadataFetcher{
 			baseUrl: baseUrl,
 			timeNow: func() time.Time {
 				return now
 			},
+			retryConfig: retryConfig,
 		}
 	}
 }

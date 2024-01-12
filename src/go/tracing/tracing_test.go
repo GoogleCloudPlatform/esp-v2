@@ -37,6 +37,11 @@ const (
 	fakeStackdriverAddress = "dns:non-existent-address:2840"
 )
 
+var retryConfig = util.RetryConfig {
+	RetryNum:      3,
+	RetryInterval: time.Millisecond * 10,
+}
+
 // Tests the various combination of tracing flags on a non-GCP deployment
 func TestNonGcpOpenCensusConfig(t *testing.T) {
 	testData := []struct {
@@ -378,10 +383,10 @@ func runTest(_ *testing.T, shouldRunServer bool, f func()) {
 			util.ProjectIDPath: fakeMetadataProjectId,
 		})
 		defer mockMetadataServer.Close()
-		metadata.SetMockMetadataFetcher(mockMetadataServer.URL, time.Now())
+		metadata.SetMockMetadataFetcher(mockMetadataServer.URL, time.Now(), retryConfig)
 	} else {
 		// Point injected client to non-existent url
-		metadata.SetMockMetadataFetcher("non-existent-url-39874983", time.Now())
+		metadata.SetMockMetadataFetcher("non-existent-url-39874983", time.Now(), retryConfig)
 	}
 
 	f()
