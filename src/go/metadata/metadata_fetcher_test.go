@@ -38,17 +38,17 @@ const (
 	fakeProjectID        = "gcpproxy"
 )
 
-var retryConfig = util.RetryConfig {
-	RetryNum:      3,
-	RetryInterval: time.Millisecond * 10,
-}
-
 type testToken struct {
 	desc               string
 	curToken           string
 	curTokenTimeout    time.Time
 	expectedToken      string
 	expectedExpiration time.Duration
+}
+
+var metadataFetcherRetryConfig = util.RetryConfig{
+	RetryNum:      3,
+	RetryInterval: time.Millisecond * 10,
 }
 
 func TestFetchAccountTokenExpired(t *testing.T) {
@@ -58,7 +58,7 @@ func TestFetchAccountTokenExpired(t *testing.T) {
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
 
-	mf := NewMockMetadataFetcher(ts.GetURL(), fakeNow, retryConfig)
+	mf := NewMockMetadataFetcher(ts.GetURL(), fakeNow)
 
 	// Make sure the accessToken is empty before the test.
 	mf.tokenInfo.accessToken = ""
@@ -116,7 +116,7 @@ func TestFetchIdentityJWTTokenBasic(t *testing.T) {
 	// Get a time stamp and use it through out the test.
 	fakeNow := time.Now()
 
-	mf := NewMockMetadataFetcher(ts.GetURL(), fakeNow, retryConfig)
+	mf := NewMockMetadataFetcher(ts.GetURL(), fakeNow)
 
 	testData := []testToken{
 		{
@@ -176,7 +176,7 @@ func TestFetchServiceName(t *testing.T) {
 	ts := util.InitMockServer(fakeServiceName)
 	defer ts.Close()
 
-	mf := NewMockMetadataFetcher(ts.GetURL(), time.Now(), retryConfig)
+	mf := NewMockMetadataFetcher(ts.GetURL(), time.Now())
 
 	name, err := mf.FetchServiceName()
 	if err != nil {
@@ -191,7 +191,7 @@ func TestFetchConfigId(t *testing.T) {
 	ts := util.InitMockServer(fakeConfigID)
 	defer ts.Close()
 
-	mf := NewMockMetadataFetcher(ts.GetURL(), time.Now(), retryConfig)
+	mf := NewMockMetadataFetcher(ts.GetURL(), time.Now())
 
 	name, err := mf.FetchConfigId()
 	if err != nil {
@@ -304,7 +304,7 @@ func TestFetchGCPAttributes(t *testing.T) {
 
 		mockBaseUrl := ts.URL
 
-		mf := NewMockMetadataFetcher(mockBaseUrl, time.Now(), retryConfig)
+		mf := NewMockMetadataFetcher(mockBaseUrl, time.Now())
 
 		attrs, err := mf.FetchGCPAttributes()
 		// if error is thrown, response from fetching GCPAttributes should be nil
@@ -332,7 +332,13 @@ func TestFetchGCPAttributes_NoMetadataServer_FailsAllRetries(t *testing.T) {
 	ts := util.InitMockServerFromPathResp(nil)
 	defer ts.Close()
 
-	mf := NewMockMetadataFetcher("non-existing-url", time.Now(), retryConfig)
+	mf := &MetadataFetcher{
+		baseUrl: "non-existing-url",
+		timeNow: func() time.Time {
+			return time.Now()
+		},
+		retryConfig: metadataFetcherRetryConfig,
+	}
 	_, actualError := mf.FetchGCPAttributes()
 
 	expectedError := "Get \"non-existing-url\": unsupported protocol scheme \"\""

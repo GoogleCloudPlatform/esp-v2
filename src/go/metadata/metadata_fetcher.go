@@ -94,7 +94,7 @@ func (mf *MetadataFetcher) getMetadata(path string) ([]byte, error) {
 				return ioutil.ReadAll(resp.Body)
 			}
 		}
-		if attempts+1 == mf.retryConfig.RetryNum {
+		if attempts+1 >= mf.retryConfig.RetryNum {
 			break
 		}
 		time.Sleep(mf.retryConfig.RetryInterval)

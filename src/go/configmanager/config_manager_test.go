@@ -46,11 +46,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var retryConfig = util.RetryConfig {
-	RetryNum:      3,
-	RetryInterval: time.Millisecond * 10,
-}
-
 func TestFetchListeners(t *testing.T) {
 	var fakeConfig, fakeScReport, fakeRollouts safeData
 
@@ -624,7 +619,7 @@ func runTest(t *testing.T, fakeScReport, fakeRollouts, fakeConfig *safeData, opt
 	})
 	defer mockMetadataServer.Close()
 
-	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now(), retryConfig)
+	metadataFetcher := metadata.NewMockMetadataFetcher(mockMetadataServer.URL, time.Now())
 
 	opts.SslSidestreamClientRootCertsPath = platform.GetFilePath(platform.TestRootCaCerts)
 
