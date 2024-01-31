@@ -1,3 +1,7 @@
+# Release 2.47.0 30-01-2024
+
+- Fix the OpenSSL vulnerabilities by rebuilding the release
+
 # Release 2.46.0 17-10-2023
 
 - enable mitigation for CVE-2020-TBD (#862)
