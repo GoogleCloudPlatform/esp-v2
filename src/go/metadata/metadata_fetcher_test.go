@@ -46,6 +46,11 @@ type testToken struct {
 	expectedExpiration time.Duration
 }
 
+var metadataFetcherRetryConfig = util.RetryConfig{
+	RetryNum:      3,
+	RetryInterval: time.Millisecond * 10,
+}
+
 func TestFetchAccountTokenExpired(t *testing.T) {
 	ts := util.InitMockServer(fakeToken)
 	defer ts.Close()
@@ -280,11 +285,6 @@ func TestFetchGCPAttributes(t *testing.T) {
 			},
 		},
 		{
-			desc:                  "No MetadataServer",
-			mockedResp:            nil,
-			expectedGCPAttributes: nil,
-		},
-		{
 			desc: "When region path is supported, zone is ignored",
 			mockedResp: map[string]string{
 				util.ZonePath:   fakeZonePath,
@@ -297,19 +297,17 @@ func TestFetchGCPAttributes(t *testing.T) {
 		},
 	}
 
-	errorTmpl := "Test: %s\n  Expected: %v\n  Actual: %v"
+	errorTmpl := "Test: %s\n  Expected: %v\n  Actual: %v\n"
 	for _, tc := range testData {
 		ts := util.InitMockServerFromPathResp(tc.mockedResp)
 		defer ts.Close()
 
 		mockBaseUrl := ts.URL
-		if tc.mockedResp == nil {
-			mockBaseUrl = "non-existing-url-287924837"
-		}
 
 		mf := NewMockMetadataFetcher(mockBaseUrl, time.Now())
 
 		attrs, err := mf.FetchGCPAttributes()
+		// if error is thrown, response from fetching GCPAttributes should be nil
 		if err != nil && tc.expectedGCPAttributes != nil {
 			t.Errorf(errorTmpl, tc.desc, nil, err)
 			continue
@@ -328,6 +326,25 @@ func TestFetchGCPAttributes(t *testing.T) {
 		}
 	}
 
+}
+
+func TestFetchGCPAttributes_NoMetadataServer_FailsAllRetries(t *testing.T) {
+	ts := util.InitMockServerFromPathResp(nil)
+	defer ts.Close()
+
+	mf := &MetadataFetcher{
+		baseUrl: "non-existing-url",
+		timeNow: func() time.Time {
+			return time.Now()
+		},
+		retryConfig: metadataFetcherRetryConfig,
+	}
+	_, actualError := mf.FetchGCPAttributes()
+
+	expectedError := "Get \"non-existing-url\": unsupported protocol scheme \"\""
+	if actualError.Error() != expectedError {
+		t.Errorf("TestFetchGCPAttributes_NoMetadataServer:\n Expected error: %v\n Actual error: %v\n", expectedError, actualError)
+	}
 }
 
 func TestMetadataFetcherTimeout(t *testing.T) {
