@@ -157,9 +157,9 @@ func (u *UriTemplate) Regex(disallowColonInWildcardPathSegment bool) string {
 		regex.WriteByte('/')
 		switch segment {
 		case SingleWildCardKey:
-			regex.WriteString(singleWildcardReplacementRegex(disallowColonInWildcardPathSegment))
+			regex.WriteString(SingleWildcardReplacementRegex(disallowColonInWildcardPathSegment))
 		case DoubleWildCardKey:
-			regex.WriteString(doubleWildcardReplacementRegex(disallowColonInWildcardPathSegment))
+			regex.WriteString(DoubleWildcardReplacementRegex(disallowColonInWildcardPathSegment))
 		default:
 			// Segment provided by user may have regex special characters.
 			// Escape them to prevent incorrect path matching.
