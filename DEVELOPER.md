@@ -42,22 +42,30 @@ Later, we will walk through how to use Intellij and CLion IDEs for the project.
 
 ### Docker Mode Setup
 
-#### Run Docker Instance
+#### Clone [ESPv2 Repo]((https://github.com/GoogleCloudPlatform/esp-v2))
 
 ```
-docker run -ti --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ~/esp-v2:/esp-v2 gcr.io/cloudesf-testing/gcpproxy-prow:v20230712-v2.44.0-17-g94471d2e-master  /bin/bash
+git clone https://github.com/GoogleCloudPlatform/esp-v2.git
+```
+
+#### Find Latest Docker Image
+
+Go to [Setup yaml](https://github.com/GoogleCloudPlatform/oss-test-infra/blob/master/prow/prowjobs/GoogleCloudPlatform/esp-v2/esp-v2.yaml#L13), copy the latest working image link.
+
+For example: ***gcr.io/cloudesf-testing/gcpproxy-prow:v20230712-v2.44.0-17-g94471d2e-master***
+
+#### Run Docker Instance
+
+Run the following command by replacing the **latest_image_link** with the link found above.
+
+```
+docker run -ti --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ~/esp-v2:/esp-v2 ${latest_image_link}  /bin/bash
 ```
 
 #### Change Directory to `esp-v2`
 
 ```
 cd esp-v2
-```
-
-#### Clone [ESPv2 Repo]((https://github.com/GoogleCloudPlatform/esp-v2))
-
-```
-git clone https://github.com/GoogleCloudPlatform/esp-v2.git
 ```
 
 #### Add the following Git Config
