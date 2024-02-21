@@ -177,11 +177,14 @@ TEST_F(CheckResponseConverterTest, ConvertConsumerInfo) {
   CheckResponse_ConsumerInfo_ConsumerType type =
       CheckResponse_ConsumerInfo_ConsumerType::
           CheckResponse_ConsumerInfo_ConsumerType_PROJECT;
+  std::string apiKeyUid = "test_api_key_uid";
+
   response.mutable_check_info()->mutable_consumer_info()->set_project_number(
       consumer_number);
   response.mutable_check_info()->mutable_consumer_info()->set_type(type);
   response.mutable_check_info()->mutable_consumer_info()->set_consumer_number(
       consumer_number);
+  response.mutable_check_info()->set_api_key_uid(apiKeyUid);
 
   Status result = ConvertCheckResponse(response, "api_xxxx", &info);
 
@@ -189,6 +192,7 @@ TEST_F(CheckResponseConverterTest, ConvertConsumerInfo) {
   EXPECT_EQ(info.consumer_type,
             CheckResponse_ConsumerInfo_ConsumerType_Name(type));
   EXPECT_EQ(info.consumer_number, std::to_string(consumer_number));
+  EXPECT_EQ(info.api_key_uid, apiKeyUid);
 }
 
 }  // namespace
