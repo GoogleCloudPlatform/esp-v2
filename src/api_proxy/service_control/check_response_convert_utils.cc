@@ -51,7 +51,7 @@ Status ConvertCheckResponse(const CheckResponse& check_response,
   }
 
   if (!check_response.check_info().api_key_uid().empty()) {
-    check_response_info->api_key_uid = check_response.check_info().api_key_uid()
+    check_response_info->api_key_uid = check_response.check_info().api_key_uid();
   }
 
   if (check_response.check_errors().empty()) {
