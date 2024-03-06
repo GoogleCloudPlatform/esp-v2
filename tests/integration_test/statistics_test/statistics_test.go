@@ -138,7 +138,7 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 			quotaRespCode: 403,
 			wantCounters: utils.StatCounters{
 				"http.ingress_http.service_control.check.OK":                         1,
-				"http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED": 2,
+				"http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED": 3,
 			},
 		},
 	}
