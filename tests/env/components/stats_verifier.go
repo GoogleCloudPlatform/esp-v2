@@ -54,7 +54,7 @@ func (sv StatsVerifier) CheckExpectedCounters(wantCounters utils.StatCounters) e
 		if getCountVal, ok := counters[wantCounter]; !ok {
 			return fmt.Errorf("expected counter %v not in the got counters: %v", wantCounter, counters)
 		} else if getCountVal != wantCounterVal {
-			return fmt.Errorf("for counter %v, expected value %v:, got value: %v ", wantCounter, wantCounterVal, getCountVal)
+			return fmt.Errorf("for counter %v, expected value: %v, got value: %v ", wantCounter, wantCounterVal, getCountVal)
 		}
 	}
 
