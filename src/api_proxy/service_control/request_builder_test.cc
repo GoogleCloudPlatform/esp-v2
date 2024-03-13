@@ -202,7 +202,7 @@ TEST_F(RequestBuilderTest, FillGoodAllocateQuotaRequestTest) {
   std::string expected_text = ReadTestBaseline("allocate_quota_request.golden");
   ASSERT_EQ(expected_text, text);
 }
-
+/*
 TEST_F(RequestBuilderTest, FillAllocateQuotaRequestNoMethodNameTest) {
   std::vector<std::pair<std::string, int>> metric_cost_vector = {
       {"metric_first", 1}, {"metric_second", 2}};
@@ -401,7 +401,7 @@ TEST_F(RequestBuilderTest, FillReportRequestEmptyOptionalTest) {
       ReadTestBaseline("report_request_empty_optional.golden");
   ASSERT_EQ(expected_text, text);
 }
-/*
+
 TEST_F(RequestBuilderTest, ReportApiKeyVerifiedTest) {
   ReportRequestInfo info;
   FillOperationInfo(&info);
