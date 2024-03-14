@@ -15,7 +15,7 @@ echo "Cleaning up resources before ${LIMIT_DATE}"
 
 # Set the project id
 PROJECT_IDS=("cloudesf-testing" "cloud-api-proxy-testing")
-REGIONS=("us-central1" "us-east1")
+REGIONS=("us-central1" "us-east1" "us-west1")
 for PROJECT in ${PROJECT_IDS[@]}; do
   for REGION in ${REGIONS[@]}; do
     echo "cleaning up resources in ${REGION} for ${PROJECT}"
@@ -122,8 +122,7 @@ for PROJECT in ${PROJECT_IDS[@]}; do
 
     TARGET_POOLS=$(gcloud compute target-pools list \
         --regions="${REGION}" \
-        --filter="instances:(gke-e2e-cloud-run) \
-        AND creationTimestamp < ${LIMIT_DATE}" \
+        --filter="creationTimestamp < ${LIMIT_DATE}" \
         --format='value(name)')
 
     for targetpool in $TARGET_POOLS; do
@@ -137,6 +136,12 @@ for PROJECT in ${PROJECT_IDS[@]}; do
         --quiet
     done
     echo "Done cleaning up forwarding rules"
+
+    for targetpool in $TARGET_POOLS; do
+      echo "Deleting target pool ${targetpool}"
+      gcloud compute target-pools delete $targetpool --region $REGION --quiet
+    done
+    echo "Done cleaning up target pools"
 
     ### Endpoints Services ###
     ENDPOINTS_SERVICES=$(gcloud endpoints services list \
