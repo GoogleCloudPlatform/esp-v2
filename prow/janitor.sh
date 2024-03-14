@@ -18,6 +18,7 @@ PROJECT_IDS=("cloudesf-testing" "cloud-api-proxy-testing")
 REGIONS=("us-central1" "us-east1" "us-west1")
 for PROJECT in ${PROJECT_IDS[@]}; do
   for REGION in ${REGIONS[@]}; do
+    echo "-------------------------------------------"
     echo "cleaning up resources in ${REGION} for ${PROJECT}"
 
     gcloud config set project ${PROJECT}
@@ -137,11 +138,24 @@ for PROJECT in ${PROJECT_IDS[@]}; do
     done
     echo "Done cleaning up forwarding rules"
 
+    ### Target Pools ###
+    # Clean up all target pools that were created older than 1 day
     for targetpool in $TARGET_POOLS; do
       echo "Deleting target pool ${targetpool}"
       gcloud compute target-pools delete $targetpool --region $REGION --quiet
     done
     echo "Done cleaning up target pools"
+
+    ### Static IPs ###
+    # Clean up static IPs that are reserved 1 day ago but not in use.
+    STATIC_IPS=$(gcloud compute addresses list \
+      --filter="status=RESERVED AND creationTimestamp < ${LIMIT_DATE}" \
+      --regions="${REGION}" \
+      --format="value(name)")
+    for static_ip in $STATIC_IPS; do
+      gcloud compute addresses delete ${static_ip} --region $REGION --quiet
+    done
+    echo "Done cleaning up unused static ips"
 
     ### Endpoints Services ###
     ENDPOINTS_SERVICES=$(gcloud endpoints services list \
@@ -181,4 +195,5 @@ for PROJECT in ${PROJECT_IDS[@]}; do
     echo "Done cleaning up Endpoints Services"
   done
 done
-
+echo "-------------------------------------------"
+echo "All Completed!"
