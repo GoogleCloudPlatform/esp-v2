@@ -35,7 +35,7 @@ func NewProxyBackendRouteGenFromOPConfig(serviceConfig *servicepb.Service, opts 
 
 	httpPatterns, err := sortHttpPatterns(httpPatternsBySelector)
 	if err != nil {
-		return nil, fmt.Errorf("fail to sort http patterns (%+v), got err: %v", httpPatternsBySelector, err)
+		return nil, fmt.Errorf("fail to sort http patterns: %v", err)
 	}
 
 	backendClusterBySelector, err := ParseBackendClusterBySelectorFromOPConfig(serviceConfig, opts)
