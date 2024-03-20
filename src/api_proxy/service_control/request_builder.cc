@@ -378,12 +378,17 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
   // 1) If api_key is available and valid, set it as apiKey:API-KEY
   // 2) If auth issuer and audience both are available, set it as:
   //    jwtAuth:issuer=base64(issuer)&audience=base64(audience)
-  if (info.check_response_info.api_key_state ==
-      api_key::ApiKeyState::VERIFIED) {
-    ASSERT(!info.api_key.empty(),
-           "API Key must be set, otherwise consumer would not be verified.");
+  if (!info.api_key.empty()) {
     std::string credential_id("apikey:");
-    credential_id += info.api_key;
+    if (info.check_response_info.api_key_state == api_key::ApiKeyState::VERIFIED) {
+        if (info.check_response_info.api_key_uid.empty()) {
+            credential_id += info.api_key;
+        } else {
+            credential_id += info.check_response_info.api_key_uid;
+        }
+    } else {
+        credential_id += "UNKNOWN";
+    }
     (*labels)[l.name] = credential_id;
   } else if (!info.auth_issuer.empty()) {
     std::string base64_issuer = Envoy::Base64Url::encode(
