@@ -191,6 +191,18 @@ TEST_F(CheckResponseConverterTest, ConvertConsumerInfo) {
   EXPECT_EQ(info.consumer_number, std::to_string(consumer_number));
 }
 
+TEST_F(CheckResponseConverterTest,
+       ApiKeyUidCarriedInCheckResponseInfo) {
+  CheckResponseInfo info;
+  CheckResponse response;
+  response.mutable_check_info()->set_api_key_uid("fake_api_key_uid");
+
+  Status result = ConvertCheckResponse(response, "api_xxxx", &info);
+
+  EXPECT_EQ(StatusCode::kOk, result.code());
+  EXPECT_EQ(info.api_key_uid, "fake_api_key_uid");
+}
+
 }  // namespace
 }  // namespace service_control
 }  // namespace api_proxy
