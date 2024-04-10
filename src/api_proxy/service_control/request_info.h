@@ -176,6 +176,7 @@ struct CheckResponseInfo {
   // The trust level of the API Key that was checked.
   api_key::ApiKeyState api_key_state;
 
+  // The API key uid of the request.
   std::string api_key_uid;
 
   CheckResponseInfo() : api_key_state(api_key::ApiKeyState::NOT_CHECKED) {}

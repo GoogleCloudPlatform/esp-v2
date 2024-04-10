@@ -382,11 +382,9 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
       api_key::ApiKeyState::VERIFIED) {
     ASSERT(!info.api_key.empty(),
            "API Key must be set, otherwise consumer would not be verified.");
-    std::string credential_id("apikey:");
-    credential_id = credential_id
-           + (info.check_response_info.api_key_uid.empty() ? info.api_key
+    const char* kCredentialIdPrefix = "apikey:";
+    (*labels)[l.name] = absl::StrCat(kCredentialIdPrefix, info.check_response_info.api_key_uid.empty() ? info.api_key
                       : info.check_response_info.api_key_uid);
-    (*labels)[l.name] = credential_id;
   } else if (!info.auth_issuer.empty()) {
     std::string base64_issuer = Envoy::Base64Url::encode(
         info.auth_issuer.data(), info.auth_issuer.size());
