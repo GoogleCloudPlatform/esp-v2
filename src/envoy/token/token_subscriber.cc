@@ -57,7 +57,7 @@ TokenSubscriber::TokenSubscriber(
 void TokenSubscriber::init() {
   init_target_ = std::make_unique<Envoy::Init::TargetImpl>(
       debug_name_, [this] { refresh(); });
-  refresh_timer_ = context_.mainThreadDispatcher().createTimer(
+  refresh_timer_ = context_.serverFactoryContext().mainThreadDispatcher().createTimer(
       [this]() -> void { refresh(); });
 
   context_.initManager().add(*init_target_);
@@ -128,7 +128,7 @@ void TokenSubscriber::refresh() {
           .setSendXff(false);
 
   const auto thread_local_cluster =
-      context_.clusterManager().getThreadLocalCluster(token_cluster_);
+      context_.serverFactoryContext().clusterManager().getThreadLocalCluster(token_cluster_);
   if (thread_local_cluster) {
     active_request_ = thread_local_cluster->httpAsyncClient().send(
         std::move(message), *this, options);

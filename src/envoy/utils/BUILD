@@ -59,7 +59,7 @@ envoy_cc_library(
     deps = [
         "@envoy//source/common/common:empty_string",
         "@envoy//source/common/router:string_accessor_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
     ],
 )
 
@@ -82,7 +82,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "@envoy//source/common/common:empty_string",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
     ],
 )
 
@@ -91,6 +91,7 @@ envoy_cc_library(
     srcs = ["rc_detail_utils.cc"],
     hdrs = ["rc_detail_utils.h"],
     repository = "@envoy",
+    deps = ["@com_google_absl//absl/strings"],
 )
 
 envoy_cc_test(

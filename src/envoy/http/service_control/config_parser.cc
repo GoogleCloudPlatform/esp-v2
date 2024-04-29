@@ -40,17 +40,17 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
     service_map_.emplace(service.service_name(), ServiceContextPtr(srv_ctx));
   }
   if (first_srv_ctx == nullptr) {
-    throw Envoy::ProtoValidationException("Empty services", config_);
+    Envoy::ProtoExceptionUtil::throwProtoValidationException("Empty services", config_);
   }
 
   if (service_map_.size() < static_cast<size_t>(config_.services_size())) {
-    throw Envoy::ProtoValidationException("Duplicated service names", config_);
+    Envoy::ProtoExceptionUtil::throwProtoValidationException("Duplicated service names", config_);
   }
 
   for (const auto& requirement : config_.requirements()) {
     const auto service_it = service_map_.find(requirement.service_name());
     if (service_it == service_map_.end()) {
-      throw Envoy::ProtoValidationException("Invalid service name",
+      Envoy::ProtoExceptionUtil::throwProtoValidationException("Invalid service name",
                                             requirement);
     }
     requirements_map_.emplace(requirement.operation_name(),
@@ -60,7 +60,7 @@ FilterConfigParser::FilterConfigParser(const FilterConfig& config,
 
   if (requirements_map_.size() <
       static_cast<size_t>(config_.requirements_size())) {
-    throw Envoy::ProtoValidationException("Duplicated operation names",
+    Envoy::ProtoExceptionUtil::throwProtoValidationException("Duplicated operation names",
                                           config_);
   }
 
