@@ -72,7 +72,8 @@ DEFINE_PROTO_FUZZER(
   NiceMock<MockFactoryContext> context;
   NiceMock<Envoy::Upstream::MockThreadLocalCluster> thread_local_cluster;
   NiceMock<Envoy::Http::MockAsyncClientRequest> request(
-      &context.cluster_manager_.thread_local_cluster_.async_client_);
+      &context.server_factory_context_.cluster_manager_.thread_local_cluster_
+           .async_client_);
   NiceMock<Envoy::Http::MockStreamDecoderFilterCallbacks>
       mock_decoder_callbacks;
 
@@ -82,7 +83,7 @@ DEFINE_PROTO_FUZZER(
 
   // Callback for token subscriber to start.
   Envoy::Event::TimerCb onReadyCallback;
-  EXPECT_CALL(context.dispatcher_, createTimer_(_))
+  EXPECT_CALL(context.server_factory_context_.dispatcher_, createTimer_(_))
       .WillRepeatedly(
           Invoke([&onReadyCallback](const Envoy::Event::TimerCb& cb) {
             ENVOY_LOG_MISC(trace, "Mocking dispatcher createTimer");
@@ -92,7 +93,8 @@ DEFINE_PROTO_FUZZER(
 
   // Mock the http async client.
   int resp_num = 0;
-  EXPECT_CALL(context.cluster_manager_, getThreadLocalCluster(_))
+  EXPECT_CALL(context.server_factory_context_.cluster_manager_,
+              getThreadLocalCluster(_))
       .WillRepeatedly(Return(&thread_local_cluster));
   EXPECT_CALL(thread_local_cluster.async_client_, send_(_, _, _))
       .WillRepeatedly(Invoke([&request, &input, &resp_num](

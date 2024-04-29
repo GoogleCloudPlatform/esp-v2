@@ -51,11 +51,8 @@ class ServiceControlFilter
       Envoy::Http::RequestTrailerMap&) override;
 
   // Called when the request is completed.
-  void log(const Envoy::Http::RequestHeaderMap* request_headers,
-           const Envoy::Http::ResponseHeaderMap* response_headers,
-           const Envoy::Http::ResponseTrailerMap* response_trailers,
-           const Envoy::StreamInfo::StreamInfo& stream_info,
-           Envoy::AccessLog::AccessLogType access_log_type) override;
+  void log(const Envoy::Formatter::HttpFormatterContext& context,
+           const Envoy::StreamInfo::StreamInfo& stream_info) override;
 
   // For Handler::CheckDoneCallback, called when callCheck() is done
   void onCheckDone(const absl::Status& status,

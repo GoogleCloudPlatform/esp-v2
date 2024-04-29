@@ -62,22 +62,24 @@ inline int64_t convertNsToMs(std::chrono::nanoseconds ns) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(ns).count();
 }
 
-bool extractAPIKeyFromQuery(const Envoy::Http::RequestHeaderMap& headers,
-                            const std::string& query, bool& were_params_parsed,
-                            Envoy::Http::Utility::QueryParams& parsed_params,
-                            std::string& api_key) {
+bool extractAPIKeyFromQuery(
+    const Envoy::Http::RequestHeaderMap& headers, const std::string& query,
+    bool& were_params_parsed,
+    Envoy::Http::Utility::QueryParamsMulti& parsed_params,
+    std::string& api_key) {
   if (!were_params_parsed) {
     if (headers.Path() == nullptr) {
       return false;
     }
-    parsed_params = Envoy::Http::Utility::parseQueryString(
+    parsed_params = Envoy::Http::Utility::QueryParamsMulti::parseQueryString(
         headers.Path()->value().getStringView());
     were_params_parsed = true;
   }
 
-  const auto& it = parsed_params.find(query);
-  if (it != parsed_params.end()) {
-    api_key = it->second;
+  std::optional<std::string> query_param_value =
+      parsed_params.getFirstValue(query);
+  if (query_param_value.has_value()) {
+    api_key = *query_param_value;
     return true;
   }
   return false;
@@ -309,7 +311,7 @@ bool extractAPIKey(
   // If checking multiple headers, cache the parameters so they are only parsed
   // once
   bool were_params_parsed{false};
-  Envoy::Http::Utility::QueryParams parsed_params;
+  Envoy::Http::Utility::QueryParamsMulti parsed_params;
 
   for (const auto& location : locations) {
     switch (location.key_case()) {

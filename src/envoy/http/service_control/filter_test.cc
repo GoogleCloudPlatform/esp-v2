@@ -91,8 +91,7 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersMissingHeaders) {
 
   // Filter should reject this request
   EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
-              setResponseFlag(
-                  Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService))
+              setResponseFlag(Envoy::StreamInfo::UnauthorizedExternalService))
       .Times(2);
 
   EXPECT_CALL(mock_decoder_callbacks_,
@@ -146,10 +145,8 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersSyncBadStatus) {
                              "service_control_check_error{API_KEY_INVALID}");
       }));
 
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(Envoy::StreamInfo::UnauthorizedExternalService));
   EXPECT_CALL(
       mock_decoder_callbacks_,
       sendLocalReply(Envoy::Http::Code::Unauthorized, "UNAUTHENTICATED: test",
@@ -202,10 +199,8 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
             filter_->decodeHeaders(req_headers_, true));
 
   // Filter should reject this request
-  EXPECT_CALL(
-      mock_decoder_callbacks_.stream_info_,
-      setResponseFlag(
-          Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService));
+  EXPECT_CALL(mock_decoder_callbacks_.stream_info_,
+              setResponseFlag(Envoy::StreamInfo::UnauthorizedExternalService));
 
   EXPECT_CALL(
       mock_decoder_callbacks_,
@@ -215,22 +210,12 @@ TEST_F(ServiceControlFilterTest, DecodeHeadersAsyncBadStatus) {
       kBadStatus, "service_control_check_error{API_KEY_INVALID}");
 }
 
-TEST_F(ServiceControlFilterTest, LogWithoutHandlerOrHeaders) {
-  // Test: If no handler and no headers, a handler is not created
-  EXPECT_CALL(mock_handler_factory_, createHandler(_, _, _)).Times(0);
-
-  // Filter has no handler. If it tries to callReport, it will seg fault
-  filter_->log(nullptr, &resp_headers_, &resp_trailer_,
-               mock_decoder_callbacks_.stream_info_,
-               Envoy::AccessLog::AccessLogType::NotSet);
-}
-
 TEST_F(ServiceControlFilterTest, LogWithoutHandler) {
   // Test: When a Filter has no Handler yet, another is created for log()
   EXPECT_CALL(*mock_handler_, callReport(_, _, _, _));
-  filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
-               mock_decoder_callbacks_.stream_info_,
-               Envoy::AccessLog::AccessLogType::NotSet);
+  Envoy::Formatter::HttpFormatterContext context(&req_headers_, &resp_headers_,
+                                                 &resp_trailer_);
+  filter_->log(context, mock_decoder_callbacks_.stream_info_);
 }
 
 TEST_F(ServiceControlFilterTest, LogWithHandler) {
@@ -240,9 +225,9 @@ TEST_F(ServiceControlFilterTest, LogWithHandler) {
 
   EXPECT_CALL(mock_handler_factory_, createHandler(_, _, _)).Times(0);
   EXPECT_CALL(*mock_handler_, callReport(_, _, _, _));
-  filter_->log(&req_headers_, &resp_headers_, &resp_trailer_,
-               mock_decoder_callbacks_.stream_info_,
-               Envoy::AccessLog::AccessLogType::NotSet);
+  Envoy::Formatter::HttpFormatterContext context(&req_headers_, &resp_headers_,
+                                                 &resp_trailer_);
+  filter_->log(context, mock_decoder_callbacks_.stream_info_);
 }
 
 TEST_F(ServiceControlFilterTest, DecodeHelpersWhileStopped) {

@@ -2,7 +2,7 @@
 
 # Required by envoy and its tests
 build --define=grpc_no_ares=true
-build --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
+build --cxxopt=-std=c++20 --host_cxxopt=-std=c++20
 
 # We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
