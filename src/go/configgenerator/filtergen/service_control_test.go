@@ -240,6 +240,7 @@ func TestNewServiceControlFilterGensFromOPConfig_GenConfig(t *testing.T) {
 					ScCheckTimeoutMs:              5020,
 					ScQuotaRetries:                8,
 					ServiceControlNetworkFailOpen: false,
+					ServiceControlReportApiKeyUid: false,
 				},
 				WantFilterConfigs: []string{`
 {

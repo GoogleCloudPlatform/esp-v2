@@ -384,8 +384,16 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
       api_key::ApiKeyState::VERIFIED) {
     ASSERT(!info.api_key.empty(),
            "API Key must be set, otherwise consumer would not be verified.");
-    (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, info.check_response_info.api_key_uid.empty() ? info.api_key
+    if (info.report_api_key_uid) {
+      if (!info.check_response_info.error.name.empty()) {
+        (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, "UNKNOWN");
+      } else {
+        (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, info.check_response_info.api_key_uid.empty() ? info.api_key
                       : info.check_response_info.api_key_uid);
+      }
+    } else {
+      (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, info.api_key);
+    }
   } else if (!info.auth_issuer.empty()) {
     std::string base64_issuer = Envoy::Base64Url::encode(
         info.auth_issuer.data(), info.auth_issuer.size());

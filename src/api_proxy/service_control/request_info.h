@@ -273,13 +273,17 @@ struct ReportRequestInfo : public OperationInfo {
   // Trace id (in hex) the request is tied to.
   std::string trace_id;
 
+  // If true, reports api key uid instead of api key.
+  bool report_api_key_uid;
+
   ReportRequestInfo()
       : http_response_code(0),
         request_size(-1),
         response_size(-1),
         frontend_protocol(protocol::UNKNOWN),
         backend_protocol(protocol::UNKNOWN),
-        compute_platform("UNKNOWN(ESPv2)") {}
+        compute_platform("UNKNOWN(ESPv2)"),
+        report_api_key_uid(false) {}
 };
 
 }  // namespace service_control

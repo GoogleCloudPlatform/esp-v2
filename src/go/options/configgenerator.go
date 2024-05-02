@@ -115,6 +115,7 @@ type ConfigGeneratorOptions struct {
 	MergeSlashesInPath            bool
 	DisallowEscapedSlashesInPath  bool
 	ServiceControlNetworkFailOpen bool
+	ServiceControlReportApiKeyUid bool
 	EnableGrpcForHttp1            bool
 	ConnectionBufferLimitBytes    int
 
@@ -194,6 +195,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		MergeSlashesInPath:                      true,
 		DisallowEscapedSlashesInPath:            false,
 		ServiceControlNetworkFailOpen:           true,
+		ServiceControlReportApiKeyUid:           false,
 		EnableGrpcForHttp1:                      true,
 		ConnectionBufferLimitBytes:              -1,
 		ServiceManagementURL:                    "https://servicemanagement.googleapis.com",

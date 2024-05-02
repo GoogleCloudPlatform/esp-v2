@@ -77,6 +77,7 @@ type ServiceControlGenerator struct {
 	MethodRequirements []*scpb.Requirement
 	CallingConfig      *scpb.ServiceControlCallingConfig
 	GCPAttributes      *scpb.GcpAttributes
+	ReportApiKeyUid    bool
 
 	NoopFilterGenerator
 }
@@ -140,6 +141,7 @@ func NewServiceControlFilterGensFromOPConfig(serviceConfig *confpb.Service, opts
 			MethodRequirements:          requirements,
 			CallingConfig:               MakeSCCallingConfigFromOPConfig(opts),
 			GCPAttributes:               params.GCPAttributes,
+			ReportApiKeyUid:             opts.ServiceControlReportApiKeyUid,
 		},
 	}, nil
 }
@@ -208,6 +210,7 @@ func (g *ServiceControlGenerator) GenFilterConfig() (proto.Message, error) {
 		},
 		GeneratedHeaderPrefix: g.GeneratedHeaderPrefix,
 		Requirements:          g.MethodRequirements,
+		ReportApiKeyUid:       g.ReportApiKeyUid,
 	}
 
 	accessTokenConfig := g.AccessToken.MakeAccessTokenConfig()
@@ -248,6 +251,7 @@ func (g *ServiceControlGenerator) GenFilterConfig() (proto.Message, error) {
 	}
 
 	filterConfig.DepErrorBehavior = depErrorBehaviorEnum
+
 	return filterConfig, nil
 }
 

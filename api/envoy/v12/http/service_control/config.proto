@@ -147,6 +147,9 @@ message FilterConfig {
   // How the filter config will handle failures when fetching access tokens.
   espv2.api.envoy.v12.http.common.DependencyErrorBehavior dep_error_behavior =
       10;
+
+  // If true, reports api_key_uid instead of api_key in ServiceControl report.
+  bool report_api_key_uid = 11;
 }
 
 message PerRouteFilterConfig {
