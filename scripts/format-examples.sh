@@ -23,12 +23,12 @@ shopt -s globstar
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 for filename in $ROOT/examples/**/*.json; do
-    echo "Formatting $filename"
-    TEMP_FILE=$(mktemp)
+  echo "Formatting $filename"
+  TEMP_FILE=$(mktemp)
 
-    # jq is a common bash utility used to format/sort/filter json.
-    # Sort keys (-S) for all fields (.) in the input file and output to the temp file.
-    jq -S '.' "$filename" > "$TEMP_FILE"
-    cp -f "$TEMP_FILE" "$filename"
-    rm "$TEMP_FILE"
+  # jq is a common bash utility used to format/sort/filter json.
+  # Sort keys (-S) for all fields (.) in the input file and output to the temp file.
+  jq -S '.' "$filename" > "$TEMP_FILE"
+  cp -f "$TEMP_FILE" "$filename"
+  rm "$TEMP_FILE"
 done

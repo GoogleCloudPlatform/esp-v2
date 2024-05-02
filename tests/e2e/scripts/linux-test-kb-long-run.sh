@@ -99,7 +99,7 @@ while true; do
       --api_key=${API_KEY}  \
       --auth_token=${JWT_TOKEN}  \
       --allow_unverified_cert=true \
-      --host_header="${HOST_HEADER}" || ((BOOKSTORE_FAILURES++)))
+    --host_header="${HOST_HEADER}" || ((BOOKSTORE_FAILURES++)))
 
   echo "Starting bookstore API Key restriction test at $(date)."
   (set -x;
@@ -108,7 +108,7 @@ while true; do
       --allow_unverified_cert=true  \
       --key_restriction_tests=${ROOT}/tests/e2e/testdata/bookstore/key_restriction_test.json.template  \
       --key_restriction_keys_file=${API_RESTRICTION_KEYS_FILE} \
-      --host_header="${HOST_HEADER}")
+    --host_header="${HOST_HEADER}")
 
   #TODO(taoxuy): b/148950591 enable stress test for cloud run on anthos
   if [[ -z ${HOST_HEADER} ]]; then

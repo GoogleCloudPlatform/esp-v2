@@ -33,7 +33,7 @@ END_USAGE
 
 while getopts :r: arg; do
   case ${arg} in
-    *) usage "Invalid option: -${OPTARG}";;
+    *) usage "Invalid option: -${OPTARG}" ;;
   esac
 done
 

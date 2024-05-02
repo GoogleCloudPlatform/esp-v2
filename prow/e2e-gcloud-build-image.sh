@@ -73,28 +73,28 @@ echo "=== Test 1: Specify a fully qualified version. ==="
 EXPECTED_IMAGE_NAME=$(formImageName "2.7.0")
 cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
-    -s "${SERVICE_NAME}" \
-    -c "${CONFIG_ID}" \
-    -p "${PROJECT_NAME}" \
-    -v "2.7.0"
+  -s "${SERVICE_NAME}" \
+  -c "${CONFIG_ID}" \
+  -p "${PROJECT_NAME}" \
+  -v "2.7.0"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 2: Specify a minor version. ==="
 EXPECTED_IMAGE_NAME=$(formImageName "2.4.0")
 cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
-    -s "${SERVICE_NAME}" \
-    -c "${CONFIG_ID}" \
-    -p "${PROJECT_NAME}" \
-    -v "2.4"
+  -s "${SERVICE_NAME}" \
+  -c "${CONFIG_ID}" \
+  -p "${PROJECT_NAME}" \
+  -v "2.4"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 3: Sepcify an invalid version fails. ==="
 if ${ROOT}/docker/serverless/gcloud_build_image \
-    -s "${SERVICE_NAME}" \
-    -c "${CONFIG_ID}" \
-    -p "${PROJECT_NAME}" \
-    -v "2.11.47"; then
+  -s "${SERVICE_NAME}" \
+  -c "${CONFIG_ID}" \
+  -p "${PROJECT_NAME}" \
+  -v "2.11.47"; then
   error_exit "Script should fail for invalid version."
 else
   echo "Script failed as expected."
@@ -104,21 +104,21 @@ echo "=== Test 4: Specify a custom image. ==="
 EXPECTED_IMAGE_NAME=$(formImageName "custom")
 cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
-    -s "${SERVICE_NAME}" \
-    -c "${CONFIG_ID}" \
-    -p "${PROJECT_NAME}" \
-    -i "gcr.io/cloudesf-testing/apiproxy-serverless:gcloud-build-image-test"
+  -s "${SERVICE_NAME}" \
+  -c "${CONFIG_ID}" \
+  -p "${PROJECT_NAME}" \
+  -i "gcr.io/cloudesf-testing/apiproxy-serverless:gcloud-build-image-test"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 5: Specify a GAR_REPOSITORY_IMAGE_PREFIX with -g flag. ==="
 EXPECTED_IMAGE_NAME=$(formGarImageName "2.30.3")
 cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
-    -s "${SERVICE_NAME}" \
-    -c "${CONFIG_ID}" \
-    -p "${PROJECT_NAME}" \
-    -v "2.30.3" \
-    -g "${GAR_REPOSITORY_IMAGE_PREFIX}"
+  -s "${SERVICE_NAME}" \
+  -c "${CONFIG_ID}" \
+  -p "${PROJECT_NAME}" \
+  -v "2.30.3" \
+  -g "${GAR_REPOSITORY_IMAGE_PREFIX}"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 6: When no ESP version is specified, the script uses the latest ESPv2 release. ==="
@@ -127,7 +127,7 @@ echo "=== Test 6: When no ESP version is specified, the script uses the latest E
 # That means we don't have a reliable way of checking if the output is correct.
 # So just test the script passes, and allow the developer to manually verify the output.
 ${ROOT}/docker/serverless/gcloud_build_image \
-    -s "${SERVICE_NAME}" \
-    -c "${CONFIG_ID}" \
-    -p "${PROJECT_NAME}"
+  -s "${SERVICE_NAME}" \
+  -c "${CONFIG_ID}" \
+  -p "${PROJECT_NAME}"
 echo ">>> WARNING: For the test above, manually verify the output version of the image is expected."

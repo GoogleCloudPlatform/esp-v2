@@ -4,11 +4,11 @@ set -e
 
 # Using GTEST_SHUFFLE here to workaround https://github.com/envoyproxy/envoy/issues/10108
 BAZEL_USE_LLVM_NATIVE_COVERAGE=1 GCOV=llvm-profdata-8 CC=clang-8 CXX=clang++-8 \
-    bazel coverage ${BAZEL_BUILD_OPTIONS} \
-    -c fastbuild --copt=-DNDEBUG --instrumentation_filter="//src/..." \
-    --test_timeout=2000 --cxxopt="-DENVOY_CONFIG_COVERAGE=1" --test_output=errors \
-    --test_arg="--log-path /dev/null" --test_arg="-l trace" --test_env=HEAPCHECK= \
-    --test_env=GTEST_SHUFFLE=1 --flaky_test_attempts=5 ${TARGET}
+  bazel coverage ${BAZEL_BUILD_OPTIONS} \
+  -c fastbuild --copt=-DNDEBUG --instrumentation_filter="//src/..." \
+  --test_timeout=2000 --cxxopt="-DENVOY_CONFIG_COVERAGE=1" --test_output=errors \
+  --test_arg="--log-path /dev/null" --test_arg="-l trace" --test_env=HEAPCHECK= \
+  --test_env=GTEST_SHUFFLE=1 --flaky_test_attempts=5 ${TARGET}
 
 COVERAGE_DIR="${SRCDIR}"/generated/${TARGET_PATH}
 mkdir -p "${COVERAGE_DIR}"
@@ -28,7 +28,7 @@ sed -i -e 's|>bazel-out/[^/]*/bin/\([^/]*\)/[^<]*/_virtual_includes/[^/]*|>\1|g'
 
 COVERAGE_VALUE=$(llvm-cov-8 export "${COVERAGE_BINARY}" -instr-profile="${COVERAGE_DATA}" \
     -ignore-filename-regex="${COVERAGE_IGNORE_REGEX}" -summary-only | \
-    python3 -c "import sys, json; print(json.load(sys.stdin)['data'][0]['totals']['lines']['percent'])")
+  python3 -c "import sys, json; print(json.load(sys.stdin)['data'][0]['totals']['lines']['percent'])")
 echo "Covered lines percentage: ${COVERAGE_VALUE}"
 
 echo "HTML coverage report is in ${COVERAGE_DIR}/index.html"
