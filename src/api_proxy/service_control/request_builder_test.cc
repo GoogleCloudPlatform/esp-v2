@@ -431,7 +431,7 @@ TEST_F(RequestBuilderTest, ReportApiKeyVerifiedWithApiKeyUIDTest) {
   FillOperationInfo(&info);
 
   info.check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
-  info.check_response_info.api_key_uid = "fake_api_key_uid";
+  info.check_response_info.api_key_uid = "apikey:fake_api_key_uid";
   info.enable_api_key_uid_reporting = true;
 
   gasv1::ReportRequest request;
