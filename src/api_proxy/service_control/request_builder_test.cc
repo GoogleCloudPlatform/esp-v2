@@ -459,7 +459,7 @@ TEST_F(RequestBuilderTest, ReportApiKeyVerifiedWithApiKeyUIDUnknownTest) {
   info.check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
   info.check_response_info.api_key_uid = "fake_api_key_uid";
   info.report_api_key_uid = true;
-  info.check_response_info.error = {"RESOURCE_EXHAUSTED", false,
+  info.check_response_info.error = {"UNREACHABLE", true,
                                ScResponseErrorType::CONSUMER_QUOTA};
 
   gasv1::ReportRequest request;
