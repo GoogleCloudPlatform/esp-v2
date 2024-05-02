@@ -133,7 +133,7 @@ var (
 
 	ServiceControlNetworkFailOpen = flag.Bool("service_control_network_fail_open", defaults.ServiceControlNetworkFailOpen, ` In case of network failures when connecting to Google service control,
         the requests will be allowed if this flag is on. The default is on.`)
-	ServiceControlReportApiKeyUid = flag.Bool("service_control_report_api_key_uid", defaults.ServiceControlReportApiKeyUid, ` If true, reports api_key_uid instead of api_key in ServiceControl report.`)
+	ServiceControlEnableApiKeyUidReporting = flag.Bool("service_control_enable_api_key_uid_reporting", defaults.ServiceControlEnableApiKeyUidReporting, ` If true, reports api_key_uid instead of api_key in ServiceControl report.`)
 
 	EnableGrpcForHttp1 = flag.Bool("enable_grpc_for_http1", defaults.EnableGrpcForHttp1, `Enable gRPC when the downstream is HTTP/1.1. The default is on.`)
 
@@ -288,7 +288,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		MergeSlashesInPath:                            *MergeSlashesInPath,
 		DisallowEscapedSlashesInPath:                  *DisallowEscapedSlashesInPath,
 		ServiceControlNetworkFailOpen:                 *ServiceControlNetworkFailOpen,
-		ServiceControlReportApiKeyUid:                 *ServiceControlReportApiKeyUid,
+		ServiceControlEnableApiKeyUidReporting:        *ServiceControlEnableApiKeyUidReporting,
 		EnableGrpcForHttp1:                            *EnableGrpcForHttp1,
 		ConnectionBufferLimitBytes:                    *ConnectionBufferLimitBytes,
 		DisableJwksAsyncFetch:                         *DisableJwksAsyncFetch,

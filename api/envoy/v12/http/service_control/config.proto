@@ -149,7 +149,7 @@ message FilterConfig {
       10;
 
   // If true, reports api_key_uid instead of api_key in ServiceControl report.
-  bool report_api_key_uid = 11;
+  bool enable_api_key_uid_reporting = 11;
 }
 
 message PerRouteFilterConfig {

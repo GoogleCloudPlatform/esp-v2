@@ -274,7 +274,7 @@ struct ReportRequestInfo : public OperationInfo {
   std::string trace_id;
 
   // If true, reports api key uid instead of api key.
-  bool report_api_key_uid;
+  bool enable_api_key_uid_reporting;
 
   ReportRequestInfo()
       : http_response_code(0),
@@ -283,7 +283,7 @@ struct ReportRequestInfo : public OperationInfo {
         frontend_protocol(protocol::UNKNOWN),
         backend_protocol(protocol::UNKNOWN),
         compute_platform("UNKNOWN(ESPv2)"),
-        report_api_key_uid(false) {}
+        enable_api_key_uid_reporting(false) {}
 };
 
 }  // namespace service_control

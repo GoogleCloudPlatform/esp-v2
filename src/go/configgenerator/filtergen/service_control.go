@@ -74,10 +74,10 @@ type ServiceControlGenerator struct {
 	ComputePlatformOverride     string
 
 	// Service control configs.
-	MethodRequirements []*scpb.Requirement
-	CallingConfig      *scpb.ServiceControlCallingConfig
-	GCPAttributes      *scpb.GcpAttributes
-	ReportApiKeyUid    bool
+	MethodRequirements       []*scpb.Requirement
+	CallingConfig            *scpb.ServiceControlCallingConfig
+	GCPAttributes            *scpb.GcpAttributes
+	EnableApiKeyUidReporting bool
 
 	NoopFilterGenerator
 }
@@ -141,7 +141,7 @@ func NewServiceControlFilterGensFromOPConfig(serviceConfig *confpb.Service, opts
 			MethodRequirements:          requirements,
 			CallingConfig:               MakeSCCallingConfigFromOPConfig(opts),
 			GCPAttributes:               params.GCPAttributes,
-			ReportApiKeyUid:             opts.ServiceControlReportApiKeyUid,
+			EnableApiKeyUidReporting:    opts.ServiceControlEnableApiKeyUidReporting,
 		},
 	}, nil
 }
@@ -208,9 +208,9 @@ func (g *ServiceControlGenerator) GenFilterConfig() (proto.Message, error) {
 			Cluster: clustergen.ServiceControlClusterName,
 			Timeout: durationpb.New(g.HttpRequestTimeout),
 		},
-		GeneratedHeaderPrefix: g.GeneratedHeaderPrefix,
-		Requirements:          g.MethodRequirements,
-		ReportApiKeyUid:       g.ReportApiKeyUid,
+		GeneratedHeaderPrefix:    g.GeneratedHeaderPrefix,
+		Requirements:             g.MethodRequirements,
+		EnableApiKeyUidReporting: g.EnableApiKeyUidReporting,
 	}
 
 	accessTokenConfig := g.AccessToken.MakeAccessTokenConfig()

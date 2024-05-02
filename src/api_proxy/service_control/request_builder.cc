@@ -384,7 +384,7 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
       api_key::ApiKeyState::VERIFIED) {
     ASSERT(!info.api_key.empty(),
            "API Key must be set, otherwise consumer would not be verified.");
-    if (info.report_api_key_uid) {
+    if (info.enable_api_key_uid_reporting) {
       if (info.check_response_info.error.is_network_error) {
         (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, "UNKNOWN");
       } else {

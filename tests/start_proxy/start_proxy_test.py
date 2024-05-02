@@ -206,7 +206,7 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing'
               ]),
             # service_control_network_fail_policy=close
-            # service_control_report_api_key_uid=false
+            # service_control_enable_api_key_uid_reporting=false
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
@@ -218,7 +218,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--service_control_network_fail_open=false',
-              '--service_control_report_api_key_uid=false',
+              '--service_control_enable_api_key_uid_reporting=false',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
