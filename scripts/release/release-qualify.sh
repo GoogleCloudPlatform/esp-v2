@@ -16,7 +16,7 @@
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo "Cannot load Bash utilities";
-  exit 1; }
+exit 1; }
 
 function usage() {
   [[ -n "${1}" ]] && echo "${1}"
@@ -105,58 +105,58 @@ function count_stress_failures() {
       if (total > 0) {
         print "Failed/Total:      ", (failed + non2xx) / total
       }
-    }' "${@}"
+  }' "${@}"
 }
 
 ( echo "Release qualification of ${SHA}."
-echo "It is now: $(date)"
+  echo "It is now: $(date)"
 
-mkdir -p "${LOGS}/${SHA}"
+  mkdir -p "${LOGS}/${SHA}"
 
-echo "Downloading prow logs to '${LOGS}' directory."
-${GSUTIL} -m -q cp -r "gs://apiproxy-continuous-long-run/${SHA}/logs/*" "${LOGS}/${SHA}/" 2>&1  \
- || error_exit "Failed to download logs from gs://apiproxy-continuous-long-run/${SHA}/logs/*"
+  echo "Downloading prow logs to '${LOGS}' directory."
+  ${GSUTIL} -m -q cp -r "gs://apiproxy-continuous-long-run/${SHA}/logs/*" "${LOGS}/${SHA}/" 2>&1  \
+    || error_exit "Failed to download logs from gs://apiproxy-continuous-long-run/${SHA}/logs/*"
 
-python3 "${ROOT}/scripts/release/validate_release.py"  \
- --commit_sha "${SHA}" \
- --path "${LOGS}/${SHA}"  \
- || error_exit "Release is not qualified."
+  python3 "${ROOT}/scripts/release/validate_release.py"  \
+    --commit_sha "${SHA}" \
+    --path "${LOGS}/${SHA}"  \
+    || error_exit "Release is not qualified."
 
-RQ_TESTS=( )
+  RQ_TESTS=( )
 
-# This while loop reads from a redirect set up at the "done" clause.
-# Because we read user input inside the loop, we set up the input
-# coming from the "find" command on file descriptor 3. This is why
-# we use "read -u3" here.
+  # This while loop reads from a redirect set up at the "done" clause.
+  # Because we read user input inside the loop, we set up the input
+  # coming from the "find" command on file descriptor 3. This is why
+  # we use "read -u3" here.
 
-while read -u3 LOG_FILE; do
-  DIR="$(dirname "${LOG_FILE}")"
-  JSON_FILE="${LOG_FILE%.log}.json"
-  RUN="${DIR##*/}"
+  while read -u3 LOG_FILE; do
+    DIR="$(dirname "${LOG_FILE}")"
+    JSON_FILE="${LOG_FILE%.log}.json"
+    RUN="${DIR##*/}"
 
-  [[ -f "${JSON_FILE}" ]]  \
-   || error_exit "Result of release qualification test ${JSON_FILE} not found."
+    [[ -f "${JSON_FILE}" ]]  \
+      || error_exit "Result of release qualification test ${JSON_FILE} not found."
 
-  echo '*********************************************************************'
-  echo "Release qualification run: ${RUN}"
+    echo '*********************************************************************'
+    echo "Release qualification run: ${RUN}"
 
-  echo ''
-  echo "Checking ${JSON_FILE}"
-  echo ''
-  check_result "${JSON_FILE}" "${SHA}" || continue
+    echo ''
+    echo "Checking ${JSON_FILE}"
+    echo ''
+    check_result "${JSON_FILE}" "${SHA}" || continue
 
-  echo ''
-  echo "Checking ${LOG_FILE}"
-  echo ''
-  count_stress_failures "${LOG_FILE}"
+    echo ''
+    echo "Checking ${LOG_FILE}"
+    echo ''
+    count_stress_failures "${LOG_FILE}"
 
-  RQ_TESTS+=(${DIR})
+    RQ_TESTS+=(${DIR})
 
-# the ! -path ... excludes the root directory which is otherwise
-# included in the result
-done 3< <( find "${LOGS}/${SHA}" ! -path "${LOGS}/${SHA}" -type f -name 'long-run-test*.log' )
+    # the ! -path ... excludes the root directory which is otherwise
+    # included in the result
+  done 3< <( find "${LOGS}/${SHA}" ! -path "${LOGS}/${SHA}" -type f -name 'long-run-test*.log' )
 
-if [[ ${#RQ_TESTS[@]} -le 0 ]]; then
+  if [[ ${#RQ_TESTS[@]} -le 0 ]]; then
     echo '*********************************************************************'
     echo '* Release qualification INCOMPLETE.                                 *'
     echo '*                       **********                                  *'
@@ -170,7 +170,7 @@ if [[ ${#RQ_TESTS[@]} -le 0 ]]; then
 
     exit 0
   fi
-#TODO(taoxuy):add envoy log check
+  #TODO(taoxuy):add envoy log check
 
   echo ''
   echo '*********************************************************************'

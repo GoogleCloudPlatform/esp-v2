@@ -45,11 +45,11 @@ SHA=""
 
 while getopts :g:u:s:n: arg; do
   case ${arg} in
-    g) GCLOUD="${OPTARG}";;
-    u) GSUTIL="${OPTARG}";;
-    s) SHA="${OPTARG}";;
-    n) VERSION="${OPTARG}";;
-    *) usage "Invalid option: -${OPTARG}";;
+    g) GCLOUD="${OPTARG}" ;;
+    u) GSUTIL="${OPTARG}" ;;
+    s) SHA="${OPTARG}" ;;
+    n) VERSION="${OPTARG}" ;;
+    *) usage "Invalid option: -${OPTARG}" ;;
   esac
 done
 
@@ -75,12 +75,12 @@ if RELEASE_BRANCH_SHA="$(git rev-parse upstream/${CURRENT_BRANCH})"; then
   if [[ "${SHA}" != "${RELEASE_BRANCH_SHA}" ]]; then
     printf "\e[31m
 WARNING: Release branch commit (${RELEASE_BRANCH_SHA}) doesn't match ${SHA}.
-\e[0m"
+    \e[0m"
   fi
 else
   printf "\e[31m
 WARNING: Cannot find release branch origin/release-${VERSION}.
-\e[0m"
+  \e[0m"
 fi
 
 function push_docker_image() {

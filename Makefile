@@ -253,8 +253,13 @@ tools.buildifier:
 		go install github.com/bazelbuild/buildtools/buildifier@latest; \
 	fi
 
+# beautysh is already installed in the newer prow image with pipx
+# TODO(shuoyang2016): remove this after we switch prow to the
+# latest version.
 tools.beautysh:
-	@command -v beautysh  >/dev/null ; if [ $$? -ne 0 ]; then \
+	@command -v pipx  >/dev/null;\
+	PIPX_INSTALLED=$$?;\
+	command -v beautysh >/dev/null; if [ $$? -ne 0 ] && [ $${PIPX_INSTALLED} -ne 0 ]; then \
 		echo "--> installing beautysh"; \
 		pip3 install --user beautysh; \
 	fi
@@ -298,8 +303,13 @@ clang-format:
 	@echo $(CPP_PROTO_FILES) | xargs clang-format-14 -i
 
 shell-format: tools.beautysh
-	@echo "--> formatting shell scripts with 'beautysh' tool"
-	@git ls-files "*.sh" | xargs ${HOME}/.local/bin/beautysh -i 2
+	@command -v pipx  >/dev/null;\
+	PIPX_INSTALLED=$$?;\
+	echo "--> formatting shell scripts with 'beautysh' tool"; \
+	if [ $${PIPX_INSTALLED} -ne 0 ]; then \
+	  git ls-files "*.sh" | xargs ${HOME}/.local/bin/beautysh -i 2; \
+	else git ls-files "*.sh" | xargs pipx run beautysh -i 2; \
+        fi
 
 .PHONY: format.check
 format.check: tools.goimports

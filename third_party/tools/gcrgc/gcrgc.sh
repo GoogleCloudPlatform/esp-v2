@@ -38,7 +38,7 @@ main(){
   IMAGE="${1}"
   DATE="${2}"
   for digest in $(gcloud container images list-tags ${IMAGE} --limit=999999 --sort-by=TIMESTAMP \
-    --filter="timestamp.datetime < '${DATE}'" --format='get(digest)'); do
+      --filter="timestamp.datetime < '${DATE}'" --format='get(digest)'); do
     (
       set -x
       gcloud container images delete -q --force-delete-tags "${IMAGE}@${digest}"

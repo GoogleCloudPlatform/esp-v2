@@ -87,10 +87,10 @@ case "${BACKEND}" in
     SERVICE_IDL="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
 
     cat "${SERVICE_IDL_TMPL}" \
-        | jq ".host = \"${APIPROXY_SERVICE}\" \
+      | jq ".host = \"${APIPROXY_SERVICE}\" \
         | .\"x-google-endpoints\"[0].name = \"${APIPROXY_SERVICE}\" \
-        | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
-        > "${SERVICE_IDL}"
+      | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${APIPROXY_SERVICE}\"" \
+      > "${SERVICE_IDL}"
 
     CREATE_SERVICE_ARGS="${SERVICE_IDL}"
     ;;
@@ -106,7 +106,7 @@ case "${BACKEND}" in
     ARGS="$ARGS -g" ;;
   *)
     echo "Invalid backend ${BACKEND}"
-    exit 1;;
+    exit 1 ;;
 esac
 
 
