@@ -12,23 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM _ENVOY_IMAGE_SHA_NAME
-
-# Install openssl, only used for self signed cert in GKE/GCE deployment.
-RUN apk add --update --no-cache openssl
-
-# Install python3
-RUN apk add --no-cache python3 py3-pip
+FROM gcr.io/cloudesf-testing/envoy-binary:7ddc99497bde27486c59556ac3d87320eeca550c
 
 ENV PATH /bin:$PATH
 
-ADD docker/generic/* /apiproxy/
-ADD bin/bootstrap /bin/
-ADD bin/configmanager /bin/
+ADD bin/gcsrunner apiproxy/
 
-# create envoy user and group
-RUN addgroup -S envoy && adduser --no-create-home -S envoy -G envoy
-# run as user envoy
-USER envoy
-
-ENTRYPOINT ["python3", "/apiproxy/start_proxy.py"]
+ENTRYPOINT ["apiproxy/gcsrunner"]

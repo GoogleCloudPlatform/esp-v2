@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM _ENVOY_IMAGE_SHA_NAME
+FROM gcr.io/cloudesf-testing/envoy-binary:7ddc99497bde27486c59556ac3d87320eeca550c
 
 # Install openssl, only used for self signed cert in GKE/GCE deployment.
 RUN apk add --update --no-cache openssl

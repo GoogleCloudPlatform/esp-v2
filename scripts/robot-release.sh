@@ -17,6 +17,11 @@
 # Fail on any error.
 set -eo pipefail
 
+set -x
+ldd --version
+cat /etc/os-release
+set +x
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . ${ROOT}/scripts/all-utilities.sh || { echo 'Cannot load Bash utilities';
 exit 1; }
