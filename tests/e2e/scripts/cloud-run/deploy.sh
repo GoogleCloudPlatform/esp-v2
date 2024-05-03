@@ -84,15 +84,15 @@ function deployBackend() {
         "bookstore")
           backend_image="gcr.io/cloudesf-testing/http-bookstore:3"
           backend_port=8080
-        ;;
+          ;;
         "echo")
           backend_image="gcr.io/cloudesf-testing/grpc-echo-server:latest"
           backend_port=8081
-        ;;
+          ;;
         *)
           echo "No such backend image for backend ${BACKEND}"
           exit 1
-        ;;
+          ;;
       esac
 
       ${GCLOUD_BETA} run deploy "${BACKEND_SERVICE_NAME}" ${USE_HTTP2} \
@@ -126,19 +126,19 @@ function deployBackend() {
       BACKEND_HOST=$(gcloud functions describe ${BACKEND_SERVICE_NAME}  --format="value(httpsTrigger.url)" --quiet)
       ;;
     "app-engine")
-    cd ${ROOT}/tests/endpoints/bookstore
+      cd ${ROOT}/tests/endpoints/bookstore
 
-    sed "s/SERVICE_NAME/${BACKEND_SERVICE_NAME}/g" app_template.yaml > app.yaml
-    gcloud app deploy --quiet
-    sleep_wrapper "1m" "Sleep 1m for App Engine backend setup"
+      sed "s/SERVICE_NAME/${BACKEND_SERVICE_NAME}/g" app_template.yaml > app.yaml
+      gcloud app deploy --quiet
+      sleep_wrapper "1m" "Sleep 1m for App Engine backend setup"
 
 
-    # For how requests are routed in App Engine, refer to
-    # https://cloud.google.com/appengine/docs/standard/python/how-requests-are-routed#example_urls
-    BACKEND_HOST="https://${BACKEND_SERVICE_NAME}-dot-cloudesf-testing.uc.r.appspot.com"
+      # For how requests are routed in App Engine, refer to
+      # https://cloud.google.com/appengine/docs/standard/python/how-requests-are-routed#example_urls
+      BACKEND_HOST="https://${BACKEND_SERVICE_NAME}-dot-cloudesf-testing.uc.r.appspot.com"
 
-    cd ${ROOT}
-    ;;
+      cd ${ROOT}
+      ;;
 
     *)
       echo "No such backend platform ${BACKEND_PLATFORM}"
@@ -264,49 +264,49 @@ function setup() {
   fi
 
   case "${BACKEND}" in
-  'bookstore')
-    local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
-    local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
-    local create_service_args=${service_idl}
+    'bookstore')
+      local service_idl_tmpl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger_template.json"
+      local service_idl="${ROOT}/tests/endpoints/bookstore/bookstore_swagger.json"
+      local create_service_args=${service_idl}
 
-    # Change the `host` to point to the proxy host (required by validation in service management).
-    # Change the `title` to identify this test (for readability in cloud console).
-    # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints).
-    # Add in the `x-google-backend` to point to the backend URL (required for backend routing).
-    # Modify one path with `disable_auth`.
-    cat "${service_idl_tmpl}" \
-      | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\" \
+      # Change the `host` to point to the proxy host (required by validation in service management).
+      # Change the `title` to identify this test (for readability in cloud console).
+      # Change the jwt audience to point to the proxy host (required for calling authenticated endpoints).
+      # Add in the `x-google-backend` to point to the backend URL (required for backend routing).
+      # Modify one path with `disable_auth`.
+      cat "${service_idl_tmpl}" \
+        | jq ".host = \"${ENDPOINTS_SERVICE_NAME}\" \
         | .\"x-google-endpoints\"[0].name = \"${ENDPOINTS_SERVICE_NAME}\" \
         | .schemes = [\"${scheme}\"] \
         | .info.title = \"${ENDPOINTS_SERVICE_TITLE}\" \
         | .securityDefinitions.auth0_jwk.\"x-google-audiences\" = \"${PROXY_HOST}\" \
         | . + { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\", \"protocol\": \"${backend_protocol}\" } }  \
-      | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true } } "\
-      > "${service_idl}"
-
-    if [[ ${BACKEND_PLATFORM} == "app-engine" ]]; then
-      tmpfile=$(mktemp)
-      cp "${service_idl}" "${tmpfile}"
-      cat "${tmpfile}" \
-        | jq ".\"x-google-backend\" += { \"jwt_audience\": \"${APP_ENGINE_IAP_CLIENT_ID}\"  }" \
+        | .paths.\"/echo_token/disable_auth\".get  +=  { \"x-google-backend\": { \"address\": \"${BACKEND_HOST}\/echo_token\/disable_auth\", \"disable_auth\": true } } "\
         > "${service_idl}"
-    fi
-    ;;
-  'echo')
-    local service_idl_tmpl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.tmpl.yaml"
-    local service_idl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.yaml"
-    local service_descriptor="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
-    local create_service_args="${service_idl} ${service_descriptor}"
 
-    # Replace values for dynamic routing.
-    sed -e "s/ENDPOINTS_SERVICE_NAME/${ENDPOINTS_SERVICE_NAME}/g" \
-      -e "s/ENDPOINTS_SERVICE_TITLE/${ENDPOINTS_SERVICE_TITLE}/g" \
-      -e "s/BACKEND_ADDRESS/${BACKEND_HOST#https://}/g" \
-      "${service_idl_tmpl}" > "${service_idl}"
-    ;;
-  *)
-    echo "Invalid backend ${BACKEND} for creating endpoints service"
-    return 1 ;;
+      if [[ ${BACKEND_PLATFORM} == "app-engine" ]]; then
+        tmpfile=$(mktemp)
+        cp "${service_idl}" "${tmpfile}"
+        cat "${tmpfile}" \
+          | jq ".\"x-google-backend\" += { \"jwt_audience\": \"${APP_ENGINE_IAP_CLIENT_ID}\"  }" \
+          > "${service_idl}"
+      fi
+      ;;
+    'echo')
+      local service_idl_tmpl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.tmpl.yaml"
+      local service_idl="${ROOT}/tests/endpoints/grpc_echo/grpc-test-dynamic-routing.yaml"
+      local service_descriptor="${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb"
+      local create_service_args="${service_idl} ${service_descriptor}"
+
+      # Replace values for dynamic routing.
+      sed -e "s/ENDPOINTS_SERVICE_NAME/${ENDPOINTS_SERVICE_NAME}/g" \
+        -e "s/ENDPOINTS_SERVICE_TITLE/${ENDPOINTS_SERVICE_TITLE}/g" \
+        -e "s/BACKEND_ADDRESS/${BACKEND_HOST#https://}/g" \
+        "${service_idl_tmpl}" > "${service_idl}"
+      ;;
+    *)
+      echo "Invalid backend ${BACKEND} for creating endpoints service"
+      return 1 ;;
   esac
 
   # Deploy the service config
@@ -340,15 +340,15 @@ function setup() {
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then
     echo "Redeploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Fully managed)"
-      # - Hops: Allow our fake client IP restriction test (via API keys) to function.
-      #         If we were restricting by our actual client ip, then the default of 0 would work.
-      #         But we are actually testing with a fake xff header, so we need a higher hops count.
-      #         On GKE we default to 2. AppHosting infra adds one more IP to xff, so 3 for serverless.
+    # - Hops: Allow our fake client IP restriction test (via API keys) to function.
+    #         If we were restricting by our actual client ip, then the default of 0 would work.
+    #         But we are actually testing with a fake xff header, so we need a higher hops count.
+    #         On GKE we default to 2. AppHosting infra adds one more IP to xff, so 3 for serverless.
     proxy_args="${proxy_args}++--envoy_xff_num_trusted_hops=3"
   else
     echo "Deploying ESPv2 ${BACKEND_SERVICE_NAME} on Cloud Run(Anthos)"
-      # - Hops: Allow our fake client IP restriction test (via API keys) to function.
-      #         Anthos has 2 more proxies than Cloud Run(Fully managed).
+    # - Hops: Allow our fake client IP restriction test (via API keys) to function.
+    #         Anthos has 2 more proxies than Cloud Run(Fully managed).
     proxy_args="${proxy_args}++--envoy_xff_num_trusted_hops=5"
   fi
   proxy_args="${proxy_args}++--enable_debug"
@@ -446,7 +446,7 @@ function tearDown() {
 
     "app-engine")
       gcloud app services delete "${BACKEND_SERVICE_NAME}" --quiet
-     ;;
+      ;;
     *)
       echo "No such backend platform ${BACKEND_PLATFORM}"
       exit 1

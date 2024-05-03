@@ -36,7 +36,7 @@ function runE2E() {
       g) local backend="${OPTARG}" ;;
       m) local apiproxy_image="${OPTARG}" ;;
       R) local rollout_strategy="${OPTARG}" ;;
-      S) local using_sa_cred='true';;
+      S) local using_sa_cred='true' ;;
       t) local test_type="$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')" ;;
     esac
   done
@@ -89,7 +89,7 @@ case ${TEST_CASE} in
   "tight-http-bookstore-managed")
     runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -m "$(get_proxy_image_name_with_sha)"
     ;;
-    "tight-http-bookstore-managed-using-sa-cred")
+  "tight-http-bookstore-managed-using-sa-cred")
     runE2E -p "gke" -c "tight" -t "http" -g "bookstore" -R "managed" -S -m "$(get_proxy_image_name_with_sha)"
     ;;
   "tight-grpc-echo-managed")
@@ -107,7 +107,7 @@ case ${TEST_CASE} in
   "cloud-run-cloud-function-http-bookstore")
     runE2E -p "cloud-run" -f "cloud-function" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
-    "cloud-run-app-engine-http-bookstore")
+  "cloud-run-app-engine-http-bookstore")
     runE2E -p "cloud-run" -f "app-engine" -t "http" -g "bookstore" -R "managed" -m "$(get_serverless_image_name_with_sha)"
     ;;
   "anthos-cloud-run-anthos-cloud-run-http-bookstore")

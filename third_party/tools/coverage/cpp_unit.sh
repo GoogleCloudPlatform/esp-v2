@@ -24,7 +24,7 @@ elif [[ -n "${COVERAGE_TARGET}" ]]; then
 else
   # For fuzz builds, this overrides to just fuzz targets.
   COVERAGE_TARGETS=//src/... && [[ ${FUZZ_COVERAGE} == "true" ]] &&
-    COVERAGE_TARGETS="$(bazel query 'attr("tags", "fuzzer", //src/...)')"
+  COVERAGE_TARGETS="$(bazel query 'attr("tags", "fuzzer", //src/...)')"
 fi
 
 if [[ "${FUZZ_COVERAGE}" == "true" ]]; then
@@ -56,10 +56,10 @@ if [[ "$VALIDATE_COVERAGE" == "true" ]]; then
   fi
   COVERAGE_FAILED=$(echo "${COVERAGE_VALUE}<${COVERAGE_THRESHOLD}" | bc)
   if test ${COVERAGE_FAILED} -eq 1; then
-      echo Code coverage ${COVERAGE_VALUE} is lower than limit of ${COVERAGE_THRESHOLD}
-      exit 1
+    echo Code coverage ${COVERAGE_VALUE} is lower than limit of ${COVERAGE_THRESHOLD}
+    exit 1
   else
-      echo Code coverage ${COVERAGE_VALUE} is good and higher than limit of ${COVERAGE_THRESHOLD}
+    echo Code coverage ${COVERAGE_VALUE} is good and higher than limit of ${COVERAGE_THRESHOLD}
   fi
 fi
 echo "HTML coverage report is in ${COVERAGE_DIR}/index.html"

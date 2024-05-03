@@ -42,8 +42,8 @@ END_USAGE
 
 while getopts :n: arg; do
   case ${arg} in
-    n) VERSION="${OPTARG}";;
-    *) usage "Invalid option: -${OPTARG}";;
+    n) VERSION="${OPTARG}" ;;
+    *) usage "Invalid option: -${OPTARG}" ;;
   esac
 done
 set -x

@@ -43,10 +43,10 @@ TAG_REF=''
 
 while getopts :b:t:n: arg; do
   case ${arg} in
-    b) BUILD_REF="${OPTARG}";;
-    t) TAG_REF="${OPTARG}";;
-    n) VERSION="${OPTARG}";;
-    *) usage "Invalid option: -${OPTARG}";;
+    b) BUILD_REF="${OPTARG}" ;;
+    t) TAG_REF="${OPTARG}" ;;
+    n) VERSION="${OPTARG}" ;;
+    *) usage "Invalid option: -${OPTARG}" ;;
   esac
 done
 
