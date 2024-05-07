@@ -1,4 +1,4 @@
-runtime: nodejs10
+runtime: nodejs18
 service: SERVICE_NAME
 
 resources:
