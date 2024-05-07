@@ -105,9 +105,10 @@ pip_install(
     requirements = "@com_github_grpc_grpc//:requirements.bazel.txt",
 )
 
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps", "grpc_test_only_deps")
+
 # ==============================================================================
 load("@com_github_grpc_grpc//bazel:grpc_python_deps.bzl", "grpc_python_deps")
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps", "grpc_test_only_deps")
 
 grpc_python_deps()
 
