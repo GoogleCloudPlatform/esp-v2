@@ -321,4 +321,5 @@ function get_apiproxy_service() {
 
 function install_e2e_dependencies() {
   pip3 install python-gflags
+  pip3 install six
 }
