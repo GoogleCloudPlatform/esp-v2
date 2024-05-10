@@ -69,7 +69,8 @@ class TokenSubscriberTest : public testing::Test {
         }));
 
     // Setup mock http async client.
-    EXPECT_CALL(context_.cluster_manager_, getThreadLocalCluster(_))
+    EXPECT_CALL(context_.server_factory_context_.cluster_manager_,
+                getThreadLocalCluster(_))
         .WillRepeatedly(Return(&thread_local_cluster_));
     EXPECT_CALL(thread_local_cluster_.async_client_, send_(_, _, _))
         .WillRepeatedly(
@@ -83,7 +84,7 @@ class TokenSubscriberTest : public testing::Test {
             }));
 
     // Setup mock refresh timer.
-    EXPECT_CALL(context_.dispatcher_, createTimer_(_))
+    EXPECT_CALL(context_.server_factory_context_.dispatcher_, createTimer_(_))
         .WillOnce(Invoke([this](Envoy::Event::TimerCb cb) {
           timer_cb_ = cb;
           return mock_timer_;

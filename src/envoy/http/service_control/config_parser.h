@@ -51,7 +51,7 @@ class ServiceContext {
       min_stream_report_interval_ms_ = kDefaultMinStreamReportIntervalMs;
     }
     if (min_stream_report_interval_ms_ < kLowerBoundMinStreamReportIntervalMs) {
-      throw Envoy::ProtoValidationException(
+      Envoy::ProtoExceptionUtil::throwProtoValidationException(
           absl::StrCat("min_stream_report_interval_ms must be larger than: ",
                        kLowerBoundMinStreamReportIntervalMs),
           config);

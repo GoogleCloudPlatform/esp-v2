@@ -348,7 +348,6 @@ constexpr char kServiceControlBackendProtocol[] =
 constexpr char kServiceControlConsumerProject[] =
     "serviceruntime.googleapis.com/consumer_project";
 constexpr char kApiKeyPrefix[] = "apikey:";
-    
 
 // User agent label value
 // The value for kUserAgent should be configured at service control server.
@@ -384,8 +383,10 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
       api_key::ApiKeyState::VERIFIED) {
     ASSERT(!info.api_key.empty(),
            "API Key must be set, otherwise consumer would not be verified.");
-    (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, info.check_response_info.api_key_uid.empty() ? info.api_key
-                      : info.check_response_info.api_key_uid);
+    (*labels)[l.name] =
+        absl::StrCat(kApiKeyPrefix, info.check_response_info.api_key_uid.empty()
+                                        ? info.api_key
+                                        : info.check_response_info.api_key_uid);
   } else if (!info.auth_issuer.empty()) {
     std::string base64_issuer = Envoy::Base64Url::encode(
         info.auth_issuer.data(), info.auth_issuer.size());

@@ -39,7 +39,7 @@ AudienceContext::AudienceContext(
     const FilterConfig& filter_config,
     const token::TokenSubscriberFactory& token_subscriber_factory,
     GetTokenFunc access_token_fn)
-    : tls_(context.threadLocal()) {
+    : tls_(context.serverFactoryContext().threadLocal()) {
   tls_.set(
       [](Envoy::Event::Dispatcher&) { return std::make_shared<TokenCache>(); });
 

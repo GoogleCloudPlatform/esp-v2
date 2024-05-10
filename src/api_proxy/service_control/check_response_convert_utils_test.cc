@@ -191,8 +191,7 @@ TEST_F(CheckResponseConverterTest, ConvertConsumerInfo) {
   EXPECT_EQ(info.consumer_number, std::to_string(consumer_number));
 }
 
-TEST_F(CheckResponseConverterTest,
-       ApiKeyUidCarriedInCheckResponseInfo) {
+TEST_F(CheckResponseConverterTest, ApiKeyUidCarriedInCheckResponseInfo) {
   CheckResponseInfo info;
   CheckResponse response;
   response.mutable_check_info()->set_api_key_uid("fake_api_key_uid");

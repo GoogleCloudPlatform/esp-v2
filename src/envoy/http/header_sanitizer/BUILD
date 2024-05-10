@@ -34,6 +34,6 @@ envoy_cc_library(
     deps = [
         ":filter_lib",
         "//api/envoy/v12/http/header_sanitizer:config_proto_cc_proto",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
     ],
 )
