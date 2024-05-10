@@ -348,7 +348,6 @@ constexpr char kServiceControlBackendProtocol[] =
 constexpr char kServiceControlConsumerProject[] =
     "serviceruntime.googleapis.com/consumer_project";
 constexpr char kApiKeyPrefix[] = "apikey:";
-    
 
 // User agent label value
 // The value for kUserAgent should be configured at service control server.

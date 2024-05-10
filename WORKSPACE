@@ -39,9 +39,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # 3) Check if envoy_build_config/extensions_build_config.bzl is up-to-date.
 # Try to match it with the one in source/extensions and comment out unneeded extensions.
 
-ENVOY_SHA1 = "6b9db09c69965d5bfb37bdd29693f8b7f9e9e9ec"  # v1.27.1, 2023.10.11
+ENVOY_SHA1 = "816188b86a0a52095b116b107f576324082c7c02"  # v1.30.1
 
-ENVOY_SHA256 = "d6cde20343d67fa4e25b9047bd805c522ece80b8058f1f311cb90ee7f3287f63"
+ENVOY_SHA256 = "41064ee8fbafc2ac3fd0d6531a106139adbbea3585defff22fdb99e06d7862e5"
 
 http_archive(
     name = "envoy",
@@ -105,9 +105,10 @@ pip_install(
     requirements = "@com_github_grpc_grpc//:requirements.bazel.txt",
 )
 
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps", "grpc_test_only_deps")
+
 # ==============================================================================
 load("@com_github_grpc_grpc//bazel:grpc_python_deps.bzl", "grpc_python_deps")
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps", "grpc_test_only_deps")
 
 grpc_python_deps()
 

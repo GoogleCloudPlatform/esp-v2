@@ -26,14 +26,10 @@ Usage: ${BASH_SOURCE[0]}  [-n <current version number>]
 
 This script will release stable ESPv2 docker image with format of:
   $(get_proxy_image_release_name):\${MINOR_BASE_VERSION}
-  $(get_proxy_image_release_name):\${MAJOR_BASE_VERSION}
   $(get_serverless_image_release_name):\${MINOR_BASE_VERSION}
-  $(get_serverless_image_release_name):\${MAJOR_BASE_VERSION}
   $(get_gcsrunner_image_release_name):\${MINOR_BASE_VERSION}
-  $(get_gcsrunner_image_release_name):\${MAJOR_BASE_VERSION}
 where:
   MINOR_BASE_VERSION=major.minor
-  MAJOR_BASE_VERSION=major
 
 END_USAGE
   exit 1
@@ -42,8 +38,8 @@ END_USAGE
 
 while getopts :n: arg; do
   case ${arg} in
-    n) VERSION="${OPTARG}";;
-    *) usage "Invalid option: -${OPTARG}";;
+    n) VERSION="${OPTARG}" ;;
+    *) usage "Invalid option: -${OPTARG}" ;;
   esac
 done
 set -x
@@ -55,14 +51,12 @@ fi
 
 # Minor base is 1.33  if version is 1.33.0
 MINOR_BASE_VERSION=${VERSION%.*}
-# Major base is 1  if version is 1.33.0
-MAJOR_BASE_VERSION=${MINOR_BASE_VERSION%.*}
 
 function tag_stable_image() {
   local image=$1
 
   gcloud container images add-tag "${image}:${VERSION}" \
-    "${image}:${MINOR_BASE_VERSION}" "${image}:${MAJOR_BASE_VERSION}" --quiet
+    "${image}:${MINOR_BASE_VERSION}" --quiet
 }
 
 tag_stable_image "$(get_proxy_image_release_name)"

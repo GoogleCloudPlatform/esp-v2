@@ -110,7 +110,7 @@ void ServiceControlFilter::rejectRequest(Envoy::Http::Code code,
   decoder_callbacks_->sendLocalReply(code, error_msg, nullptr, absl::nullopt,
                                      rc_detail);
   decoder_callbacks_->streamInfo().setResponseFlag(
-      Envoy::StreamInfo::ResponseFlag::UnauthorizedExternalService);
+      Envoy::StreamInfo::UnauthorizedExternalService);
 }
 
 Envoy::Http::FilterDataStatus ServiceControlFilter::decodeData(
@@ -132,20 +132,17 @@ Envoy::Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
 }
 
 void ServiceControlFilter::log(
-    const Envoy::Http::RequestHeaderMap* request_headers,
-    const Envoy::Http::ResponseHeaderMap* response_headers,
-    const Envoy::Http::ResponseTrailerMap* response_trailers,
-    const Envoy::StreamInfo::StreamInfo&, Envoy::AccessLog::AccessLogType) {
+    const Envoy::Formatter::HttpFormatterContext& context,
+    const Envoy::StreamInfo::StreamInfo&) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
-    if (!request_headers) return;
-    handler_ =
-        factory_.createHandler(*request_headers, decoder_callbacks_, stats_);
+    handler_ = factory_.createHandler(context.requestHeaders(),
+                                      decoder_callbacks_, stats_);
   }
 
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
-  handler_->callReport(request_headers, response_headers, response_trailers,
-                       parent_span);
+  handler_->callReport(&context.requestHeaders(), &context.responseHeaders(),
+                       &context.responseTrailers(), parent_span);
 }
 
 }  // namespace service_control

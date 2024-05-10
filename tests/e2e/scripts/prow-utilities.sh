@@ -182,7 +182,7 @@ function check_http_service() {
   local errors="$(mktemp /tmp/curl.XXXXX)"
   if [[ -n ${host_header} ]];
   then
-   local http_response="$(curl -k -m 20 --write-out %{http_code} --silent --output ${errors} ${host} -H "HOST:${host_header}")"
+    local http_response="$(curl -k -m 20 --write-out %{http_code} --silent --output ${errors} ${host} -H "HOST:${host_header}")"
   else
     local http_response="$(curl -k -m 20 --write-out %{http_code} --silent --output ${errors} ${host})"
   fi
@@ -321,4 +321,5 @@ function get_apiproxy_service() {
 
 function install_e2e_dependencies() {
   pip3 install python-gflags
+  pip3 install six
 }

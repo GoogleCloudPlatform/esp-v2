@@ -50,11 +50,11 @@ DIRECTORY="."
 
 while getopts :s:l:d:n: arg; do
   case ${arg} in
-    s) SHA="${OPTARG}";;
-    l) LAST_COMMIT="${OPTARG}";;
-    d) DIRECTORY="${OPTARG}";;
-    n) VERSION="${OPTARG}";;
-    *) usage "Invalid option: -${OPTARG}";;
+    s) SHA="${OPTARG}" ;;
+    l) LAST_COMMIT="${OPTARG}" ;;
+    d) DIRECTORY="${OPTARG}" ;;
+    n) VERSION="${OPTARG}" ;;
+    *) usage "Invalid option: -${OPTARG}" ;;
   esac
 done
 
@@ -113,7 +113,7 @@ EOF
 echo $(pwd)
 git log ${LAST_COMMIT}..${SHA} --pretty="- %s%w(76,2)" \
   | perl -pe'BEGIN {undef $/;} s/\s+Change-Id:[^\n]*\s+/\n/gs;' \
-    >> "${CHANGELOG}"
+  >> "${CHANGELOG}"
 
 cat <<EOF >> "${CHANGELOG}"
 

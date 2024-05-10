@@ -38,8 +38,8 @@ SHA=''
 
 while getopts :n:s: arg; do
   case ${arg} in
-    s) SHA="${OPTARG}";;
-    *) usage "Invalid option: -${OPTARG}";;
+    s) SHA="${OPTARG}" ;;
+    *) usage "Invalid option: -${OPTARG}" ;;
   esac
 done
 

@@ -45,8 +45,9 @@ class ServiceControlFilterConfig
                 proto_config)),
         call_factory_(proto_config_, stats_prefix, context),
         config_parser_(*proto_config_, call_factory_),
-        handler_factory_(context.api().randomGenerator(), config_parser_,
-                         context.timeSource()) {}
+        handler_factory_(context.serverFactoryContext().api().randomGenerator(),
+                         config_parser_,
+                         context.serverFactoryContext().timeSource()) {}
 
   const ServiceControlHandlerFactory& handler_factory() const {
     return handler_factory_;

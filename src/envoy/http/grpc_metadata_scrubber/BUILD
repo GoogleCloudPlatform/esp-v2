@@ -16,7 +16,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":filter_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
     ],
 )
 

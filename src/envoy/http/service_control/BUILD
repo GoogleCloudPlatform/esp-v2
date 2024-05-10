@@ -168,7 +168,7 @@ envoy_cc_library(
     ],
     repository = "@envoy",
     deps = [
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
     ],
 )
 
@@ -188,7 +188,7 @@ envoy_cc_library(
         "//src/envoy/utils:rc_detail_utils_lib",
         "@envoy//source/common/grpc:status_lib",
         "@envoy//source/common/http:headers_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
     ],
 )
@@ -203,7 +203,7 @@ envoy_cc_library(
         ":filter_stats_lib",
         ":handler_impl_lib",
         ":service_control_call_impl_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
     ],
 )
 
@@ -215,7 +215,7 @@ envoy_cc_library(
     deps = [
         ":filter_config_lib",
         ":filter_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/exe:all_extensions_lib",
     ],
 )
 
