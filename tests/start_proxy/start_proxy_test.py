@@ -192,21 +192,23 @@ class TestStartProxy(unittest.TestCase):
               '--disable_tracing'
               ]),
             # service_control_network_fail_policy=open
+            # service_control_enable_api_key_uid_reporting=true
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
               '--service_control_network_fail_policy=open', '--check_metadata',
+              '--service_control_enable_api_key_uid_reporting=true',
               '--disable_tracing', '--underscores_in_headers'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079', '--enable_strict_transport_security',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
+              '--service_control_enable_api_key_uid_reporting', 'true',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
             # service_control_network_fail_policy=close
-            # service_control_enable_api_key_uid_reporting=false
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
@@ -218,7 +220,6 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--service_control_network_fail_open=false',
-              '--service_control_enable_api_key_uid_reporting=false',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
