@@ -577,6 +577,11 @@ environment variable or by passing "-k" flag to this script.
         connecting to Google service control. If it is `open`, the request will be allowed,
         otherwise, it will be rejected. Default is `open`.
         ''')
+    parser.add_argument('--service_control_enable_api_key_uid_reporting',
+        default=False,
+        help='''
+        Enable when need to report api_key_uid in the telemetry report.'''
+    )
     parser.add_argument(
         '--disable_jwks_async_fetch',
         action='store_true',
@@ -1381,6 +1386,12 @@ def gen_proxy_config(args):
     #  NOTE: It is true by default in configmangager's flags.
     if args.service_control_network_fail_policy == "close":
         proxy_conf.extend(["--service_control_network_fail_open=false"])
+
+    if args.service_control_enable_api_key_uid_reporting:
+        proxy_conf.extend([
+            "--service_control_enable_api_key_uid_reporting",
+            args.service_control_enable_api_key_uid_reporting
+        ])
 
     if args.service_json_path:
         proxy_conf.extend(["--service_json_path", args.service_json_path])

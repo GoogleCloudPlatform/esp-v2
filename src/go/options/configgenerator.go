@@ -109,14 +109,15 @@ type ConfigGeneratorOptions struct {
 	LogResponseHeaders        string
 	MinStreamReportIntervalMs uint64
 
-	SuppressEnvoyHeaders          bool
-	UnderscoresInHeaders          bool
-	NormalizePath                 bool
-	MergeSlashesInPath            bool
-	DisallowEscapedSlashesInPath  bool
-	ServiceControlNetworkFailOpen bool
-	EnableGrpcForHttp1            bool
-	ConnectionBufferLimitBytes    int
+	SuppressEnvoyHeaders                   bool
+	UnderscoresInHeaders                   bool
+	NormalizePath                          bool
+	MergeSlashesInPath                     bool
+	DisallowEscapedSlashesInPath           bool
+	ServiceControlNetworkFailOpen          bool
+	ServiceControlEnableApiKeyUidReporting bool
+	EnableGrpcForHttp1                     bool
+	ConnectionBufferLimitBytes             int
 
 	// JwtAuthn related flags
 	DisableJwksAsyncFetch              bool
@@ -194,6 +195,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		MergeSlashesInPath:                      true,
 		DisallowEscapedSlashesInPath:            false,
 		ServiceControlNetworkFailOpen:           true,
+		ServiceControlEnableApiKeyUidReporting:  false,
 		EnableGrpcForHttp1:                      true,
 		ConnectionBufferLimitBytes:              -1,
 		ServiceManagementURL:                    "https://servicemanagement.googleapis.com",

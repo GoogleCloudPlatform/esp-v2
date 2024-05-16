@@ -188,6 +188,9 @@ void ServiceControlHandlerImpl::prepareReportRequest(
 
   info.tracing_project_id =
       require_ctx_->service_ctx().config().tracing_project_id();
+
+  info.enable_api_key_uid_reporting =
+      cfg_parser_.config().enable_api_key_uid_reporting();
 }
 
 void ServiceControlHandlerImpl::callCheck(

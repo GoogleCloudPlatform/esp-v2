@@ -431,7 +431,8 @@ TEST_F(RequestBuilderTest, ReportApiKeyVerifiedWithApiKeyUIDTest) {
   FillOperationInfo(&info);
 
   info.check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
-  info.check_response_info.api_key_uid = "fake_api_key_uid";
+  info.check_response_info.api_key_uid = "apikey:fake_api_key_uid";
+  info.enable_api_key_uid_reporting = true;
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -450,6 +451,61 @@ TEST_F(RequestBuilderTest, ReportApiKeyVerifiedWithApiKeyUIDTest) {
   ASSERT_TRUE(fields.contains("api_key"));
   ASSERT_EQ(fields.at("api_key").string_value(), "api_key_x");
 }
+
+TEST_F(RequestBuilderTest, ReportApiKeyVerifiedWithApiKeyUIDUnknownTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+
+  info.check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
+  info.check_response_info.api_key_uid = "fake_api_key_uid";
+  info.enable_api_key_uid_reporting = true;
+  info.check_response_info.error = {"UNREACHABLE", true,
+                               ScResponseErrorType::CONSUMER_QUOTA};
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  // Credential id is filled.
+  ASSERT_TRUE(request.operations(0).labels().contains("/credential_id"));
+  ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
+            "apikey:UNKNOWN");
+
+  // Consumer id is filled.
+  ASSERT_EQ(request.operations(0).consumer_id(), "api_key:api_key_x");
+
+  // Log entry is filled.
+  const gasv1::LogEntry log_entry = request.operations(0).log_entries(0);
+  const auto fields = log_entry.struct_payload().fields();
+  ASSERT_TRUE(fields.contains("api_key"));
+  ASSERT_EQ(fields.at("api_key").string_value(), "api_key_x");
+}
+
+TEST_F(RequestBuilderTest, ReportApiKeyVerifiedNotReportApiKeyUIDTest) {
+  ReportRequestInfo info;
+  FillOperationInfo(&info);
+
+  info.check_response_info.api_key_state = api_key::ApiKeyState::VERIFIED;
+  info.check_response_info.api_key_uid = "fake_api_key_uid";
+  info.enable_api_key_uid_reporting = false;
+
+  gasv1::ReportRequest request;
+  ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
+
+  // Credential id is filled.
+  ASSERT_TRUE(request.operations(0).labels().contains("/credential_id"));
+  ASSERT_EQ(request.operations(0).labels().at("/credential_id"),
+            "apikey:api_key_x");
+
+  // Consumer id is filled.
+  ASSERT_EQ(request.operations(0).consumer_id(), "api_key:api_key_x");
+
+  // Log entry is filled.
+  const gasv1::LogEntry log_entry = request.operations(0).log_entries(0);
+  const auto fields = log_entry.struct_payload().fields();
+  ASSERT_TRUE(fields.contains("api_key"));
+  ASSERT_EQ(fields.at("api_key").string_value(), "api_key_x");
+}
+
 
 TEST_F(RequestBuilderTest, ReportApiKeyNotVerifiedTest) {
   ReportRequestInfo info;
