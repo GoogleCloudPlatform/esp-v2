@@ -208,6 +208,15 @@ class TestStartProxy(unittest.TestCase):
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
+              # service_control_url specified
+            (['-R=managed','--listener_port=8080',  '--disable_tracing',
+              '--service_control_url=https://non-default-servicecontrol.googleapis.com'],
+             ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
+              '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
+              '--listener_port', '8080', '--service_control_url',
+              'https://non-default-servicecontrol.googleapis.com',
+              '--disable_tracing'
+              ]),
             # service_control_network_fail_policy=close
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',

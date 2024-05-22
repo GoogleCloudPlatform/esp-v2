@@ -661,6 +661,13 @@ environment variable or by passing "-k" flag to this script.
         Must be > 0 and the default is 30 seconds if not set.
         ''')
     parser.add_argument(
+        '--service_control_url',
+        default=None,
+        help='''
+        Set the url of service control server. The default is
+        "https://servicecontrol.googleapis.com" if not set.
+        ''')
+    parser.add_argument(
         '--service_control_check_timeout_ms',
         default=None,
         help='''
@@ -1346,6 +1353,11 @@ def gen_proxy_config(args):
 
     if args.http_request_timeout_s:
         proxy_conf.extend( ["--http_request_timeout_s", str(args.http_request_timeout_s)])
+        
+    if args.service_control_url:
+        proxy_conf.extend([
+            "--service_control_url", args.service_control_url
+        ])
 
     if args.service_control_check_retries:
         proxy_conf.extend([
