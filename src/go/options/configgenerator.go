@@ -195,7 +195,7 @@ func DefaultConfigGeneratorOptions() ConfigGeneratorOptions {
 		MergeSlashesInPath:                      true,
 		DisallowEscapedSlashesInPath:            false,
 		ServiceControlNetworkFailOpen:           true,
-		ServiceControlEnableApiKeyUidReporting:  false,
+		ServiceControlEnableApiKeyUidReporting:  true,
 		EnableGrpcForHttp1:                      true,
 		ConnectionBufferLimitBytes:              -1,
 		ServiceManagementURL:                    "https://servicemanagement.googleapis.com",
