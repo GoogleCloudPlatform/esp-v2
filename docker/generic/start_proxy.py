@@ -578,7 +578,7 @@ environment variable or by passing "-k" flag to this script.
         otherwise, it will be rejected. Default is `open`.
         ''')
     parser.add_argument('--service_control_enable_api_key_uid_reporting',
-        default=False,
+        default=True,
         help='''
         Enable when need to report api_key_uid in the telemetry report.'''
     )
