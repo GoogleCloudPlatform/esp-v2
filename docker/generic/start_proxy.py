@@ -142,7 +142,7 @@ environment variable or by passing "-k" flag to this script.
 
         Default value is {backend}. Follow the same format when setting
         manually. Valid schemes are `http`, `https`, `grpc`, and `grpcs`.
-        
+
         See the flag --enable_backend_address_override for details on how ESPv2
         decides between using this flag vs using the backend addresses specified
         in the service configuration.
@@ -156,19 +156,19 @@ environment variable or by passing "-k" flag to this script.
         or the `backend.rule.address` field in the service configuration.
         For OpenAPI users, note the `backend.rule.address` field is set
         by the `address` field in the `x-google-backend` extension.
-        
+
         `backend.rule.address` is usually specified when routing to different
         backends based on the route.
-        By default, the `backend.rule.address` will take priority over 
+        By default, the `backend.rule.address` will take priority over
         the --backend flag for each individual operation.
-        
+
         Enable this flag if you want the --backend flag to take priority
         instead. This is useful if you are developing on a local workstation.
         Then you use a the same production service config but override the
         backend address via the --backend flag for local testing.
-        
+
         Note: Only the address will be overridden.
-        All other components of `backend.rule` will still apply 
+        All other components of `backend.rule` will still apply
         (deadlines, backend auth, path translation, etc).
         ''')
 
@@ -186,11 +186,11 @@ environment variable or by passing "-k" flag to this script.
         Proxy's server cert path. When configured, ESPv2 only accepts HTTP/1.x and
         HTTP/2 secure connections on listener_port. Requires the certificate and
         key files "server.crt" and "server.key" within this path.
-        
+
         Before using this feature, please make sure TLS isn't terminated before ESPv2
         in your deployment model. In general, Cloud Run, GKE(GCLB enforced in ingress)
         and GCE with GCLB configured terminates TLS before ESPv2. If that's the case,
-        please don't set up flag. 
+        please don't set up flag.
         ''')
 
     parser.add_argument('--ssl_server_cipher_suites', default=None, help='''
@@ -199,12 +199,12 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('--ssl_server_root_cert_path', default=None, help='''
          The file path of root certificates that ESPv2 uses to verify downstream client certificate.
-        If not specified, ESPv2 doesn't verify client certificates by default. 
-        
+        If not specified, ESPv2 doesn't verify client certificates by default.
+
         Before using this feature, please make sure mTLS isn't terminated before ESPv2
         in your deployment model. In general, Cloud Run, GKE with container-native load balancing
         and GCE with GCLB configured terminates mTLS before ESPv2. If that's the case,
-        please don't set up flag. 
+        please don't set up flag.
         ''')
 
     parser.add_argument('--ssl_backend_client_cert_path', default=None, help='''
@@ -273,8 +273,8 @@ environment variable or by passing "-k" flag to this script.
                         Valid time units are "m" for minutes, "s" for seconds, and "ms" for milliseconds.''')
     parser.add_argument('--health_check_grpc_backend_no_traffic_interval', default=None,
                         help='''Specify the checking interval to call the backend gRPC Health service
-                        when at start up or the backend did not have any traffic. Default is 60 seconds. 
-                        It only applies when the flag "--health_check_grpc_backend" is used. 
+                        when at start up or the backend did not have any traffic. Default is 60 seconds.
+                        It only applies when the flag "--health_check_grpc_backend" is used.
                         The acceptable format is a sequence of decimal numbers, each with
                         optional fraction and a unit suffix, such as "5s", "100ms" or "2m".
                         Valid time units are "m" for minutes, "s" for seconds, and "ms" for milliseconds.''')
@@ -313,23 +313,23 @@ environment variable or by passing "-k" flag to this script.
         help='''
         When enabled, ESPv2 will attach the operation name of the matched route
         in the request to the backend.
-        
+
         The operation name:
         - For OpenAPI: Is derived from the `operationId` field.
         - For gRPC: Is the fully-qualified name of the RPC.
-        
+
         The header will be attached with key `X-Endpoint-API-Operation-Name`.
-        
+
         NOTE: We do NOT recommend relying on this feature. There are no
         guarantees that the operation name will remain consistent across
         multiple service configuration IDs.
-        
+
         NOTE: If you are using this feature with OpenAPI,
         please only use the last segment of the operation name. For example:
-        
+
         `1.echo_api_endpoints_cloudesf_testing_cloud_goog.EchoHeader`
         Your backend should parse past the last `.` and only use `EchoHeader`.
-        
+
         NOTE: For OpenAPI, the operation name may not match the `operationId`
         field exactly. For example, some sanitization may occur that only allows
         alphanumeric characters. The exact sanitization is internal
@@ -447,10 +447,10 @@ environment variable or by passing "-k" flag to this script.
         help='''Disable normalization of the `path` HTTP header according to
         RFC 3986. It is recommended to keep this option enabled if your backend
         performs path normalization by default.
-        
+
         The following table provides examples of the request `path` the backend
         will receive from ESPv2 based on the configuration of this flag.
-        
+
         -----------------------------------------------------------------
         | Request Path     | Without Normalization | With Normalization |
         -----------------------------------------------------------------
@@ -458,17 +458,17 @@ environment variable or by passing "-k" flag to this script.
         | /%%4A            | /%%4A                 | /J                 |
         | /%%4a            | /%%4a                 | /J                 |
         -----------------------------------------------------------------
-        
+
         By default, ESPv2 will normalize paths.
         Disable the feature only if your traffic is affected by the behavior.
-        
+
         Note: Following RFC 3986, this option does not unescape percent-encoded
         slash characters. See flag `--disallow_escaped_slashes_in_path` to
         enable this non-compliant behavior.
-        
+
         Note: Case normalization from RFC 3986 is not supported, even if this
         option is enabled.
-        
+
         For more details, see:
         https://cloud.google.com/api-gateway/docs/path-templating''')
 
@@ -476,20 +476,20 @@ environment variable or by passing "-k" flag to this script.
         help='''Disable merging of adjacent slashes in the `path` HTTP header.
         It is recommended to keep this option enabled if your backend
         performs merging by default.
-        
+
         The following table provides examples of the request `path` the backend
         will receive from ESPv2 based on the configuration of this flag.
-        
+
         -----------------------------------------------------------------
         | Request Path     | Without Normalization | With Normalization |
         -----------------------------------------------------------------
         | /hello//world    | Rejected              | /hello/world       |
         | /hello///        | Rejected              | /hello             |
         -----------------------------------------------------------------
-        
+
         By default, ESPv2 will merge slashes.
         Disable the feature only if your traffic is affected by the behavior.
-        
+
         For more details, see:
         https://cloud.google.com/api-gateway/docs/path-templating''')
 
@@ -499,20 +499,20 @@ environment variable or by passing "-k" flag to this script.
         Disallows requests with escaped percent-encoded slash characters:
         - %%2F or %%2f is treated as a /
         - %%5C or %%5c is treated as a  \
-        
+
         When enabled, the behavior depends on the protocol:
         - For OpenAPI backends, request paths with unescaped percent-encoded
           slashes will be automatically escaped via a redirect.
-        - For gRPC backends, request paths with unescaped percent-encoded 
+        - For gRPC backends, request paths with unescaped percent-encoded
           slashes will be rejected (gRPC does not support redirects).
-          
+
         This option is **not** RFC 3986 compliant,
         so it is turned off by default.
         If your backend is **not** RFC 3986 compliant and escapes slashes,
         you **must** enable this option in ESPv2.
         This will prevent against path confusion attacks that result in security
         requirements not being enforced.
-        
+
         For more details, see:
         https://cloud.google.com/api-gateway/docs/path-templating
         and
@@ -536,10 +536,10 @@ environment variable or by passing "-k" flag to this script.
     parser.add_argument(
         '--envoy_connection_buffer_limit_bytes', action=None,
         help='''
-        Configure the maximum amount of data that is buffered for each 
+        Configure the maximum amount of data that is buffered for each
         request/response body, in bytes. If not set, default is decided by
         Envoy.
-        
+
         https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/listener/v3/listener.proto
         ''')
 
@@ -637,7 +637,7 @@ environment variable or by passing "-k" flag to this script.
         '--jwt_pad_forward_payload_header',
         action='store_true',
         default=False,
-        help='''For the JWT in request, the JWT payload is forwarded to backend 
+        help='''For the JWT in request, the JWT payload is forwarded to backend
         in the `X-Endpoint-API-UserInfo` header by default. Normally JWT based64 encode doesn’t
         add padding. If this flag is true, the header will be padded.
         '''
@@ -714,12 +714,12 @@ environment variable or by passing "-k" flag to this script.
         default=None,
         help='''
         The conditions under which ESPv2 does retry on the backends. One or more
-        retryOn conditions can be specified by comma-separated list. 
+        retryOn conditions can be specified by comma-separated list.
         The default is `reset,connect-failure,refused-stream`. Disable retry by
         setting this flag to empty.
-        
-        All the retryOn conditions are defined in the 
-        x-envoy-retry-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on) and 
+
+        All the retryOn conditions are defined in the
+        x-envoy-retry-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on) and
         x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on).
         ''')
     parser.add_argument(
@@ -728,14 +728,14 @@ environment variable or by passing "-k" flag to this script.
         help='''
         The list of backend http status codes will be retried, in
         addition to the status codes enabled for retry through other retry
-        policies set in `--backend_retry_ons`. 
+        policies set in `--backend_retry_ons`.
         The format is a comma-delimited String, like "501, 503".
         ''')
     parser.add_argument(
         '--backend_retry_num',
         default=None,
         help='''
-        The allowed number of retries. Must be >= 0 and defaults to 1. 
+        The allowed number of retries. Must be >= 0 and defaults to 1.
         ''')
     parser.add_argument(
         '--backend_per_try_timeout',
@@ -743,7 +743,7 @@ environment variable or by passing "-k" flag to this script.
         help='''
         The backend timeout per retry attempt. Valid time units are "ns", "us",
         "ms", "s", "m", "h".
-        
+
         Please note the `deadline` in the `x-google-backend` extension is the
         total time wait for a full response from one request, including all
         retries. If the flag is unspecified, ESPv2 will use the  `deadline` in
@@ -801,7 +801,7 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
         Note the order matters. Default is 'traceparent,x-cloud-trace-context'.
-        
+
         See official documentation for more details:
         https://cloud.google.com/endpoints/docs/openapi/tracing'''
     )
@@ -811,7 +811,7 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context).
         Note the order matters. Default is 'traceparent,x-cloud-trace-context'.
-        
+
         See official documentation for more details:
         https://cloud.google.com/endpoints/docs/openapi/tracing'''
     )
@@ -821,10 +821,10 @@ environment variable or by passing "-k" flag to this script.
         help='''
         By default, traces will be sent to production Stackdriver Tracing.
         If this is non-empty, ESPv2 will send traces to this gRPC service instead.
-        
+
         The url must be in gRPC format.
         https://github.com/grpc/grpc/blob/master/doc/naming.md
-        
+
         The gRPC service must implement the cloud trace v2 RPCs.
         https://github.com/googleapis/googleapis/tree/master/google/devtools/cloudtrace/v2
         '''
@@ -837,7 +837,7 @@ environment variable or by passing "-k" flag to this script.
         By default, the proxy tries to talk to GCP metadata server to get VM
         location in the first few requests. Setting this flag to true to skip
         this step.
-        
+
         This will also disable the following features:
         - Backend authentication
         ''')
@@ -854,10 +854,10 @@ environment variable or by passing "-k" flag to this script.
         action='store_true',
         default=False,
         help='''
-        Enable application default credentials to communicate with service management APIs. 
-        Google auth libraries use a strategy called Application Default Credentials (ADC) 
-        to detect and select credentials based on environment or context automatically. 
-        For more detail, see: https://google.aip.dev/auth/4110. 
+        Enable application default credentials to communicate with service management APIs.
+        Google auth libraries use a strategy called Application Default Credentials (ADC)
+        to detect and select credentials based on environment or context automatically.
+        For more detail, see: https://google.aip.dev/auth/4110.
         ''')
     parser.add_argument(
         '--dns_resolver_addresses',
@@ -962,14 +962,14 @@ environment variable or by passing "-k" flag to this script.
         help='''
         Whether disallow colon in the url wildcard path segment for route match. According
         to Google http url template spec[1], the literal colon cannot be used in
-        url wildcard path segment. This flag isn't enabled for backward compatibility. 
-        
+        url wildcard path segment. This flag isn't enabled for backward compatibility.
+
         [1]https://github.com/googleapis/googleapis/blob/165280d3deea4d225a079eb5c34717b214a5b732/google/api/http.proto#L226-L252
         ''')
     parser.add_argument(
         '--ads_named_pipe', action=None,
         help='''
-        Unix domain socket to use internally for xDs between config manager and 
+        Unix domain socket to use internally for xDs between config manager and
         envoy. Only change if running multiple ESPv2 instances on the same host.
         '''
     )
@@ -1029,7 +1029,7 @@ environment variable or by passing "-k" flag to this script.
 
     parser.add_argument('--ssl_port', default=None, type=int, help='''
         This flag added for backward compatible for ESPv1 and will be deprecated.
-        Please use the flags --listener_port and --ssl_server_cert_path instead. 
+        Please use the flags --listener_port and --ssl_server_cert_path instead.
         When configured, ESPv2 accepts HTTP/1.x and HTTP/2 secure connections on this port,
         Requires the certificate and key files /etc/nginx/ssl/nginx.crt and
         /etc/nginx/ssl/nginx.key''')
@@ -1070,11 +1070,11 @@ environment variable or by passing "-k" flag to this script.
         The file path for gRPC backend SSL root certificates.''')
 
     parser.add_argument('--ssl_client_cert_path', default=None, help='''
-        This flag is renamed and deprecated for clarity. 
+        This flag is renamed and deprecated for clarity.
         Use `--ssl_backend_client_cert_path` instead.''')
 
     parser.add_argument('--ssl_client_root_certs_file', default=None, help='''
-        This flag is renamed and deprecated for clarity. 
+        This flag is renamed and deprecated for clarity.
         Use `--ssl_backend_client_root_certs_file` instead.''')
 
     # End Deprecated Flags Section
@@ -1353,7 +1353,7 @@ def gen_proxy_config(args):
 
     if args.http_request_timeout_s:
         proxy_conf.extend( ["--http_request_timeout_s", str(args.http_request_timeout_s)])
-        
+
     if args.service_control_url:
         proxy_conf.extend([
             "--service_control_url", args.service_control_url
