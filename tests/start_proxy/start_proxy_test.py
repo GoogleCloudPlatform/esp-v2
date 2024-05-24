@@ -59,7 +59,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--http_request_timeout_s', '10',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               ]),
             # backend with DNS address, no version.
@@ -75,7 +75,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'echo.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--service_control_check_timeout_ms', '100',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--backend_dns_lookup_family', 'v4only',
               '--dns_resolver_addresses', '127.0.0.1:53'
@@ -92,7 +92,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'echo.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--service_control_check_timeout_ms', '100',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--backend_dns_lookup_family', 'v4only',
               '--dns_resolver_addresses', '127.0.0.1:53'
@@ -108,7 +108,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079', '--enable_strict_transport_security',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -124,7 +124,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -140,7 +140,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -156,7 +156,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -172,7 +172,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -196,39 +196,38 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
             # service_control_network_fail_policy=open
-            # service_control_enable_api_key_uid_reporting
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
               '--service_control_network_fail_policy=open', '--check_metadata',
-              '--service_control_enable_api_key_uid_reporting',
               '--disable_tracing', '--underscores_in_headers'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079', '--enable_strict_transport_security',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
-            # no-service_control_enable_api_key_uid_reporting
+            # service_control_enable_api_key_uid_reporting=False
             (['-R=managed','--enable_strict_transport_security',
               '--http_port=8079', '--service_control_quota_retries=3',
               '--service_control_report_timeout_ms=300',
               '--service_control_network_fail_policy=open', '--check_metadata',
-              '--no-service_control_enable_api_key_uid_reporting',
+              '--service_control_enable_api_key_uid_reporting=False',
               '--disable_tracing', '--underscores_in_headers'],
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079', '--enable_strict_transport_security',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
+              '--service_control_enable_api_key_uid_reporting', 'False',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -239,7 +238,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--service_control_url',
               'https://non-default-servicecontrol.googleapis.com',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # service_control_network_fail_policy=close
@@ -254,7 +253,7 @@ class TestStartProxy(unittest.TestCase):
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
               '--service_control_network_fail_open=false',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata', '--underscores_in_headers',
               '--disable_tracing'
               ]),
@@ -265,7 +264,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_server_cert_path',
               '/etc/endpoint/ssl',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # ssl_server_root_cert_path specified
@@ -275,7 +274,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_server_root_cert_path',
               '/etc/endpoint/ssl/root.cert',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # legacy ssl_port specified
@@ -284,7 +283,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--ssl_server_cert_path', '/etc/nginx/ssl',
               '--listener_port', '9000',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               ]),
             # ssl_backend_client_cert_path specified
@@ -294,7 +293,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_cert_path',
               '/etc/endpoint/ssl',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -303,7 +302,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_cert_path',
               '/etc/endpoint/ssl',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # ssl_backend_client_root_certs_file specified
@@ -313,7 +312,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
               '/etc/endpoints/ssl/ca-certificates.crt',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -322,7 +321,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
               '/etc/endpoints/ssl/ca-certificates.crt',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # legacy enable_grpc_backend_ssl specified
@@ -332,7 +331,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_root_certs_path',
               '/etc/nginx/trusted-ca-certificates.crt',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # legacy tls_mutual_auth specified
@@ -342,7 +341,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_backend_client_cert_path',
               '/etc/nginx/ssl',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # ssl_minimum_protocol and ssl_maximum_protocol specified
@@ -353,7 +352,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_minimum_protocol',
               'TLSv1.1','--ssl_maximum_protocol','TLSv1.3',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # ssl_server_cipher_suites and ssl_backend_client_cipher_suites specified
@@ -365,7 +364,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8080',
               '--ssl_server_cipher_suites', 'AES128-SHA,AES256-GCM-SHA384',
               '--ssl_backend_client_cipher_suites', 'AES256-SHA',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # legacy --ssl_protocols specified
@@ -375,7 +374,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_minimum_protocol',
               'TLSv1.2','--ssl_maximum_protocol','TLSv1.3',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -384,7 +383,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_minimum_protocol',
               'TLSv1.2','--ssl_maximum_protocol','TLSv1.2',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             (['-R=managed','--listener_port=8080',  '--disable_tracing',
@@ -393,7 +392,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8080', '--ssl_server_cert_path',
               '/tmp/ssl/endpoints',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing'
               ]),
             # http2_port specified.
@@ -407,7 +406,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata',
               '--disable_tracing'
               ]),
@@ -422,7 +421,7 @@ class TestStartProxy(unittest.TestCase):
               '--listener_port', '8079',
               '--service_control_quota_retries', '3',
               '--service_control_report_timeout_ms', '300',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--check_metadata',
               '--disable_tracing'
               ]),
@@ -435,7 +434,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'https://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--cors_preset', 'basic',
               '--cors_allow_origin', '*', '--cors_allow_origin_regex', '',
@@ -460,7 +459,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'https://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--cors_preset', 'cors_with_regex',
               '--cors_allow_origin', '*',
@@ -480,7 +479,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'https://127.0.0.1:8000', '--v', '0',
               '--envoy_xff_num_trusted_hops', '0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service.json',
               '--disable_tracing',
               '--compute_platform_override', 'Cloud Run(ESPv2)'
@@ -495,7 +494,7 @@ class TestStartProxy(unittest.TestCase):
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
               '--http_request_timeout_s', '10',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               ]),
             # json-grpc transcoder json print options
@@ -510,7 +509,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--transcoding_always_print_primitive_fields',
               '--transcoding_always_print_enums_as_ints',
@@ -527,7 +526,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--transcoding_ignore_query_parameters', 'foo,bar'
               ]),
@@ -542,7 +541,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--transcoding_ignore_unknown_query_parameters'
               ]),
@@ -557,7 +556,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--transcoding_query_parameters_disable_unescape_plus'
               ]),
@@ -572,7 +571,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--transcoding_stream_newline_delimited'
               ]),
@@ -587,7 +586,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--transcoding_case_insensitive_enum_parsing'
               ]),
@@ -602,7 +601,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--disallow_colon_in_wildcard_path_segment'
               ]),
@@ -617,7 +616,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'grpc://127.0.0.1:8000', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--connection_buffer_limit_bytes', '1024'
               ]),
@@ -634,7 +633,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '1',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--suppress_envoy_headers=false'
               ]),
@@ -650,7 +649,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--access_log', '/foo/bar',
               '--access_log_format', '%START_TIME%',
               '--disable_tracing',
@@ -663,7 +662,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
@@ -675,7 +674,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing', '--enable_application_default_credentials',
               '--non_gcp',
               ]),
@@ -688,7 +687,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1', '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--tracing_project_id', 'test_project_1234',
               '--service_account_key', '/tmp/service_accout_key', '--non_gcp',
               ]),
@@ -707,7 +706,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--tracing_incoming_context', 'fake-incoming-context',
               '--tracing_outgoing_context', 'fake-outgoing-context',
               '--tracing_stackdriver_address', 'localhost:9990',
@@ -726,7 +725,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '1',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--tracing_sample_rate', '1',
               # '--tracing_enable_verbose_annotations',
               '--suppress_envoy_headers=false',
@@ -744,7 +743,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--tracing_sample_rate', '0',
               ]),
             # --disable_tracing overrides all other tracing flags
@@ -760,7 +759,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               ]),
             # backend retry setting
@@ -770,7 +769,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--backend_retry_ons', '5xx',
               '--disable_tracing'
               ]),
@@ -780,7 +779,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--backend_retry_num', '10',
               '--disable_tracing'
               ]),
@@ -790,7 +789,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--backend_per_try_timeout', '10s',
               '--disable_tracing'
               ]),
@@ -800,7 +799,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager', '--logtostderr', '--rollout_strategy', 'managed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--listener_port', '8079',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--backend_retry_on_status_codes', '500,501',
               '--disable_tracing'
               ]),
@@ -818,7 +817,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--disable_tracing',
               '--service_account_key', '/tmp/service_account_key',
               ]),
@@ -833,7 +832,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--envoy_xff_num_trusted_hops', '0',
               '--listener_port', '8080',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               '--disable_tracing',
               '--compute_platform_override', 'Cloud Run(ESPv2)'
@@ -850,7 +849,7 @@ class TestStartProxy(unittest.TestCase):
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--envoy_xff_num_trusted_hops', '3',
               '--listener_port', '8080',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               '--disable_tracing',
               '--compute_platform_override', 'Cloud Run(ESPv2)'
@@ -863,7 +862,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_request_headers', 'k1=v1',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Double header flags: --add_request_header
@@ -875,7 +874,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_request_headers', 'k1=v1;k2=v2',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Single header flag: --append_request_header
@@ -886,7 +885,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_request_headers', 'k1=v1',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Double header flags: --append_request_header
@@ -898,7 +897,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_request_headers', 'k1=v1;k2=v2',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Single header flag: --add_response_header
@@ -909,7 +908,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_response_headers', 'k1=v1',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Double header flags: --add_response_header
@@ -921,7 +920,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--add_response_headers', 'k1=v1;k2=v2',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Single header flag: --append_response_header
@@ -932,7 +931,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_response_headers', 'k1=v1',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Double header flags: --append_response_header
@@ -944,7 +943,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--append_response_headers', 'k1=v1;k2=v2',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # Path security options.
@@ -955,7 +954,7 @@ class TestStartProxy(unittest.TestCase):
               ],
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               '--normalize_path=false',
               '--merge_slashes_in_path=false',
@@ -966,7 +965,7 @@ class TestStartProxy(unittest.TestCase):
               ],
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               '--disallow_escaped_slashes_in_path',
               ]),
@@ -978,7 +977,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--enable_operation_name_header',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # response_compression.
@@ -989,7 +988,7 @@ class TestStartProxy(unittest.TestCase):
              ['bin/configmanager',  '--logtostderr', '--rollout_strategy', 'fixed',
               '--backend_address', 'http://127.0.0.1:8082', '--v', '0',
               '--enable_response_compression',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--service_json_path', '/tmp/service_config.json',
               ]),
             # passing the flag --health_check_grp_backend
@@ -1005,7 +1004,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               ]),
             # passing the flag --ads_named_pipe
             (['--service=test_bookstore.gloud.run',
@@ -1019,7 +1018,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               '--ads_named_pipe', '@espv2-named-pipe-9'
               ]),
             # passing the flags: --health_check_grp_backend, --health_check_grp_backend_interval and --health_check_grp_backend_service
@@ -1041,7 +1040,7 @@ class TestStartProxy(unittest.TestCase):
               '--v', '0',
               '--service', 'test_bookstore.gloud.run',
               '--service_config_id', '2019-11-09r0',
-              '--service_control_enable_api_key_uid_reporting', True,
+              '--service_control_enable_api_key_uid_reporting', 'True',
               ]),
         ]
 
@@ -1169,7 +1168,7 @@ class TestStartProxy(unittest.TestCase):
                  '--v', '0',
                  '--service', 'test_bookstore.gloud.run',
                  '--service_config_id', '2019-11-09r0',
-                 '--service_control_enable_api_key_uid_reporting', True,
+                 '--service_control_enable_api_key_uid_reporting', 'True',
                  ],
             ),
             (
@@ -1187,7 +1186,7 @@ class TestStartProxy(unittest.TestCase):
                  '--v', '0',
                  '--service', 'test_bookstore.gloud.run',
                  '--service_config_id', '2019-11-09r0',
-                 '--service_control_enable_api_key_uid_reporting', True,
+                 '--service_control_enable_api_key_uid_reporting', 'True',
                  '--service_account_key', '/tmp/service_account_key',
                  ],
             ),
@@ -1207,7 +1206,7 @@ class TestStartProxy(unittest.TestCase):
                  '--v', '0',
                  '--service', 'test_bookstore.gloud.run',
                  '--service_config_id', '2019-11-09r0',
-                 '--service_control_enable_api_key_uid_reporting', True,
+                 '--service_control_enable_api_key_uid_reporting', 'True',
                  '--service_account_key', '/tmp/service_account_key',
                  ],
             ),
@@ -1227,7 +1226,7 @@ class TestStartProxy(unittest.TestCase):
                  '--v', '0',
                  '--service', 'test_bookstore.gloud.run',
                  '--service_config_id', '2019-11-09r0',
-                 '--service_control_enable_api_key_uid_reporting', True,
+                 '--service_control_enable_api_key_uid_reporting', 'True',
                  '--service_account_key', '/tmp/service_account_key222',
                  ],
             ),
