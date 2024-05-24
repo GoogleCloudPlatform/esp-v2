@@ -578,7 +578,8 @@ environment variable or by passing "-k" flag to this script.
         otherwise, it will be rejected. Default is `open`.
         ''')
     parser.add_argument('--service_control_enable_api_key_uid_reporting',
-        default=False,
+        default=True,
+        action=argparse.BooleanOptionalAction,
         help='''
         Enable when need to report api_key_uid in the telemetry report.'''
     )
@@ -1404,7 +1405,7 @@ def gen_proxy_config(args):
             "--service_control_enable_api_key_uid_reporting",
             args.service_control_enable_api_key_uid_reporting
         ])
-
+        
     if args.service_json_path:
         proxy_conf.extend(["--service_json_path", args.service_json_path])
 
