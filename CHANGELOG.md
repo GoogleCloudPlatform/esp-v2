@@ -1,10 +1,15 @@
 # Release 2.49.0 27-06-2024
 
-- Default service_control_enable_api_key_uuid_reporting to true ([#910](https://github.com/GoogleCloudPlatform/esp-v2/pull/910))
-- Expose service_control_url flag to set service controller endpoint. ([#905](https://github.com/GoogleCloudPlatform/esp-v2/pull/905))
+- Default `service_control_enable_api_key_uuid_reporting` to true ([#910](https://github.com/GoogleCloudPlatform/esp-v2/pull/910))
+- Expose `service_control_url` flag to set service controller endpoint. ([#905](https://github.com/GoogleCloudPlatform/esp-v2/pull/905))
 - Update Envoy to v1.30.1. ([#904](https://github.com/GoogleCloudPlatform/esp-v2/pull/904))
 - Add a flag to opt out of reporting api key uid and report unknown in network error. ([#897](https://github.com/GoogleCloudPlatform/esp-v2/pull/897))
 - Propagate Api Key UID when it is returned by the service controller. ([#892](https://github.com/GoogleCloudPlatform/esp-v2/pull/892))
+
+# Release 2.48.0 08-04-2024
+
+- Fix libexpat vulnerabilities by rebuilding the release
+- Update googleapi version to latest (#884)
 
 # Release 2.47.0 30-01-2024
 
