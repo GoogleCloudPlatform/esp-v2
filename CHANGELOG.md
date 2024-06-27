@@ -1,3 +1,8 @@
+# Release 2.48.0 08-04-2024
+
+- Fix libexpat vulnerabilities by rebuilding the release
+- Update googleapi version to latest (#884)
+
 # Release 2.47.0 30-01-2024
 
 - Fix the OpenSSL vulnerabilities by rebuilding the release
