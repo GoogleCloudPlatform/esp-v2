@@ -170,7 +170,7 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 			snakeToJson = make(map[string]string)
 		}
 
-		pattern, err := httpRuleToHTTPPattern(rule, snakeToJson)
+		pattern, err := HTTPRuleToHTTPPattern(rule, snakeToJson)
 		if err != nil {
 			return nil, fmt.Errorf("fail to process http rule for operation %q: %v", selector, err)
 		}
@@ -181,7 +181,7 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 		// when interpret the http rules from the descriptor. Therefore, no need to
 		// check for nested additional_bindings.
 		for i, additionalRule := range rule.AdditionalBindings {
-			additionalPattern, err := httpRuleToHTTPPattern(additionalRule, snakeToJson)
+			additionalPattern, err := HTTPRuleToHTTPPattern(additionalRule, snakeToJson)
 			if err != nil {
 				return nil, fmt.Errorf("fail to process http rule's additional_binding at index %d for operation %q: %v", i, selector, err)
 			}
@@ -226,7 +226,9 @@ func ParseHTTPPatternsBySelectorFromOPConfig(serviceConfig *servicepb.Service, o
 	return httpPatternsBySelector, nil
 }
 
-func httpRuleToHTTPPattern(rule *annotationspb.HttpRule, snakeToJson map[string]string) (*httppattern.Pattern, error) {
+// HTTPRuleToHTTPPattern converts an HTTP rule to an internal HTTP pattern
+// representation, to be used while parsing the service config for HTTP patterns.
+func HTTPRuleToHTTPPattern(rule *annotationspb.HttpRule, snakeToJSON map[string]string) (*httppattern.Pattern, error) {
 	parsedRule, err := parseHttpRule(rule)
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse http rule: %v", err)
@@ -237,7 +239,7 @@ func httpRuleToHTTPPattern(rule *annotationspb.HttpRule, snakeToJson map[string]
 		return nil, fmt.Errorf("fail to parse http rule path into uri template: %v", err)
 	}
 
-	uriTemplate.ReplaceVariableField(snakeToJson)
+	uriTemplate.ReplaceVariableField(snakeToJSON)
 
 	return &httppattern.Pattern{
 		HttpMethod:  parsedRule.method,
