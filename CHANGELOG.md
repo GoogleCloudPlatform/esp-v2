@@ -1,3 +1,7 @@
+# Release 2.50.0 31-07-2024
+
+- Update Go version to 1.22.5 (#916)
+
 # Release 2.49.0 27-06-2024
 
 - Default `service_control_enable_api_key_uuid_reporting` to true ([#910](https://github.com/GoogleCloudPlatform/esp-v2/pull/910))
