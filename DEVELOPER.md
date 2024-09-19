@@ -52,7 +52,7 @@ git clone https://github.com/GoogleCloudPlatform/esp-v2.git
 
 Go to [Setup yaml](https://github.com/GoogleCloudPlatform/oss-test-infra/blob/master/prow/prowjobs/GoogleCloudPlatform/esp-v2/esp-v2.yaml#L13), copy the latest working image link.
 
-For example: ***gcr.io/cloudesf-testing/gcpproxy-prow:v20230712-v2.44.0-17-g94471d2e-master***
+For example: ***gcr.io/cloudesf-testing/gcpproxy-prow:v20240727-v2.46.0-27-g6c21f955-master***
 
 #### Run Docker Instance
 
