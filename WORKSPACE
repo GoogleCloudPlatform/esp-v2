@@ -41,7 +41,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 ENVOY_SHA1 = "86dc7ef91ca15fb4957a74bd599397413fc26a24"  # v1.32.0
 
-ENVOY_SHA256 = ""
+ENVOY_SHA256 = "e03ffb3862322bbf58c93c5373d94c822c3d96dd2c5ae496c5c464f4fd16af34"
 
 http_archive(
     name = "envoy",
