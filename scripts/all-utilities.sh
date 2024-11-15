@@ -378,7 +378,7 @@ function try_setup_bazel_remote_cache() {
   local root_dir=$3
   local presubmit_test_case=$4
   local gcp_project_id="cloudesf-testing"
-  local silo_uuid="v9"
+  local silo_uuid="v10"
 
   # Determine if this job is running on a non-Prow host. All Prow jobs must have this env var
   # https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md#job-environment-variables
