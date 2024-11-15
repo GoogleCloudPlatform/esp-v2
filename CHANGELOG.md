@@ -1,7 +1,6 @@
 # Release 2.51.0 14-11-2024
 
 - Update Envoy to 1.30.7 (#936)
-- Update the docker build image in DEVELOPER.md to latest (#930)
 
 # Release 2.50.0 31-07-2024
 
