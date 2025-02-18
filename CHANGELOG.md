@@ -1,3 +1,7 @@
+# Release 2.52.0 18-02-2025
+
+- Fix CVE-2024-9287 vulnerabilities by rebuilding the release
+
 # Release 2.51.0 14-11-2024
 
 - Update Envoy to 1.30.7 (#936)
