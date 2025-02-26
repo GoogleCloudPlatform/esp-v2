@@ -243,5 +243,4 @@ Download link pattern: https://github.com/envoyproxy/envoy/archive/${ENVOY_SHA1}
 
 ```text
 DEBUG: Rule 'envoy' indicated that a canonical reproducible form can be obtained by modifying arguments sha256 = "e03xxx..."
-
 ```
