@@ -216,3 +216,32 @@ You will need the following tools to run manual e2e tests:
 2) `gcloud`
 
 Alternatively, you can rely on ESPv2 Prow CI/CD to run e2e tests.
+
+### Envoy version update
+
+#### Clone [ESPv2 Repo]((https://github.com/GoogleCloudPlatform/esp-v2))
+
+Follow [above steps](#docker-mode-setup) to clone the repo. 
+If you didn't clone the code to your home directory (`~`), be sure to update the enlist mounting folder `~/esp-v2` in `docker run` command.
+
+#### Envoy version lookup
+
+Go to https://github.com/envoyproxy/envoy/releases to see the latest release.
+The version can be found under the release tag. Copy the commit id and set it as `ENVOY_SHA1` in `WORKSPACE` file.
+
+```text
+ENVOY_SHA1 = "86dxxx..."  # v1.32.0
+
+ENVOY_SHA256 = ""
+```
+
+To get the `ENVOY_SHA256`, leave the field as empty and run `make depend.install` command locally or submit a pull request online. 
+Look for the `DEBUG` log in the following pattern and update the `ENVOY_SHA256` accordingly.
+
+Alternatively we can download source code zip for ENVOY_SHA1 release from releases page & find its sha256 using any cmdline tool.
+Download link pattern: https://github.com/envoyproxy/envoy/archive/${ENVOY_SHA1}.zip.
+
+```text
+DEBUG: Rule 'envoy' indicated that a canonical reproducible form can be obtained by modifying arguments sha256 = "e03xxx..."
+
+```
