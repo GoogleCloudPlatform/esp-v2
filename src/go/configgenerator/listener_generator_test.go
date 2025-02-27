@@ -303,7 +303,6 @@ func TestMakeListeners(t *testing.T) {
                       "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-http.backend.test:8080",
-                        "hostRewriteLiteral": "http.backend.test",
                         "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,
@@ -330,7 +329,6 @@ func TestMakeListeners(t *testing.T) {
                       "name": "endpoints.examples.bookstore.Bookstore.CreateShelf",
                       "route": {
                         "cluster": "backend-cluster-http.backend.test:8080",
-                        "hostRewriteLiteral": "http.backend.test",
                         "idleTimeout": "300s",
                         "retryPolicy": {
                           "numRetries": 1,

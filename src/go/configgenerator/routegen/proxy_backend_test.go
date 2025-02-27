@@ -1351,7 +1351,6 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
       "name":"endpoints.examples.bookstore.Bookstore.Echo",
       "route":{
         "cluster":"backend-cluster-http.abc.com:80",
-        "hostRewriteLiteral":"http.abc.com",
         "idleTimeout":"300s",
         "retryPolicy":{
           "numRetries":1,
@@ -1378,7 +1377,6 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
       "name":"endpoints.examples.bookstore.Bookstore.Echo",
       "route":{
         "cluster":"backend-cluster-http.abc.com:80",
-        "hostRewriteLiteral":"http.abc.com",
         "idleTimeout":"300s",
         "retryPolicy":{
           "numRetries":1,
