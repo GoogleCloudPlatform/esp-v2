@@ -98,9 +98,11 @@ func (g *ProxyBackendGenerator) GenRouteConfig(filterGens []filtergen.FilterGene
 
 			if !isGrpc {
 				methodCfg.BackendClusterName = backendCluster.HTTPBackend.Name
-// Host rewrite is not needed for HTTP backends as it's handled by go/cloud-esf-http-backends (see [link to design doc]).
-// This configuration is for test purposes only since the cluster config is not owned by Cloud ESF.
-				methodCfg.Deadline = deadlineSpecifier.HTTPBackendDeadline
+				// No need to configure host rewrite for http backend.
+				// This solution is designed in go/cloud-esf-http-backends and is used to serve
+				// traffic with dual backends (http, grpc). The cluster config though is not owned by Cloud
+				// ESF so the below configuration is test only.
+				methodCfg.HostRewrite = ""
 				methodCfg.IsStreaming = false
 			}
 		}
