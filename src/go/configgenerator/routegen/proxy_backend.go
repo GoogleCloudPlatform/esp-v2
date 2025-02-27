@@ -103,6 +103,7 @@ func (g *ProxyBackendGenerator) GenRouteConfig(filterGens []filtergen.FilterGene
 				// traffic with dual backends (http, grpc). The cluster config though is not owned by Cloud
 				// ESF so the below configuration is test only.
 				methodCfg.HostRewrite = ""
+				methodCfg.Deadline = deadlineSpecifier.HTTPBackendDeadline
 				methodCfg.IsStreaming = false
 			}
 		}
