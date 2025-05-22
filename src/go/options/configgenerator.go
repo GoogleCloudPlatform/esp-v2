@@ -78,11 +78,12 @@ type ConfigGeneratorOptions struct {
 	DnsResolverAddresses             string
 
 	// Headers manipulation:
-	AddRequestHeaders         string
-	AppendRequestHeaders      string
-	AddResponseHeaders        string
-	AppendResponseHeaders     string
-	EnableOperationNameHeader bool
+	AddRequestHeaders              string
+	AppendRequestHeaders           string
+	AddResponseHeaders             string
+	AppendResponseHeaders          string
+	EnableOperationNameHeader      bool
+	AllowHostRewriteForHTTPBackend bool
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey                   string
