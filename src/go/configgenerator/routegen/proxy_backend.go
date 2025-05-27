@@ -15,11 +15,12 @@ import (
 // ProxyBackendGenerator is a RouteGenerator to configure routes to the local
 // or remote backend service.
 type ProxyBackendGenerator struct {
-	HTTPPatterns             httppattern.MethodSlice
-	BackendClusterBySelector map[string]*BackendClusterSpecifier
-	DeadlineBySelector       map[string]*DeadlineSpecifier
-	MethodBySelector         map[string]*apipb.Method
-	BackendRouteGen          *helpers.BackendRouteGenerator
+	HTTPPatterns                   httppattern.MethodSlice
+	BackendClusterBySelector       map[string]*BackendClusterSpecifier
+	DeadlineBySelector             map[string]*DeadlineSpecifier
+	MethodBySelector               map[string]*apipb.Method
+	BackendRouteGen                *helpers.BackendRouteGenerator
+	AllowHostRewriteForHTTPBackend bool
 
 	*NoopRouteGenerator
 }
@@ -44,11 +45,12 @@ func NewProxyBackendRouteGenFromOPConfig(serviceConfig *servicepb.Service, opts 
 	}
 
 	return &ProxyBackendGenerator{
-		HTTPPatterns:             *httpPatterns,
-		BackendClusterBySelector: backendClusterBySelector,
-		DeadlineBySelector:       ParseDeadlineSelectorFromOPConfig(serviceConfig, opts),
-		MethodBySelector:         ParseMethodBySelectorFromOPConfig(serviceConfig),
-		BackendRouteGen:          helpers.NewBackendRouteGeneratorFromOPConfig(opts),
+		HTTPPatterns:                   *httpPatterns,
+		BackendClusterBySelector:       backendClusterBySelector,
+		DeadlineBySelector:             ParseDeadlineSelectorFromOPConfig(serviceConfig, opts),
+		MethodBySelector:               ParseMethodBySelectorFromOPConfig(serviceConfig),
+		BackendRouteGen:                helpers.NewBackendRouteGeneratorFromOPConfig(opts),
+		AllowHostRewriteForHTTPBackend: opts.AllowHostRewriteForHTTPBackend,
 	}, nil
 }
 
@@ -98,11 +100,11 @@ func (g *ProxyBackendGenerator) GenRouteConfig(filterGens []filtergen.FilterGene
 
 			if !isGrpc {
 				methodCfg.BackendClusterName = backendCluster.HTTPBackend.Name
-				// No need to configure host rewrite for http backend.
-				// This solution is designed in go/cloud-esf-http-backends and is used to serve
-				// traffic with dual backends (http, grpc). The cluster config though is not owned by Cloud
-				// ESF so the below configuration is test only.
-				methodCfg.HostRewrite = ""
+				if g.AllowHostRewriteForHTTPBackend {
+					methodCfg.HostRewrite = backendCluster.HTTPBackend.HostName
+				} else {
+					methodCfg.HostRewrite = ""
+				}
 				methodCfg.Deadline = deadlineSpecifier.HTTPBackendDeadline
 				methodCfg.IsStreaming = false
 			}

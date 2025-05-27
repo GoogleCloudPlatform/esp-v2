@@ -87,7 +87,8 @@ var (
          For example --add_response_headers=key1=value1;key2=value2. If a header is already in the response, its value will be replaced with the new one.`)
 	AppendResponseHeaders = flag.String("append_response_headers", defaults.AppendResponseHeaders, `Append HTTP headers to the response before sent to the upstream backend. Multiple headers are separated by ';'.
          For example --append_response_headers=key1=value1;key2=value2. If a header is already in the response, the new value will be append.`)
-	EnableOperationNameHeader = flag.Bool("enable_operation_name_header", defaults.EnableOperationNameHeader, "If enabled, the operation name for the matched route will be sent to the upstream as a request header.")
+	EnableOperationNameHeader      = flag.Bool("enable_operation_name_header", defaults.EnableOperationNameHeader, "If enabled, the operation name for the matched route will be sent to the upstream as a request header.")
+	AllowHostRewriteForHTTPBackend = flag.Bool("allow_host_rewrite_for_http_backend", defaults.AllowHostRewriteForHTTPBackend, "If enabled, the host/:authority header of the upstream request will be rewritten to the hostname of backend http cluster.")
 
 	// Flags for non_gcp deployment.
 	ServiceAccountKey = flag.String("service_account_key", defaults.ServiceAccountKey, `Use the service account key JSON file to access the service control and the
@@ -269,6 +270,7 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		AddResponseHeaders:                            *AddResponseHeaders,
 		AppendResponseHeaders:                         *AppendResponseHeaders,
 		EnableOperationNameHeader:                     *EnableOperationNameHeader,
+		AllowHostRewriteForHTTPBackend:                *AllowHostRewriteForHTTPBackend,
 		ServiceAccountKey:                             *ServiceAccountKey,
 		TokenAgentPort:                                *TokenAgentPort,
 		EnableApplicationDefaultCredentials:           *EnableApplicationDefaultCredentials,
