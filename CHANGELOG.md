@@ -1,7 +1,3 @@
-# RC 2.53.0 XX-XX-2025
-
-- Update Alpine base image from 3.18 to 3.22
-
 # Release 2.52.0 18-02-2025
 
 - Fix CVE-2024-9287 vulnerabilities by rebuilding the release
