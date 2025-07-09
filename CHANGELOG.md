@@ -1,3 +1,7 @@
+# Release 2.53.0 08-07-2025
+
+- Fix CVE-2025-47273 vulnerabilities
+
 # Release 2.52.0 18-02-2025
 
 - Fix CVE-2024-9287 vulnerabilities by rebuilding the release
