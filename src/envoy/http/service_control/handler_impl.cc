@@ -376,7 +376,7 @@ void ServiceControlHandlerImpl::callReport(
   info.response_code_detail = stream_info_.responseCodeDetails().value_or("");
 
   if (!require_ctx_->service_ctx().config().tracing_disabled()) {
-    info.trace_id = parent_span.getTraceIdAsHex();
+    info.trace_id = parent_span.getTraceId();
   }
 
   require_ctx_->service_ctx().call().callReport(info);

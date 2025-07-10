@@ -111,7 +111,7 @@ absl::Status ProtoToJson(
     json_options.add_whitespace = true;
   }
   if (options & JsonOptions::OUTPUT_DEFAULTS) {
-    json_options.always_print_primitive_fields = true;
+    json_options.always_print_fields_with_no_presence = true;
   }
   // TODO: Skip going to bytes and use ProtoObjectSource directly.
   std::string binary = message.SerializeAsString();
