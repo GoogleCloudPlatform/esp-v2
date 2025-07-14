@@ -155,7 +155,7 @@ DEFINE_PROTO_FUZZER(
     stream_info->route_ = mock_route;
     EXPECT_CALL(*mock_route, mostSpecificPerFilterConfig(kFilterName))
         .WillRepeatedly(
-            Invoke([per_route](const std::string&)
+            Invoke([per_route](std::string_view)
                        -> const Envoy::Router::RouteSpecificFilterConfig* {
               return per_route.get();
             }));
