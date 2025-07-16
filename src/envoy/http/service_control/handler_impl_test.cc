@@ -1153,7 +1153,7 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // Test: Test that report fills in the trace id.
-  EXPECT_CALL(mock_span_, getTraceId()).WillOnce(Return("test-trace-id"));
+  EXPECT_CALL(mock_span_, getTraceIdAsHex()).WillOnce(Return("test-trace-id"));
 
   setPerRouteOperation("get_header_key");
   TestRequestHeaderMapImpl headers{
@@ -1177,8 +1177,8 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
 }
 
 TEST_F(HandlerTest, HandlerReportWithoutTraceId) {
-  // Test getTraceId is not called since trace is disabled.
-  EXPECT_CALL(mock_span_, getTraceId()).Times(0);
+  // Test getTraceIdAsHex is not called since trace is disabled.
+  EXPECT_CALL(mock_span_, getTraceIdAsHex()).Times(0);
   proto_config_.mutable_services(0)->set_tracing_disabled(true);
 
   setPerRouteOperation("get_header_key");
