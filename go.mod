@@ -7,11 +7,10 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/census-instrumentation/opencensus-proto v0.4.1
 	github.com/envoyproxy/go-control-plane v0.11.1-0.20230524094728-9239064ad72f
-	github.com/envoyproxy/protoc-gen-validate v0.10.1
-	github.com/golang/glog v1.1.0
+	github.com/golang/glog v1.2.4
 	github.com/golang/protobuf v1.5.3
 	github.com/google/brotli/go/cbrotli v0.0.0-20220110100810-f4153a09f87c
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/imdario/mergo v0.3.15
@@ -34,6 +33,7 @@ require (
 	cloud.google.com/go/servicemanagement v1.8.0 // indirect
 	cloud.google.com/go/trace v1.9.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20230607035331-e9ce68804cb4 // indirect
+	github.com/envoyproxy/protoc-gen-validate v0.10.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
