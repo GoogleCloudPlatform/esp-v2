@@ -114,7 +114,7 @@ function count_stress_failures() {
   mkdir -p "${LOGS}/${SHA}"
 
   echo "Downloading prow logs to '${LOGS}' directory."
-  ${GSUTIL} -m -q cp -r "gs://apiproxy-continuous-long-run/${SHA}/logs/*" "${LOGS}/${SHA}/" 2>&1  \
+  gcloud -q storage cp --recursive "gs://apiproxy-continuous-long-run/${SHA}/logs/*" "${LOGS}/${SHA}/" 2>&1  \
     || error_exit "Failed to download logs from gs://apiproxy-continuous-long-run/${SHA}/logs/*"
 
   python3 "${ROOT}/scripts/release/validate_release.py"  \

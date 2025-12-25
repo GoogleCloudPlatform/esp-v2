@@ -21,7 +21,7 @@
 // Fetches from the bucket at `BUCKET` at the path `CONFIG_FILE_NAME`,
 // Behavior is similar to running:
 //
-// `gsutil cp "gs://${BUCKET}/${CONFIG_FILE_NAME}" envoy.json`
+// `gcloud storage cp "gs://${BUCKET}/${CONFIG_FILE_NAME}" envoy.json`
 //
 // without needing `gsutil` in the image.
 //

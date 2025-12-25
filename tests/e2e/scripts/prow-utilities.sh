@@ -257,7 +257,8 @@ function upload_logs() {
   local log_dir="${2}"
 
   echo "Uploading content of ${log_dir} to ${remote_dir}"
-  retry -n 3 ${GSUTIL} -h 'Content-Type:text/plain' -m cp -r  \
+  # The gsutil top-level flag `-h` is not supported in `gcloud storage`.
+  retry -n 3 gcloud storage cp --recursive  \
     "${log_dir}" "${remote_dir}"  \
     || echo "Failed to upload ${log_dir}"
 }
@@ -297,7 +298,7 @@ function wait_apiproxy_image() {
 }
 
 function download_client_binaries() {
-  gsutil -m cp "gs://apiproxy-testing-presubmit-binaries/*" ${ROOT}/bin/
+  gcloud storage cp "gs://apiproxy-testing-presubmit-binaries/*" ${ROOT}/bin/
   mv ${ROOT}/bin/api_descriptor.pb ${ROOT}/tests/endpoints/grpc_echo/proto/api_descriptor.pb
   chmod +x ${ROOT}/bin/*
 }

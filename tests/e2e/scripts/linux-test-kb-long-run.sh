@@ -56,7 +56,7 @@ fi
 # Download api Keys with restrictions from Cloud storage.
 TEMP_DIR="$(mktemp -d)"
 API_RESTRICTION_KEYS_FILE="${TEMP_DIR}/apiproxy-e2e-key-restriction.json"
-gsutil cp gs://apiproxy-testing-client-secret-files/restricted_api_keys.json  \
+gcloud storage cp gs://apiproxy-testing-client-secret-files/restricted_api_keys.json  \
   "${API_RESTRICTION_KEYS_FILE}"  \
   || error_exit "Failed to download API key with restrictions file."
 

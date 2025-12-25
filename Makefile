@@ -132,7 +132,7 @@ upload-e2e-client-binaries: build-grpc-echo build-grpc-interop
 	@cp -n bin/stress_test /tmp/apiproxy-test-presubmit-binaries/stress_test
 	@cp -n bin/grpc_echo_client /tmp/apiproxy-test-presubmit-binaries/grpc_echo_client
 	@cp -n tests/endpoints/grpc_echo/proto/api_descriptor.pb /tmp/apiproxy-test-presubmit-binaries/api_descriptor.pb
-	@gsutil cp -Z -r /tmp/apiproxy-test-presubmit-binaries/* "gs://apiproxy-testing-presubmit-binaries/"
+	@gcloud storage cp --gzip-local-all --recursive /tmp/apiproxy-test-presubmit-binaries/* "gs://apiproxy-testing-presubmit-binaries/"
 
 
 #-----------------------------------------------------------------------------
