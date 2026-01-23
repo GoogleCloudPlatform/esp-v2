@@ -131,7 +131,7 @@ function retry() {
 # Download api Keys from Cloud storage and source the file.
 function set_api_keys() {
   local api_key_directory="$(mktemp -d)"
-  $GSUTIL cp gs://apiproxy-testing-client-secret-files/api_keys  \
+  gcloud storage cp gs://apiproxy-testing-client-secret-files/api_keys  \
     "${api_key_directory}/api_keys"  \
     || error_exit "Failed to download API key file."
 
@@ -142,7 +142,7 @@ function set_api_keys() {
 function get_test_client_key() {
   local remote_file_name=$1
   local key_path=$2
-  $GSUTIL  cp "gs://apiproxy-testing-client-secret-files/$remote_file_name" "$key_path"
+  gcloud storage cp "gs://apiproxy-testing-client-secret-files/$remote_file_name" "$key_path"
   echo -n "$key_path"
   return 0
 }
@@ -279,7 +279,7 @@ function update_tool() {
 
   [[ -z "${TOOLS_BUCKET}" ]] && return 1
   echo "Uploading ${local_path} to ${remote_path}."
-  ${GSUTIL} cp "${local_path}" "${remote_path}"  \
+  gcloud storage cp "${local_path}" "${remote_path}"  \
     || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}";
   return 1; }
   return 0
@@ -293,7 +293,7 @@ function get_tool() {
 
   [[ -z "${TOOLS_BUCKET}" ]] && return 1
   echo "Downloading ${remote_path} to ${local_path}."
-  ${GSUTIL} cp "${remote_path}" "${local_path}"  \
+  gcloud storage cp "${remote_path}" "${local_path}"  \
     || { echo "Failed to upload ${tool_name} to ${TOOLS_BUCKET}";
   return 1; }
   return 0

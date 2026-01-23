@@ -73,10 +73,10 @@ case "${JOB_TYPE}" in
 esac
 
 # Upload folder.
-gsutil -m rsync -r -d "${ROOT}/generated" "gs://esp-v2-coverage/${PUBLIC_DIRECTORY}"
+gcloud storage rsync --recursive --delete-unmatched-destination-objects "${ROOT}/generated" "gs://esp-v2-coverage/${PUBLIC_DIRECTORY}"
 
 # No browser cache since some directories change often and that would be misleading.
-gsutil -m setmeta -h "Cache-Control:private, max-age=0, no-transform" "gs://esp-v2-coverage/${PUBLIC_DIRECTORY}/**"
+gcloud storage objects update --cache-control="private, max-age=0, no-transform" "gs://esp-v2-coverage/${PUBLIC_DIRECTORY}/**"
 
 echo '======================================================='
 echo '==================== View Coverage ===================='
