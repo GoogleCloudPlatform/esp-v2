@@ -1,3 +1,7 @@
+# Release 2.54.0 26-01-2026
+
+- update glibc package to 2.35-r0 to resolve segfaults (#973)
+
 # Release 2.53.0 08-07-2025
 
 - Fix CVE-2025-47273 vulnerabilities
