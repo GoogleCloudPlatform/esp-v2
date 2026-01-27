@@ -9,6 +9,7 @@ src/go/proto/
 .clwb/
 .ijwb/
 .idea/
+.vscode/
 
 # C++ coverage
 generated/
