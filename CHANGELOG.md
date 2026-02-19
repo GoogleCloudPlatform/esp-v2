@@ -1,3 +1,7 @@
+# Release 2.55.0 19-02-2026
+
+- Fix OpenSSL vulnerabilities by rebuilding the release
+
 # Release 2.54.0 26-01-2026
 
 - update glibc package to 2.35-r0 to resolve segfaults (#973)
