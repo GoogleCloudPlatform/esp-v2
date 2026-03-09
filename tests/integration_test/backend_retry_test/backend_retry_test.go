@@ -441,7 +441,7 @@ func TestBackendPerTryTimeout(t *testing.T) {
 			if tc.wantError != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantError) {
 					t.Errorf("Test (%s) failed, want error %s, get error %v", tc.desc, tc.wantError, err)
-					t.Errorf(respStr)
+					t.Errorf("%s", respStr)
 				}
 			} else if err != nil {
 				t.Errorf("Test (%s) failed, get unexpected error %v", tc.desc, err)
