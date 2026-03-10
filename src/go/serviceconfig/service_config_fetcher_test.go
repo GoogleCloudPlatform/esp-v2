@@ -45,7 +45,7 @@ func initServiceManagementForTestServiceConfigFetcher(t *testing.T,
 			}
 			_, _ = w.Write(resp)
 		default:
-			fmt.Printf(r.URL.Path)
+			fmt.Printf("%s", r.URL.Path)
 			w.WriteHeader(http.StatusNotFound)
 		}
 
