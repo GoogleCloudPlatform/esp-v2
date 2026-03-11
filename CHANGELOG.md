@@ -1,3 +1,7 @@
+# Release 2.55.1 11-03-2026
+
+- Bump Go version to 1.26 (#983)
+
 # Release 2.55.0 19-02-2026
 
 - Fix OpenSSL vulnerabilities by rebuilding the release
