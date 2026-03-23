@@ -14,7 +14,7 @@
 
 # Folloing portion is copied from https://github.com/Docker-Hub-frolvlad/docker-alpine-glibc/blob/master/Dockerfile
 ################################################################################################################
-FROM alpine:3.22
+FROM alpine:3.23
 
 ENV LANG=C.UTF-8
 
