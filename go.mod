@@ -74,3 +74,5 @@ require (
 	golang.org/x/tools v0.42.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260311181403-84a4fc48630c // indirect
 )
+
+replace github.com/envoyproxy/go-control-plane => github.com/envoyproxy/go-control-plane v0.11.1-0.20230524094728-9239064ad72f
