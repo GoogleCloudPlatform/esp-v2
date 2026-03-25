@@ -8,7 +8,7 @@ require (
 	github.com/census-instrumentation/opencensus-proto v0.4.1
 	github.com/envoyproxy/go-control-plane v0.11.1-0.20230524094728-9239064ad72f
 	github.com/envoyproxy/protoc-gen-validate v0.10.1
-	github.com/golang/glog v1.1.0
+	github.com/golang/glog v1.2.4
 	github.com/golang/protobuf v1.5.3
 	github.com/google/brotli/go/cbrotli v0.0.0-20220110100810-f4153a09f87c
 	github.com/google/go-cmp v0.7.0
