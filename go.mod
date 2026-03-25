@@ -6,7 +6,11 @@ require (
 	cloud.google.com/go/storage v1.28.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/census-instrumentation/opencensus-proto v0.4.1
+<<<<<<< HEAD
 	github.com/envoyproxy/go-control-plane v0.14.0
+=======
+	github.com/envoyproxy/go-control-plane v0.13.4
+>>>>>>> 4b726106243342eac13206b1b37c70eedce0bfaf
 	github.com/envoyproxy/protoc-gen-validate v1.3.0
 	github.com/golang/glog v1.2.5
 	github.com/golang/protobuf v1.5.4
@@ -16,11 +20,19 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/imdario/mergo v0.3.15
 	github.com/miekg/dns v1.1.45
+<<<<<<< HEAD
 	golang.org/x/net v0.52.0
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.114.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.79.3
+=======
+	golang.org/x/net v0.38.0
+	golang.org/x/oauth2 v0.34.0
+	google.golang.org/api v0.114.0
+	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
+	google.golang.org/grpc v1.74.0-dev
+>>>>>>> 4b726106243342eac13206b1b37c70eedce0bfaf
 	google.golang.org/protobuf v1.36.11
 )
 
