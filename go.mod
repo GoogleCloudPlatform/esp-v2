@@ -1,6 +1,6 @@
 module github.com/GoogleCloudPlatform/esp-v2
 
-go 1.26
+go 1.26.1
 
 require (
 	cloud.google.com/go/storage v1.28.1
