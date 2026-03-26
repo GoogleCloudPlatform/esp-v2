@@ -18,12 +18,7 @@ FROM _ENVOY_IMAGE_SHA_NAME
 RUN apk add --update --no-cache openssl
 
 # Install python3
-RUN apk add --no-cache python3 py3-pip && \
-<<<<<<< HEAD
-    python3 -m pip install --no-cache-dir --upgrade --break-system-packages pip==26
-=======
-    python3 -m pip install --no-cache-dir --upgrade pip==26
->>>>>>> fca380f4d2f8d65da4c518637fd965fd801ced3d
+RUN apk add --no-cache python3 py3-pip && python3 -m pip install --no-cache-dir --upgrade --break-system-packages pip==26
 
 ENV PATH /bin:$PATH
 
