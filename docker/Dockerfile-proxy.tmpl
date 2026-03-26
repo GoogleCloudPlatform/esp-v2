@@ -19,10 +19,9 @@ RUN apk add --update --no-cache openssl
 
 # Install python3
 RUN apk add --no-cache python3 wget && \
+    apk del py3-pip && \
     wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py && \
     python3 /tmp/get-pip.py "pip==26" --break-system-packages && \
-    rm /tmp/get-pip.py && \
-    apk del wget
 
 
 ENV PATH /bin:$PATH
