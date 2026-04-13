@@ -30,6 +30,8 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/tokengenerator"
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	discoverygrpc "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
@@ -54,7 +56,10 @@ func main() {
 		glog.Exitf("fail to initialize config manager: %v", err)
 	}
 	server := xds.NewServer(ctx, m.Cache(), nil)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(pathValidationInterceptor),
+		grpc.StreamInterceptor(pathValidationStreamInterceptor),
+	)
 	lis, err := net.Listen("unix", opts.AdsNamedPipe)
 	if err != nil {
 		glog.Exitf("Server failed to listen: %v", err)
@@ -93,4 +98,18 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		glog.Exitf("Server fail to serve: %v", err)
 	}
+}
+
+func pathValidationInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	if info.FullMethod == "" || info.FullMethod[0] != '/' {
+		return nil, status.Errorf(codes.Unimplemented, "malformed method name")
+	}
+	return handler(ctx, req)
+}
+
+func pathValidationStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	if info.FullMethod == "" || info.FullMethod[0] != '/' {
+		return status.Errorf(codes.Unimplemented, "malformed method name")
+	}
+	return handler(srv, ss)
 }
