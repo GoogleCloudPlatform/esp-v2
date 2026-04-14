@@ -169,7 +169,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 		rejectWith429Times := 3
 		rejectCnt := 0
 		var lastCallTime time.Time
-		silentInterval := time.Millisecond * 300
+		silentInterval := time.Millisecond * 150
 		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if rejectCnt < rejectWith429Times {
 				rejectCnt += 1
@@ -226,7 +226,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 			retryConfigs: map[int]util.RetryConfig{
 				http.StatusTooManyRequests: {
 					RetryNum:      3,
-					RetryInterval: time.Millisecond * 400,
+					RetryInterval: time.Millisecond * 200,
 				},
 			},
 		},
