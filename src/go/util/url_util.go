@@ -59,7 +59,7 @@ func ParseURI(uri string) (string, string, uint32, string, error) {
 				port = HTTPDefaultPort
 			}
 		} else {
-			return "", "", 0, "", fmt.Errorf("parse \"%v\": %v", uri, err)
+			return "", "", 0, "", err
 		}
 	}
 
