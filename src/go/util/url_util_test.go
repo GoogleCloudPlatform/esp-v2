@@ -206,7 +206,7 @@ func TestParseURI(t *testing.T) {
 		{
 			desc:    "fail for too many colons before port",
 			url:     "grpcs://127.0.0.1:::80",
-			wantErr: `parse "grpcs://127.0.0.1:::80": invalid port ":::80" after host`,
+			wantErr: `too many colons in address`,
 		},
 		{
 			desc:    "bad escape sequence in path",
