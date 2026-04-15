@@ -18,8 +18,9 @@ FROM _ENVOY_IMAGE_SHA_NAME
 RUN apk add --update --no-cache openssl
 
 # Install python3
-RUN apk add --no-cache python3 py3-pip
-RUN pip3 install --upgrade --break-system-packages pip==26 wheel==0.46.2 jaraco-context==6.1
+RUN apk add --no-cache python3 py3-pip && \
+    pip3 install --upgrade --break-system-packages pip==26 wheel==0.46.2 jaraco-context==6.1 && \
+    apk del py3-pip
 
 ENV PATH /bin:$PATH
 
