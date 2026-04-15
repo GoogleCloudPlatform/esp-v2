@@ -22,7 +22,7 @@ RUN apk add --no-cache python3 wget && \
     wget https://bootstrap.pypa.io/get-pip.py && \
     python3 get-pip.py --break-system-packages "pip==26" "wheel==0.46.2" "jaraco-context==6.1" && \
     rm get-pip.py && \
-    apk del wget
+    apk del wget py3-pip || true
 
 ENV PATH /bin:$PATH
 
