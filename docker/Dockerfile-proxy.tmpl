@@ -18,9 +18,13 @@ FROM _ENVOY_IMAGE_SHA_NAME
 RUN apk add --update --no-cache openssl
 
 # Install python3
-RUN apk add --no-cache python3 py3-pip && \
-    pip3 install --upgrade --break-system-packages pip==26 wheel==0.46.2 jaraco-context==6.1 && \
-    apk del py3-pip
+RUN apk add --no-cache python3 wget && \
+    rm -rf /usr/lib/python3*/site-packages/pip /usr/lib/python3*/site-packages/pip-*.dist-info && \
+    wget https://bootstrap.pypa.io/get-pip.py && \
+    python3 get-pip.py --break-system-packages "pip==26" "wheel==0.46.2" "jaraco-context==6.1" && \
+    rm get-pip.py && \
+    rm -rf /root/.cache/pip && \
+    apk del wget
 
 ENV PATH /bin:$PATH
 
