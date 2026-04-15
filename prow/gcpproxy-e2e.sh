@@ -20,6 +20,22 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ID="api_proxy_e2e_test"
 
+# Install Go 1.26.2 to support go 1.26.2 in go.mod
+GO_VERSION="1.26.2"
+GO_TARBALL="go${GO_VERSION}.linux-amd64.tar.gz"
+INSTALL_DIR="${ROOT}/test_go_env"
+
+echo "Installing Go ${GO_VERSION} for tests..."
+mkdir -p "${INSTALL_DIR}"
+wget -q "https://go.dev/dl/${GO_TARBALL}" -O "${INSTALL_DIR}/${GO_TARBALL}"
+tar xzf "${INSTALL_DIR}/${GO_TARBALL}" -C "${INSTALL_DIR}"
+export PATH="${INSTALL_DIR}/go/bin:${PATH}"
+rm "${INSTALL_DIR}/${GO_TARBALL}"
+
+echo "Using Go version:"
+go version
+
+
 gcloud config set core/project cloudesf-testing
 
 cd "${ROOT}"
