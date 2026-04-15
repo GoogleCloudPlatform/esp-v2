@@ -20,6 +20,8 @@ import (
 	"os/exec"
 	"strconv"
 
+	"runtime"
+
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
 )
@@ -65,8 +67,18 @@ func NewEnvoy(args []string, bootstrapArgs []string, confPath string, ports *pla
 		"--base-id", strconv.Itoa(int(ports.TestId)),
 	)
 
-	glog.Infof("Calling envoy at %v with args: %v", platform.GetFilePath(platform.Envoy), args)
-	cmd := exec.Command(platform.GetFilePath(platform.Envoy), args...)
+	binary := platform.GetFilePath(platform.Envoy)
+	glog.Infof("Calling envoy at %v with args: %v", binary, args)
+
+	var cmd *exec.Cmd
+	if runtime.GOOS == "linux" {
+		glog.Infof("Running on Linux, using setarch to disable ASLR for Envoy")
+		setarchArgs := []string{"--addr-no-randomize", binary}
+		setarchArgs = append(setarchArgs, args...)
+		cmd = exec.Command("setarch", setarchArgs...)
+	} else {
+		cmd = exec.Command(binary, args...)
+	}
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return &Envoy{
