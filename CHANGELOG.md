@@ -1,3 +1,11 @@
+# Release 2.55.2 17-04-2026
+
+- Fix multiple security vulnerabilities in Python and Go dependencies (#1006, #1007, #993).
+- Update oauth2 package to v0.27.0 to address CVE-2025-22868 (#999).
+- Update glibc package to 1.26.2 (#1004).
+- Apply a workaround for a gRPC vulnerability (#1002).
+- Fix a TSAN error in E2E tests (#1006).
+
 # Release 2.55.1 11-03-2026
 
 - Bump Go version to 1.26 (#983)
