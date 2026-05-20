@@ -59,6 +59,17 @@ function build_wrk() {
 }
 
 function update_wrk() {
+  if command -v apt-get >/dev/null; then
+    echo "Installing wrk via apt-get..."
+    if ${SUDO} apt-get update && ${SUDO} apt-get install -y wrk; then
+      if [[ -f /usr/bin/wrk ]]; then
+        ${SUDO} ln -sf /usr/bin/wrk /usr/local/bin/wrk
+        echo "wrk installed successfully via apt-get."
+        return 0
+      fi
+    fi
+  fi
+
   local wrk_current='none'
   if [[ -d "${WRK_DIRECTORY}" ]]; then
     wrk_current="$(git -C "${WRK_DIRECTORY}" log -n 1 --pretty=format:%H)"
