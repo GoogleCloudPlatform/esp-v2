@@ -321,6 +321,10 @@ function get_apiproxy_service() {
 }
 
 function install_e2e_dependencies() {
-  pip3 install python-gflags
-  pip3 install six
+  local break_system_packages=""
+  if pip3 install --help | grep -q -- "--break-system-packages"; then
+    break_system_packages="--break-system-packages"
+  fi
+  pip3 install ${break_system_packages} python-gflags
+  pip3 install ${break_system_packages} six
 }
