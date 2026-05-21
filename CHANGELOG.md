@@ -1,3 +1,15 @@
+# Release 2.55.3 21-05-2026
+
+TODO: Edit the section below before submitting! DIRECTORY /usr/local/google/home/sunaydagli/esp-v2
+===============================================
+
+- update version number (#1013)
+- update to install pip packages (#1012)
+- Bump up go version to 1.26.3 and pip to 26.1 (#1010)
+- Update changelog for ESPv2 release to 2.55.2 (#1009)
+
+TODO: Edit the section above before submitting! DIRECTORY /usr/local/google/home/sunaydagli/esp-v2
+===============================================
 # Release 2.55.2 17-04-2026
 
 - Fix multiple security vulnerabilities in Python and Go dependencies (#1006, #1007, #993).
