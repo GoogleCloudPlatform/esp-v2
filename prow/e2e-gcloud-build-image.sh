@@ -69,24 +69,33 @@ function expectImage() {
   [ "${curr_dir}" == "${START_DIR}" ] || error_exit "New working directory changed: ${curr_dir}"
 }
 
+echo "Determining latest ESPv2 release version for testing..."
+ALL_TAGS=$(gcloud container images list-tags "gcr.io/endpoints-release/endpoints-runtime-serverless" --format="value(tags)")
+LATEST_VERSION=$(echo "${ALL_TAGS}" | tr ',' '\n' | grep -E '^[2-9]\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)
+if [ -z "${LATEST_VERSION}" ]; then
+  error_exit "Failed to determine latest ESPv2 version for testing."
+fi
+LATEST_MINOR_VERSION=$(echo "${LATEST_VERSION}" | cut -d. -f1,2)
+echo "Latest fully qualified version: ${LATEST_VERSION}, minor version: ${LATEST_MINOR_VERSION}"
+
 echo "=== Test 1: Specify a fully qualified version. ==="
-EXPECTED_IMAGE_NAME=$(formImageName "2.7.0")
+EXPECTED_IMAGE_NAME=$(formImageName "${LATEST_VERSION}")
 cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
   -s "${SERVICE_NAME}" \
   -c "${CONFIG_ID}" \
   -p "${PROJECT_NAME}" \
-  -v "2.7.0"
+  -v "${LATEST_VERSION}"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 2: Specify a minor version. ==="
-EXPECTED_IMAGE_NAME=$(formImageName "2.4.0")
+EXPECTED_IMAGE_NAME=$(formImageName "${LATEST_VERSION}")
 cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
   -s "${SERVICE_NAME}" \
   -c "${CONFIG_ID}" \
   -p "${PROJECT_NAME}" \
-  -v "2.4"
+  -v "${LATEST_MINOR_VERSION}"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 3: Sepcify an invalid version fails. ==="
@@ -111,23 +120,22 @@ ${ROOT}/docker/serverless/gcloud_build_image \
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 5: Specify a GAR_REPOSITORY_IMAGE_PREFIX with -g flag. ==="
-EXPECTED_IMAGE_NAME=$(formGarImageName "2.30.3")
+EXPECTED_IMAGE_NAME=$(formGarImageName "${LATEST_VERSION}")
 cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
   -s "${SERVICE_NAME}" \
   -c "${CONFIG_ID}" \
   -p "${PROJECT_NAME}" \
-  -v "2.30.3" \
+  -v "${LATEST_VERSION}" \
   -g "${GAR_REPOSITORY_IMAGE_PREFIX}"
 expectImage "${EXPECTED_IMAGE_NAME}"
 
 echo "=== Test 6: When no ESP version is specified, the script uses the latest ESPv2 release. ==="
-# Knowing the latest ESP version number is hard, it depends on what is tagged in GCR.
-# This is a chicken and egg problem, because `gcloud_build_image` uses that.
-# That means we don't have a reliable way of checking if the output is correct.
-# So just test the script passes, and allow the developer to manually verify the output.
+EXPECTED_IMAGE_NAME=$(formImageName "${LATEST_VERSION}")
+cleanupOldImage "${EXPECTED_IMAGE_NAME}"
 ${ROOT}/docker/serverless/gcloud_build_image \
   -s "${SERVICE_NAME}" \
   -c "${CONFIG_ID}" \
   -p "${PROJECT_NAME}"
-echo ">>> WARNING: For the test above, manually verify the output version of the image is expected."
+expectImage "${EXPECTED_IMAGE_NAME}"
+
