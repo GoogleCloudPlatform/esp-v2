@@ -387,8 +387,9 @@ Status set_credential_id(const SupportedLabel& l, const ReportRequestInfo& info,
       if (info.check_response_info.error.is_network_error) {
         (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, "UNKNOWN");
       } else {
-        (*labels)[l.name] = info.check_response_info.api_key_uid.empty() ? absl::StrCat(kApiKeyPrefix,  info.api_key)
-                      : info.check_response_info.api_key_uid;
+        (*labels)[l.name] = info.check_response_info.api_key_uid.empty()
+                                ? absl::StrCat(kApiKeyPrefix, info.api_key)
+                                : info.check_response_info.api_key_uid;
       }
     } else {
       (*labels)[l.name] = absl::StrCat(kApiKeyPrefix, info.api_key);

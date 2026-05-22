@@ -59,7 +59,7 @@ For example: ***gcr.io/cloudesf-testing/gcpproxy-prow:v20240727-v2.46.0-27-g6c21
 Run the following command by replacing the **latest_image_link** with the link found above.
 
 ```
-docker run -ti --privileged -v /var/run/docker.sock:/var/run/docker.sock -v ~/esp-v2:/esp-v2 ${latest_image_link}  /bin/bash
+docker run -ti -v /var/run/docker.sock:/var/run/docker.sock -v ~/esp-v2:/esp-v2 ${latest_image_link}  /bin/bash
 ```
 
 #### Change Directory to `esp-v2`
@@ -191,7 +191,7 @@ make test-envoy
 To run integration tests:
 
 ```
-make integration-test-run-parallel
+make integration-test
 ```
 
 #### Enable IDE Integration

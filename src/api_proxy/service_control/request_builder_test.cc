@@ -460,7 +460,7 @@ TEST_F(RequestBuilderTest, ReportApiKeyVerifiedWithApiKeyUIDUnknownTest) {
   info.check_response_info.api_key_uid = "fake_api_key_uid";
   info.enable_api_key_uid_reporting = true;
   info.check_response_info.error = {"UNREACHABLE", true,
-                               ScResponseErrorType::CONSUMER_QUOTA};
+                                    ScResponseErrorType::CONSUMER_QUOTA};
 
   gasv1::ReportRequest request;
   ASSERT_TRUE(scp_.FillReportRequest(info, &request).ok());
@@ -505,7 +505,6 @@ TEST_F(RequestBuilderTest, ReportApiKeyVerifiedNotReportApiKeyUIDTest) {
   ASSERT_TRUE(fields.contains("api_key"));
   ASSERT_EQ(fields.at("api_key").string_value(), "api_key_x");
 }
-
 
 TEST_F(RequestBuilderTest, ReportApiKeyNotVerifiedTest) {
   ReportRequestInfo info;
