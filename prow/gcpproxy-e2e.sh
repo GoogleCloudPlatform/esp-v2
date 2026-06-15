@@ -20,8 +20,8 @@ set -eo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ID="api_proxy_e2e_test"
 
-# Install Go 1.26.3 to support go 1.26.3 in go.mod
-GO_VERSION="1.26.3"
+# Install Go 1.26.4 to support go 1.26.4 in go.mod
+GO_VERSION="1.26.4"
 GO_TARBALL="go${GO_VERSION}.linux-amd64.tar.gz"
 INSTALL_DIR="${ROOT}/test_go_env"
 
