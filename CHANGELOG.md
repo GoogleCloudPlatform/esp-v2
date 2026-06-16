@@ -1,3 +1,11 @@
+# Release 2.55.4 16-06-2026
+
+===============================================
+
+- Update version to 2.55.4 and owners. (#1020)
+- change glibc version to 1.26.4 (#1018)
+
+===============================================
 # Release 2.55.3 21-05-2026
 
 TODO: Edit the section below before submitting! DIRECTORY /usr/local/google/home/sunaydagli/esp-v2
