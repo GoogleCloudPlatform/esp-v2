@@ -51,12 +51,15 @@ fi
 
 # Minor base is 1.33  if version is 1.33.0
 MINOR_BASE_VERSION=${VERSION%.*}
+MAJOR_VERSION=${VERSION%%.*}
 
 function tag_stable_image() {
   local image=$1
 
   gcloud container images add-tag "${image}:${VERSION}" \
     "${image}:${MINOR_BASE_VERSION}" --quiet
+  gcloud container images add-tag "${image}:${VERSION}" \
+    "${image}:${MAJOR_VERSION}" --quiet
 }
 
 tag_stable_image "$(get_proxy_image_release_name)"
