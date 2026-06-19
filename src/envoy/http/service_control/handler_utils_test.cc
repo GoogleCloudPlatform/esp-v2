@@ -489,6 +489,16 @@ TEST(TestExtractIPFromForwardedHeader, WrongIpv4) {
   EXPECT_FALSE(extractIPFromForwardedHeader(headers).ok());
 }
 
+TEST(TestExtractIPFromForwardedHeader, EmptyForToken) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{"forwarded", "for="}};
+  EXPECT_FALSE(extractIPFromForwardedHeader(headers).ok());
+}
+
+TEST(TestExtractIPFromForwardedHeader, EmptyQuotedForToken) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{{"forwarded", "for=\"\""}};
+  EXPECT_FALSE(extractIPFromForwardedHeader(headers).ok());
+}
+
 TEST(TestExtractIPFromForwardedHeader, WrongIpv6) {
   Envoy::Http::TestRequestHeaderMapImpl headers{
       {"forwarded", "for=\"[fe80::1%]\""}};
