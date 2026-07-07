@@ -1,3 +1,8 @@
+# Release 2.55.5 07-07-2026
+
+- chore: bump version to 2.55.5 for security release (#1025)
+- refactor: remove privileged mode from docker command and add major version tagging to release script (#1024)
+
 # Release 2.55.4 16-06-2026
 
 - Update version to 2.55.4 and owners. (#1020)
