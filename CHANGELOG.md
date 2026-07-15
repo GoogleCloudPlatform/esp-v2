@@ -3,11 +3,6 @@
 - Update version to 2.55.6 (#1028)
 - update go and python versions, update SSL test keys (#1027)
 
-# Release 2.55.6 15-07-2026
-
-- Update version to 2.55.6 (#1028)
-- update go and python versions, update SSL test keys (#1027)
-
 # Release 2.55.5 07-07-2026
 
 - chore: bump version to 2.55.5 for security release (#1025)
