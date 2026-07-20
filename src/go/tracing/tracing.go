@@ -17,39 +17,15 @@ package tracing
 import (
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
+	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/glog"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
-	var out []tracepb.OpenCensusConfig_TraceContext
-
-	if ctx_str == "" {
-		return out, nil
-	}
-
-	for _, ctx := range strings.Split(ctx_str, ",") {
-		switch ctx {
-		case "traceparent":
-			out = append(out, tracepb.OpenCensusConfig_TRACE_CONTEXT)
-		case "grpc-trace-bin":
-			out = append(out, tracepb.OpenCensusConfig_GRPC_TRACE_BIN)
-		case "x-cloud-trace-context":
-			out = append(out, tracepb.OpenCensusConfig_CLOUD_TRACE_CONTEXT)
-		default:
-			return out, fmt.Errorf("Invalid trace context: %v. It must be one of (traceparent|grpc-trace-bin|x-cloud-trace-context)", ctx)
-		}
-	}
-
-	return out, nil
-}
 
 // ShouldFetchTracingProjectID determines if we should use tenant project ID
 // from IMDS.
@@ -74,36 +50,24 @@ func ShouldFetchTracingProjectID(opts options.CommonOptions) bool {
 	return true
 }
 
-func createOpenCensusConfig(opts options.TracingOptions) (*tracepb.OpenCensusConfig, error) {
-	cfg := &tracepb.OpenCensusConfig{
-		TraceConfig: &opencensuspb.TraceConfig{
-			MaxNumberOfAttributes:    opts.MaxNumAttributes,
-			MaxNumberOfAnnotations:   opts.MaxNumAnnotations,
-			MaxNumberOfMessageEvents: opts.MaxNumMessageEvents,
-			MaxNumberOfLinks:         opts.MaxNumLinks,
-		},
-		StackdriverExporterEnabled: true,
-		StackdriverProjectId:       opts.ProjectId,
-	}
-
+func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTelemetryConfig, error) {
+	// Stackdriver Export via OTLP directly accesses the Google Cloud Telemetry API.
+	targetUri := "telemetry.googleapis.com"
 	if opts.StackdriverAddress != "" {
-		cfg.StackdriverAddress = opts.StackdriverAddress
+		targetUri = opts.StackdriverAddress
 	}
 
-	if ctx, err := createTraceContexts(opts.IncomingContext); err == nil {
-		cfg.IncomingTraceContext = ctx
-	} else {
-		return nil, err
+	cfg := &tracepb.OpenTelemetryConfig{
+		ServiceName: "espv2", // Provide a default service name.
+		GrpcService: &corev3.GrpcService{
+			TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+				GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+					TargetUri:  targetUri,
+					StatPrefix: "opentelemetry",
+				},
+			},
+		},
 	}
-
-	if ctx, err := createTraceContexts(opts.OutgoingContext); err == nil {
-		cfg.OutgoingTraceContext = ctx
-	} else {
-		return nil, err
-	}
-
-	// Tracing sample rate in OpenCensusConfig is not used at all by Envoy.
-	// No need to set it.
 
 	return cfg, nil
 }
@@ -115,12 +79,12 @@ func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tr
 		return nil, nil
 	}
 
-	openCensusConfig, err := createOpenCensusConfig(opts)
+	openTelemetryConfig, err := createOpenTelemetryConfig(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	typedConfig, err := anypb.New(openCensusConfig)
+	typedConfig, err := anypb.New(openTelemetryConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +108,7 @@ func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tr
 			Value: percentSampleRate,
 		},
 		Provider: &tracepb.Tracing_Http{
-			Name:       "envoy.tracers.opencensus",
+			Name:       "envoy.tracers.opentelemetry",
 			ConfigType: &tracepb.Tracing_Http_TypedConfig{TypedConfig: typedConfig},
 		},
 		Verbose: opts.EnableVerboseAnnotations,

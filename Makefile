@@ -150,10 +150,9 @@ test: format
 	@go test -race $(shell go list ./src/go/... | grep -v serviceconfig) -count=1
 	@if command -v clang > /dev/null; then \
 		CC=clang go test -msan ./src/go/...; \
-	elif command -v clang-14 > /dev/null; then \
-		CC=clang-14 go test -msan ./src/go/...; \
 	else \
-		go test -msan ./src/go/...; \
+		echo "clang not found. Please install the latest clang"; \
+		exit 1; \
 	fi
 	@python3 -m unittest tests/start_proxy/start_proxy_test.py
 	@python3 -m unittest tests/start_proxy/env_start_proxy_test.py

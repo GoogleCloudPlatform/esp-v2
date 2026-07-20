@@ -3,3 +3,4 @@ filegroup(
     srcs = ["VERSION"],
     visibility = ["//:__subpackages__"],
 )
+

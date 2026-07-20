@@ -151,12 +151,16 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 			"value": 100
 		},
 		"provider":{
-			"name":"envoy.tracers.opencensus",
+			"name":"envoy.tracers.opentelemetry",
 			"typedConfig":{
-				 "@type":"type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
-				 "stackdriverExporterEnabled":true,
-				 "stackdriverProjectId":"test-project",
-				 "traceConfig":{}
+				 "@type":"type.googleapis.com/envoy.config.trace.v3.OpenTelemetryConfig",
+				 "grpcService":{
+					  "googleGrpc":{
+							"statPrefix":"opentelemetry",
+							"targetUri":"telemetry.googleapis.com"
+					  }
+				 },
+				 "serviceName":"espv2"
 			}
 		},
 		"randomSampling":{

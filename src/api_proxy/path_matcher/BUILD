@@ -24,7 +24,7 @@ envoy_basic_cc_library(
         "path_matcher_node.h",
     ],
     deps = [
-        "//external:abseil_strings",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -56,9 +56,9 @@ envoy_basic_cc_library(
     ],
     deps = [
         ":path_matcher_lib",
-        "//external:abseil_flat_hash_map",
-        "//external:abseil_strings",
-        "//external:protobuf",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 

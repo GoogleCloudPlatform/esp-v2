@@ -4,6 +4,7 @@
 build --define=grpc_no_ares=true
 build --cxxopt=-std=c++20 --host_cxxopt=-std=c++20
 
+build --cxxopt=-stdlib=libc++ --host_cxxopt=-stdlib=libc++ --linkopt=-lc++ --host_linkopt=-lc++ --linkopt=-L/usr/local/google/home/xunsun/workspaces/espv2/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04/lib --linkopt=-Wl,-rpath,/usr/local/google/home/xunsun/workspaces/espv2/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04/lib
 # We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
 
@@ -18,7 +19,7 @@ build --show_timestamps
 build:release -c opt
 build:debug -c dbg
 
-build --experimental_local_memory_estimate
+
 build --incompatible_strict_action_env=true
 build --host_force_python=PY3
 build --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a
@@ -27,13 +28,16 @@ build --action_env=BAZEL_LINKOPTS=-lm
 # We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
 
-# Pass PATH variable from the environment. CC and CXX are always clang (no gcc).
-build --action_env=CC=clang-14
-build --action_env=CXX=clang++-14
-build --action_env=PATH
+# Pass PATH variable from the environment.
+build --action_env=PATH=/usr/local/google/home/xunsun/workspaces/espv2/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+build --action_env=CC=clang
+build --action_env=CXX=clang++
+
+# Disable bzlmod to use WORKSPACE properly
+build --noenable_bzlmod
 
 # Disable ICU linking for googleurl.
-build --@com_googlesource_googleurl//build_config:system_icu=0
+# build --@com_googlesource_googleurl//build_config:system_icu=0
 
 # Common flags for sanitizers
 build:sanitizer --define tcmalloc=disabled
@@ -42,15 +46,15 @@ build:sanitizer --build_tag_filters=-no_san
 build:sanitizer --test_tag_filters=-no_san
 
 # Common flags for Clang
-build:clang --action_env=BAZEL_COMPILER=clang
+build:clang --action_env=BAZEL_COMPILER=clang-14
+build:clang --copt=-fsanitize=scudo
+build:clang --copt=-ftrivial-auto-var-init=pattern
 
 # Compile with the Scudo allocator
 # https://llvm.org/docs/ScudoHardenedAllocator.html
-build:clang --copt -fsanitize=scudo
 
 # Compile with automatic variable initialization
 # https://reviews.llvm.org/rL349442
-build:clang --copt -ftrivial-auto-var-init=pattern
 
 # Compilation modes
 build:clang-release --config=clang
@@ -91,8 +95,8 @@ build:clang-tsan --copt -DEVENT__DISABLE_DEBUG_MODE
 # Fuzz builds
 build:asan-fuzzer --config=clang-asan
 build:asan-fuzzer -c opt
-build:asan-fuzzer --action_env=CC=clang-14
-build:asan-fuzzer --action_env=CXX=clang++-14
+build:asan-fuzzer --action_env=CC=clang
+build:asan-fuzzer --action_env=CXX=clang++
 build:asan-fuzzer --nocache_test_results
 build:asan-fuzzer --define=FUZZING_ENGINE=libfuzzer
 build:asan-fuzzer --copt=-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -104,8 +108,8 @@ build:asan-fuzzer --test_env=UBSAN_OPTIONS=print_stacktrace=1
 coverage --config=coverage
 build:coverage --action_env=BAZEL_USE_LLVM_NATIVE_COVERAGE=1
 build:coverage --action_env=GCOV=llvm-profdata
-build:coverage --action_env=CC=clang-14
-build:coverage --action_env=CXX=clang++-14
+build:coverage --action_env=CC=clang
+build:coverage --action_env=CXX=clang++
 build:coverage --copt=-DNDEBUG
 build:coverage --test_timeout=900
 build:coverage --define=ENVOY_CONFIG_COVERAGE=1
@@ -124,3 +128,7 @@ coverage:test-coverage --test_arg="--log-path /dev/null"
 coverage:test-coverage --test_arg="-l trace"
 coverage:fuzz-coverage --config=asan-fuzzer
 coverage:fuzz-coverage --run_under=@envoy//bazel/coverage:fuzz_coverage_wrapper.sh
+build:clang-release --copt=-Wno-unknown-warning-option
+build:clang-release --cxxopt=-Wno-unknown-warning-option
+build:clang-release --copt=-Wno-deprecated-declarations
+build:clang-release --cxxopt=-Wno-deprecated-declarations

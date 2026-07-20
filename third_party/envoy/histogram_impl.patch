@@ -1,0 +1,19 @@
+--- a/source/common/stats/histogram_impl.cc
++++ b/source/common/stats/histogram_impl.cc
+@@ -107,11 +107,11 @@
+         for (const auto& matcher : config.histogram_bucket_settings()) {
+           std::vector<double> buckets{matcher.buckets().begin(), matcher.buckets().end()};
+           std::sort(buckets.begin(), buckets.end());
+-          configs.emplace_back(Matchers::StringMatcherImpl(matcher.match(), context),
+-                               buckets.empty()
+-                                   ? absl::nullopt
+-                                   : absl::make_optional<ConstSupportedBuckets>(std::move(buckets)),
+-                               PROTOBUF_GET_OPTIONAL_WRAPPED(matcher, bins));
++          configs.push_back({Matchers::StringMatcherImpl(matcher.match(), context),
++                             buckets.empty()
++                                 ? absl::nullopt
++                                 : absl::make_optional<ConstSupportedBuckets>(std::move(buckets)),
++                             PROTOBUF_GET_OPTIONAL_WRAPPED(matcher, bins)});
+         }
+ 
+         return configs;

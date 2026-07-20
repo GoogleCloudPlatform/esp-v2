@@ -58,11 +58,11 @@ Envoy::Http::FilterHeadersStatus ServiceControlFilter::decodeHeaders(
 
   // This shouldn't happen as the catch-all route match should catch all
   // the undefined requests.
-  if (route == nullptr) {
+  if (!route.has_value()) {
     return Envoy::Http::FilterHeadersStatus::Continue;
   }
 
-  handler_ = factory_.createHandler(headers, decoder_callbacks_, stats_);
+  handler_ = factory_.createHandler(&headers, decoder_callbacks_, stats_);
   handler_->fillFilterState(*decoder_callbacks_->streamInfo().filterState());
   state_ = Calling;
   stopped_ = false;
@@ -132,17 +132,17 @@ Envoy::Http::FilterTrailersStatus ServiceControlFilter::decodeTrailers(
 }
 
 void ServiceControlFilter::log(
-    const Envoy::Formatter::HttpFormatterContext& context,
+    const Envoy::Formatter::Context& context,
     const Envoy::StreamInfo::StreamInfo&) {
   ENVOY_LOG(debug, "Called ServiceControl Filter : {}", __func__);
   if (!handler_) {
-    handler_ = factory_.createHandler(context.requestHeaders(),
+    handler_ = factory_.createHandler(context.requestHeaders().ptr(),
                                       decoder_callbacks_, stats_);
   }
 
   Envoy::Tracing::Span& parent_span = decoder_callbacks_->activeSpan();
-  handler_->callReport(&context.requestHeaders(), &context.responseHeaders(),
-                       &context.responseTrailers(), parent_span);
+  handler_->callReport(context.requestHeaders().ptr(), context.responseHeaders().ptr(),
+                       context.responseTrailers().ptr(), parent_span);
 }
 
 }  // namespace service_control

@@ -32,6 +32,9 @@ func main() {
 	}
 
 	opts := flags.DefaultBootstrapperOptionsFromFlags()
+	if opts.TracingOptions.MaxNumAttributes != 32 || opts.TracingOptions.MaxNumAnnotations != 32 || opts.TracingOptions.MaxNumMessageEvents != 128 || opts.TracingOptions.MaxNumLinks != 128 {
+		glog.Warning("The following tracing span limit flags are DEPRECATED and ignored by OpenTelemetry: tracing_max_num_attributes, tracing_max_num_annotations, tracing_max_num_message_events, tracing_max_num_links.")
+	}
 	bootstrapStr, err := ads.CreateBootstrapConfig(opts)
 	if err != nil {
 		glog.Exitf("failed to create bootstrap config, error: %v", err)

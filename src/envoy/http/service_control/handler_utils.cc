@@ -107,7 +107,7 @@ bool extractAPIKeyFromCookie(const Envoy::Http::RequestHeaderMap& headers,
   return false;
 }
 
-void extractJwtPayload(const Envoy::ProtobufWkt::Value& value,
+void extractJwtPayload(const Envoy::Protobuf::Value& value,
                        const std::string& jwt_payload_path,
                        std::string& info_jwt_payloads) {
   switch (value.kind_case()) {
@@ -275,12 +275,12 @@ void fillJwtPayloads(const ::envoy::config::core::v3::Metadata& metadata,
     std::vector<std::string> steps =
         absl::StrSplit(jwt_payload_path, kJwtPayLoadsDelimeter);
     steps.insert(steps.begin(), jwt_payload_metadata_name);
-    const Envoy::ProtobufWkt::Value& value =
+    const Envoy::Protobuf::Value& value =
         Envoy::Config::Metadata::metadataValue(
             &metadata,
             Envoy::Extensions::HttpFilters::HttpFilterNames::get().JwtAuthn,
             steps);
-    if (&value != &Envoy::ProtobufWkt::Value::default_instance()) {
+    if (&value != &Envoy::Protobuf::Value::default_instance()) {
       extractJwtPayload(value, jwt_payload_path, info_jwt_payloads);
     }
   }
@@ -292,12 +292,12 @@ void fillJwtPayload(const ::envoy::config::core::v3::Metadata& metadata,
                     std::string& info_iss_or_aud) {
   std::vector<std::string> steps = {jwt_payload_metadata_name,
                                     jwt_payload_path};
-  const Envoy::ProtobufWkt::Value& value =
+  const Envoy::Protobuf::Value& value =
       Envoy::Config::Metadata::metadataValue(
           &metadata,
           Envoy::Extensions::HttpFilters::HttpFilterNames::get().JwtAuthn,
           steps);
-  if (&value != &Envoy::ProtobufWkt::Value::default_instance()) {
+  if (&value != &Envoy::Protobuf::Value::default_instance()) {
     absl::StrAppend(&info_iss_or_aud, value.string_value());
   }
 }

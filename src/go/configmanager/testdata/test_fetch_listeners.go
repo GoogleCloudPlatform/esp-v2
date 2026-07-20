@@ -2741,25 +2741,16 @@ var (
                 "value": 0.1
               },
               "provider": {
-                "name": "envoy.tracers.opencensus",
+                "name": "envoy.tracers.opentelemetry",
                 "typedConfig": {
-                  "@type": "type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
-                  "incomingTraceContext": [
-                    "TRACE_CONTEXT",
-                    "CLOUD_TRACE_CONTEXT"
-                  ],
-                  "outgoingTraceContext": [
-                    "TRACE_CONTEXT",
-                    "CLOUD_TRACE_CONTEXT"
-                  ],
-                  "stackdriverExporterEnabled": true,
-                  "stackdriverProjectId": "fake-project-id",
-                  "traceConfig": {
-                    "maxNumberOfAnnotations": "32",
-                    "maxNumberOfAttributes": "32",
-                    "maxNumberOfLinks": "128",
-                    "maxNumberOfMessageEvents": "128"
-                  }
+                  "@type": "type.googleapis.com/envoy.config.trace.v3.OpenTelemetryConfig",
+                  "grpcService": {
+                    "googleGrpc": {
+                      "statPrefix": "opentelemetry",
+                      "targetUri": "telemetry.googleapis.com"
+                    }
+                  },
+                  "serviceName": "espv2"
                 }
               },
               "randomSampling": {

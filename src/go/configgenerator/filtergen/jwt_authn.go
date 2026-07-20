@@ -222,16 +222,16 @@ func (g *JwtAuthnGenerator) GenFilterConfig() (proto.Message, error) {
 
 func defaultJwtLocations() ([]*jwtpb.JwtHeader, []string, error) {
 	return []*jwtpb.JwtHeader{
-			{
-				Name:        util.DefaultJwtHeaderNameAuthorization,
-				ValuePrefix: util.DefaultJwtHeaderValuePrefixBearer,
-			},
-			{
-				Name: util.DefaultJwtHeaderNameXGoogleIapJwtAssertion,
-			},
-		}, []string{
-			util.DefaultJwtQueryParamAccessToken,
-		}, nil
+		{
+			Name:        util.DefaultJwtHeaderNameAuthorization,
+			ValuePrefix: util.DefaultJwtHeaderValuePrefixBearer,
+		},
+		{
+			Name: util.DefaultJwtHeaderNameXGoogleIapJwtAssertion,
+		},
+	}, []string{
+		util.DefaultJwtQueryParamAccessToken,
+	}, nil
 }
 
 func processJwtLocations(provider *confpb.AuthProvider) ([]*jwtpb.JwtHeader, []string, error) {

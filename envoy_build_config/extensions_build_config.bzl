@@ -24,7 +24,7 @@ EXTENSIONS = {
     "envoy.filters.http.jwt_authn": "//source/extensions/filters/http/jwt_authn:config",
     "envoy.filters.http.router": "//source/extensions/filters/http/router:config",
     "envoy.filters.network.http_connection_manager": "//source/extensions/filters/network/http_connection_manager:config",
-    "envoy.tracers.opencensus": "//source/extensions/tracers/opencensus:config",
+    "envoy.tracers.opentelemetry": "//source/extensions/tracers/opentelemetry:config",
 
     # Implicitly needed for TLS config.
     "envoy.transport_sockets.raw_buffer": "//source/extensions/transport_sockets/raw_buffer:config",

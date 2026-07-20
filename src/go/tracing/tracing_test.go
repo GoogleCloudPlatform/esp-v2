@@ -22,11 +22,11 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
+	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 )
@@ -38,57 +38,27 @@ const (
 )
 
 // Tests the various combination of tracing flags on a non-GCP deployment
-func TestNonGcpOpenCensusConfig(t *testing.T) {
+func TestOpenTelemetryConfig(t *testing.T) {
 	testData := []struct {
 		desc       string
 		opts       *options.TracingOptions
 		wantError  string
-		wantResult *tracepb.OpenCensusConfig
+		wantResult *tracepb.OpenTelemetryConfig
 	}{
 		{
 			desc: "Success with default tracing",
 			opts: &options.TracingOptions{
 				ProjectId: fakeOptsProjectId,
 			},
-			wantResult: &tracepb.OpenCensusConfig{
-				TraceConfig:                &opencensuspb.TraceConfig{},
-				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeOptsProjectId,
-			},
-		},
-		{
-			desc: "Failed with invalid tracing_incoming_context",
-			opts: &options.TracingOptions{
-				ProjectId:       fakeOptsProjectId,
-				IncomingContext: "aaa",
-			},
-			wantError: "Invalid trace context: aaa",
-		},
-		{
-			desc: "Failed with invalid tracing_outgoing_context",
-			opts: &options.TracingOptions{
-				ProjectId:       fakeOptsProjectId,
-				OutgoingContext: "bbb",
-			},
-			wantError: "Invalid trace context: bbb",
-		},
-		{
-			desc: "Success with some tracing contexts",
-			opts: &options.TracingOptions{
-				ProjectId:       fakeOptsProjectId,
-				IncomingContext: "traceparent,grpc-trace-bin",
-				OutgoingContext: "x-cloud-trace-context",
-			},
-			wantResult: &tracepb.OpenCensusConfig{
-				TraceConfig:                &opencensuspb.TraceConfig{},
-				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeOptsProjectId,
-				IncomingTraceContext: []tracepb.OpenCensusConfig_TraceContext{
-					tracepb.OpenCensusConfig_TRACE_CONTEXT,
-					tracepb.OpenCensusConfig_GRPC_TRACE_BIN,
-				},
-				OutgoingTraceContext: []tracepb.OpenCensusConfig_TraceContext{
-					tracepb.OpenCensusConfig_CLOUD_TRACE_CONTEXT,
+			wantResult: &tracepb.OpenTelemetryConfig{
+				ServiceName: "espv2",
+				GrpcService: &corev3.GrpcService{
+					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+							TargetUri:  "telemetry.googleapis.com",
+							StatPrefix: "opentelemetry",
+						},
+					},
 				},
 			},
 		},
@@ -98,40 +68,23 @@ func TestNonGcpOpenCensusConfig(t *testing.T) {
 				ProjectId:          fakeOptsProjectId,
 				StackdriverAddress: fakeStackdriverAddress,
 			},
-			wantResult: &tracepb.OpenCensusConfig{
-				TraceConfig:                &opencensuspb.TraceConfig{},
-				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeOptsProjectId,
-				StackdriverAddress:         fakeStackdriverAddress,
-			},
-		},
-		{
-			desc: "Success with custom max number of attributes/annotations/message_events/links",
-			opts: &options.TracingOptions{
-				ProjectId:           fakeOptsProjectId,
-				StackdriverAddress:  fakeStackdriverAddress,
-				MaxNumAttributes:    1,
-				MaxNumAnnotations:   2,
-				MaxNumMessageEvents: 3,
-				MaxNumLinks:         4,
-			},
-			wantResult: &tracepb.OpenCensusConfig{
-				TraceConfig: &opencensuspb.TraceConfig{
-					MaxNumberOfAttributes:    1,
-					MaxNumberOfAnnotations:   2,
-					MaxNumberOfMessageEvents: 3,
-					MaxNumberOfLinks:         4,
+			wantResult: &tracepb.OpenTelemetryConfig{
+				ServiceName: "espv2",
+				GrpcService: &corev3.GrpcService{
+					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+							TargetUri:  fakeStackdriverAddress,
+							StatPrefix: "opentelemetry",
+						},
+					},
 				},
-				StackdriverExporterEnabled: true,
-				StackdriverProjectId:       fakeOptsProjectId,
-				StackdriverAddress:         fakeStackdriverAddress,
 			},
 		},
 	}
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, err := createOpenCensusConfig(*tc.opts)
+			got, err := createOpenTelemetryConfig(*tc.opts)
 
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {
 				t.Errorf("failed, expected err: %v, got: %v", tc.wantError, err)
@@ -143,7 +96,7 @@ func TestNonGcpOpenCensusConfig(t *testing.T) {
 				}
 
 				if diff := cmp.Diff(tc.wantResult, got, protocmp.Transform()); diff != "" {
-					t.Errorf("createOpenCensusConfig(%v) diff (-want +got):\n%s", tc.opts, diff)
+					t.Errorf("createOpenTelemetryConfig(%v) diff (-want +got):\n%s", tc.opts, diff)
 				}
 			}
 		})
@@ -229,7 +182,7 @@ func TestHcmTracingSampleRate(t *testing.T) {
 					Value: 0.1,
 				},
 				Provider: &tracepb.Tracing_Http{
-					Name: "envoy.tracers.opencensus",
+					Name: "envoy.tracers.opentelemetry",
 					// Typed config is already tested, so strip it out.
 					ConfigType: nil,
 				},
@@ -252,7 +205,7 @@ func TestHcmTracingSampleRate(t *testing.T) {
 					Value: 27.5,
 				},
 				Provider: &tracepb.Tracing_Http{
-					Name: "envoy.tracers.opencensus",
+					Name: "envoy.tracers.opentelemetry",
 					// Typed config is already tested, so strip it out.
 					ConfigType: nil,
 				},
@@ -275,7 +228,7 @@ func TestHcmTracingSampleRate(t *testing.T) {
 					Value: 100,
 				},
 				Provider: &tracepb.Tracing_Http{
-					Name: "envoy.tracers.opencensus",
+					Name: "envoy.tracers.opentelemetry",
 					// Typed config is already tested, so strip it out.
 					ConfigType: nil,
 				},
@@ -298,7 +251,7 @@ func TestHcmTracingSampleRate(t *testing.T) {
 					Value: 0,
 				},
 				Provider: &tracepb.Tracing_Http{
-					Name: "envoy.tracers.opencensus",
+					Name: "envoy.tracers.opentelemetry",
 					// Typed config is already tested, so strip it out.
 					ConfigType: nil,
 				},
@@ -321,7 +274,7 @@ func TestHcmTracingSampleRate(t *testing.T) {
 					Value: 12.3457,
 				},
 				Provider: &tracepb.Tracing_Http{
-					Name: "envoy.tracers.opencensus",
+					Name: "envoy.tracers.opentelemetry",
 					// Typed config is already tested, so strip it out.
 					ConfigType: nil,
 				},

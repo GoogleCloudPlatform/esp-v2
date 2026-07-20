@@ -354,7 +354,7 @@ TEST_F(HandlerTest, HandlerNoOperationFound) {
   // mock_decoder_callbacks_.stream_info_.filter_state_. This test should not
   // set that value.
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -381,7 +381,7 @@ TEST_F(HandlerTest, HandlerMissingHeaders) {
 
   // Note: This test builds off of `HandlerNoOperationFound` to keep mocks
   // simple
-  ServiceControlHandlerImpl handler(req_headers_, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&req_headers_, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -408,7 +408,7 @@ TEST_F(HandlerTest, HandlerNoRequirementMatched) {
   // passed through without check and report should be called.
   setPerRouteOperation("bad-operation-name");
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(OkStatus(), ""));
@@ -432,7 +432,7 @@ TEST_F(HandlerTest, HandlerCheckNotNeeded) {
   TestRequestHeaderMapImpl headers{{":method", "GET"}, {":path", "/echo"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -461,7 +461,7 @@ TEST_F(HandlerTest, RequestHeaderSizeWithModificationInUpstream) {
 
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(request_headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&request_headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   EXPECT_CALL(mock_check_done_callback_, onCheckDone(OkStatus(), ""));
@@ -488,7 +488,7 @@ TEST_F(HandlerTest, HandlerCheckMissingApiKey) {
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
 
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   Status bad_status =
@@ -529,7 +529,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithApiKeyRestrictionFields) {
                                    {"x-android-cert", "cert-123"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   CheckResponseInfo response_info;
@@ -573,7 +573,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckSyncWithoutApiKeyRestrictionFields) {
   };
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   CheckResponseInfo response_info;
@@ -614,7 +614,7 @@ TEST_F(HandlerTest, TestClientIPWithForwardHeaders) {
   };
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   CheckResponseInfo response_info;
@@ -656,7 +656,7 @@ TEST_F(HandlerTest, TestClientIPWithOutForwardHeaders) {
   };
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   CheckResponseInfo response_info;
@@ -692,7 +692,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaSync) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   CheckResponseInfo response_info;
@@ -731,7 +731,7 @@ TEST_F(HandlerTest, HandlerCallQuotaWithoutCheck) {
                                    {":path", "/echo?key=foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   // Check is not called.
@@ -766,7 +766,7 @@ TEST_F(HandlerTest, HandlerFailCheckSync) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -813,7 +813,7 @@ TEST_F(HandlerTest, FillFilterState) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -837,7 +837,7 @@ TEST_F(HandlerTest, HandlerFailQuotaSync) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   CheckResponseInfo response_info;
@@ -878,7 +878,7 @@ TEST_F(HandlerTest, HandlerSuccessfulCheckAsync) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -921,7 +921,7 @@ TEST_F(HandlerTest, HandlerSuccessfulQuotaAsync) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -972,7 +972,7 @@ TEST_F(HandlerTest, HandlerFailCheckAsync) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -1024,7 +1024,7 @@ TEST_F(HandlerTest, HandlerFailQuotaAsync) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -1083,7 +1083,7 @@ TEST_F(HandlerTest, HandlerCancelFuncResetOnDone) {
   MockFunction<void()> mock_cancel;
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
 
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
@@ -1110,7 +1110,7 @@ TEST_F(HandlerTest, HandlerCancelFuncCalledOnDestroy) {
   MockFunction<void()> mock_cancel;
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
 
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
@@ -1132,7 +1132,7 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
   MockFunction<void()> mock_cancel;
   CancelFunc cancel_fn = mock_cancel.AsStdFunction();
 
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
   EXPECT_CALL(*mock_call_, callCheck(_, _, _))
@@ -1153,14 +1153,14 @@ TEST_F(HandlerTest, HandlerCancelFuncNotCalledOnDestroyForSyncOnDone) {
 
 TEST_F(HandlerTest, HandlerReportWithoutCheck) {
   // Test: Test that report fills in the trace id.
-  EXPECT_CALL(mock_span_, getTraceIdAsHex()).WillOnce(Return("test-trace-id"));
+  EXPECT_CALL(mock_span_, getTraceId()).WillOnce(Return("test-trace-id"));
 
   setPerRouteOperation("get_header_key");
   TestRequestHeaderMapImpl headers{
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -1177,8 +1177,8 @@ TEST_F(HandlerTest, HandlerReportWithoutCheck) {
 }
 
 TEST_F(HandlerTest, HandlerReportWithoutTraceId) {
-  // Test getTraceIdAsHex is not called since trace is disabled.
-  EXPECT_CALL(mock_span_, getTraceIdAsHex()).Times(0);
+  // Test getTraceId is not called since trace is disabled.
+  EXPECT_CALL(mock_span_, getTraceId()).Times(0);
   proto_config_.mutable_services(0)->set_tracing_disabled(true);
 
   setPerRouteOperation("get_header_key");
@@ -1186,7 +1186,7 @@ TEST_F(HandlerTest, HandlerReportWithoutTraceId) {
       {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
   TestResponseHeaderMapImpl response_headers{
       {"content-type", "application/grpc"}};
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -1210,7 +1210,7 @@ TEST_F(HandlerTest, HandlerReportWithTrace) {
       {"content-type", "application/grpc"}};
   CheckDoneFunc stored_on_done;
   CheckResponseInfo response_info;
-  ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                     "test-uuid", *cfg_parser_, test_time_,
                                     stats_);
 
@@ -1239,7 +1239,7 @@ class HandlerReportStatusTest : public HandlerTest {
         {":method", "GET"}, {":path", "/echo"}, {"x-api-key", "foobar"}};
     CheckDoneFunc stored_on_done;
     CheckResponseInfo response_info;
-    ServiceControlHandlerImpl handler(headers, &mock_decoder_callbacks_,
+    ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
                                       "test-uuid", *cfg_parser_, test_time_,
                                       stats_);
 
