@@ -89,10 +89,6 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
                   "explicitHttpConfig":{
                      "http2ProtocolOptions":{
-                       "connectionKeepalive":{
-                         "interval":"30s",
-                         "timeout":"10s"
-                       }
                      }
                   }
                }
@@ -190,10 +186,6 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
                   "explicitHttpConfig":{
                      "http2ProtocolOptions":{
-                       "connectionKeepalive":{
-                         "interval":"30s",
-                         "timeout":"10s"
-                       }
                      }
                   }
                }
