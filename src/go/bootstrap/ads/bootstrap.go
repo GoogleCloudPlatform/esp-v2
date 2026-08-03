@@ -74,13 +74,14 @@ func CreateBootstrapConfig(opts options.AdsBootstrapperOptions) (string, error) 
 		StaticResources: &bootstrappb.Bootstrap_StaticResources{
 			Clusters: []*clusterpb.Cluster{
 				{
+					// Config Manager enforces grpc-go's default minimum interval for client keepalive pings.
 					Name:           opts.AdsNamedPipe,
 					LbPolicy:       clusterpb.Cluster_ROUND_ROBIN,
 					ConnectTimeout: connectTimeoutProto,
 					ClusterDiscoveryType: &clusterpb.Cluster_Type{
 						Type: clusterpb.Cluster_STATIC,
 					},
-					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptionsWithoutKeepalive(),
 					LoadAssignment:                util.CreateUdsLoadAssignment(opts.AdsNamedPipe),
 				},
 			},
