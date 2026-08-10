@@ -22,6 +22,7 @@ import (
 	httppb "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -36,6 +37,9 @@ func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
 			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
 				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{
+						MaxConcurrentStreams:        &wrapperspb.UInt32Value{Value: 2147483647},
+						InitialStreamWindowSize:     &wrapperspb.UInt32Value{Value: 268435456},
+						InitialConnectionWindowSize: &wrapperspb.UInt32Value{Value: 268435456},
 						ConnectionKeepalive: &corepb.KeepaliveSettings{
 							Interval: durationpb.New(Http2KeepaliveInterval),
 							Timeout:  durationpb.New(Http2KeepaliveTimeout),

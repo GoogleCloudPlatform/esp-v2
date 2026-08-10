@@ -99,6 +99,12 @@ func (g *HTTPConnectionManagerGenerator) GenFilterConfig() (proto.Message, error
 		// Security options for `path` header.
 		NormalizePath: &wrapperspb.BoolValue{Value: g.NormalizePath},
 		MergeSlashes:  g.MergeSlashesInPath,
+
+		Http2ProtocolOptions: &corepb.Http2ProtocolOptions{
+			MaxConcurrentStreams:        &wrapperspb.UInt32Value{Value: 2147483647},
+			InitialStreamWindowSize:     &wrapperspb.UInt32Value{Value: 268435456},
+			InitialConnectionWindowSize: &wrapperspb.UInt32Value{Value: 268435456},
+		},
 	}
 
 	// Converting the error message for requests rejected by Envoy to JSON format:

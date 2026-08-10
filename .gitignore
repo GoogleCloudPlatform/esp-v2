@@ -10,6 +10,10 @@ src/go/proto/
 .ijwb/
 .idea/
 
+
 # C++ coverage
 generated/
 third_party/tools/coverage/BUILD
+
+# Local user overrides
+.bazelrc.user

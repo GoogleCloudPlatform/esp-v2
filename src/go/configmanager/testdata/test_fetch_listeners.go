@@ -27,7 +27,12 @@ const (
 	TestFetchListenersEndpointName = "endpoints.examples.bookstore.Bookstore"
 	TestFetchListenersConfigID     = "2017-05-01r0"
 	testProjectID                  = "project123"
-	localReplyConfig               = `"localReplyConfig": {
+	localReplyConfig               = `"http2ProtocolOptions": {
+					"initialConnectionWindowSize": 268435456,
+					"initialStreamWindowSize": 268435456,
+					"maxConcurrentStreams": 2147483647
+				  },
+				  "localReplyConfig": {
                     "bodyFormat": {
                       "jsonFormat": {
                         "code": "%RESPONSE_CODE%",

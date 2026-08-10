@@ -44,6 +44,11 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	"commonHttpProtocolOptions": {
 		"headersWithUnderscoresAction": "REJECT_REQUEST"
 	},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
@@ -94,6 +99,11 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	"commonHttpProtocolOptions": {
 		"headersWithUnderscoresAction": "REJECT_REQUEST"
 	},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
@@ -133,6 +143,11 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 {
 	"commonHttpProtocolOptions": {
 		"headersWithUnderscoresAction": "REJECT_REQUEST"
+	},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
 	},
 	"localReplyConfig": {
 		"bodyFormat": {
@@ -193,6 +208,11 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 				`
 {
 	"commonHttpProtocolOptions": {},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
@@ -231,7 +251,12 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 				`
 {
 	"commonHttpProtocolOptions": {},
-																"httpProtocolOptions": {"enableTrailers": true},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
+	"httpProtocolOptions": {"enableTrailers": true},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
