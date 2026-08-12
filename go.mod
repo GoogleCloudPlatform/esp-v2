@@ -19,7 +19,7 @@ require (
 	golang.org/x/net v0.38.0
 	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.114.0
-	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
+	google.golang.org/genproto v0.0.0-20260810153831-ec0a7760b754
 	google.golang.org/grpc v1.56.3
 	google.golang.org/protobuf v1.36.11
 )
