@@ -43,6 +43,12 @@ func main() {
 	if opts.TracingOptions.MaxNumAttributes != 32 || opts.TracingOptions.MaxNumAnnotations != 32 || opts.TracingOptions.MaxNumMessageEvents != 128 || opts.TracingOptions.MaxNumLinks != 128 {
 		glog.Warning("The following tracing span limit flags are DEPRECATED and ignored by OpenTelemetry: tracing_max_num_attributes, tracing_max_num_annotations, tracing_max_num_message_events, tracing_max_num_links. Please use standard OTel environment variables instead (e.g., OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, OTEL_SPAN_EVENT_COUNT_LIMIT, OTEL_SPAN_LINK_COUNT_LIMIT).")
 	}
+	if opts.TracingOptions.ProjectId != "" {
+		glog.Warning("The following tracing flag is DEPRECATED and ignored by OpenTelemetry: tracing_project_id. Please use standard OTel environment variables instead (e.g., OTEL_RESOURCE_ATTRIBUTES=\"gcp.project.id=YOUR_PROJECT\" or rely on ADC metadata).")
+	}
+	if opts.TracingOptions.StackdriverAddress != "" {
+		glog.Warning("The following tracing flag is DEPRECATED and ignored by OpenTelemetry: tracing_stackdriver_address. Please use standard OTel environment variables instead (e.g., OTEL_EXPORTER_OTLP_ENDPOINT=\"http://target:port\").")
+	}
 
 	// Create context that allows cancellation.
 	// Allows shutting down downstream servers gracefully.

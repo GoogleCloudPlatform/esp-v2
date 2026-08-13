@@ -23,39 +23,12 @@ import (
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/golang/glog"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-// ShouldFetchTracingProjectID determines if we should use tenant project ID
-// from IMDS.
-func ShouldFetchTracingProjectID(opts options.CommonOptions) bool {
-	if opts.TracingOptions.DisableTracing {
-		return false
-	}
-
-	// If user specified a project-id, use that
-	projectId := opts.TracingOptions.ProjectId
-	if projectId != "" {
-		return false
-	}
-
-	// Otherwise determine project-id automatically
-	glog.Infof("--tracing_project_id was not specified, attempting to fetch it from GCP Metadata server.")
-	if opts.NonGCP {
-		glog.Warning("--tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime.")
-		return false
-	}
-
-	return true
-}
 
 func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTelemetryConfig, error) {
 	// Stackdriver Export via OTLP directly accesses the Google Cloud Telemetry API.
 	targetUri := "telemetry.googleapis.com"
-	if opts.StackdriverAddress != "" {
-		targetUri = opts.StackdriverAddress
-	}
 
 	cfg := &tracepb.OpenTelemetryConfig{
 		ServiceName: "espv2", // Provide a default service name.
@@ -74,8 +47,7 @@ func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTeleme
 
 // CreateTracing outputs envoy HCM tracing config.
 func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tracing, error) {
-	if opts.ProjectId == "" {
-		glog.Warningf("Not adding tracing config because project ID is empty")
+	if opts.DisableTracing {
 		return nil, nil
 	}
 

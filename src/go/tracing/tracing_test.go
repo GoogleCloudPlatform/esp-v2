@@ -32,9 +32,8 @@ import (
 )
 
 const (
-	fakeOptsProjectId      = "fake-opts-project-id"
-	fakeMetadataProjectId  = "fake-metadata-project-id"
-	fakeStackdriverAddress = "dns:non-existent-address:2840"
+	fakeOptsProjectId     = "fake-opts-project-id"
+	fakeMetadataProjectId = "fake-metadata-project-id"
 )
 
 // Tests the various combination of tracing flags on a non-GCP deployment
@@ -62,24 +61,6 @@ func TestOpenTelemetryConfig(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "Success with custom stackdriver address",
-			opts: &options.TracingOptions{
-				ProjectId:          fakeOptsProjectId,
-				StackdriverAddress: fakeStackdriverAddress,
-			},
-			wantResult: &tracepb.OpenTelemetryConfig{
-				ServiceName: "espv2",
-				GrpcService: &corev3.GrpcService{
-					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
-						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
-							TargetUri:  fakeStackdriverAddress,
-							StatPrefix: "opentelemetry",
-						},
-					},
-				},
-			},
-		},
 	}
 
 	for _, tc := range testData {
@@ -98,59 +79,6 @@ func TestOpenTelemetryConfig(t *testing.T) {
 				if diff := cmp.Diff(tc.wantResult, got, protocmp.Transform()); diff != "" {
 					t.Errorf("createOpenTelemetryConfig(%v) diff (-want +got):\n%s", tc.opts, diff)
 				}
-			}
-		})
-	}
-}
-
-// Ensures that the project-id is automatically populated in the tracing config on GCP deployments
-func TestShouldFetchTracingProjectID(t *testing.T) {
-	testData := []struct {
-		desc string
-		opts options.CommonOptions
-		want bool
-	}{
-		{
-			desc: "No fetch when project ID is specified",
-			opts: options.CommonOptions{
-				TracingOptions: &options.TracingOptions{
-					ProjectId: fakeOptsProjectId,
-				},
-			},
-			want: false,
-		},
-		{
-			desc: "No fetch when non-GCP",
-			opts: options.CommonOptions{
-				NonGCP:         true,
-				TracingOptions: &options.TracingOptions{},
-			},
-			want: false,
-		},
-		{
-			desc: "No fetch when tracing is disabled",
-			opts: options.CommonOptions{
-				TracingOptions: &options.TracingOptions{
-					DisableTracing: true,
-				},
-			},
-			want: false,
-		},
-		{
-			desc: "Fetch by default",
-			opts: options.CommonOptions{
-				TracingOptions: &options.TracingOptions{},
-			},
-			want: true,
-		},
-	}
-
-	for _, tc := range testData {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := ShouldFetchTracingProjectID(tc.opts)
-
-			if got != tc.want {
-				t.Fatalf("ShouldFetchTracingProjectID() got %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -283,15 +211,15 @@ func TestHcmTracingSampleRate(t *testing.T) {
 		{
 			desc: "Invalid sampling rate has error",
 			opts: options.TracingOptions{
-				ProjectId:    "test-project",
 				SamplingRate: 1.3,
 			},
 			wantError: "invalid trace sampling rate",
 		},
 		{
-			desc: "Empty config when project ID is not specified",
+			desc: "Empty config when tracing is disabled",
 			opts: options.TracingOptions{
-				SamplingRate: options.DefaultCommonOptions().TracingOptions.SamplingRate,
+				DisableTracing: true,
+				SamplingRate:   options.DefaultCommonOptions().TracingOptions.SamplingRate,
 			},
 			wantResult: nil,
 		},
