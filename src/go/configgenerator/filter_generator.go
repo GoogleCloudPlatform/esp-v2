@@ -28,6 +28,7 @@ import (
 func MakeHTTPFilterGenFactories(scParams filtergen.ServiceControlOPFactoryParams) []filtergen.FilterGeneratorOPFactory {
 	return []filtergen.FilterGeneratorOPFactory{
 		filtergen.NewHeaderSanitizerFilterGensFromOPConfig,
+		filtergen.NewTraceContextFilterGensFromOPConfig,
 		filtergen.NewCORSFilterGensFromOPConfig,
 
 		// Health check filter is behind Path Matcher filter, since Service Control

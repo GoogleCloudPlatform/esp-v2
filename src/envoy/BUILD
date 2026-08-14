@@ -33,6 +33,11 @@ alias(
 )
 
 alias(
+    name = "trace_context",
+    actual = "//src/envoy/http/trace_context:filter_factory",
+)
+
+alias(
     name = "main",
     actual = "@envoy//source/exe:envoy_main_entry_lib",
 )
@@ -44,6 +49,7 @@ envoy_cc_binary(
         ":backend_auth",
         ":grpc_metadata_scrubber",
         ":header_sanitizer",
+        ":trace_context",
         ":main",
         ":path_rewrite",
         ":service_control",

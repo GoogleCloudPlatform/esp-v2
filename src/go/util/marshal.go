@@ -29,6 +29,7 @@ import (
 	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/header_sanitizer"
 	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/path_rewrite"
 	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/service_control"
+	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/trace_context"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/metrics/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
