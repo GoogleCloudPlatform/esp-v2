@@ -1,3 +1,8 @@
+# Release 2.55.7 18-08-2026
+
+- Update VERSION to 2.55.7 (#1035)
+- Update go version to 1.26.6 (#1033)
+
 # Release 2.55.6 15-07-2026
 
 - Update version to 2.55.6 (#1028)
