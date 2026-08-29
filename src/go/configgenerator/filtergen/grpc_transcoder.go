@@ -257,7 +257,7 @@ func UpdateProtoDescriptorFromOPConfig(serviceConfig *confpb.Service, opts optio
 		}
 	}
 
-	newData, err := protov2.Marshal(fds)
+	newData, err := protov2.MarshalOptions{Deterministic: true}.Marshal(fds)
 	if err != nil {
 		glog.Error("failed to marshal proto descriptor, error: ", err)
 		return nil, fmt.Errorf("failed to marshal proto descriptor, error: %v", err)
