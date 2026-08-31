@@ -18,9 +18,11 @@ import (
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tcpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/trace_context"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -69,5 +71,26 @@ func (g *TraceContextGenerator) FilterName() string {
 func (g *TraceContextGenerator) GenFilterConfig() (proto.Message, error) {
 	return &tcpb.TraceContextForwardedConfig{
 		OutgoingContexts: g.OutgoingContexts,
+	}, nil
+}
+
+// GenEarlyHeaderMutationConfig generates the early header mutation extension for incoming trace contexts.
+func GenEarlyHeaderMutationConfig(incoming string) (*corepb.TypedExtensionConfig, error) {
+	formats := parseLegacyFormats(incoming)
+	if len(formats) == 0 {
+		return nil, nil // Do not inject if no legacy formats requested
+	}
+
+	config := &tcpb.TraceContextTranslatorConfig{
+		IncomingContexts: formats,
+	}
+	serialized, err := anypb.New(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &corepb.TypedExtensionConfig{
+		Name:        "com.google.espv2.filters.http.early_header_mutation.trace_context",
+		TypedConfig: serialized,
 	}, nil
 }

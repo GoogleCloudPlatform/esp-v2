@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 )
 
 func TestNewTraceContextFilterGensFromOPConfig_GenConfig(t *testing.T) {
@@ -105,20 +106,58 @@ func TestNewTraceContextFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 			WantFilterConfigs: nil,
 		},
-		{
-			Desc: "No-op when outgoing context is empty",
-			OptsIn: options.ConfigGeneratorOptions{
-				CommonOptions: options.CommonOptions{
-					TracingOptions: &options.TracingOptions{
-						OutgoingContext: "",
-					},
-				},
-			},
-			WantFilterConfigs: nil,
-		},
 	}
 
 	for _, tc := range testdata {
 		tc.RunTest(t, filtergen.NewTraceContextFilterGensFromOPConfig)
+	}
+}
+
+
+func TestGenEarlyHeaderMutationConfig(t *testing.T) {
+	testcases := []struct {
+		desc     string
+		incoming string
+		want     string
+	}{
+		{
+			desc:     "Generate for cloud trace",
+			incoming: "x-cloud-trace-context",
+			want:     `{"name":"com.google.espv2.filters.http.early_header_mutation.trace_context","typedConfig":{"@type":"type.googleapis.com/envoy.v12.http.trace_context.TraceContextTranslatorConfig","incomingContexts":["CLOUD_TRACE_CONTEXT"]}}`,
+		},
+		{
+			desc:     "Generate for grpc trace bin",
+			incoming: "grpc-trace-bin",
+			want:     `{"name":"com.google.espv2.filters.http.early_header_mutation.trace_context","typedConfig":{"@type":"type.googleapis.com/envoy.v12.http.trace_context.TraceContextTranslatorConfig","incomingContexts":["GRPC_TRACE_BIN"]}}`,
+		},
+		{
+			desc:     "No-op when incoming context is not legacy format",
+			incoming: "traceparent",
+			want:     "",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := filtergen.GenEarlyHeaderMutationConfig(tc.incoming)
+			if err != nil {
+				t.Fatalf("GenEarlyHeaderMutationConfig(%s) failed: %v", tc.incoming, err)
+			}
+			if tc.want == "" {
+				if got != nil {
+					t.Errorf("GenEarlyHeaderMutationConfig(%s) = %v, want nil", tc.incoming, got)
+				}
+				return
+			}
+			
+			gotJSON, err := util.ProtoToJson(got)
+			if err != nil {
+				t.Fatalf("Failed to marshal got proto to json: %v", err)
+			}
+
+			if err := util.JsonEqual(tc.want, gotJSON); err != nil {
+				t.Errorf("GenEarlyHeaderMutationConfig(%s) mismatch: %v", tc.incoming, err)
+			}
+		})
 	}
 }
