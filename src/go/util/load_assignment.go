@@ -31,15 +31,24 @@ const (
 
 // CreateUpstreamProtocolOptions creates a http2 protocol option as a typed upstream extension.
 func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
+	return createUpstreamProtocolOptions(&corepb.KeepaliveSettings{
+		Interval: durationpb.New(Http2KeepaliveInterval),
+		Timeout:  durationpb.New(Http2KeepaliveTimeout),
+	})
+}
+
+// CreateUpstreamProtocolOptionsWithoutKeepalive creates HTTP/2 protocol options without connection keepalive.
+func CreateUpstreamProtocolOptionsWithoutKeepalive() map[string]*anypb.Any {
+	return createUpstreamProtocolOptions(nil)
+}
+
+func createUpstreamProtocolOptions(connectionKeepalive *corepb.KeepaliveSettings) map[string]*anypb.Any {
 	o := &httppb.HttpProtocolOptions{
 		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
 				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{
-						ConnectionKeepalive: &corepb.KeepaliveSettings{
-							Interval: durationpb.New(Http2KeepaliveInterval),
-							Timeout:  durationpb.New(Http2KeepaliveTimeout),
-						},
+						ConnectionKeepalive: connectionKeepalive,
 					},
 				},
 			},
