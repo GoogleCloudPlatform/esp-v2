@@ -42,3 +42,23 @@ func TestCreateUpstreamProtocolOptionsIncludesKeepalive(t *testing.T) {
 		t.Errorf("keepalive timeout = %v, want %v", got, Http2KeepaliveTimeout)
 	}
 }
+
+func TestCreateUpstreamProtocolOptionsWithoutKeepalive(t *testing.T) {
+	options, ok := CreateUpstreamProtocolOptionsWithoutKeepalive()[UpstreamProtocolOptions]
+	if !ok {
+		t.Fatalf("CreateUpstreamProtocolOptionsWithoutKeepalive() did not return %q", UpstreamProtocolOptions)
+	}
+
+	httpOptions := &httppb.HttpProtocolOptions{}
+	if err := options.UnmarshalTo(httpOptions); err != nil {
+		t.Fatalf("options.UnmarshalTo(%T) failed: %v", httpOptions, err)
+	}
+
+	http2Options := httpOptions.GetExplicitHttpConfig().GetHttp2ProtocolOptions()
+	if http2Options == nil {
+		t.Fatal("CreateUpstreamProtocolOptionsWithoutKeepalive() did not configure HTTP/2")
+	}
+	if keepalive := http2Options.GetConnectionKeepalive(); keepalive != nil {
+		t.Errorf("connection keepalive = %v, want nil", keepalive)
+	}
+}
