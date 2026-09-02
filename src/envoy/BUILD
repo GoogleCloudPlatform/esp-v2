@@ -42,16 +42,22 @@ alias(
     actual = "@envoy//source/exe:envoy_main_entry_lib",
 )
 
+alias(
+    name = "early_header_mutation",
+    actual = "//src/envoy/http/early_header_mutation/trace_context:early_header_mutation_factory",
+)
+
 envoy_cc_binary(
     name = "envoy",
     repository = "@envoy",
     deps = [
         ":backend_auth",
+        ":early_header_mutation",
         ":grpc_metadata_scrubber",
         ":header_sanitizer",
-        ":trace_context",
         ":main",
         ":path_rewrite",
         ":service_control",
+        ":trace_context",
     ],
 )

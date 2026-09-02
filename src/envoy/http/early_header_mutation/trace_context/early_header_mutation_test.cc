@@ -74,7 +74,8 @@ TEST_F(TraceContextEarlyHeaderMutationTest, TranslatesGrpcTraceBin) {
 }
 
 TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceW3C) {
-  setupConfig({::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT});
+  setupConfig({::envoy::v12::http::trace_context::TRACE_CONTEXT,
+               ::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT});
 
   // W3C traceparent exists BEFORE
   headers_.addCopy(Envoy::Http::LowerCaseString("traceparent"),
@@ -87,6 +88,29 @@ TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceW3C) {
   // Legacy deleted
   EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context")).empty());
   // W3C preserved and unmutated
+  auto traceparent = headers_.get(Envoy::Http::LowerCaseString("traceparent"));
+  ASSERT_FALSE(traceparent.empty());
+  EXPECT_EQ(traceparent[0]->value().getStringView(),
+            "00-999999aa7843bc8bf206b12000100000-0000000000000002-01");
+}
+
+TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceW3CWithCustomOrder) {
+  // Simulates --tracing_incoming_context="x-cloud-trace-context,traceparent"
+  setupConfig({::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT,
+               ::envoy::v12::http::trace_context::TRACE_CONTEXT});
+
+  // W3C traceparent exists BEFORE
+  headers_.addCopy(Envoy::Http::LowerCaseString("traceparent"),
+                   "00-999999aa7843bc8bf206b12000100000-0000000000000002-01");
+  // Legacy exists BEFORE
+  headers_.addCopy(Envoy::Http::LowerCaseString("x-cloud-trace-context"),
+                   "105445aa7843bc8bf206b12000100000/1;o=1");
+
+  EXPECT_TRUE(mutation_->mutate(headers_, stream_info_));
+
+  // Legacy deleted
+  EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context")).empty());
+  // W3C preserved and unmutated despite checking cloud trace context first
   auto traceparent = headers_.get(Envoy::Http::LowerCaseString("traceparent"));
   ASSERT_FALSE(traceparent.empty());
   EXPECT_EQ(traceparent[0]->value().getStringView(),

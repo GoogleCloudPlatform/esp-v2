@@ -32,18 +32,21 @@ class TraceContextHeaders {
   const Envoy::Http::LowerCaseString Traceparent{"traceparent"};
   const Envoy::Http::LowerCaseString CloudTraceContext{"x-cloud-trace-context"};
   const Envoy::Http::LowerCaseString GrpcTraceBin{"grpc-trace-bin"};
+  const Envoy::Http::LowerCaseString OriginalTraceparent{"x-espv2-original-traceparent"};
 };
 using TraceContextHeadersSingleton = Envoy::ConstSingleton<TraceContextHeaders>;
 
-class Filter : public Envoy::Http::PassThroughDecoderFilter,
+class Filter : public Envoy::Http::PassThroughFilter,
                public Envoy::Logger::Loggable<Envoy::Logger::Id::filter> {
  public:
   Filter(std::shared_ptr<const ::envoy::v12::http::trace_context::TraceContextForwardedConfig> config)
       : config_(std::move(config)) {}
 
   // Envoy::Http::StreamDecoderFilter
-  Envoy::Http::FilterHeadersStatus decodeHeaders(Envoy::Http::RequestHeaderMap&,
-                                                 bool) override;
+  Envoy::Http::FilterHeadersStatus decodeHeaders(Envoy::Http::RequestHeaderMap& headers, bool end_stream) override;
+
+  // Http::StreamEncoderFilter
+  Envoy::Http::FilterHeadersStatus encodeHeaders(Envoy::Http::ResponseHeaderMap& headers, bool end_stream) override;
 
  private:
   std::shared_ptr<const ::envoy::v12::http::trace_context::TraceContextForwardedConfig> config_;

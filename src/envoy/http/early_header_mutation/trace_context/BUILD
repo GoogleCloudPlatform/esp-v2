@@ -32,6 +32,7 @@ envoy_cc_extension(
         "//api/envoy/v12/http/trace_context:config_proto_cc_proto",
         "@envoy//envoy/http:early_header_mutation_interface",
         "@envoy//envoy/registry",
+        "@envoy//source/common/config:utility_lib",
     ],
 )
 

@@ -29,32 +29,36 @@ constexpr const char kFilterName[] =
 /**
  * Config registration for ESPv2 trace context filter.
  */
-class FilterFactory
-    : public Envoy::Extensions::HttpFilters::Common::FactoryBase<
-          ::envoy::v12::http::trace_context::TraceContextForwardedConfig> {
+class UpstreamFilterFactory
+    : public Envoy::Server::Configuration::UpstreamHttpFilterConfigFactory {
  public:
-  FilterFactory() : FactoryBase(kFilterName) {}
+  std::string name() const override { return kFilterName; }
 
- private:
-  Envoy::Http::FilterFactoryCb createFilterFactoryFromProtoTyped(
-      const ::envoy::v12::http::trace_context::TraceContextForwardedConfig& config,
+  absl::StatusOr<Envoy::Http::FilterFactoryCb> createFilterFactoryFromProto(
+      const Envoy::Protobuf::Message& config,
       const std::string&,
-      Envoy::Server::Configuration::FactoryContext&) override {
-    
-    auto shared_config = std::make_shared<::envoy::v12::http::trace_context::TraceContextForwardedConfig>(config);
+      Envoy::Server::Configuration::UpstreamFactoryContext& context) override {
+    auto message = Envoy::MessageUtil::downcastAndValidate<const ::envoy::v12::http::trace_context::TraceContextForwardedConfig&>(
+        config, context.serverFactoryContext().messageValidationVisitor());
+    auto shared_config = std::make_shared<::envoy::v12::http::trace_context::TraceContextForwardedConfig>(message);
 
     return [shared_config](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
       auto filter = std::make_shared<Filter>(shared_config);
-      callbacks.addStreamDecoderFilter(filter);
+      callbacks.addStreamFilter(filter);
     };
   }
+
+  Envoy::ProtobufTypes::MessagePtr createEmptyConfigProto() override {
+    return std::make_unique<::envoy::v12::http::trace_context::TraceContextForwardedConfig>();
+  }
 };
+
 /**
  * Static registration for the filter. @see RegisterFactory.
  */
 static Envoy::Registry::RegisterFactory<
-    FilterFactory, Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
-    register_;
+    UpstreamFilterFactory, Envoy::Server::Configuration::UpstreamHttpFilterConfigFactory>
+    register_upstream_;
 
 }  // namespace trace_context
 }  // namespace http_filters

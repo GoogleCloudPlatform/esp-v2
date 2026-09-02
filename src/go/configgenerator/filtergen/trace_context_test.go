@@ -71,7 +71,7 @@ func TestNewTraceContextFilterGensFromOPConfig_GenConfig(t *testing.T) {
 `,
 			},
 		},
-        {
+		{
 			Desc: "Generate trace context for both",
 			OptsIn: options.ConfigGeneratorOptions{
 				CommonOptions: options.CommonOptions{
@@ -96,7 +96,7 @@ func TestNewTraceContextFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
-			Desc: "No-op when outgoing context is not legacy format",
+			Desc: "Outputs traceparent config when traceparent is explicitly requested",
 			OptsIn: options.ConfigGeneratorOptions{
 				CommonOptions: options.CommonOptions{
 					TracingOptions: &options.TracingOptions{
@@ -104,7 +104,9 @@ func TestNewTraceContextFilterGensFromOPConfig_GenConfig(t *testing.T) {
 					},
 				},
 			},
-			WantFilterConfigs: nil,
+			WantFilterConfigs: []string{
+				`{"name":"com.google.espv2.filters.http.trace_context","typedConfig":{"@type":"type.googleapis.com/envoy.v12.http.trace_context.TraceContextForwardedConfig","outgoingContexts":["TRACE_CONTEXT"]}}`,
+			},
 		},
 	}
 
@@ -112,7 +114,6 @@ func TestNewTraceContextFilterGensFromOPConfig_GenConfig(t *testing.T) {
 		tc.RunTest(t, filtergen.NewTraceContextFilterGensFromOPConfig)
 	}
 }
-
 
 func TestGenEarlyHeaderMutationConfig(t *testing.T) {
 	testcases := []struct {
@@ -131,9 +132,9 @@ func TestGenEarlyHeaderMutationConfig(t *testing.T) {
 			want:     `{"name":"com.google.espv2.filters.http.early_header_mutation.trace_context","typedConfig":{"@type":"type.googleapis.com/envoy.v12.http.trace_context.TraceContextTranslatorConfig","incomingContexts":["GRPC_TRACE_BIN"]}}`,
 		},
 		{
-			desc:     "No-op when incoming context is not legacy format",
+			desc:     "Outputs traceparent config when explicitly requested",
 			incoming: "traceparent",
-			want:     "",
+			want:     `{"name":"com.google.espv2.filters.http.early_header_mutation.trace_context","typedConfig":{"@type":"type.googleapis.com/envoy.v12.http.trace_context.TraceContextTranslatorConfig","incomingContexts":["TRACE_CONTEXT"]}}`,
 		},
 	}
 
@@ -149,7 +150,7 @@ func TestGenEarlyHeaderMutationConfig(t *testing.T) {
 				}
 				return
 			}
-			
+
 			gotJSON, err := util.ProtoToJson(got)
 			if err != nil {
 				t.Fatalf("Failed to marshal got proto to json: %v", err)

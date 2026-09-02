@@ -18,8 +18,8 @@ import (
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tcpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/trace_context"
+	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -39,6 +39,8 @@ func parseLegacyFormats(outgoing string) []tcpb.TraceContextFormat {
 	var formats []tcpb.TraceContextFormat
 	for _, p := range strings.Split(outgoing, ",") {
 		switch strings.TrimSpace(p) {
+		case "traceparent":
+			formats = append(formats, tcpb.TraceContextFormat_TRACE_CONTEXT)
 		case "x-cloud-trace-context":
 			formats = append(formats, tcpb.TraceContextFormat_CLOUD_TRACE_CONTEXT)
 		case "grpc-trace-bin":
@@ -50,12 +52,12 @@ func parseLegacyFormats(outgoing string) []tcpb.TraceContextFormat {
 
 // NewTraceContextFilterGensFromOPConfig acts as a FilterGeneratorOPFactory.
 func NewTraceContextFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
-	// The C++ wrappers will only be injected (loaded) into the Envoy Listener/Route configuration if the customer's flags explicitly request legacy formats (x-cloud-trace-context or grpc-trace-bin).
-	formats := parseLegacyFormats(opts.TracingOptions.OutgoingContext)
-	
-	if len(formats) == 0 {
-		return nil, nil // Do not inject the C++ filter if legacy formats are not requested
+	// The C++ wrappers will always be injected to handle x-cloud-trace-context or grpc-trace-bin.
+	// It is also needed even when outgoing contexts are empty, to aggressively strip traceparent overrides from OpenTelemetry.
+	if opts.TracingOptions.DisableTracing {
+		return nil, nil
 	}
+	formats := parseLegacyFormats(opts.TracingOptions.OutgoingContext)
 
 	return []FilterGenerator{
 		&TraceContextGenerator{
@@ -76,9 +78,9 @@ func (g *TraceContextGenerator) GenFilterConfig() (proto.Message, error) {
 
 // GenEarlyHeaderMutationConfig generates the early header mutation extension for incoming trace contexts.
 func GenEarlyHeaderMutationConfig(incoming string) (*corepb.TypedExtensionConfig, error) {
-	formats := parseLegacyFormats(incoming)
-	if len(formats) == 0 {
-		return nil, nil // Do not inject if no legacy formats requested
+	var formats []tcpb.TraceContextFormat
+	if incoming != "" {
+		formats = parseLegacyFormats(incoming)
 	}
 
 	config := &tcpb.TraceContextTranslatorConfig{

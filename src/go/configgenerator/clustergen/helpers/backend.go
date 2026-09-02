@@ -16,11 +16,17 @@ package helpers
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	tcpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/trace_context"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	clusterpb "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	wrappers "google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -46,6 +52,9 @@ type BaseBackendCluster struct {
 	// TLS adds on additional TLS transport socket config to the cluster.
 	// Nil if not needed.
 	TLS *ClusterTLSConfiger
+
+	// UpstreamHttpFilters adds HTTP filters before the request hits the network.
+	UpstreamHttpFilters []*hcmpb.HttpFilter
 }
 
 // GenBaseConfig generates the base cluster configuration that is common to
@@ -83,7 +92,9 @@ func (c *BaseBackendCluster) GenBaseConfig() (*clusterpb.Cluster, error) {
 	}
 
 	if isHttp2 {
-		config.TypedExtensionProtocolOptions = util.CreateUpstreamProtocolOptions()
+		config.TypedExtensionProtocolOptions = util.CreateUpstreamProtocolOptions(c.UpstreamHttpFilters)
+	} else if len(c.UpstreamHttpFilters) > 0 {
+		config.TypedExtensionProtocolOptions = util.CreateHttp1UpstreamProtocolOptions(c.UpstreamHttpFilters)
 	}
 
 	switch c.BackendDnsLookupFamily {
@@ -115,4 +126,49 @@ func makeCircuitBreakersThresholds(prio corepb.RoutingPriority, maxRequests int)
 			Value: uint32(maxRequests),
 		},
 	}
+}
+
+func CreateUpstreamHttpFilters(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) []*hcmpb.HttpFilter {
+	if opts.TracingOptions.DisableTracing {
+		return nil
+	}
+
+	formats := []tcpb.TraceContextFormat{}
+	for _, p := range strings.Split(opts.TracingOptions.OutgoingContext, ",") {
+		switch strings.TrimSpace(p) {
+		case "traceparent":
+			formats = append(formats, tcpb.TraceContextFormat_TRACE_CONTEXT)
+		case "x-cloud-trace-context":
+			formats = append(formats, tcpb.TraceContextFormat_CLOUD_TRACE_CONTEXT)
+		case "grpc-trace-bin":
+			formats = append(formats, tcpb.TraceContextFormat_GRPC_TRACE_BIN)
+		}
+	}
+
+	msg := &tcpb.TraceContextForwardedConfig{
+		OutgoingContexts: formats,
+	}
+
+	serialized, err := anypb.New(msg)
+	if err != nil {
+		return nil
+	}
+
+	filter := &hcmpb.HttpFilter{
+		Name: "com.google.espv2.filters.http.trace_context",
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{
+			TypedConfig: serialized,
+		},
+	}
+
+	codecFilter := &hcmpb.HttpFilter{
+		Name: "envoy.extensions.filters.http.upstream_codec.v3.UpstreamCodec",
+		ConfigType: &hcmpb.HttpFilter_TypedConfig{
+			TypedConfig: &anypb.Any{
+				TypeUrl: "type.googleapis.com/envoy.extensions.filters.http.upstream_codec.v3.UpstreamCodec",
+			},
+		},
+	}
+
+	return []*hcmpb.HttpFilter{filter, codecFilter}
 }

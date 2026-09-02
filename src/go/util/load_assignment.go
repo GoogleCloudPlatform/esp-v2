@@ -19,6 +19,7 @@ import (
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	httppb "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -31,7 +32,7 @@ const (
 )
 
 // CreateUpstreamProtocolOptions creates a http2 protocol option as a typed upstream extension.
-func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
+func CreateUpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter) map[string]*anypb.Any {
 	o := &httppb.HttpProtocolOptions{
 		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
@@ -48,6 +49,26 @@ func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
 				},
 			},
 		},
+		HttpFilters: upstreamHttpFilters,
+	}
+	a, _ := anypb.New(o)
+
+	return map[string]*anypb.Any{
+		UpstreamProtocolOptions: a,
+	}
+}
+
+// CreateHttp1UpstreamProtocolOptions creates an HTTP/1 protocol option as a typed upstream extension.
+func CreateHttp1UpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter) map[string]*anypb.Any {
+	o := &httppb.HttpProtocolOptions{
+		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
+			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
+				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{
+					HttpProtocolOptions: &corepb.Http1ProtocolOptions{},
+				},
+			},
+		},
+		HttpFilters: upstreamHttpFilters,
 	}
 	a, _ := anypb.New(o)
 

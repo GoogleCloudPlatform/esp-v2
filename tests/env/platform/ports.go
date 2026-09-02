@@ -152,6 +152,9 @@ const (
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
 	TestTraceContextPropagationHeaders
+	TestTraceContextPropagationW3C
+	TestTraceContextPropagationIngress
+	TestTraceContextPropagationEgress
 	TestTraceContextPropagationHeadersForScCheck
 	TestTracesDynamicRouting
 	TestTracesFetchingJwks

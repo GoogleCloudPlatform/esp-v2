@@ -31,47 +31,69 @@ namespace trace_context {
 using Envoy::Http::FilterHeadersStatus;
 using Envoy::Http::RequestHeaderMap;
 
-FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
+Envoy::Http::FilterHeadersStatus Filter::decodeHeaders(
+    Envoy::Http::RequestHeaderMap& headers, bool) {
+  ENVOY_LOG(trace, "TraceContextFilter::decodeHeaders EXECUTING");
+
+  const auto& const_headers = TraceContextHeadersSingleton::get();
+
   Envoy::Tracing::Span& active_span = decoder_callbacks_->activeSpan();
-  const auto& headers_singleton = TraceContextHeadersSingleton::get();
+  std::string trace_id = active_span.getTraceId();
+  std::string span_id = active_span.getSpanId();
 
-  // Force the tracer to inject context so that the "traceparent" header is 
-  // populated in this header map if it hasn't been already.
-  Envoy::Tracing::UpstreamContext upstream_context;
-  Envoy::Tracing::HttpTraceContext trace_context(headers);
-  active_span.injectContext(trace_context, upstream_context);
-
-  auto traceparent_header = headers.get(headers_singleton.Traceparent);
-  if (!traceparent_header.empty()) {
-    absl::string_view traceparent = traceparent_header[0]->value().getStringView();
+  if (!trace_id.empty() && !span_id.empty()) {
+    std::string fake_traceparent = "00-" + trace_id + "-" + span_id + "-01";
 
     for (int format : config_->outgoing_contexts()) {
       switch (format) {
         case ::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT: {
-          absl::optional<std::string> cloud_trace = 
-              espv2::api_proxy::tracing::TraceContextUtils::TraceParentToXCloudTraceContext(traceparent);
+          absl::optional<std::string> cloud_trace =
+              espv2::api_proxy::tracing::TraceContextUtils::
+                  TraceParentToXCloudTraceContext(fake_traceparent);
           if (cloud_trace.has_value()) {
-            headers.setCopy(headers_singleton.CloudTraceContext, cloud_trace.value());
+            headers.setCopy(const_headers.CloudTraceContext,
+                            cloud_trace.value());
           }
           break;
         }
         case ::envoy::v12::http::trace_context::GRPC_TRACE_BIN: {
-          absl::optional<std::string> grpc_trace = 
-              espv2::api_proxy::tracing::TraceContextUtils::TraceParentToGrpcTraceBin(traceparent);
+          absl::optional<std::string> grpc_trace = espv2::api_proxy::tracing::
+              TraceContextUtils::TraceParentToGrpcTraceBin(fake_traceparent);
           if (grpc_trace.has_value()) {
-            headers.setCopy(headers_singleton.GrpcTraceBin, grpc_trace.value());
+            headers.setCopy(const_headers.GrpcTraceBin, grpc_trace.value());
           }
           break;
         }
-        default:
-          break;
       }
     }
   }
 
-  return FilterHeadersStatus::Continue;
+  bool wants_traceparent = false;
+  for (int format : config_->outgoing_contexts()) {
+    if (format == ::envoy::v12::http::trace_context::TRACE_CONTEXT) {
+      wants_traceparent = true;
+    }
+  }
+
+  if (!wants_traceparent) {
+    headers.remove(const_headers.Traceparent);
+    auto original = headers.get(const_headers.OriginalTraceparent);
+    if (!original.empty()) {
+      headers.setCopy(const_headers.Traceparent,
+                      original[0]->value().getStringView());
+    }
+  }
+
+  headers.remove(const_headers.OriginalTraceparent);
+
+  return Envoy::Http::FilterHeadersStatus::Continue;
 }
 
+Envoy::Http::FilterHeadersStatus Filter::encodeHeaders(
+    Envoy::Http::ResponseHeaderMap&, bool) {
+  ENVOY_LOG(trace, "TraceContextFilter::encodeHeaders EXECUTING");
+  return Envoy::Http::FilterHeadersStatus::Continue;
+}
 }  // namespace trace_context
 }  // namespace http_filters
 }  // namespace envoy

@@ -29,6 +29,9 @@ import (
 func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTelemetryConfig, error) {
 	// Stackdriver Export via OTLP directly accesses the Google Cloud Telemetry API.
 	targetUri := "telemetry.googleapis.com"
+	if opts.StackdriverAddress != "" {
+		targetUri = opts.StackdriverAddress
+	}
 
 	cfg := &tracepb.OpenTelemetryConfig{
 		ServiceName: "espv2", // Provide a default service name.

@@ -1,6 +1,7 @@
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
+    "envoy_cc_test",
 )
 
 package(
@@ -37,14 +38,9 @@ envoy_cc_library(
     deps = [
         ":filter_lib",
         "//api/envoy/v12/http/trace_context:config_proto_cc_proto",
-        "@envoy//source/extensions/filters/http/common:factory_base_lib",
         "@envoy//source/exe:all_extensions_lib",
+        "@envoy//source/extensions/filters/http/common:factory_base_lib",
     ],
-)
-
-load(
-    "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_test",
 )
 
 envoy_cc_test(
