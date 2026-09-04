@@ -27,6 +27,9 @@ bool TraceContextEarlyHeaderMutation::mutate(
     const Envoy::StreamInfo::StreamInfo&) const {
   const auto& const_headers = TraceContextHeadersSingleton::get();
 
+  // Strip any unsolicited client-supplied stash header to prevent spoofing.
+  headers.remove(const_headers.x_espv2_original_traceparent);
+
   auto original_traceparent = headers.get(const_headers.traceparent);
   if (!original_traceparent.empty()) {
     headers.setCopy(const_headers.x_espv2_original_traceparent,
@@ -48,52 +51,47 @@ bool TraceContextEarlyHeaderMutation::mutate(
     }
   }
 
+  // Evaluate incoming trace contexts in the exact order configured by the
+  // user (matching legacy OpenCensus precedence semantics).
   bool found_valid_context = false;
-
-  // 1. W3C traceparent takes absolute priority over legacy headers if
-  // configured and present.
-  if (has_traceparent && !headers.get(const_headers.traceparent).empty()) {
-    found_valid_context = true;
-  } else {
-    // 2. If W3C traceparent isn't active, fallback to evaluating other
-    // configured contexts in priority order.
-    for (const auto& format : config_->incoming_contexts()) {
-      if (format == ::envoy::v12::http::trace_context::TRACE_CONTEXT) {
-        continue;  // Already handled above
-      }
-
-      switch (format) {
-        case ::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT: {
-          auto result = headers.get(const_headers.x_cloud_trace_context);
-          if (!result.empty()) {
-            auto val = espv2::api_proxy::tracing::TraceContextUtils::
-                XCloudTraceContextToTraceParent(
-                    result[0]->value().getStringView());
-            if (val.has_value()) {
-              headers.setCopy(const_headers.traceparent, val.value());
-              found_valid_context = true;
-            }
-          }
-          break;
+  for (const auto& format : config_->incoming_contexts()) {
+    switch (format) {
+      case ::envoy::v12::http::trace_context::TRACE_CONTEXT: {
+        if (!headers.get(const_headers.traceparent).empty()) {
+          found_valid_context = true;
         }
-        case ::envoy::v12::http::trace_context::GRPC_TRACE_BIN: {
-          auto result = headers.get(const_headers.grpc_trace_bin);
-          if (!result.empty()) {
-            auto val = espv2::api_proxy::tracing::TraceContextUtils::
-                GrpcTraceBinToTraceParent(result[0]->value().getStringView());
-            if (val.has_value()) {
-              headers.setCopy(const_headers.traceparent, val.value());
-              found_valid_context = true;
-            }
-          }
-          break;
-        }
-        default:
-          break;
-      }
-      if (found_valid_context) {
         break;
       }
+      case ::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT: {
+        auto result = headers.get(const_headers.x_cloud_trace_context);
+        if (!result.empty()) {
+          auto val = espv2::api_proxy::tracing::TraceContextUtils::
+              XCloudTraceContextToTraceParent(
+                  result[0]->value().getStringView());
+          if (val.has_value()) {
+            headers.setCopy(const_headers.traceparent, val.value());
+            found_valid_context = true;
+          }
+        }
+        break;
+      }
+      case ::envoy::v12::http::trace_context::GRPC_TRACE_BIN: {
+        auto result = headers.get(const_headers.grpc_trace_bin);
+        if (!result.empty()) {
+          auto val = espv2::api_proxy::tracing::TraceContextUtils::
+              GrpcTraceBinToTraceParent(result[0]->value().getStringView());
+          if (val.has_value()) {
+            headers.setCopy(const_headers.traceparent, val.value());
+            found_valid_context = true;
+          }
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    if (found_valid_context) {
+      break;
     }
   }
 
