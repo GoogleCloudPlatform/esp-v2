@@ -36,18 +36,11 @@ bool TraceContextEarlyHeaderMutation::mutate(
                     original_traceparent[0]->value().getStringView());
   }
 
-  bool has_cloud_trace = false;
-  bool has_grpc_trace = false;
   bool has_traceparent = false;
   for (const auto& format : config_->incoming_contexts()) {
-    if (format == ::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT) {
-      has_cloud_trace = true;
-    }
-    if (format == ::envoy::v12::http::trace_context::GRPC_TRACE_BIN) {
-      has_grpc_trace = true;
-    }
     if (format == ::envoy::v12::http::trace_context::TRACE_CONTEXT) {
       has_traceparent = true;
+      break;
     }
   }
 
@@ -93,14 +86,6 @@ bool TraceContextEarlyHeaderMutation::mutate(
     if (found_valid_context) {
       break;
     }
-  }
-
-  // Cleanup unused legacy headers to prevent downstream confusion
-  if (has_cloud_trace) {
-    headers.remove(const_headers.x_cloud_trace_context);
-  }
-  if (has_grpc_trace) {
-    headers.remove(const_headers.grpc_trace_bin);
   }
 
   // If no traceparent was securely resolved, force strip any forged/stale

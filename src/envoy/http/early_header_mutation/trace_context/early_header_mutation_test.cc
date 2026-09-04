@@ -32,7 +32,7 @@ class TraceContextEarlyHeaderMutationTest : public testing::Test {
   Envoy::StreamInfo::MockStreamInfo stream_info_;
 };
 
-TEST_F(TraceContextEarlyHeaderMutationTest, TranslatesXCloudTraceContext) {
+TEST_F(TraceContextEarlyHeaderMutationTest, TranslatesXCloudTraceContextAndPreservesOriginal) {
   setupConfig({::envoy::v12::http::trace_context::CLOUD_TRACE_CONTEXT});
 
   headers_.addCopy(Envoy::Http::LowerCaseString("x-cloud-trace-context"),
@@ -40,14 +40,18 @@ TEST_F(TraceContextEarlyHeaderMutationTest, TranslatesXCloudTraceContext) {
 
   EXPECT_TRUE(mutation_->mutate(headers_, stream_info_));
 
-  EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context")).empty());
+  // Legacy header is preserved on ingress (not scrubbed)
+  auto cloud_trace = headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context"));
+  ASSERT_FALSE(cloud_trace.empty());
+  EXPECT_EQ(cloud_trace[0]->value().getStringView(),
+            "105445aa7843bc8bf206b12000100000/1;o=1");
   auto traceparent = headers_.get(Envoy::Http::LowerCaseString("traceparent"));
   ASSERT_FALSE(traceparent.empty());
   EXPECT_EQ(traceparent[0]->value().getStringView(),
             "00-105445aa7843bc8bf206b12000100000-0000000000000001-01");
 }
 
-TEST_F(TraceContextEarlyHeaderMutationTest, TranslatesGrpcTraceBin) {
+TEST_F(TraceContextEarlyHeaderMutationTest, TranslatesGrpcTraceBinAndPreservesOriginal) {
   setupConfig({::envoy::v12::http::trace_context::GRPC_TRACE_BIN});
 
   std::string binary_header;
@@ -65,7 +69,10 @@ TEST_F(TraceContextEarlyHeaderMutationTest, TranslatesGrpcTraceBin) {
 
   EXPECT_TRUE(mutation_->mutate(headers_, stream_info_));
 
-  EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("grpc-trace-bin")).empty());
+  // Legacy header is preserved on ingress (not scrubbed)
+  auto grpc_trace = headers_.get(Envoy::Http::LowerCaseString("grpc-trace-bin"));
+  ASSERT_FALSE(grpc_trace.empty());
+  EXPECT_EQ(grpc_trace[0]->value().getStringView(), base64_header);
   auto traceparent = headers_.get(Envoy::Http::LowerCaseString("traceparent"));
   ASSERT_FALSE(traceparent.empty());
   EXPECT_EQ(traceparent[0]->value().getStringView(),
@@ -84,8 +91,11 @@ TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceW3C) {
 
   EXPECT_TRUE(mutation_->mutate(headers_, stream_info_));
 
-  // Legacy deleted
-  EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context")).empty());
+  // Legacy preserved
+  auto cloud_trace = headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context"));
+  ASSERT_FALSE(cloud_trace.empty());
+  EXPECT_EQ(cloud_trace[0]->value().getStringView(),
+            "105445aa7843bc8bf206b12000100000/1;o=1");
   // Original W3C is stashed
   auto stashed = headers_.get(Envoy::Http::LowerCaseString("x-espv2-original-traceparent"));
   ASSERT_FALSE(stashed.empty());
@@ -112,8 +122,11 @@ TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceOrderHonoredCloudTraceFirs
 
   EXPECT_TRUE(mutation_->mutate(headers_, stream_info_));
 
-  // Legacy deleted
-  EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context")).empty());
+  // Legacy preserved
+  auto cloud_trace = headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context"));
+  ASSERT_FALSE(cloud_trace.empty());
+  EXPECT_EQ(cloud_trace[0]->value().getStringView(),
+            "105445aa7843bc8bf206b12000100000/1;o=1");
   // Original W3C is stashed
   auto stashed = headers_.get(Envoy::Http::LowerCaseString("x-espv2-original-traceparent"));
   ASSERT_FALSE(stashed.empty());
@@ -148,8 +161,10 @@ TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceOrderHonoredGrpcTraceBinFi
 
   EXPECT_TRUE(mutation_->mutate(headers_, stream_info_));
 
-  // Legacy deleted
-  EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("grpc-trace-bin")).empty());
+  // Legacy preserved
+  auto grpc_trace = headers_.get(Envoy::Http::LowerCaseString("grpc-trace-bin"));
+  ASSERT_FALSE(grpc_trace.empty());
+  EXPECT_EQ(grpc_trace[0]->value().getStringView(), base64_header);
   // Original W3C is stashed
   auto stashed = headers_.get(Envoy::Http::LowerCaseString("x-espv2-original-traceparent"));
   ASSERT_FALSE(stashed.empty());
@@ -196,6 +211,10 @@ TEST_F(TraceContextEarlyHeaderMutationTest, FallbackToSecondWhenFirstMalformed) 
   ASSERT_FALSE(traceparent.empty());
   EXPECT_EQ(traceparent[0]->value().getStringView(),
             "00-999999aa7843bc8bf206b12000100000-0000000000000002-01");
+  // Malformed legacy header is also preserved
+  auto cloud_trace = headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context"));
+  ASSERT_FALSE(cloud_trace.empty());
+  EXPECT_EQ(cloud_trace[0]->value().getStringView(), "invalid-trace-format");
 }
 
 TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceOrderHonoredBetweenLegacyFormats) {
@@ -221,6 +240,15 @@ TEST_F(TraceContextEarlyHeaderMutationTest, PrecedenceOrderHonoredBetweenLegacyF
 
   EXPECT_TRUE(mutation_->mutate(headers_, stream_info_));
 
+  // Both legacy headers are preserved on ingress
+  auto grpc_trace = headers_.get(Envoy::Http::LowerCaseString("grpc-trace-bin"));
+  ASSERT_FALSE(grpc_trace.empty());
+  EXPECT_EQ(grpc_trace[0]->value().getStringView(), base64_header);
+  auto cloud_trace_header = headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context"));
+  ASSERT_FALSE(cloud_trace_header.empty());
+  EXPECT_EQ(cloud_trace_header[0]->value().getStringView(),
+            "105445aa7843bc8bf206b12000100000/1;o=1");
+
   // GRPC_TRACE_BIN was listed first, so it won and was translated to traceparent
   auto traceparent = headers_.get(Envoy::Http::LowerCaseString("traceparent"));
   ASSERT_FALSE(traceparent.empty());
@@ -241,7 +269,11 @@ TEST_F(TraceContextEarlyHeaderMutationTest, ScrubsSpoofedStashHeaderWithoutIncom
 
   // Spoofed stash header must be removed
   EXPECT_TRUE(headers_.get(Envoy::Http::LowerCaseString("x-espv2-original-traceparent")).empty());
-  // x-cloud-trace-context is translated to traceparent
+  // x-cloud-trace-context is preserved and translated to traceparent
+  auto cloud_trace = headers_.get(Envoy::Http::LowerCaseString("x-cloud-trace-context"));
+  ASSERT_FALSE(cloud_trace.empty());
+  EXPECT_EQ(cloud_trace[0]->value().getStringView(),
+            "105445aa7843bc8bf206b12000100000/1;o=1");
   auto traceparent = headers_.get(Envoy::Http::LowerCaseString("traceparent"));
   ASSERT_FALSE(traceparent.empty());
   EXPECT_EQ(traceparent[0]->value().getStringView(),
