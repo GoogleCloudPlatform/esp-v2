@@ -1,12 +1,14 @@
 load(
     "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_extension",
     "envoy_cc_library",
     "envoy_cc_test",
-    "envoy_package",
 )
 
-envoy_package()
+package(
+    default_visibility = [
+        "//src/envoy:__subpackages__",
+    ],
+)
 
 envoy_cc_library(
     name = "early_header_mutation_lib",
@@ -23,7 +25,7 @@ envoy_cc_library(
     ],
 )
 
-envoy_cc_extension(
+envoy_cc_library(
     name = "early_header_mutation_factory",
     srcs = ["early_header_mutation_factory.cc"],
     repository = "@envoy",
