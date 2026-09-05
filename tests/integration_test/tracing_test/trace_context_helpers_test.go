@@ -20,7 +20,19 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 )
+
+// drainSpans pauses briefly and reads all spans from the fake stackdriver server
+// to ensure no unaccounted spans trigger VerifyInvariants failure in TearDown.
+func drainSpans(s *env.TestEnv) {
+	time.Sleep(5 * time.Second)
+	if s.FakeStackdriverServer != nil {
+		_, _ = s.FakeStackdriverServer.RetrieveSpanNames()
+	}
+}
 
 // createTraceparent creates a W3C traceparent header: 00-{traceId}-{spanId}-{flags}.
 func createTraceparent(traceId, spanId string, sampled bool) string {

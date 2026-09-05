@@ -10,7 +10,9 @@ namespace envoy {
 namespace http_filters {
 namespace trace_context {
 
-class TraceContextHeaders {
+namespace {
+
+class EarlyHeaderMutationHeaders {
  public:
   const Envoy::Http::LowerCaseString x_cloud_trace_context{
       "x-cloud-trace-context"};
@@ -20,12 +22,14 @@ class TraceContextHeaders {
       "x-espv2-original-traceparent"};
 };
 
-using TraceContextHeadersSingleton = Envoy::ConstSingleton<TraceContextHeaders>;
+using EarlyHeaderMutationHeadersSingleton = Envoy::ConstSingleton<EarlyHeaderMutationHeaders>;
+
+}  // namespace
 
 bool TraceContextEarlyHeaderMutation::mutate(
     Envoy::Http::RequestHeaderMap& headers,
     const Envoy::StreamInfo::StreamInfo&) const {
-  const auto& const_headers = TraceContextHeadersSingleton::get();
+  const auto& const_headers = EarlyHeaderMutationHeadersSingleton::get();
 
   // Strip any unsolicited client-supplied stash header to prevent spoofing.
   headers.remove(const_headers.x_espv2_original_traceparent);
