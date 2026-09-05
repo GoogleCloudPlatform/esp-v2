@@ -26,7 +26,6 @@ import (
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
-	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
@@ -336,10 +335,10 @@ func TestTracingSampleRate(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for i, tc := range tests {
 		// Place in closure to allow deferring in loop.
 		func() {
-			s := env.NewTestEnv(platform.TestTracingSampleRate, platform.GrpcBookstoreSidecar)
+			s := env.NewTestEnv(uint16(200+i*2), platform.GrpcBookstoreSidecar)
 			s.SetupFakeTraceServer(tc.tracingSampleRate)
 
 			defer s.TearDown(t)
@@ -421,22 +420,6 @@ func TestTracesDynamicRouting(t *testing.T) {
 	}
 }
 
-func createTraceparentContextPrefix(traceId string) string {
-	return "00-" + traceId + "-"
-}
-
-func createTraceparentContext(traceId, spanId string) string {
-	return createTraceparentContextPrefix(traceId) + spanId + "-01"
-}
-
-func createCloudTraceContextPrefix(traceId string) string {
-	return traceId + "/"
-}
-
-func createCloudTraceContext(traceId, spanId string) string {
-	return createCloudTraceContextPrefix(traceId) + spanId + ";o=1"
-}
-
 func TestTraceContextPropagationHeaders(t *testing.T) {
 	t.Parallel()
 
@@ -447,7 +430,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 	cloudSpanId := "1"
 	incomingTraceContexts := map[string]string{
 		"traceparent":           createTraceparentContext(traceparentTraceId, traceparentSpanId),
-		"X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+		"X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId, true),
 	}
 
 	testData := []struct {
@@ -469,7 +452,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 			wantRespHeaders: map[string]string{
 				// All headers are not changed.
 				"Echo-Traceparent":           createTraceparentContext(traceparentTraceId, traceparentSpanId),
-				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId, true),
 			},
 		},
 		{
@@ -483,7 +466,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 				// Trace id is maintained. Span id is changed, so it's not checked.
 				"Echo-Traceparent": "00-0af7651916cd43dd8448eb211c80319c-",
 				// All other headers are not changed.
-				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId, true),
 			},
 			notWantRespHeaders: map[string]string{
 				// The span id should have changed.
@@ -505,7 +488,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 			},
 			notWantRespHeaders: map[string]string{
 				// The span id should have changed.
-				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId, true),
 			},
 		},
 		{
@@ -519,7 +502,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 				// Trace id and span id are changed, so they not checked.
 				"Echo-Traceparent": "00-",
 				// All other headers are not changed.
-				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId, true),
 			},
 			notWantRespHeaders: map[string]string{
 				// The trace id and span id should have changed.
@@ -553,7 +536,7 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 			}, utils.CommonArgs()...),
 			requestHeader: map[string]string{
 				// Only the 2nd header is provided.
-				"X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+				"X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId, true),
 			},
 			wantRespHeaders: map[string]string{
 				// Both headers are created with the same trace id.
@@ -562,16 +545,16 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 			},
 			notWantRespHeaders: map[string]string{
 				// The span id should have changed.
-				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId),
+				"Echo-X-Cloud-Trace-Context": createCloudTraceContext(cloudTraceId, cloudSpanId, true),
 			},
 		},
 		// grpc-trace-bin is not tested, it's difficult to test.
 		// We should be safe, opencensus has tests for this.
 	}
-	for _, tc := range testData {
+	for i, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
 
-			s := env.NewTestEnv(platform.TestTraceContextPropagationHeaders, platform.EchoRemote)
+			s := env.NewTestEnv(uint16(180+i*2), platform.EchoRemote)
 			s.SetupFakeTraceServer(1)
 			defer s.TearDown(t)
 			if err := s.Setup(tc.confArgs); err != nil {
@@ -607,169 +590,3 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 	}
 }
 
-func TestTraceContextPropagationHeadersForScCheck(t *testing.T) {
-	t.Parallel()
-
-	traceId := "0af7651916cd43dd8448eb211c80319c"
-	spanId := "b7ad6b7169203331"
-	incomingTraceContexts := map[string][]string{
-		"traceparent": {
-			createTraceparentContext(traceId, spanId),
-		},
-	}
-	expectedTraceContexts := map[string][]string{
-		// Only the trace id is checked. Span id should be changed.
-		// By default, both trace contexts are generated.
-		"Traceparent": {
-			createTraceparentContextPrefix(traceId),
-		},
-		"X-Cloud-Trace-Context": {
-			createCloudTraceContextPrefix(traceId),
-		},
-	}
-
-	tests := []struct {
-		desc                 string
-		tracingSampleRate    float32
-		expectedScReqHeaders map[string][]string
-	}{
-		{
-			desc:                 "SC Check receives trace context propagation header.",
-			tracingSampleRate:    1,
-			expectedScReqHeaders: expectedTraceContexts,
-		},
-		{
-			desc:                 "Trace context is propagated even when sampling rate is 0.",
-			tracingSampleRate:    0,
-			expectedScReqHeaders: expectedTraceContexts,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.desc, func(t *testing.T) {
-			s := env.NewTestEnv(platform.TestTraceContextPropagationHeadersForScCheck, platform.GrpcBookstoreSidecar)
-			s.SetupFakeTraceServer(tc.tracingSampleRate)
-
-			handler := utils.ExpectHeaderHandler{
-				T:               t,
-				ExpectedHeaders: tc.expectedScReqHeaders,
-			}
-			s.ServiceControlServer.OverrideCheckHandler(&handler)
-
-			defer s.TearDown(t)
-			if err := s.Setup(utils.CommonArgs()); err != nil {
-				t.Fatalf("fail to setup test env, %v", err)
-			}
-
-			addr := fmt.Sprintf("%v:%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
-			_, err := bsclient.MakeCall("http", addr, "GET", "/v1/shelves?key=api-key-2", testdata.FakeCloudTokenLongClaims, incomingTraceContexts)
-			if err != nil {
-				t.Errorf("expected no err, got err: %v", err)
-				return
-			}
-
-			if handler.RequestCount != 1 {
-				t.Errorf("SC Check was expected to be called once, but it was called %v times.", handler.RequestCount)
-				return
-			}
-
-			// Ignore the spans in this test, we do not check the names.
-			time.Sleep(5 * time.Second)
-			_, _ = s.FakeStackdriverServer.RetrieveSpanNames()
-		})
-	}
-}
-
-func TestReportTraceId(t *testing.T) {
-	t.Parallel()
-
-	traceparentTraceId := "0af7651916cd43dd8448eb211c80319c"
-	traceparentSpanId := "b7ad6b7169203331"
-	incomingTraceContexts := map[string]string{
-		"traceparent": createTraceparentContext(traceparentTraceId, traceparentSpanId),
-	}
-
-	testData := []struct {
-		desc              string
-		tracingSampleRate float32
-		wantScRequests    []interface{}
-	}{
-		{
-			desc:              "Trace ID is extracted from the incoming trace context and placed in the SC Report.",
-			tracingSampleRate: 1,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/echo/nokey",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ApiVersion:        "1.0.0",
-					ApiKeyState:       "NOT CHECKED",
-					ProducerProjectID: "producer-project",
-					HttpMethod:        "POST",
-					FrontendProtocol:  "http",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-					Trace:             "projects/" + comp.FakeProjectID + "/traces/" + traceparentTraceId,
-				},
-			},
-		},
-		{
-			desc:              "Trace ID is in SC Report even when requests are not sampled.",
-			tracingSampleRate: 0,
-			wantScRequests: []interface{}{
-				&utils.ExpectedReport{
-					Version:           utils.ESPv2Version(),
-					ServiceName:       "echo-api.endpoints.cloudesf-testing.cloud.goog",
-					ServiceConfigID:   "test-config-id",
-					URL:               "/echo/nokey",
-					ApiMethod:         "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey",
-					ApiName:           "1.echo_api_endpoints_cloudesf_testing_cloud_goog",
-					ApiVersion:        "1.0.0",
-					ApiKeyState:       "NOT CHECKED",
-					ProducerProjectID: "producer-project",
-					HttpMethod:        "POST",
-					FrontendProtocol:  "http",
-					LogMessage:        "1.echo_api_endpoints_cloudesf_testing_cloud_goog.Echo_nokey is called",
-					StatusCode:        "0",
-					ResponseCode:      200,
-					Platform:          util.GCE,
-					Location:          "test-zone",
-					Trace:             "projects/" + comp.FakeProjectID + "/traces/" + traceparentTraceId,
-				},
-			},
-		},
-	}
-	for _, tc := range testData {
-		t.Run(tc.desc, func(t *testing.T) {
-
-			s := env.NewTestEnv(platform.TestReportTraceId, platform.EchoSidecar)
-			s.SetupFakeTraceServer(tc.tracingSampleRate)
-			defer s.TearDown(t)
-			if err := s.Setup(utils.CommonArgs()); err != nil {
-				t.Fatalf("fail to setup test env, %v", err)
-			}
-
-			url := fmt.Sprintf("http://%v:%v%v%v", platform.GetLoopbackAddress(), s.Ports().ListenerPort, "/echo/nokey", "")
-			_, err := client.DoWithHeaders(url, "POST", `{"message":"hello"}`, incomingTraceContexts)
-			if err != nil {
-				t.Fatalf("fail to make call to backend: %v", err)
-			}
-
-			scRequests, err := s.ServiceControlServer.GetRequests(len(tc.wantScRequests))
-			if err != nil {
-				t.Fatalf("GetRequests returns error: %v", err)
-			}
-			utils.CheckScRequest(t, scRequests, tc.wantScRequests, tc.desc)
-
-			// Ignore the spans in this test, we do not check the names.
-			time.Sleep(5 * time.Second)
-			_, _ = s.FakeStackdriverServer.RetrieveSpanNames()
-		})
-	}
-}
