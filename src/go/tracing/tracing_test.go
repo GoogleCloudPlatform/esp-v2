@@ -403,3 +403,123 @@ func runTest(_ *testing.T, shouldRunServer bool, f func()) {
 
 	f()
 }
+
+func TestParseResourceAttributes(t *testing.T) {
+	testCases := []struct {
+		desc  string
+		input string
+		want  map[string]string
+	}{
+		{
+			desc:  "Single attribute",
+			input: "gcp.project.id=my-project",
+			want: map[string]string{
+				"gcp.project.id": "my-project",
+			},
+		},
+		{
+			desc:  "Multiple attributes with whitespace",
+			input: "  service.name=my-svc , gcp.project.id=my-project , service.version=1.0  ",
+			want: map[string]string{
+				"service.name":    "my-svc",
+				"gcp.project.id":  "my-project",
+				"service.version": "1.0",
+			},
+		},
+		{
+			desc:  "Quoted attribute values",
+			input: `gcp.project.id="my-project",service.name='my-svc'`,
+			want: map[string]string{
+				"gcp.project.id": "my-project",
+				"service.name":   "my-svc",
+			},
+		},
+		{
+			desc:  "Empty string",
+			input: "",
+			want:  map[string]string{},
+		},
+		{
+			desc:  "Malformed entries ignored",
+			input: "keyonly,valid=value,=valonly",
+			want: map[string]string{
+				"valid": "value",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := parseResourceAttributes(tc.input)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("parseResourceAttributes(%q) diff (-want +got):\n%s", tc.input, diff)
+			}
+		})
+	}
+}
+
+func TestResolveTracingProjectId(t *testing.T) {
+	testCases := []struct {
+		desc            string
+		envResourceAttr string
+		optsProjectId   string
+		wantProjectId   string
+	}{
+		{
+			desc:            "Project ID resolved from OTEL_RESOURCE_ATTRIBUTES",
+			envResourceAttr: "gcp.project.id=otel-project",
+			optsProjectId:   "",
+			wantProjectId:   "otel-project",
+		},
+		{
+			desc:            "OTEL_RESOURCE_ATTRIBUTES takes precedence over opts.ProjectId",
+			envResourceAttr: "gcp.project.id=otel-project",
+			optsProjectId:   "flag-project",
+			wantProjectId:   "otel-project",
+		},
+		{
+			desc:            "Fallback to opts.ProjectId when OTEL_RESOURCE_ATTRIBUTES is unset",
+			envResourceAttr: "",
+			optsProjectId:   "flag-project",
+			wantProjectId:   "flag-project",
+		},
+		{
+			desc:            "Fallback to opts.ProjectId when OTEL_RESOURCE_ATTRIBUTES lacks gcp.project.id",
+			envResourceAttr: "service.name=my-svc,service.version=1.0",
+			optsProjectId:   "flag-project",
+			wantProjectId:   "flag-project",
+		},
+		{
+			desc:            "Fallback to empty string when both env var and opts.ProjectId are empty",
+			envResourceAttr: "",
+			optsProjectId:   "",
+			wantProjectId:   "",
+		},
+		{
+			desc:            "Project ID resolved among multiple attributes with whitespace and quotes",
+			envResourceAttr: `service.name=my-svc, gcp.project.id="quoted-project", environment=prod`,
+			optsProjectId:   "flag-project",
+			wantProjectId:   "quoted-project",
+		},
+		{
+			desc:            "Fallback to opts.ProjectId when gcp.project.id attribute is empty",
+			envResourceAttr: "gcp.project.id=,service.name=my-svc",
+			optsProjectId:   "flag-project",
+			wantProjectId:   "flag-project",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Setenv("OTEL_RESOURCE_ATTRIBUTES", tc.envResourceAttr)
+
+			opts := options.TracingOptions{
+				ProjectId: tc.optsProjectId,
+			}
+			got := ResolveTracingProjectId(opts)
+			if got != tc.wantProjectId {
+				t.Errorf("ResolveTracingProjectId(%v) = %q, want %q", opts, got, tc.wantProjectId)
+			}
+		})
+	}
+}

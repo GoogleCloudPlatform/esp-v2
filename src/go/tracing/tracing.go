@@ -39,6 +39,52 @@ func normalizeOtlpEndpoint(endpoint string) string {
 	return endpoint
 }
 
+// parseResourceAttributes parses a comma-separated key=value string (as specified in
+// the OpenTelemetry specification for OTEL_RESOURCE_ATTRIBUTES) into a map.
+func parseResourceAttributes(rawAttrs string) map[string]string {
+	attrs := make(map[string]string)
+	for _, pair := range strings.Split(rawAttrs, ",") {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			k := strings.TrimSpace(parts[0])
+			v := strings.TrimSpace(parts[1])
+			v = strings.Trim(v, `"'`)
+			if k != "" {
+				attrs[k] = v
+			}
+		}
+	}
+	return attrs
+}
+
+// ResolveTracingProjectId resolves the GCP Project ID for tracing and Service Control
+// using the following precedence order:
+// 1. "gcp.project.id" attribute from the OTEL_RESOURCE_ATTRIBUTES environment variable.
+// 2. opts.ProjectId (fallback for the deprecated --tracing_project_id flag).
+// 3. Default: empty string "" (falls back to GCP metadata server / ADC resolution).
+func ResolveTracingProjectId(opts options.TracingOptions) string {
+	rawAttrs := os.Getenv("OTEL_RESOURCE_ATTRIBUTES")
+	if rawAttrs != "" {
+		attrs := parseResourceAttributes(rawAttrs)
+		if projectID, ok := attrs["gcp.project.id"]; ok && projectID != "" {
+			if opts.ProjectId != "" {
+				glog.Infof("Both OTEL_RESOURCE_ATTRIBUTES (gcp.project.id=%q) and --tracing_project_id (%q) are configured. Using OTEL_RESOURCE_ATTRIBUTES.", projectID, opts.ProjectId)
+			}
+			return projectID
+		}
+	}
+
+	if opts.ProjectId != "" {
+		return opts.ProjectId
+	}
+
+	return ""
+}
+
 func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTelemetryConfig, error) {
 	// Exporter destination precedence:
 	// 1. OTEL_EXPORTER_OTLP_ENDPOINT environment variable.

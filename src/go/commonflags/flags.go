@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/tracing"
 	"github.com/golang/glog"
 )
 
@@ -66,27 +67,30 @@ var (
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
+	tracingOpts := options.TracingOptions{
+		DisableTracing:           *DisableTracing,
+		ProjectId:                *TracingProjectId,
+		StackdriverAddress:       *TracingStackdriverAddress,
+		SamplingRate:             *TracingSamplingRate,
+		IncomingContext:          *TracingIncomingContext,
+		OutgoingContext:          *TracingOutgoingContext,
+		MaxNumAttributes:         *TracingMaxNumAttributes,
+		MaxNumAnnotations:        *TracingMaxNumAnnotations,
+		MaxNumMessageEvents:      *TracingMaxNumMessageEvents,
+		MaxNumLinks:              *TracingMaxNumLinks,
+		EnableVerboseAnnotations: *TracingEnableVerboseAnnotations,
+	}
+	tracingOpts.ProjectId = tracing.ResolveTracingProjectId(tracingOpts)
+
 	opts := options.CommonOptions{
-		AdminAddress:          *AdminAddress,
-		AdminPort:             *AdminPort,
-		AdsNamedPipe:          *AdsNamedPipe,
-		HttpRequestTimeout:    time.Duration(*HttpRequestTimeoutS) * time.Second,
-		Node:                  *Node,
-		NonGCP:                *NonGCP,
-		GeneratedHeaderPrefix: *GeneratedHeaderPrefix,
-		TracingOptions: &options.TracingOptions{
-			DisableTracing:           *DisableTracing,
-			ProjectId:                *TracingProjectId,
-			StackdriverAddress:       *TracingStackdriverAddress,
-			SamplingRate:             *TracingSamplingRate,
-			IncomingContext:          *TracingIncomingContext,
-			OutgoingContext:          *TracingOutgoingContext,
-			MaxNumAttributes:         *TracingMaxNumAttributes,
-			MaxNumAnnotations:        *TracingMaxNumAnnotations,
-			MaxNumMessageEvents:      *TracingMaxNumMessageEvents,
-			MaxNumLinks:              *TracingMaxNumLinks,
-			EnableVerboseAnnotations: *TracingEnableVerboseAnnotations,
-		},
+		AdminAddress:                       *AdminAddress,
+		AdminPort:                          *AdminPort,
+		AdsNamedPipe:                       *AdsNamedPipe,
+		HttpRequestTimeout:                 time.Duration(*HttpRequestTimeoutS) * time.Second,
+		Node:                               *Node,
+		NonGCP:                             *NonGCP,
+		GeneratedHeaderPrefix:              *GeneratedHeaderPrefix,
+		TracingOptions:                     &tracingOpts,
 		MetadataURL:                        *MetadataURL,
 		IamURL:                             *IamURL,
 		DisallowColonInWildcardPathSegment: *DisallowColonInWildcardPathSegment,
