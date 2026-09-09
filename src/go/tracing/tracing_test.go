@@ -36,13 +36,56 @@ const (
 	fakeMetadataProjectId = "fake-metadata-project-id"
 )
 
-// Tests the various combination of tracing flags on a non-GCP deployment
+func TestNormalizeOtlpEndpoint(t *testing.T) {
+	testCases := []struct {
+		input string
+		want  string
+	}{
+		{
+			input: "http://127.0.0.1:4317",
+			want:  "127.0.0.1:4317",
+		},
+		{
+			input: "https://custom-collector:4317",
+			want:  "custom-collector:4317",
+		},
+		{
+			input: "custom-collector:4317",
+			want:  "custom-collector:4317",
+		},
+		{
+			input: "  http://custom-collector:4317  ",
+			want:  "custom-collector:4317",
+		},
+		{
+			input: "  https://custom-collector:4317  ",
+			want:  "custom-collector:4317",
+		},
+		{
+			input: "dns:custom-collector:4317",
+			want:  "dns:custom-collector:4317",
+		},
+		{
+			input: "",
+			want:  "",
+		},
+	}
+
+	for _, tc := range testCases {
+		if got := normalizeOtlpEndpoint(tc.input); got != tc.want {
+			t.Errorf("normalizeOtlpEndpoint(%q) = %q, want %q", tc.input, got, tc.want)
+		}
+	}
+}
+
+// Tests the various combinations of tracing flags and environment variables for OTLP exporter resolution.
 func TestOpenTelemetryConfig(t *testing.T) {
 	testData := []struct {
-		desc       string
-		opts       *options.TracingOptions
-		wantError  string
-		wantResult *tracepb.OpenTelemetryConfig
+		desc        string
+		envEndpoint string
+		opts        *options.TracingOptions
+		wantError   string
+		wantResult  *tracepb.OpenTelemetryConfig
 	}{
 		{
 			desc: "Success with default tracing",
@@ -61,10 +104,103 @@ func TestOpenTelemetryConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc:        "OTEL_EXPORTER_OTLP_ENDPOINT with http scheme is normalized",
+			envEndpoint: "http://custom-collector:4317",
+			opts: &options.TracingOptions{
+				ProjectId: fakeOptsProjectId,
+			},
+			wantResult: &tracepb.OpenTelemetryConfig{
+				ServiceName: "espv2",
+				GrpcService: &corev3.GrpcService{
+					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+							TargetUri:  "custom-collector:4317",
+							StatPrefix: "opentelemetry",
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:        "OTEL_EXPORTER_OTLP_ENDPOINT with https scheme is normalized",
+			envEndpoint: "https://custom-collector:4317",
+			opts: &options.TracingOptions{
+				ProjectId: fakeOptsProjectId,
+			},
+			wantResult: &tracepb.OpenTelemetryConfig{
+				ServiceName: "espv2",
+				GrpcService: &corev3.GrpcService{
+					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+							TargetUri:  "custom-collector:4317",
+							StatPrefix: "opentelemetry",
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:        "OTEL_EXPORTER_OTLP_ENDPOINT overrides legacy --tracing_stackdriver_address flag",
+			envEndpoint: "http://env-collector:4317",
+			opts: &options.TracingOptions{
+				ProjectId:          fakeOptsProjectId,
+				StackdriverAddress: "flag-collector:4317",
+			},
+			wantResult: &tracepb.OpenTelemetryConfig{
+				ServiceName: "espv2",
+				GrpcService: &corev3.GrpcService{
+					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+							TargetUri:  "env-collector:4317",
+							StatPrefix: "opentelemetry",
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "Fallback to legacy --tracing_stackdriver_address when env var is unset",
+			opts: &options.TracingOptions{
+				ProjectId:          fakeOptsProjectId,
+				StackdriverAddress: "flag-collector:4317",
+			},
+			wantResult: &tracepb.OpenTelemetryConfig{
+				ServiceName: "espv2",
+				GrpcService: &corev3.GrpcService{
+					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+							TargetUri:  "flag-collector:4317",
+							StatPrefix: "opentelemetry",
+						},
+					},
+				},
+			},
+		},
+		{
+			desc:        "OTEL_EXPORTER_OTLP_ENDPOINT with whitespace is trimmed",
+			envEndpoint: "   custom-collector:4317   ",
+			opts: &options.TracingOptions{
+				ProjectId: fakeOptsProjectId,
+			},
+			wantResult: &tracepb.OpenTelemetryConfig{
+				ServiceName: "espv2",
+				GrpcService: &corev3.GrpcService{
+					TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+							TargetUri:  "custom-collector:4317",
+							StatPrefix: "opentelemetry",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testData {
 		t.Run(tc.desc, func(t *testing.T) {
+			t.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", tc.envEndpoint)
+
 			got, err := createOpenTelemetryConfig(*tc.opts)
 
 			if tc.wantError != "" && (err == nil || !strings.Contains(err.Error(), tc.wantError)) {

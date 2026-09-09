@@ -17,20 +17,42 @@ package tracing
 import (
 	"fmt"
 	"math"
+	"os"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	"github.com/golang/glog"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// normalizeOtlpEndpoint trims leading/trailing whitespace and strips "http://" or
+// "https://" prefixes since Envoy's GoogleGrpc.TargetUri expects a gRPC target
+// string rather than an HTTP URL scheme.
+func normalizeOtlpEndpoint(endpoint string) string {
+	endpoint = strings.TrimSpace(endpoint)
+	endpoint = strings.TrimPrefix(endpoint, "http://")
+	endpoint = strings.TrimPrefix(endpoint, "https://")
+	return endpoint
+}
+
 func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTelemetryConfig, error) {
-	// Stackdriver Export via OTLP directly accesses the Google Cloud Telemetry API.
-	targetUri := "telemetry.googleapis.com"
-	if opts.StackdriverAddress != "" {
-		targetUri = opts.StackdriverAddress
+	// Exporter destination precedence:
+	// 1. OTEL_EXPORTER_OTLP_ENDPOINT environment variable.
+	// 2. opts.StackdriverAddress (fallback for deprecated --tracing_stackdriver_address).
+	// 3. Default: "telemetry.googleapis.com" (Google Cloud Trace).
+	targetURI := "telemetry.googleapis.com"
+	envEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if envEndpoint != "" {
+		targetURI = normalizeOtlpEndpoint(envEndpoint)
+		if opts.StackdriverAddress != "" {
+			glog.Infof("Both OTEL_EXPORTER_OTLP_ENDPOINT (%q) and --tracing_stackdriver_address (%q) are configured. Using OTEL_EXPORTER_OTLP_ENDPOINT.", envEndpoint, opts.StackdriverAddress)
+		}
+	} else if opts.StackdriverAddress != "" {
+		targetURI = opts.StackdriverAddress
 	}
 
 	cfg := &tracepb.OpenTelemetryConfig{
@@ -38,7 +60,7 @@ func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTeleme
 		GrpcService: &corev3.GrpcService{
 			TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
 				GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
-					TargetUri:  targetUri,
+					TargetUri:  targetURI,
 					StatPrefix: "opentelemetry",
 				},
 			},
