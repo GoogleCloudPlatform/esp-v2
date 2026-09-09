@@ -17,9 +17,11 @@ package main
 import (
 	"flag"
 	"io/ioutil"
+	"os"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/ads"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/bootstrap/ads/flags"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/golang/glog"
 )
 
@@ -33,13 +35,13 @@ func main() {
 
 	opts := flags.DefaultBootstrapperOptionsFromFlags()
 	if opts.TracingOptions.MaxNumAttributes != 32 || opts.TracingOptions.MaxNumAnnotations != 32 || opts.TracingOptions.MaxNumMessageEvents != 128 || opts.TracingOptions.MaxNumLinks != 128 {
-		glog.Warning("The following tracing span limit flags are DEPRECATED and ignored by OpenTelemetry: tracing_max_num_attributes, tracing_max_num_annotations, tracing_max_num_message_events, tracing_max_num_links. Please use standard OTel environment variables instead (e.g., OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, OTEL_SPAN_EVENT_COUNT_LIMIT, OTEL_SPAN_LINK_COUNT_LIMIT).")
+		glog.Warning("The tracing span limit flags (tracing_max_num_attributes, tracing_max_num_annotations, tracing_max_num_message_events, tracing_max_num_links) are DEPRECATED and ignored. Envoy's OpenTelemetry tracer does not enforce per-span limits.")
 	}
-	if opts.TracingOptions.ProjectId != "" {
-		glog.Warning("The following tracing flag is DEPRECATED and ignored by OpenTelemetry: tracing_project_id. Please use standard OTel environment variables instead (e.g., OTEL_RESOURCE_ATTRIBUTES=\"gcp.project.id=YOUR_PROJECT\" or rely on ADC metadata).")
+	if *commonflags.TracingProjectId != "" || (opts.TracingOptions.ProjectId != "" && os.Getenv("OTEL_RESOURCE_ATTRIBUTES") == "") {
+		glog.Warning("The flag --tracing_project_id is DEPRECATED and will be removed in a future release. Please migrate to standard OpenTelemetry resource attributes (e.g., OTEL_RESOURCE_ATTRIBUTES=\"gcp.project.id=YOUR_PROJECT\") or rely on ADC metadata.")
 	}
 	if opts.TracingOptions.StackdriverAddress != "" {
-		glog.Warning("The following tracing flag is DEPRECATED and ignored by OpenTelemetry: tracing_stackdriver_address. Please use standard OTel environment variables instead (e.g., OTEL_EXPORTER_OTLP_ENDPOINT=\"http://target:port\").")
+		glog.Warning("The flag --tracing_stackdriver_address is DEPRECATED and will be removed in a future release. Please migrate to the standard environment variable OTEL_EXPORTER_OTLP_ENDPOINT.")
 	}
 	bootstrapStr, err := ads.CreateBootstrapConfig(opts)
 	if err != nil {
