@@ -169,6 +169,17 @@ const (
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
 	TestWebsocket
+	TestTracingOtlpEndpoint
+	TestTracingOtlpEndpointPrecedence
+	TestTracingOtlpEndpointFallback
+	TestTracingOtlpEndpointSchemeHttps
+	TestTracingOtlpEndpointSchemeBare
+	TestTracingOtlpEndpointSchemeDns
+	TestTracingProjectId
+	TestTracingProjectIdLegacyFlag
+	TestTracingProjectIdOtelEnv
+	TestTracingProjectIdPrecedence
+	TestTracingProjectIdDefaultFallback
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )
