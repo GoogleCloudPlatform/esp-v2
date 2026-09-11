@@ -1,3 +1,14 @@
+# Release 2.56.0 09-09-2026
+
+- Update version to 2.56.0 (#1038)
+- Update golang.org/x/net to v0.55.0 and pip to 26.2 (#1037)
+- Disable keepalive for local ADS cluster (#1031)
+
+# Release 2.55.7 18-08-2026
+
+- Update VERSION to 2.55.7 (#1035)
+- Update go version to 1.26.6 (#1033)
+
 # Release 2.55.6 15-07-2026
 
 - Update version to 2.55.6 (#1028)

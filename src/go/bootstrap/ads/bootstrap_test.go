@@ -92,10 +92,6 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
                   "explicitHttpConfig":{
                      "http2ProtocolOptions":{
-                       "connectionKeepalive":{
-                         "interval":"30s",
-                         "timeout":"10s"
-                       },
                        "initialConnectionWindowSize": 268435456,
                        "initialStreamWindowSize": 268435456,
                        "maxConcurrentStreams": 2147483647
@@ -199,10 +195,6 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
                   "explicitHttpConfig":{
                      "http2ProtocolOptions":{
-                       "connectionKeepalive":{
-                         "interval":"30s",
-                         "timeout":"10s"
-                       },
                        "initialConnectionWindowSize": 268435456,
                        "initialStreamWindowSize": 268435456,
                        "maxConcurrentStreams": 2147483647

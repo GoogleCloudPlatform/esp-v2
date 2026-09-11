@@ -33,6 +33,18 @@ const (
 
 // CreateUpstreamProtocolOptions creates a http2 protocol option as a typed upstream extension.
 func CreateUpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter) map[string]*anypb.Any {
+	return createUpstreamProtocolOptions(upstreamHttpFilters, &corepb.KeepaliveSettings{
+		Interval: durationpb.New(Http2KeepaliveInterval),
+		Timeout:  durationpb.New(Http2KeepaliveTimeout),
+	})
+}
+
+// CreateUpstreamProtocolOptionsWithoutKeepalive creates HTTP/2 protocol options without connection keepalive.
+func CreateUpstreamProtocolOptionsWithoutKeepalive() map[string]*anypb.Any {
+	return createUpstreamProtocolOptions(nil, nil)
+}
+
+func createUpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter, connectionKeepalive *corepb.KeepaliveSettings) map[string]*anypb.Any {
 	o := &httppb.HttpProtocolOptions{
 		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
@@ -41,10 +53,7 @@ func CreateUpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter) map[
 						MaxConcurrentStreams:        &wrapperspb.UInt32Value{Value: 2147483647},
 						InitialStreamWindowSize:     &wrapperspb.UInt32Value{Value: 268435456},
 						InitialConnectionWindowSize: &wrapperspb.UInt32Value{Value: 268435456},
-						ConnectionKeepalive: &corepb.KeepaliveSettings{
-							Interval: durationpb.New(Http2KeepaliveInterval),
-							Timeout:  durationpb.New(Http2KeepaliveTimeout),
-						},
+						ConnectionKeepalive:         connectionKeepalive,
 					},
 				},
 			},
