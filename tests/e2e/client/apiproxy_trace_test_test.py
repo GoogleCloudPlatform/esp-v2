@@ -402,6 +402,27 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
         )
         self.assertEqual(req.headers.get('Authorization'), 'Bearer test-jwt')
 
+    @mock.patch('urllib.request.urlopen')
+    def test_send_traced_request_with_host_header(self, mock_urlopen):
+        """Verifies custom Host header is set on the request when host_header is provided."""
+        mock_resp = mock.MagicMock()
+        mock_resp.status = 200
+        mock_resp.read.return_value = b'{"shelves": []}'
+        mock_resp.__enter__.return_value = mock_resp
+        mock_urlopen.return_value = mock_resp
+
+        status, body = send_traced_request(
+            host='http://localhost:8082',
+            traceparent_header='00-4bf92f3577b34da6a3ce929d0e0e4736-0010000000000001-01',
+            path='/shelves',
+            host_header='custom.example.com',
+        )
+
+        self.assertEqual(status, 200)
+        args, _ = mock_urlopen.call_args
+        req = args[0]
+        self.assertEqual(req.headers.get('Host'), 'custom.example.com')
+
     @mock.patch('apiproxy_trace_test.verify_trace_spans')
     @mock.patch('apiproxy_trace_test.poll_cloud_trace')
     @mock.patch('apiproxy_trace_test.get_gcp_access_token')
@@ -419,12 +440,21 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
             host='http://localhost:8082',
             project_id='test-project',
             api_key='key123',
+            host_header='custom.example.com',
             timeout_sec=10,
             delay_sec=0,
         )
 
         self.assertTrue(success)
-        mock_send.assert_called_once()
+        mock_send.assert_called_once_with(
+            host='http://localhost:8082',
+            traceparent_header=mock.ANY,
+            path='/shelves',
+            api_key='key123',
+            auth_token=None,
+            host_header='custom.example.com',
+            verbose=False,
+        )
         mock_token.assert_called_once()
         mock_poll.assert_called_once()
         mock_verify.assert_called_once()
@@ -437,6 +467,7 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
             '--project', 'test-project',
             '--api_key', 'my-key',
             '--auth_token', 'my-token',
+            '--host_header', 'custom.example.com',
             '--timeout', '45',
             '--delay', '3',
             '--verbose',
@@ -445,9 +476,14 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
         self.assertEqual(args.project, 'test-project')
         self.assertEqual(args.api_key, 'my-key')
         self.assertEqual(args.auth_token, 'my-token')
+        self.assertEqual(args.host_header, 'custom.example.com')
         self.assertEqual(args.timeout, 45)
         self.assertEqual(args.delay, 3)
         self.assertTrue(args.verbose)
+
+        # Check default value for host_header
+        default_args = parser.parse_args([])
+        self.assertIsNone(default_args.host_header)
 
 
 if __name__ == '__main__':

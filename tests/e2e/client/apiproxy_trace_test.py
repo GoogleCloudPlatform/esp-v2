@@ -323,6 +323,7 @@ def send_traced_request(
     method: str = 'GET',
     api_key: str = None,
     auth_token: str = None,
+    host_header: str = None,
     timeout: int = 15,
     verbose: bool = False,
 ):
@@ -338,6 +339,8 @@ def send_traced_request(
         'traceparent': traceparent_header,
         'Accept': 'application/json',
     }
+    if host_header:
+        headers['Host'] = host_header
     if auth_token:
         headers['Authorization'] = f"Bearer {auth_token}"
 
@@ -371,6 +374,7 @@ def run_trace_e2e_test(
     project_id: str,
     api_key: str = None,
     auth_token: str = None,
+    host_header: str = None,
     timeout_sec: int = 60,
     delay_sec: int = 5,
     verbose: bool = False,
@@ -391,6 +395,7 @@ def run_trace_e2e_test(
         path=path,
         api_key=api_key,
         auth_token=auth_token,
+        host_header=host_header,
         verbose=verbose,
     )
     if verbose:
@@ -449,6 +454,7 @@ class ApiProxyTraceTest(unittest.TestCase):
     project = None
     api_key = None
     auth_token = None
+    host_header = None
     timeout = 60
     delay = 5
     verbose = False
@@ -476,6 +482,7 @@ class ApiProxyTraceTest(unittest.TestCase):
             project_id=project,
             api_key=self.api_key or os.environ.get('API_KEY'),
             auth_token=self.auth_token,
+            host_header=self.host_header or os.environ.get('HOST_HEADER'),
             timeout_sec=self.timeout,
             delay_sec=self.delay,
             verbose=self.verbose,
@@ -506,6 +513,11 @@ def make_argparser():
         '--auth_token',
         default=None,
         help='OAuth2 / JWT auth token for backend or Cloud Trace.',
+    )
+    parser.add_argument(
+        '--host_header',
+        default=None,
+        help='Deployed application host name or custom domain.',
     )
     parser.add_argument(
         '--timeout',
@@ -540,6 +552,7 @@ if __name__ == '__main__':
     ApiProxyTraceTest.project = args.project
     ApiProxyTraceTest.api_key = args.api_key
     ApiProxyTraceTest.auth_token = args.auth_token
+    ApiProxyTraceTest.host_header = args.host_header
     ApiProxyTraceTest.timeout = args.timeout
     ApiProxyTraceTest.delay = args.delay
     ApiProxyTraceTest.verbose = args.verbose
@@ -562,6 +575,7 @@ if __name__ == '__main__':
             project_id=args.project,
             api_key=args.api_key,
             auth_token=args.auth_token,
+            host_header=args.host_header,
             timeout_sec=args.timeout,
             delay_sec=args.delay,
             verbose=args.verbose,
