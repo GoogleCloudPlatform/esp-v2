@@ -122,6 +122,11 @@ func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tr
 		return nil, nil
 	}
 
+	if opts.StackdriverAddress != "" {
+		glog.Warningf("WARNING: Legacy tracing stackdriver address %s detected. Suppressing OpenTelemetry tracer for legacy data plane compatibility.", opts.StackdriverAddress)
+		return nil, nil
+	}
+
 	openTelemetryConfig, err := createOpenTelemetryConfig(opts)
 	if err != nil {
 		return nil, err

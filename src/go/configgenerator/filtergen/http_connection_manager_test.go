@@ -143,6 +143,24 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
+			Desc: "Generate HttpConMgr when StackdriverAddress is defined (legacy data plane mode suppresses tracing and early header mutation)",
+			OptsIn: options.ConfigGeneratorOptions{
+				CommonOptions: options.CommonOptions{
+					TracingOptions: &options.TracingOptions{
+						DisableTracing:     false,
+						StackdriverAddress: "127.0.0.1:9990",
+						ProjectId:          "test-project",
+						SamplingRate:       1,
+					},
+				},
+			},
+			OptsMergeBehavior:     mergo.WithOverwriteWithEmptyValue,
+			OnlyCheckFilterConfig: true,
+			WantFilterConfigs: []string{
+				`{"commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},"http2ProtocolOptions":{"initialConnectionWindowSize":268435456,"initialStreamWindowSize":268435456,"maxConcurrentStreams":2147483647},"localReplyConfig":{"bodyFormat":{"jsonFormat":{"code":"%RESPONSE_CODE%","message":"%LOCAL_REPLY_BODY%"}}},"normalizePath":false,"pathWithEscapedSlashesAction":"KEEP_UNCHANGED","statPrefix":"ingress_http","upgradeConfigs":[{"upgradeType":"websocket"}],"useRemoteAddress":false}`,
+			},
+		},
+		{
 			Desc: "Generate HttpConMgr when UnderscoresInHeaders is defined",
 			OptsIn: options.ConfigGeneratorOptions{
 				UnderscoresInHeaders: true,

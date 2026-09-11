@@ -62,7 +62,7 @@ VERSION=$(cat ${ROOT}/VERSION)
 
 # Checkout to the head of master
 git reset --hard
-git checkout ${SHA}
+git checkout ${SHA} -- . ':(exclude)prow/gcpproxy-api-regression.sh'
 
 # Keep files
 echo ${VERSION} > ${ROOT}/VERSION
@@ -77,5 +77,8 @@ echo '===================== Bazel test ====================='
 echo '======================================================'
 make depend.install
 make build-envoy build-grpc-interop build-grpc-echo
+
+# Skip legacy tracing tests as Envoy 1.30.7 cannot run OpenTelemetry and the new configmanager suppresses tracing for legacy data plane.
+rm -rf tests/integration_test/tracing_test
 
 make integration-test-run-sequential

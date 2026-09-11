@@ -359,6 +359,15 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 			wantResult: nil,
 		},
+		{
+			desc: "Suppress OpenTelemetry tracer when legacy StackdriverAddress is specified",
+			opts: options.TracingOptions{
+				ProjectId:          "test-project",
+				SamplingRate:       1.0,
+				StackdriverAddress: "127.0.0.1:9990",
+			},
+			wantResult: nil,
+		},
 	}
 
 	for _, tc := range testData {
@@ -380,6 +389,10 @@ func TestHcmTracingSampleRate(t *testing.T) {
 
 					if diff := cmp.Diff(tc.wantResult, got, protocmp.Transform()); diff != "" {
 						t.Errorf("CreateTracing() diff (-want +got):\n%s", diff)
+					}
+				} else {
+					if got != nil {
+						t.Fatalf("Test (%s): failed, expected nil result, got: %v", tc.desc, got)
 					}
 				}
 			})

@@ -54,7 +54,7 @@ func parseLegacyFormats(outgoing string) []tcpb.TraceContextFormat {
 func NewTraceContextFilterGensFromOPConfig(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) ([]FilterGenerator, error) {
 	// The C++ wrappers will always be injected to handle x-cloud-trace-context or grpc-trace-bin.
 	// It is also needed even when outgoing contexts are empty, to aggressively strip traceparent overrides from OpenTelemetry.
-	if opts.TracingOptions.DisableTracing {
+	if opts.TracingOptions != nil && (opts.TracingOptions.DisableTracing || opts.TracingOptions.StackdriverAddress != "") {
 		return nil, nil
 	}
 	formats := parseLegacyFormats(opts.TracingOptions.OutgoingContext)

@@ -173,13 +173,15 @@ func (g *HTTPConnectionManagerGenerator) GenFilterConfig() (proto.Message, error
 			return nil, err
 		}
 
-		// Inject early_header_mutation extension to handle incoming trace contexts or to aggressively delete them
-		mutationConfig, err := GenEarlyHeaderMutationConfig(g.TracingOptions.IncomingContext)
-		if err != nil {
-			return nil, err
-		}
-		if mutationConfig != nil {
-			httpConMgr.EarlyHeaderMutationExtensions = append(httpConMgr.EarlyHeaderMutationExtensions, mutationConfig)
+		if g.TracingOptions.StackdriverAddress == "" {
+			// Inject early_header_mutation extension to handle incoming trace contexts or to aggressively delete them
+			mutationConfig, err := GenEarlyHeaderMutationConfig(g.TracingOptions.IncomingContext)
+			if err != nil {
+				return nil, err
+			}
+			if mutationConfig != nil {
+				httpConMgr.EarlyHeaderMutationExtensions = append(httpConMgr.EarlyHeaderMutationExtensions, mutationConfig)
+			}
 		}
 	}
 
