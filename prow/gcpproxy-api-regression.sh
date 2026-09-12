@@ -60,9 +60,13 @@ SHA=$(git ls-remote https://github.com/GoogleCloudPlatform/esp-v2.git HEAD | cut
 # keep the current version (used by tests)
 VERSION=$(cat ${ROOT}/VERSION)
 
+# Gracefully shut down the Bazel 7 server daemon before switching to master (which uses Bazel 6).
+bazelisk shutdown || true
+pkill -9 -f "bazel" || true
+
 # Checkout to the head of master
 git reset --hard
-git checkout ${SHA} -- . ':(exclude)prow/gcpproxy-api-regression.sh'
+git checkout ${SHA} -- . ':(exclude)prow'
 
 # Keep files
 echo ${VERSION} > ${ROOT}/VERSION
