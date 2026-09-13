@@ -3,4 +3,5 @@ exports_files([
     "quiche.patch",
     "session_idle_list.patch",
     "prometheus_stats.patch",
+    "router_ratelimit.patch",
 ])

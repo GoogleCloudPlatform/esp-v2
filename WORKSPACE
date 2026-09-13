@@ -77,6 +77,7 @@ http_archive(
         "//third_party/envoy:histogram_impl.patch",
         "//third_party/envoy:session_idle_list.patch",
         "//third_party/envoy:prometheus_stats.patch",
+        "//third_party/envoy:router_ratelimit.patch",
     ],
     sha256 = ENVOY_SHA256,
     strip_prefix = "envoy-" + ENVOY_SHA1,
@@ -93,6 +94,25 @@ http_archive(
     sha256 = "6d4d6640ca3121620995ee255945161821218752b551a1a180f4215f7d124d45",
     strip_prefix = "zlib-cacf7f1d4e3d44d871b605da3b647f07d718623f",
     url = "https://github.com/madler/zlib/archive/cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
+)
+
+# Override proto-converter to silence -Werror on deprecated protobuf RepeatedPtrField
+http_archive(
+    name = "proto-converter",
+    patch_args = ["-p1"],
+    patch_cmds = [
+        "rm src/google/protobuf/stubs/common.cc",
+        "rm src/google/protobuf/stubs/common.h",
+        "rm src/google/protobuf/stubs/common_unittest.cc",
+        "rm src/google/protobuf/util/converter/port_def.inc",
+        "rm src/google/protobuf/util/converter/port_undef.inc",
+        "sed -i 's/\"-Werror\"/\"-Wno-deprecated-declarations\"/g' build_defs/cpp_opts.bzl",
+    ],
+    patches = ["@envoy//bazel:com_google_protoconverter.patch"],
+    repo_mapping = {"@com_google_absl": "@abseil-cpp"},
+    sha256 = "9555d9cf7bd541ea5fdb67d7d6b72ea44da77df3e27b960b4155dc0c6b81d476",
+    strip_prefix = "proto-converter-1db76535b86b80aa97489a1edcc7009e18b67ab7",
+    urls = ["https://github.com/grpc-ecosystem/proto-converter/archive/1db76535b86b80aa97489a1edcc7009e18b67ab7.zip"],
 )
 
 # ==============================================================================
@@ -171,8 +191,8 @@ grpc_bindings()
 new_local_repository(
     name = "llvm_toolchain_llvm_obsolete",
     build_file_content = """
-filegroup(name = "symbolizer", srcs = [])
-filegroup(name = "bin/clang", srcs = [])
+filegroup(name = "symbolizer", srcs = ["bin/llvm-symbolizer"], visibility = ["//visibility:public"])
+filegroup(name = "bin/clang", srcs = [], visibility = ["//visibility:public"])
     """,
     path = "third_party",
 )
@@ -180,9 +200,12 @@ filegroup(name = "bin/clang", srcs = [])
 new_local_repository(
     name = "llvm_toolchain_llvm",
     build_file_content = """
-filegroup(name = "symbolizer", srcs = [])
-filegroup(name = "bin/clang", srcs = [])
-exports_files(["lib/clang/18/include/fuzzer/FuzzedDataProvider.h"])
+filegroup(name = "symbolizer", srcs = ["bin/llvm-symbolizer"], visibility = ["//visibility:public"])
+filegroup(name = "bin/clang", srcs = [], visibility = ["//visibility:public"])
+exports_files([
+    "bin/llvm-symbolizer",
+    "lib/clang/18/include/fuzzer/FuzzedDataProvider.h",
+], visibility = ["//visibility:public"])
     """,
     path = "third_party",
 )

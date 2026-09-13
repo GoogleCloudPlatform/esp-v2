@@ -28,7 +28,10 @@ build --define absl=1
 # Pass PATH variable from the environment. CC and CXX are always clang (no gcc).
 build --action_env=CC=clang-14
 build --action_env=CXX=clang++-14
+build --repo_env=CC=clang-14
+build --repo_env=CXX=clang++-14
 build --action_env=PATH
+build --repo_env=PATH
 
 # Disable bzlmod to use WORKSPACE properly
 build --noenable_bzlmod

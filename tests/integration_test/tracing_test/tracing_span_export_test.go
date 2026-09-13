@@ -589,4 +589,3 @@ func TestTraceContextPropagationHeaders(t *testing.T) {
 		})
 	}
 }
-

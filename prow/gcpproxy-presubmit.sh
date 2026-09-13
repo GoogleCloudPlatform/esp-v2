@@ -84,6 +84,7 @@ case "${PRESUBMIT_TEST_CASE}" in
     make test-envoy-msan
     ;;
   "tsan")
+    sysctl -w vm.mmap_rnd_bits=28 2>/dev/null || true
     make test-envoy-tsan
     ;;
   *)
