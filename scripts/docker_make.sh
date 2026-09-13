@@ -29,6 +29,6 @@
 # It is built from docker/Dockerfile-prow-env
 IMAGE=gcr.io/cloudesf-testing/gcpproxy-prow:latest
 
-docker run --rm -ti -v "${PWD}":/source "${IMAGE}" \
+docker run --rm -ti --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v "${PWD}":/source "${IMAGE}" \
   /bin/bash -lc "cd source && make $*"
 
