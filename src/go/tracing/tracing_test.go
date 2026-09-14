@@ -360,13 +360,27 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			wantResult: nil,
 		},
 		{
-			desc: "Suppress OpenTelemetry tracer when legacy StackdriverAddress is specified",
+			desc: "Generate OpenTelemetry tracer when StackdriverAddress is specified",
 			opts: options.TracingOptions{
 				ProjectId:          "test-project",
 				SamplingRate:       1.0,
 				StackdriverAddress: "127.0.0.1:9990",
 			},
-			wantResult: nil,
+			wantResult: &hcmpb.HttpConnectionManager_Tracing{
+				ClientSampling: &typepb.Percent{
+					Value: 0,
+				},
+				RandomSampling: &typepb.Percent{
+					Value: 100,
+				},
+				OverallSampling: &typepb.Percent{
+					Value: 100,
+				},
+				Provider: &tracepb.Tracing_Http{
+					Name:       "envoy.tracers.opentelemetry",
+					ConfigType: nil,
+				},
+			},
 		},
 	}
 

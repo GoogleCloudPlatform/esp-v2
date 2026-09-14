@@ -109,18 +109,6 @@ func TestNewTraceContextFilterGensFromOPConfig_GenConfig(t *testing.T) {
 			},
 		},
 		{
-			Desc: "Returns nil filter generators when StackdriverAddress is specified (legacy data plane mode)",
-			OptsIn: options.ConfigGeneratorOptions{
-				CommonOptions: options.CommonOptions{
-					TracingOptions: &options.TracingOptions{
-						StackdriverAddress: "127.0.0.1:9990",
-						OutgoingContext:    "x-cloud-trace-context",
-					},
-				},
-			},
-			WantFilterConfigs: nil,
-		},
-		{
 			Desc: "Returns nil filter generators when DisableTracing is true",
 			OptsIn: options.ConfigGeneratorOptions{
 				CommonOptions: options.CommonOptions{

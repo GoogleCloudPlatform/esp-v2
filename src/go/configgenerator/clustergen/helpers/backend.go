@@ -129,7 +129,7 @@ func makeCircuitBreakersThresholds(prio corepb.RoutingPriority, maxRequests int)
 }
 
 func CreateUpstreamHttpFilters(serviceConfig *servicepb.Service, opts options.ConfigGeneratorOptions) []*hcmpb.HttpFilter {
-	if opts.TracingOptions != nil && (opts.TracingOptions.DisableTracing || opts.TracingOptions.StackdriverAddress != "") {
+	if opts.TracingOptions != nil && opts.TracingOptions.DisableTracing {
 		return nil
 	}
 

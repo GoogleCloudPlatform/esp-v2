@@ -38,7 +38,7 @@ build --repo_env=PATH
 build --noenable_bzlmod
 
 # Disable ICU linking for googleurl.
-# build --@com_googlesource_googleurl//build_config:system_icu=0
+build --@googleurl//build_config:system_icu=0
 
 # Common flags for sanitizers
 build:sanitizer --define tcmalloc=disabled
@@ -80,6 +80,7 @@ build:asan --test_env=ASAN_SYMBOLIZER_PATH
 
 build:clang-asan --config=asan
 build:clang-asan --action_env=ENVOY_UBSAN_VPTR=1
+build:clang-asan --linkopt=-fuse-ld=lld-14
 build:clang-asan --copt -fno-sanitize=vptr,function
 build:clang-asan --linkopt -fno-sanitize=vptr,function
 build:clang-asan --copt -fno-optimize-sibling-calls
