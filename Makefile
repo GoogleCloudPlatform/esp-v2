@@ -172,7 +172,7 @@ test-envoy-asan: clang-format
 
 test-envoy-tsan: clang-format
 	@echo "--> running envoy's unit tests (tsan)"
-	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) setarch $(shell uname -m) -R bazelisk test --config=clang-tsan  --test_output=errors  //src/...
+	ASAN_SYMBOLIZER_PATH=$(which llvm-symbolizer-14) bazelisk test --config=clang-tsan  --test_output=errors  //src/...
 
 .PHONY: integration-test-run-sequential integration-test-run-parallel integration-test integration-test-asan integration-test-tsan integration-debug
 integration-test-run-sequential:

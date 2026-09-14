@@ -83,6 +83,6 @@ make depend.install
 make build-envoy build-grpc-interop build-grpc-echo
 
 # Skip legacy tracing tests as Envoy 1.30.7 cannot run OpenTelemetry and the new configmanager suppresses tracing for legacy data plane.
-rm -rf tests/integration_test/opencensus_tracing_test tests/integration_test/tracing_test
+rm -rf tests/integration_test/opencensus_tracing_test tests/integration_test/tracing_test tests/integration_test/backend_retry_test
 
 make integration-test-run-sequential

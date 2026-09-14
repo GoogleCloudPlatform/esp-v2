@@ -78,6 +78,7 @@ http_archive(
         "//third_party/envoy:session_idle_list.patch",
         "//third_party/envoy:prometheus_stats.patch",
         "//third_party/envoy:router_ratelimit.patch",
+        "//third_party/envoy:google_async_client_impl.patch",
     ],
     sha256 = ENVOY_SHA256,
     strip_prefix = "envoy-" + ENVOY_SHA1,
