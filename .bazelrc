@@ -20,7 +20,8 @@ build:debug -c dbg
 build --incompatible_strict_action_env=true
 build --host_force_python=PY3
 build --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a
-build --action_env=BAZEL_LINKOPTS=-lm
+build --action_env=BAZEL_LINKOPTS=-lm -latomic
+build --linkopt=-latomic
 
 # We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
