@@ -1,0 +1,11 @@
+--- a/quiche/quic/core/quic_config.cc
++++ b/quiche/quic/core/quic_config.cc
+@@ -567,7 +567,7 @@
+ 
+ const QuicTagVector& QuicConfig::ClientRequestedIndependentOptions(
+     Perspective perspective) const {
+-  static constexpr QuicTagVector no_options;
++  static const QuicTagVector no_options;
+   if (perspective == Perspective::IS_SERVER) {
+     return HasReceivedConnectionOptions() ? ReceivedConnectionOptions()
+                                           : no_options;

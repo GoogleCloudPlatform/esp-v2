@@ -86,3 +86,52 @@ func TestServiceControlCredential(t *testing.T) {
 
 	}
 }
+
+func TestResolveTracingProjectIdInCommonOptions(t *testing.T) {
+	orig := *TracingProjectId
+	defer flag.Set("tracing_project_id", orig)
+
+	testCases := []struct {
+		desc            string
+		envResourceAttr string
+		flagProjectId   string
+		wantProjectId   string
+	}{
+		{
+			desc:            "Default: no env var, flag is empty -> empty project ID",
+			envResourceAttr: "",
+			flagProjectId:   "",
+			wantProjectId:   "",
+		},
+		{
+			desc:            "OTEL_RESOURCE_ATTRIBUTES resolves project ID",
+			envResourceAttr: "gcp.project.id=otel-project-id",
+			flagProjectId:   "",
+			wantProjectId:   "otel-project-id",
+		},
+		{
+			desc:            "OTEL_RESOURCE_ATTRIBUTES overrides --tracing_project_id flag",
+			envResourceAttr: "gcp.project.id=otel-override-project",
+			flagProjectId:   "legacy-flag-project",
+			wantProjectId:   "otel-override-project",
+		},
+		{
+			desc:            "Fallback to --tracing_project_id when env var is unset",
+			envResourceAttr: "",
+			flagProjectId:   "legacy-flag-project",
+			wantProjectId:   "legacy-flag-project",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Setenv("OTEL_RESOURCE_ATTRIBUTES", tc.envResourceAttr)
+			flag.Set("tracing_project_id", tc.flagProjectId)
+
+			opts := DefaultCommonOptionsFromFlags()
+			if got := opts.TracingOptions.ProjectId; got != tc.wantProjectId {
+				t.Errorf("DefaultCommonOptionsFromFlags().TracingOptions.ProjectId = %q, want %q", got, tc.wantProjectId)
+			}
+		})
+	}
+}

@@ -64,7 +64,7 @@ class ServiceControlHandlerFactory {
   virtual ~ServiceControlHandlerFactory() = default;
 
   virtual ServiceControlHandlerPtr createHandler(
-      const Envoy::Http::RequestHeaderMap& headers,
+      const Envoy::Http::RequestHeaderMap* headers,
       Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
       ServiceControlFilterStats& filter_stats) const PURE;
 };

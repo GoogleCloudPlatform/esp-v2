@@ -17,10 +17,11 @@ package tracing
 import (
 	"fmt"
 	"math"
+	"os"
 	"strings"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
-	opencensuspb "github.com/census-instrumentation/opencensus-proto/gen-go/trace/v1"
+	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
@@ -28,99 +29,105 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func createTraceContexts(ctx_str string) ([]tracepb.OpenCensusConfig_TraceContext, error) {
-	var out []tracepb.OpenCensusConfig_TraceContext
+// normalizeOtlpEndpoint trims leading/trailing whitespace and strips "http://" or
+// "https://" prefixes since Envoy's GoogleGrpc.TargetUri expects a gRPC target
+// string rather than an HTTP URL scheme.
+func normalizeOtlpEndpoint(endpoint string) string {
+	endpoint = strings.TrimSpace(endpoint)
+	endpoint = strings.TrimPrefix(endpoint, "http://")
+	endpoint = strings.TrimPrefix(endpoint, "https://")
+	return endpoint
+}
 
-	if ctx_str == "" {
-		return out, nil
+// parseResourceAttributes parses a comma-separated key=value string (as specified in
+// the OpenTelemetry specification for OTEL_RESOURCE_ATTRIBUTES) into a map.
+func parseResourceAttributes(rawAttrs string) map[string]string {
+	attrs := make(map[string]string)
+	for _, pair := range strings.Split(rawAttrs, ",") {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			k := strings.TrimSpace(parts[0])
+			v := strings.TrimSpace(parts[1])
+			v = strings.Trim(v, `"'`)
+			if k != "" {
+				attrs[k] = v
+			}
+		}
 	}
+	return attrs
+}
 
-	for _, ctx := range strings.Split(ctx_str, ",") {
-		switch ctx {
-		case "traceparent":
-			out = append(out, tracepb.OpenCensusConfig_TRACE_CONTEXT)
-		case "grpc-trace-bin":
-			out = append(out, tracepb.OpenCensusConfig_GRPC_TRACE_BIN)
-		case "x-cloud-trace-context":
-			out = append(out, tracepb.OpenCensusConfig_CLOUD_TRACE_CONTEXT)
-		default:
-			return out, fmt.Errorf("Invalid trace context: %v. It must be one of (traceparent|grpc-trace-bin|x-cloud-trace-context)", ctx)
+// ResolveTracingProjectId resolves the GCP Project ID for tracing and Service Control
+// using the following precedence order:
+// 1. "gcp.project.id" attribute from the OTEL_RESOURCE_ATTRIBUTES environment variable.
+// 2. opts.ProjectId (fallback for the deprecated --tracing_project_id flag).
+// 3. Default: empty string "" (falls back to GCP metadata server / ADC resolution).
+func ResolveTracingProjectId(opts options.TracingOptions) string {
+	rawAttrs := os.Getenv("OTEL_RESOURCE_ATTRIBUTES")
+	if rawAttrs != "" {
+		attrs := parseResourceAttributes(rawAttrs)
+		if projectID, ok := attrs["gcp.project.id"]; ok && projectID != "" {
+			if opts.ProjectId != "" {
+				glog.Infof("Both OTEL_RESOURCE_ATTRIBUTES (gcp.project.id=%q) and --tracing_project_id (%q) are configured. Using OTEL_RESOURCE_ATTRIBUTES.", projectID, opts.ProjectId)
+			}
+			return projectID
 		}
 	}
 
-	return out, nil
+	if opts.ProjectId != "" {
+		return opts.ProjectId
+	}
+
+	return ""
 }
 
-// ShouldFetchTracingProjectID determines if we should use tenant project ID
-// from IMDS.
-func ShouldFetchTracingProjectID(opts options.CommonOptions) bool {
-	if opts.TracingOptions.DisableTracing {
-		return false
+func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTelemetryConfig, error) {
+	// Exporter destination precedence:
+	// 1. OTEL_EXPORTER_OTLP_ENDPOINT environment variable.
+	// 2. opts.StackdriverAddress (fallback for deprecated --tracing_stackdriver_address).
+	// 3. Default: "telemetry.googleapis.com" (Google Cloud Trace).
+	targetURI := "telemetry.googleapis.com"
+	envEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if envEndpoint != "" {
+		targetURI = normalizeOtlpEndpoint(envEndpoint)
+		if opts.StackdriverAddress != "" {
+			glog.Infof("Both OTEL_EXPORTER_OTLP_ENDPOINT (%q) and --tracing_stackdriver_address (%q) are configured. Using OTEL_EXPORTER_OTLP_ENDPOINT.", envEndpoint, opts.StackdriverAddress)
+		}
+	} else if opts.StackdriverAddress != "" {
+		targetURI = opts.StackdriverAddress
 	}
 
-	// If user specified a project-id, use that
-	projectId := opts.TracingOptions.ProjectId
-	if projectId != "" {
-		return false
-	}
-
-	// Otherwise determine project-id automatically
-	glog.Infof("--tracing_project_id was not specified, attempting to fetch it from GCP Metadata server.")
-	if opts.NonGCP {
-		glog.Warning("--tracing_project_id was not specified and can not be fetched from GCP Metadata server on non-GCP runtime.")
-		return false
-	}
-
-	return true
-}
-
-func createOpenCensusConfig(opts options.TracingOptions) (*tracepb.OpenCensusConfig, error) {
-	cfg := &tracepb.OpenCensusConfig{
-		TraceConfig: &opencensuspb.TraceConfig{
-			MaxNumberOfAttributes:    opts.MaxNumAttributes,
-			MaxNumberOfAnnotations:   opts.MaxNumAnnotations,
-			MaxNumberOfMessageEvents: opts.MaxNumMessageEvents,
-			MaxNumberOfLinks:         opts.MaxNumLinks,
+	cfg := &tracepb.OpenTelemetryConfig{
+		ServiceName: "espv2", // Provide a default service name.
+		GrpcService: &corev3.GrpcService{
+			TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
+				GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
+					TargetUri:  targetURI,
+					StatPrefix: "opentelemetry",
+				},
+			},
 		},
-		StackdriverExporterEnabled: true,
-		StackdriverProjectId:       opts.ProjectId,
 	}
-
-	if opts.StackdriverAddress != "" {
-		cfg.StackdriverAddress = opts.StackdriverAddress
-	}
-
-	if ctx, err := createTraceContexts(opts.IncomingContext); err == nil {
-		cfg.IncomingTraceContext = ctx
-	} else {
-		return nil, err
-	}
-
-	if ctx, err := createTraceContexts(opts.OutgoingContext); err == nil {
-		cfg.OutgoingTraceContext = ctx
-	} else {
-		return nil, err
-	}
-
-	// Tracing sample rate in OpenCensusConfig is not used at all by Envoy.
-	// No need to set it.
 
 	return cfg, nil
 }
 
 // CreateTracing outputs envoy HCM tracing config.
 func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tracing, error) {
-	if opts.ProjectId == "" {
-		glog.Warningf("Not adding tracing config because project ID is empty")
+	if opts.DisableTracing {
 		return nil, nil
 	}
 
-	openCensusConfig, err := createOpenCensusConfig(opts)
+	openTelemetryConfig, err := createOpenTelemetryConfig(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	typedConfig, err := anypb.New(openCensusConfig)
+	typedConfig, err := anypb.New(openTelemetryConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +151,7 @@ func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tr
 			Value: percentSampleRate,
 		},
 		Provider: &tracepb.Tracing_Http{
-			Name:       "envoy.tracers.opencensus",
+			Name:       "envoy.tracers.opentelemetry",
 			ConfigType: &tracepb.Tracing_Http_TypedConfig{TypedConfig: typedConfig},
 		},
 		Verbose: opts.EnableVerboseAnnotations,

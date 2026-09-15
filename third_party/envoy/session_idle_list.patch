@@ -1,0 +1,11 @@
+--- a/source/common/http/session_idle_list.h
++++ b/source/common/http/session_idle_list.h
+@@ -72,7 +72,7 @@
+       MonotonicTime enqueue_time;
+ 
+       // Sort by enqueue time. Used by `IdleSessionSet` for session order.
+-      friend std::strong_ordering operator<=>(const SessionInfo& lhs, const SessionInfo& rhs) {
++      friend auto operator<=>(const SessionInfo& lhs, const SessionInfo& rhs) {
+         return std::forward_as_tuple(lhs.enqueue_time, lhs.session) <=>
+                std::forward_as_tuple(rhs.enqueue_time, rhs.session);
+       }

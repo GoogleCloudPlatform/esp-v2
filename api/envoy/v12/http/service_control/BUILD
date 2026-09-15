@@ -12,8 +12,18 @@ api_cc_py_proto_library(
     visibility = ["//visibility:public"],
     deps = [
         "//api/envoy/v12/http/common:base_proto",
-        "//external:service_proto",
+        "//api/envoy/v12/http/service_control:googleapis_service_proto",
     ],
+)
+
+alias(
+    name = "googleapis_service_proto",
+    actual = "@com_github_googleapis_googleapis//google/api:service_proto",
+)
+
+alias(
+    name = "googleapis_service_proto_cc_proto",
+    actual = "@com_github_googleapis_googleapis//google/api:service_cc_proto",
 )
 
 go_proto_library(

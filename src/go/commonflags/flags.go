@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/tracing"
 	"github.com/golang/glog"
 )
 
@@ -35,15 +36,15 @@ var (
 	Node                            = flag.String("node", defaults.Node, "envoy node id")
 	NonGCP                          = flag.Bool("non_gcp", defaults.NonGCP, `By default, the proxy tries to talk to GCP metadata server to get VM location in the first few requests. Setting this flag to true to skip this step`)
 	GeneratedHeaderPrefix           = flag.String("generated_header_prefix", defaults.GeneratedHeaderPrefix, "Set the header prefix for the generated headers. By default, it is `X-Endpoint-`")
-	TracingProjectId                = flag.String("tracing_project_id", defaults.TracingOptions.ProjectId, "The Google project id required for Stack driver tracing. If not set, will automatically use fetch it from GCP Metadata server")
-	TracingStackdriverAddress       = flag.String("tracing_stackdriver_address", defaults.TracingOptions.StackdriverAddress, "By default, the Stackdriver exporter will connect to production Stackdriver. If this is non-empty, it will connect to this address. It must be in the gRPC format and implement the cloud trace v2 RPCs.")
+	TracingProjectId                = flag.String("tracing_project_id", defaults.TracingOptions.ProjectId, "DEPRECATED and will be removed in a future release. Sets the originating GCP Project ID as fallback. Please migrate to standard OpenTelemetry resource attributes (e.g., OTEL_RESOURCE_ATTRIBUTES=\"gcp.project.id=YOUR_PROJECT\") or rely on ADC metadata.")
+	TracingStackdriverAddress       = flag.String("tracing_stackdriver_address", defaults.TracingOptions.StackdriverAddress, "DEPRECATED and will be removed in a future release. Overrides the telemetry exporter destination as fallback. Please migrate to the standard environment variable OTEL_EXPORTER_OTLP_ENDPOINT.")
 	TracingSamplingRate             = flag.Float64("tracing_sample_rate", defaults.TracingOptions.SamplingRate, "tracing sampling rate from 0.0 to 1.0")
 	TracingIncomingContext          = flag.String("tracing_incoming_context", defaults.TracingOptions.IncomingContext, "comma separated incoming trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
 	TracingOutgoingContext          = flag.String("tracing_outgoing_context", defaults.TracingOptions.OutgoingContext, "comma separated outgoing trace contexts (traceparent|grpc-trace-bin|x-cloud-trace-context)")
-	TracingMaxNumAttributes         = flag.Int64("tracing_max_num_attributes", defaults.TracingOptions.MaxNumAttributes, "Sets the maximum number of attributes that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of attributes published will be much less.")
-	TracingMaxNumAnnotations        = flag.Int64("tracing_max_num_annotations", defaults.TracingOptions.MaxNumAnnotations, "Sets the maximum number of annotations that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of annotations published will be much less.")
-	TracingMaxNumMessageEvents      = flag.Int64("tracing_max_num_message_events", defaults.TracingOptions.MaxNumMessageEvents, "Sets the maximum number of message events that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of message events published will be much less.")
-	TracingMaxNumLinks              = flag.Int64("tracing_max_num_links", defaults.TracingOptions.MaxNumLinks, "Sets the maximum number of links that each span can contain. Defaults to the maximum allowed by Stackdriver. In practice, the number of links published will be much less.")
+	TracingMaxNumAttributes         = flag.Int64("tracing_max_num_attributes", defaults.TracingOptions.MaxNumAttributes, "DEPRECATED and ignored. Envoy's OpenTelemetry tracer does not enforce per-span limits.")
+	TracingMaxNumAnnotations        = flag.Int64("tracing_max_num_annotations", defaults.TracingOptions.MaxNumAnnotations, "DEPRECATED and ignored. Envoy's OpenTelemetry tracer does not enforce per-span limits.")
+	TracingMaxNumMessageEvents      = flag.Int64("tracing_max_num_message_events", defaults.TracingOptions.MaxNumMessageEvents, "DEPRECATED and ignored. Envoy's OpenTelemetry tracer does not enforce per-span limits.")
+	TracingMaxNumLinks              = flag.Int64("tracing_max_num_links", defaults.TracingOptions.MaxNumLinks, "DEPRECATED and ignored. Envoy's OpenTelemetry tracer does not enforce per-span limits.")
 	TracingEnableVerboseAnnotations = flag.Bool("tracing_enable_verbose_annotations", defaults.TracingOptions.EnableVerboseAnnotations, "If enabled, spans are annotated with timing events on when the request/response started/ended")
 
 	//Suspected Envoy has listener initialization bug: if a http filter needs to use
@@ -66,27 +67,30 @@ var (
 )
 
 func DefaultCommonOptionsFromFlags() options.CommonOptions {
+	tracingOpts := options.TracingOptions{
+		DisableTracing:           *DisableTracing,
+		ProjectId:                *TracingProjectId,
+		StackdriverAddress:       *TracingStackdriverAddress,
+		SamplingRate:             *TracingSamplingRate,
+		IncomingContext:          *TracingIncomingContext,
+		OutgoingContext:          *TracingOutgoingContext,
+		MaxNumAttributes:         *TracingMaxNumAttributes,
+		MaxNumAnnotations:        *TracingMaxNumAnnotations,
+		MaxNumMessageEvents:      *TracingMaxNumMessageEvents,
+		MaxNumLinks:              *TracingMaxNumLinks,
+		EnableVerboseAnnotations: *TracingEnableVerboseAnnotations,
+	}
+	tracingOpts.ProjectId = tracing.ResolveTracingProjectId(tracingOpts)
+
 	opts := options.CommonOptions{
-		AdminAddress:          *AdminAddress,
-		AdminPort:             *AdminPort,
-		AdsNamedPipe:          *AdsNamedPipe,
-		HttpRequestTimeout:    time.Duration(*HttpRequestTimeoutS) * time.Second,
-		Node:                  *Node,
-		NonGCP:                *NonGCP,
-		GeneratedHeaderPrefix: *GeneratedHeaderPrefix,
-		TracingOptions: &options.TracingOptions{
-			DisableTracing:           *DisableTracing,
-			ProjectId:                *TracingProjectId,
-			StackdriverAddress:       *TracingStackdriverAddress,
-			SamplingRate:             *TracingSamplingRate,
-			IncomingContext:          *TracingIncomingContext,
-			OutgoingContext:          *TracingOutgoingContext,
-			MaxNumAttributes:         *TracingMaxNumAttributes,
-			MaxNumAnnotations:        *TracingMaxNumAnnotations,
-			MaxNumMessageEvents:      *TracingMaxNumMessageEvents,
-			MaxNumLinks:              *TracingMaxNumLinks,
-			EnableVerboseAnnotations: *TracingEnableVerboseAnnotations,
-		},
+		AdminAddress:                       *AdminAddress,
+		AdminPort:                          *AdminPort,
+		AdsNamedPipe:                       *AdsNamedPipe,
+		HttpRequestTimeout:                 time.Duration(*HttpRequestTimeoutS) * time.Second,
+		Node:                               *Node,
+		NonGCP:                             *NonGCP,
+		GeneratedHeaderPrefix:              *GeneratedHeaderPrefix,
+		TracingOptions:                     &tracingOpts,
 		MetadataURL:                        *MetadataURL,
 		IamURL:                             *IamURL,
 		DisallowColonInWildcardPathSegment: *DisallowColonInWildcardPathSegment,

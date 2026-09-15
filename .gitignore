@@ -2,6 +2,7 @@ bazel-*/
 bazel-*
 vendor/
 bin/
+!third_party/bin/
 *.pyc
 node_modules/
 src/go/proto/
@@ -10,6 +11,10 @@ src/go/proto/
 .ijwb/
 .idea/
 
+
 # C++ coverage
 generated/
 third_party/tools/coverage/BUILD
+
+# Local user overrides
+.bazelrc.user

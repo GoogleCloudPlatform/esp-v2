@@ -1,4 +1,4 @@
-load("@com_google_protobuf//:protobuf.bzl", "cc_proto_library")
+
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 exports_files([
@@ -17,7 +17,7 @@ genrule(
         "@com_github_grpc_grpc//src/proto/grpc/health/v1:health.proto",
     ],
     outs = ["bookstore.descriptor"],
-    cmd = """$(location //external:protoc) $(location //tests/endpoints/bookstore_grpc/proto/v1:bookstore.proto) \
+    cmd = """$(location @com_google_protobuf//:protoc) $(location //tests/endpoints/bookstore_grpc/proto/v1:bookstore.proto) \
          $(location //tests/endpoints/bookstore_grpc/proto/v2:bookstore_v2.proto) \
         -I$$(dirname $(location @com_google_googleapis//google/rpc:status.proto))/../.. \
         -I$$(dirname $(location @com_github_grpc_grpc//src/proto/grpc/health/v1:health.proto))/../../.. \
@@ -25,5 +25,5 @@ genrule(
         -I$$(dirname $(location //tests/endpoints/bookstore_grpc/proto/v1:bookstore.proto)) \
         -I$$(dirname $(location //tests/endpoints/bookstore_grpc/proto/v2:bookstore_v2.proto)) \
         --include_imports --descriptor_set_out=$@""",
-    tools = ["//external:protoc"],
+    tools = ["@com_google_protobuf//:protoc"],
 )
