@@ -14,6 +14,8 @@
 
 #include "src/envoy/http/service_control/handler_utils.h"
 
+#include <cmath>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -114,11 +116,23 @@ void extractJwtPayload(const Envoy::ProtobufWkt::Value& value,
     case ::google::protobuf::Value::kNullValue:
       absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=;");
       return;
-    case ::google::protobuf::Value::kNumberValue:
-      absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
-                      std::to_string(static_cast<long>(value.number_value())),
-                      ";");
+    case ::google::protobuf::Value::kNumberValue: {
+      // The JWT number claim is parsed into a double. Casting to long is
+      // undefined when it is non-finite or outside long's range, so guard the
+      // narrowing (same as JsonStruct::getInteger) and render the raw value in
+      // that case.
+      const double number = value.number_value();
+      if (std::isfinite(number) &&
+          number >= static_cast<double>(std::numeric_limits<long>::min()) &&
+          number < 9223372036854775808.0 /* 2^63 */) {
+        absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
+                        std::to_string(static_cast<long>(number)), ";");
+      } else {
+        absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
+                        absl::StrCat(number), ";");
+      }
       return;
+    }
     case ::google::protobuf::Value::kBoolValue:
       absl::StrAppend(&info_jwt_payloads, jwt_payload_path, "=",
                       value.bool_value() ? "true" : "false", ";");
