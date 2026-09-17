@@ -16,4 +16,5 @@ FROM _PROXY_IMAGE_SHA_NAME
 
 ADD docker/serverless/env_start_proxy.py /env_start_proxy.py
 
-ENTRYPOINT ["/env_start_proxy.py"]
+ENTRYPOINT ["/usr/bin/python3", "/env_start_proxy.py"]
+
