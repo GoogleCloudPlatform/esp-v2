@@ -62,7 +62,7 @@ constexpr char JwtPayloadAudiencePath[] = "aud";
 }  // namespace
 
 ServiceControlHandlerImpl::ServiceControlHandlerImpl(
-    const Envoy::Http::RequestHeaderMap& headers,
+    const Envoy::Http::RequestHeaderMap* headers,
     Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
     const std::string& uuid, const FilterConfigParser& cfg_parser,
     Envoy::TimeSource& time_source, ServiceControlFilterStats& filter_stats)
@@ -71,17 +71,21 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
       decoder_callbacks_(decoder_callbacks),
       time_source_(time_source),
       uuid_(uuid),
-      request_header_size_(headers.byteSize()),
+      request_header_size_(headers ? headers->byteSize() : 0),
       consumer_type_header_(cfg_parser_.config().generated_header_prefix() +
                             kConsumerTypeHeaderSuffix),
       consumer_number_header_(cfg_parser_.config().generated_header_prefix() +
                               kConsumerNumberHeaderSuffix),
       is_grpc_(false),
       filter_stats_(filter_stats) {
-  is_grpc_ = Envoy::Grpc::Common::hasGrpcContentType(headers);
+  is_grpc_ = headers && Envoy::Grpc::Common::hasGrpcContentType(*headers);
 
-  http_method_ = std::string(utils::readHeaderEntry(headers.Method()));
-  path_ = std::string(utils::readHeaderEntry(headers.Path()));
+  if (headers && headers->Method()) {
+    http_method_ = std::string(utils::readHeaderEntry(headers->Method()));
+  }
+  if (headers && headers->Path()) {
+    path_ = std::string(utils::readHeaderEntry(headers->Path()));
+  }
 
   const auto operation = getOperationFromPerRoute();
   if (!operation.empty()) {
@@ -97,23 +101,25 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
     require_ctx_ = cfg_parser_.non_match_rqm_ctx();
   }
 
-  if (require_ctx_->config().api_key().locations_size() > 0) {
-    extractAPIKey(headers, require_ctx_->config().api_key().locations(),
-                  api_key_);
-  } else {
-    extractAPIKey(headers, cfg_parser_.default_api_keys().locations(),
-                  api_key_);
-  }
+  if (headers) {
+    if (require_ctx_->config().api_key().locations_size() > 0) {
+      extractAPIKey(*headers, require_ctx_->config().api_key().locations(),
+                    api_key_);
+    } else {
+      extractAPIKey(*headers, cfg_parser_.default_api_keys().locations(),
+                    api_key_);
+    }
 
-  if (require_ctx_->service_ctx().config().client_ip_from_forwarded_header()) {
-    const auto status_or_ip = extractIPFromForwardedHeader(headers);
-    if (!status_or_ip.ok()) {
-      ENVOY_LOG(error, "failed to extract IP from forwarded header: {}",
-                status_or_ip.status());
-      // status ok with empty string is a valid return, it means not such
-      // header.
-    } else if (!status_or_ip.value().empty()) {
-      client_ip_from_forwarded_header_ = status_or_ip.value();
+    if (require_ctx_->service_ctx().config().client_ip_from_forwarded_header()) {
+      const auto status_or_ip = extractIPFromForwardedHeader(*headers);
+      if (!status_or_ip.ok()) {
+        ENVOY_LOG(error, "failed to extract IP from forwarded header: {}",
+                  status_or_ip.status());
+        // status ok with empty string is a valid return, it means not such
+        // header.
+      } else if (!status_or_ip.value().empty()) {
+        client_ip_from_forwarded_header_ = status_or_ip.value();
+      }
     }
   }
 }
@@ -376,7 +382,7 @@ void ServiceControlHandlerImpl::callReport(
   info.response_code_detail = stream_info_.responseCodeDetails().value_or("");
 
   if (!require_ctx_->service_ctx().config().tracing_disabled()) {
-    info.trace_id = parent_span.getTraceIdAsHex();
+    info.trace_id = parent_span.getTraceId();
   }
 
   require_ctx_->service_ctx().call().callReport(info);

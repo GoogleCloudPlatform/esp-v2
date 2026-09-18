@@ -169,6 +169,29 @@ if [ "${BACKEND}" == 'bookstore' ]; then
   kill $(jobs -p)
 fi
 
+if [[ ${STATUS} -ne 0 ]]; then
+  echo "=========================================================================="
+  echo "ERROR: GKE test failed with STATUS=${STATUS} in namespace ${NAMESPACE}"
+  echo "Dumping Kubernetes pods, events, and container logs for diagnosis..."
+  echo "=========================================================================="
+  echo "--- kubectl get pods -n ${NAMESPACE} -o wide ---"
+  kubectl get pods -n "${NAMESPACE}" -o wide || true
+  echo "--- kubectl describe pods -n ${NAMESPACE} ---"
+  kubectl describe pods -n "${NAMESPACE}" || true
+  echo "--- kubectl get events -n ${NAMESPACE} --sort-by='.lastTimestamp' ---"
+  kubectl get events -n "${NAMESPACE}" --sort-by='.lastTimestamp' || true
+  pod_name=$(kubectl get --no-headers=true pods -l app=app -n "${NAMESPACE}" -o custom-columns=:metadata.name 2>/dev/null | head -n 1 || true)
+  if [[ -n "${pod_name}" ]]; then
+    echo "--- kubectl logs ${pod_name} -c apiproxy (previous) ---"
+    kubectl logs "${pod_name}" -c apiproxy -n "${NAMESPACE}" --previous || true
+    echo "--- kubectl logs ${pod_name} -c apiproxy (current) ---"
+    kubectl logs "${pod_name}" -c apiproxy -n "${NAMESPACE}" || true
+    echo "--- kubectl logs ${pod_name} (all containers) ---"
+    kubectl logs "${pod_name}" -n "${NAMESPACE}" --all-containers=true || true
+  fi
+  echo "=========================================================================="
+fi
+
 if [[ -n ${REMOTE_LOG_DIR} ]]; then
   fetch_proxy_logs "${NAMESPACE}" "${LOG_DIR}"
   upload_logs "${REMOTE_LOG_DIR}" "${LOG_DIR}"

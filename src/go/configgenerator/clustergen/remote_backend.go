@@ -50,13 +50,13 @@ func NewRemoteBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts
 			continue
 		}
 
-		gen, err := backendRuleToCluster(rule, opts, false)
+		gen, err := backendRuleToCluster(rule, opts, false, serviceConfig)
 		if err != nil {
 			return nil, fmt.Errorf("fail to create RemoteBackendCluster for selector %q: %v", rule.GetSelector(), err)
 		}
 		gens = dedupAndAddGenerator(gen, gens, dedupClusterNames)
 
-		httpBackendGen, err := httpBackendRuleToCluster(rule, opts)
+		httpBackendGen, err := httpBackendRuleToCluster(rule, opts, serviceConfig)
 		if err != nil {
 			return nil, fmt.Errorf("fail to create HTTP RemoteBackendCluster for selector %q: %v", rule.GetSelector(), err)
 		}
@@ -66,19 +66,19 @@ func NewRemoteBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts
 	return gens, nil
 }
 
-// httpBackendRuleToCluster creates a RemoteBackendCluster for non-OpenAPI HTTP backend support.
-// This is not used by ESPv2.
-func httpBackendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGeneratorOptions) (*RemoteBackendCluster, error) {
+// httpBackendRuleToCluster is a wrapper for backendRuleToCluster if the backend rule
+// has an associated HTTP backend protocol.
+func httpBackendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGeneratorOptions, serviceConfig *servicepb.Service) (*RemoteBackendCluster, error) {
 	httpBackendRule := IsHTTPBackendEnabled(rule)
 	if httpBackendRule == nil {
 		return nil, nil
 	}
 
-	return backendRuleToCluster(httpBackendRule, opts, true)
+	return backendRuleToCluster(httpBackendRule, opts, true, serviceConfig)
 }
 
 // backendRuleToCluster is a shared helper to translate a BackendRule into a RemoteBackendCluster.
-func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGeneratorOptions, isHTTPBackend bool) (*RemoteBackendCluster, error) {
+func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGeneratorOptions, isHTTPBackend bool, serviceConfig *servicepb.Service) (*RemoteBackendCluster, error) {
 	if rule.GetAddress() == "" {
 		glog.Infof("Skip backend rule %q because it does not have dynamic routing address.", rule.GetSelector())
 		return nil, nil
@@ -117,6 +117,7 @@ func backendRuleToCluster(rule *servicepb.BackendRule, opts options.ConfigGenera
 			BackendDnsLookupFamily: opts.BackendDnsLookupFamily,
 			DNS:                    helpers.NewClusterDNSConfigerFromOPConfig(opts),
 			TLS:                    tls,
+			UpstreamHttpFilters:    helpers.CreateUpstreamHttpFilters(serviceConfig, opts),
 		},
 	}
 	return cluster, nil

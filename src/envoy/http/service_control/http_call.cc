@@ -23,7 +23,9 @@
 #include "source/common/http/headers.h"
 #include "source/common/http/message_impl.h"
 #include "source/common/http/utility.h"
+#include "source/common/singleton/const_singleton.h"
 #include "source/common/tracing/http_tracer_impl.h"
+#include "src/api_proxy/tracing/trace_context_utils.h"
 
 using ::absl::OkStatus;
 using ::absl::Status;
@@ -43,6 +45,13 @@ constexpr absl::string_view KApplicationProto = "application/x-protobuf";
 
 RegisterCustomInlineHeader<CustomInlineHeaderRegistry::Type::RequestHeaders>
     authorization_handle(CustomHeaders::get().Authorization);
+
+class HttpCallHeaders {
+ public:
+  const Envoy::Http::LowerCaseString Traceparent{"traceparent"};
+  const Envoy::Http::LowerCaseString CloudTraceContext{"x-cloud-trace-context"};
+};
+using HttpCallHeadersSingleton = Envoy::ConstSingleton<HttpCallHeaders>;
 
 class HttpCallImpl : public HttpCall,
                      public Envoy::Event::DeferredDeletable,
@@ -209,6 +218,18 @@ class HttpCallImpl : public HttpCall,
     Envoy::Http::RequestMessagePtr message = prepareHeaders(token);
     Envoy::Tracing::HttpTraceContext trace_context(message->headers());
     request_span_->injectContext(trace_context, nullptr);
+    
+    // Provide trace propagation to X-Cloud-Trace-Context header for Google APIs
+    const auto& const_headers = HttpCallHeadersSingleton::get();
+    auto traceparent_result = message->headers().get(const_headers.Traceparent);
+    if (!traceparent_result.empty()) {
+      auto cloud_trace = espv2::api_proxy::tracing::TraceContextUtils::TraceParentToXCloudTraceContext(
+          traceparent_result[0]->value().getStringView());
+      if (cloud_trace.has_value()) {
+        message->headers().setCopy(const_headers.CloudTraceContext, cloud_trace.value());
+      }
+    }
+
     ENVOY_LOG(debug, "http call from [uri = {}]: start", uri_);
 
     const auto thread_local_cluster =

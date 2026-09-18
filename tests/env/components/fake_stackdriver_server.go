@@ -18,36 +18,33 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
-	emptypb "github.com/golang/protobuf/ptypes/empty"
-	cloudtracegrpc "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
-	cloudtracepb "google.golang.org/genproto/googleapis/devtools/cloudtrace/v2"
+	coltracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
+	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 )
 
-// FakeTraceServer implements the cloud trace v2 RPCs (see cloudtracegrpc.TraceServiceServer)
+// FakeTraceServer implements OTLP trace service (see coltracepb.TraceServiceServer)
 type FakeTraceServer struct {
-	cloudtracegrpc.TraceServiceServer
+	coltracepb.TraceServiceServer
 
-	RcvSpan chan *cloudtracepb.Span
+	RcvSpan chan *tracepb.Span
 	server  *grpc.Server
 }
 
-func (s *FakeTraceServer) BatchWriteSpans(ctx context.Context, req *cloudtracepb.BatchWriteSpansRequest) (*emptypb.Empty, error) {
-	for i, span := range req.Spans {
-		glog.Infof("Fake stackdriver server received span %v with name: %v", i, span.DisplayName.Value)
-		s.RcvSpan <- span
+func (s *FakeTraceServer) Export(ctx context.Context, req *coltracepb.ExportTraceServiceRequest) (*coltracepb.ExportTraceServiceResponse, error) {
+	for _, rs := range req.ResourceSpans {
+		for _, ss := range rs.ScopeSpans {
+			for _, span := range ss.Spans {
+				glog.Infof("Fake stackdriver server received span with name: %v", span.Name)
+				s.RcvSpan <- span
+			}
+		}
 	}
-	return &emptypb.Empty{}, nil
-}
-
-func (s *FakeTraceServer) CreateSpan(ctx context.Context, span *cloudtracepb.Span) (*cloudtracepb.Span, error) {
-	glog.Infof("Fake stackdriver server created span with name: %v", span.DisplayName.Value)
-	return span, nil
+	return &coltracepb.ExportTraceServiceResponse{}, nil
 }
 
 func (s *FakeTraceServer) StopAndWait() {
@@ -60,10 +57,10 @@ func NewFakeStackdriver() *FakeTraceServer {
 
 	grpcServer := grpc.NewServer()
 	fsds := &FakeTraceServer{
-		RcvSpan: make(chan *cloudtracepb.Span, 20),
+		RcvSpan: make(chan *tracepb.Span, 100),
 		server:  grpcServer,
 	}
-	cloudtracegrpc.RegisterTraceServiceServer(grpcServer, fsds)
+	coltracepb.RegisterTraceServiceServer(grpcServer, fsds)
 
 	return fsds
 }
@@ -88,18 +85,7 @@ func (s *FakeTraceServer) RetrieveSpanNames() ([]string, error) {
 
 		select {
 		case span := <-s.RcvSpan:
-
-			// Check attributes
-			if len(span.Attributes.AttributeMap) == 0 {
-				return nil, fmt.Errorf("expected span %s to have more than 0 attributes attached to it", span.DisplayName.Value)
-			}
-
-			// Check for project id
-			if !strings.Contains(span.Name, FakeProjectID) {
-				return nil, fmt.Errorf("expected span %s to have the project id in its name, but got name: %s", span.DisplayName.Value, span.Name)
-			}
-
-			names = append(names, span.DisplayName.Value)
+			names = append(names, span.Name)
 
 		case <-time.After(1 * time.Second):
 			// No more spans received by the server.

@@ -1,0 +1,42 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package envoy.v12.http.trace_context;
+
+option go_package = "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/trace_context";
+option java_multiple_files = true;
+option java_outer_classname = "TraceContextProto";
+option java_package = "io.envoyproxy.envoy.v12.http.trace_context";
+
+import "validate/validate.proto";
+
+// Supported trace context formats.
+enum TraceContextFormat {
+  TRACE_CONTEXT_FORMAT_UNSPECIFIED = 0;
+  CLOUD_TRACE_CONTEXT = 1;
+  GRPC_TRACE_BIN = 2;
+  TRACE_CONTEXT = 3;
+}
+
+// Configuration for the early_header_mutation extension (Incoming request extractor).
+message TraceContextTranslatorConfig {
+  repeated TraceContextFormat incoming_contexts = 1;
+}
+
+// Configuration for the HTTP Filter (Forwarded request injector).
+message TraceContextForwardedConfig {
+  repeated TraceContextFormat outgoing_contexts = 1;
+}
