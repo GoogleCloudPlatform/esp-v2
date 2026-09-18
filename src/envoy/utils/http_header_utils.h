@@ -31,8 +31,8 @@ absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry);
 // better performance.
 // For details, see
 // https://github.com/envoyproxy/envoy/blob/c5f4302325223765b660f0f366ce25bf8570e7a5/include/envoy/http/header_map.h#L271
-absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
-                                const Envoy::Http::LowerCaseString& header);
+std::string extractHeader(const Envoy::Http::HeaderMap& headers,
+                          const Envoy::Http::LowerCaseString& header);
 
 // Get the HTTP method to be used for the request. This method understands the
 // x-http-method-override header. If present, it will override the method
