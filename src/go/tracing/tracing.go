@@ -142,13 +142,13 @@ func CreateTracing(opts options.TracingOptions) (*hcmpb.HttpConnectionManager_Tr
 
 	return &hcmpb.HttpConnectionManager_Tracing{
 		ClientSampling: &typepb.Percent{
-			Value: 100,
+			Value: 0,
 		},
 		RandomSampling: &typepb.Percent{
 			Value: percentSampleRate,
 		},
 		OverallSampling: &typepb.Percent{
-			Value: 100,
+			Value: percentSampleRate,
 		},
 		Provider: &tracepb.Tracing_Http{
 			Name:       "envoy.tracers.opentelemetry",

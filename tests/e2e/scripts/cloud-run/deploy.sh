@@ -340,7 +340,7 @@ function setup() {
     -i "${APIPROXY_IMAGE}"
 
   # Redeploy ESPv2 to update the service config. Set flags as follows:
-  proxy_args="^++^--tracing_sample_rate=0.0005"
+  proxy_args="^++^--tracing_sample_rate=1.0"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then

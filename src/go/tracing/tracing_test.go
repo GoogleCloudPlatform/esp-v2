@@ -237,13 +237,13 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{
 				ClientSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0,
 				},
 				RandomSampling: &typepb.Percent{
 					Value: 0.1,
 				},
 				OverallSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0.1,
 				},
 				Provider: &tracepb.Tracing_Http{
 					Name: "envoy.tracers.opentelemetry",
@@ -260,13 +260,13 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{
 				ClientSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0,
 				},
 				RandomSampling: &typepb.Percent{
 					Value: 27.5,
 				},
 				OverallSampling: &typepb.Percent{
-					Value: 100,
+					Value: 27.5,
 				},
 				Provider: &tracepb.Tracing_Http{
 					Name: "envoy.tracers.opentelemetry",
@@ -283,7 +283,7 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{
 				ClientSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0,
 				},
 				RandomSampling: &typepb.Percent{
 					Value: 100,
@@ -306,13 +306,13 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{
 				ClientSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0,
 				},
 				RandomSampling: &typepb.Percent{
 					Value: 0,
 				},
 				OverallSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0,
 				},
 				Provider: &tracepb.Tracing_Http{
 					Name: "envoy.tracers.opentelemetry",
@@ -329,13 +329,13 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{
 				ClientSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0,
 				},
 				RandomSampling: &typepb.Percent{
 					Value: 12.3457,
 				},
 				OverallSampling: &typepb.Percent{
-					Value: 100,
+					Value: 12.3457,
 				},
 				Provider: &tracepb.Tracing_Http{
 					Name: "envoy.tracers.opentelemetry",
@@ -368,7 +368,7 @@ func TestHcmTracingSampleRate(t *testing.T) {
 			},
 			wantResult: &hcmpb.HttpConnectionManager_Tracing{
 				ClientSampling: &typepb.Percent{
-					Value: 100,
+					Value: 0,
 				},
 				RandomSampling: &typepb.Percent{
 					Value: 100,
