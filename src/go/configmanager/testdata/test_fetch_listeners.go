@@ -2763,6 +2763,9 @@ var (
                   "@type": "type.googleapis.com/envoy.config.trace.v3.OpenTelemetryConfig",
                   "grpcService": {
                     "googleGrpc": {
+                      "channelCredentials": {
+                        "googleDefault": {}
+                      },
                       "statPrefix": "opentelemetry",
                       "targetUri": "telemetry.googleapis.com"
                     }

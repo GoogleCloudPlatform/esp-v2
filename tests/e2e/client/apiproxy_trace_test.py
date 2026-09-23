@@ -369,6 +369,145 @@ def send_traced_request(
         return e.code, body
 
 
+
+def verify_trace_propagation_via_version_endpoint(
+    host: str,
+    trace_id: str,
+    client_span_id: str,
+    host_header: str = None,
+    timeout: int = 15,
+    verbose: bool = False,
+) -> bool:
+    """Verifies in-band W3C trace context extraction and propagation to backend.
+
+    Sends GET /version to ESPv2 with the client traceparent header. The Bookstore
+    backend's /version endpoint returns its received HTTP request headers as JSON.
+    This function validates:
+    1. HTTP response status is 200.
+    2. Response body is valid JSON containing a 'traceparent' header.
+    3. The propagated trace ID matches expected trace_id.
+    4. The propagated span ID is a valid 16-hex character string and differs
+       from client_span_id (confirming ESPv2 generated its own downstream span).
+
+    Args:
+        host: ESPv2 endpoint URL or hostname.
+        trace_id: 32-hex-char client trace ID.
+        client_span_id: 16-hex-char client span ID.
+        host_header: Optional custom Host header.
+        timeout: Request timeout in seconds.
+        verbose: If True, prints debug output.
+
+    Returns:
+        bool: True if trace context propagation was verified, False otherwise.
+    """
+    traceparent_header = f"00-{trace_id}-{client_span_id}-01"
+    status, body = send_traced_request(
+        host=host,
+        traceparent_header=traceparent_header,
+        path='/version',
+        method='GET',
+        host_header=host_header,
+        timeout=timeout,
+        verbose=verbose,
+    )
+    if status != 200:
+        if verbose:
+            print(
+                f"/version returned HTTP status {status}, expected 200. Body: {body}",
+                file=sys.stderr,
+            )
+        return False
+
+    try:
+        headers_dict = json.loads(body)
+    except (json.JSONDecodeError, ValueError) as e:
+        if verbose:
+            print(
+                f"Failed to parse JSON response from /version: {e}. Body: {body}",
+                file=sys.stderr,
+            )
+        return False
+
+    if not isinstance(headers_dict, dict):
+        if verbose:
+            print(
+                f"/version response is not a JSON object: {headers_dict}",
+                file=sys.stderr,
+            )
+        return False
+
+    # Find traceparent header (case-insensitive)
+    echoed_traceparent = None
+    for k, v in headers_dict.items():
+        if k.lower() == 'traceparent':
+            echoed_traceparent = v
+            break
+
+    if not echoed_traceparent:
+        if verbose:
+            print(
+                f"/version response did not contain 'traceparent' header. Headers: {headers_dict}",
+                file=sys.stderr,
+            )
+        return False
+
+    if isinstance(echoed_traceparent, list):
+        echoed_traceparent = echoed_traceparent[0]
+    echoed_traceparent = str(echoed_traceparent).strip()
+
+    parts = echoed_traceparent.split('-')
+    if len(parts) != 4:
+        if verbose:
+            print(
+                f"Malformed traceparent header format: '{echoed_traceparent}'",
+                file=sys.stderr,
+            )
+        return False
+
+    version, echoed_trace_id, echoed_span_id, _ = parts
+    if version != '00':
+        if verbose:
+            print(
+                f"Unexpected W3C traceparent version: '{version}' (expected '00')",
+                file=sys.stderr,
+            )
+        return False
+
+    if echoed_trace_id.lower() != trace_id.lower():
+        if verbose:
+            print(
+                f"Trace ID mismatch in propagated header: got '{echoed_trace_id}', "
+                f"expected '{trace_id}'",
+                file=sys.stderr,
+            )
+        return False
+
+    if len(echoed_span_id) != 16 or not all(c in '0123456789abcdefABCDEF' for c in echoed_span_id):
+        if verbose:
+            print(
+                f"Invalid downstream span ID in propagated header: '{echoed_span_id}'",
+                file=sys.stderr,
+            )
+        return False
+
+    if echoed_span_id.lower() == client_span_id.lower():
+        if verbose:
+            print(
+                f"Downstream span ID was not mutated by ESPv2: got '{echoed_span_id}', "
+                f"matches client span ID '{client_span_id}'",
+                file=sys.stderr,
+            )
+        return False
+
+    if verbose:
+        print(
+            f"Successfully verified in-band trace propagation via /version: "
+            f"trace_id={trace_id}, client_span_id={client_span_id} -> "
+            f"downstream_span_id={echoed_span_id}"
+        )
+    return True
+
+
 def run_trace_e2e_test(
     host: str,
     project_id: str,
@@ -380,7 +519,7 @@ def run_trace_e2e_test(
     verbose: bool = False,
     path: str = '/shelves',
 ) -> bool:
-    """Executes the full E2E trace assertion workflow."""
+    """Executes the full E2E trace assertion workflow with dual verification."""
     trace_id, client_span_id, traceparent = generate_w3c_traceparent()
     if verbose:
         print(
@@ -389,6 +528,28 @@ def run_trace_e2e_test(
         )
         print(f"traceparent header: {traceparent}")
 
+    # --- Verification 1: In-Band Header Propagation via /version ---
+    if verbose:
+        print("Starting Verification 1: In-band W3C trace context propagation via /version...")
+    header_ok = verify_trace_propagation_via_version_endpoint(
+        host=host,
+        trace_id=trace_id,
+        client_span_id=client_span_id,
+        host_header=host_header,
+        timeout=15,
+        verbose=verbose,
+    )
+    if not header_ok:
+        print(
+            "Verification 1 FAILED: Direct trace context propagation via /version failed.",
+            file=sys.stderr,
+        )
+        return False
+    print("Verification 1 SUCCESS: In-band W3C trace context propagation verified via /version.")
+
+    # --- Verification 2: Out-of-Band Cloud Trace Export ---
+    if verbose:
+        print("Starting Verification 2: Out-of-band Google Cloud Trace export...")
     status, _ = send_traced_request(
         host=host,
         traceparent_header=traceparent,
@@ -399,7 +560,7 @@ def run_trace_e2e_test(
         verbose=verbose,
     )
     if verbose:
-        print(f"ESPv2 response status: {status}")
+        print(f"ESPv2 response status for {path}: {status}")
 
     if delay_sec > 0:
         time.sleep(delay_sec)
@@ -441,9 +602,9 @@ def run_trace_e2e_test(
     )
 
     if valid:
-        print(f"Trace E2E verification SUCCESS for trace {trace_id}.")
+        print(f"Verification 2 SUCCESS: Cloud Trace E2E export verified for trace {trace_id}.")
     else:
-        print(f"Trace E2E verification FAILED for trace {trace_id}.", file=sys.stderr)
+        print(f"Verification 2 FAILED: Cloud Trace span structure invalid for trace {trace_id}.", file=sys.stderr)
     return valid
 
 

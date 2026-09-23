@@ -42,6 +42,7 @@ from apiproxy_trace_test import (
     poll_cloud_trace,
     run_trace_e2e_test,
     send_traced_request,
+    verify_trace_propagation_via_version_endpoint,
     verify_trace_spans,
 )
 
@@ -423,14 +424,109 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
         req = args[0]
         self.assertEqual(req.headers.get('Host'), 'custom.example.com')
 
+    @mock.patch('apiproxy_trace_test.send_traced_request')
+    def test_verify_trace_propagation_via_version_endpoint_success(self, mock_send):
+        """Verifies successful in-band trace context verification via /version."""
+        mock_send.return_value = (
+            200,
+            json.dumps({
+                'host': 'localhost:8082',
+                'traceparent': '00-4bf92f3577b34da6a3ce929d0e0e4736-0020000000000002-01',
+            }),
+        )
+
+        result = verify_trace_propagation_via_version_endpoint(
+            host='http://localhost:8082',
+            trace_id='4bf92f3577b34da6a3ce929d0e0e4736',
+            client_span_id='0010000000000001',
+            host_header='custom.example.com',
+        )
+        self.assertTrue(result)
+        mock_send.assert_called_once_with(
+            host='http://localhost:8082',
+            traceparent_header='00-4bf92f3577b34da6a3ce929d0e0e4736-0010000000000001-01',
+            path='/version',
+            method='GET',
+            host_header='custom.example.com',
+            timeout=15,
+            verbose=False,
+        )
+
+    @mock.patch('apiproxy_trace_test.send_traced_request')
+    def test_verify_trace_propagation_via_version_endpoint_http_error(self, mock_send):
+        """Verifies failure when /version returns a non-200 HTTP status code."""
+        mock_send.return_value = (500, 'Internal Server Error')
+        result = verify_trace_propagation_via_version_endpoint(
+            host='http://localhost:8082',
+            trace_id='4bf92f3577b34da6a3ce929d0e0e4736',
+            client_span_id='0010000000000001',
+        )
+        self.assertFalse(result)
+
+    @mock.patch('apiproxy_trace_test.send_traced_request')
+    def test_verify_trace_propagation_via_version_endpoint_missing_header(self, mock_send):
+        """Verifies failure when /version response contains no traceparent header."""
+        mock_send.return_value = (200, json.dumps({'host': 'localhost:8082'}))
+        result = verify_trace_propagation_via_version_endpoint(
+            host='http://localhost:8082',
+            trace_id='4bf92f3577b34da6a3ce929d0e0e4736',
+            client_span_id='0010000000000001',
+        )
+        self.assertFalse(result)
+
+    @mock.patch('apiproxy_trace_test.send_traced_request')
+    def test_verify_trace_propagation_via_version_endpoint_trace_id_mismatch(self, mock_send):
+        """Verifies failure when echoed trace ID does not match expected trace ID."""
+        mock_send.return_value = (
+            200,
+            json.dumps({
+                'traceparent': '00-ffffffffffffffffffffffffffffffff-0020000000000002-01'
+            }),
+        )
+        result = verify_trace_propagation_via_version_endpoint(
+            host='http://localhost:8082',
+            trace_id='4bf92f3577b34da6a3ce929d0e0e4736',
+            client_span_id='0010000000000001',
+        )
+        self.assertFalse(result)
+
+    @mock.patch('apiproxy_trace_test.send_traced_request')
+    def test_verify_trace_propagation_via_version_endpoint_span_not_mutated(self, mock_send):
+        """Verifies failure when echoed span ID is identical to the client span ID."""
+        mock_send.return_value = (
+            200,
+            json.dumps({
+                'traceparent': '00-4bf92f3577b34da6a3ce929d0e0e4736-0010000000000001-01'
+            }),
+        )
+        result = verify_trace_propagation_via_version_endpoint(
+            host='http://localhost:8082',
+            trace_id='4bf92f3577b34da6a3ce929d0e0e4736',
+            client_span_id='0010000000000001',
+        )
+        self.assertFalse(result)
+
+    @mock.patch('apiproxy_trace_test.send_traced_request')
+    def test_verify_trace_propagation_via_version_endpoint_invalid_json(self, mock_send):
+        """Verifies failure when /version response body cannot be parsed as JSON."""
+        mock_send.return_value = (200, 'Not JSON')
+        result = verify_trace_propagation_via_version_endpoint(
+            host='http://localhost:8082',
+            trace_id='4bf92f3577b34da6a3ce929d0e0e4736',
+            client_span_id='0010000000000001',
+        )
+        self.assertFalse(result)
+
     @mock.patch('apiproxy_trace_test.verify_trace_spans')
     @mock.patch('apiproxy_trace_test.poll_cloud_trace')
     @mock.patch('apiproxy_trace_test.get_gcp_access_token')
     @mock.patch('apiproxy_trace_test.send_traced_request')
+    @mock.patch('apiproxy_trace_test.verify_trace_propagation_via_version_endpoint')
     def test_run_trace_e2e_test_success(
-        self, mock_send, mock_token, mock_poll, mock_verify
+        self, mock_version, mock_send, mock_token, mock_poll, mock_verify
     ):
-        """Verifies end-to-end trace assertion execution flow."""
+        """Verifies end-to-end trace assertion execution flow with dual verification."""
+        mock_version.return_value = True
         mock_send.return_value = (200, '{"shelves": []}')
         mock_token.return_value = 'mock-bearer-token'
         mock_poll.return_value = {'spans': [{'spanId': '0020000000000001'}]}
@@ -446,6 +542,7 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
         )
 
         self.assertTrue(success)
+        mock_version.assert_called_once()
         mock_send.assert_called_once_with(
             host='http://localhost:8082',
             traceparent_header=mock.ANY,
@@ -458,6 +555,25 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
         mock_token.assert_called_once()
         mock_poll.assert_called_once()
         mock_verify.assert_called_once()
+
+    @mock.patch('apiproxy_trace_test.poll_cloud_trace')
+    @mock.patch('apiproxy_trace_test.verify_trace_propagation_via_version_endpoint')
+    def test_run_trace_e2e_test_version_propagation_failure(
+        self, mock_version, mock_poll
+    ):
+        """Verifies that in-band /version verification failure blocks execution before Cloud Trace."""
+        mock_version.return_value = False
+
+        success = run_trace_e2e_test(
+            host='http://localhost:8082',
+            project_id='test-project',
+            timeout_sec=10,
+            delay_sec=0,
+        )
+
+        self.assertFalse(success)
+        mock_version.assert_called_once()
+        mock_poll.assert_not_called()
 
     def test_make_argparser(self):
         """Verifies CLI argument parser options and defaults."""

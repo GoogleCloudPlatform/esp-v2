@@ -29,6 +29,7 @@ import (
 
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -99,6 +100,11 @@ func TestOpenTelemetryConfig(t *testing.T) {
 						GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
 							TargetUri:  "telemetry.googleapis.com",
 							StatPrefix: "opentelemetry",
+							ChannelCredentials: &corev3.GrpcService_GoogleGrpc_ChannelCredentials{
+								CredentialSpecifier: &corev3.GrpcService_GoogleGrpc_ChannelCredentials_GoogleDefault{
+									GoogleDefault: &emptypb.Empty{},
+								},
+							},
 						},
 					},
 				},

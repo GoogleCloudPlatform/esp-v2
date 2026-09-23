@@ -27,6 +27,7 @@ import (
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/glog"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // normalizeOtlpEndpoint trims leading/trailing whitespace and strips "http://" or
@@ -101,14 +102,23 @@ func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTeleme
 		targetURI = opts.StackdriverAddress
 	}
 
+	googleGrpc := &corev3.GrpcService_GoogleGrpc{
+		TargetUri:  targetURI,
+		StatPrefix: "opentelemetry",
+	}
+	if targetURI == "telemetry.googleapis.com" || strings.HasPrefix(targetURI, "telemetry.googleapis.com:") {
+		googleGrpc.ChannelCredentials = &corev3.GrpcService_GoogleGrpc_ChannelCredentials{
+			CredentialSpecifier: &corev3.GrpcService_GoogleGrpc_ChannelCredentials_GoogleDefault{
+				GoogleDefault: &emptypb.Empty{},
+			},
+		}
+	}
+
 	cfg := &tracepb.OpenTelemetryConfig{
 		ServiceName: "espv2", // Provide a default service name.
 		GrpcService: &corev3.GrpcService{
 			TargetSpecifier: &corev3.GrpcService_GoogleGrpc_{
-				GoogleGrpc: &corev3.GrpcService_GoogleGrpc{
-					TargetUri:  targetURI,
-					StatPrefix: "opentelemetry",
-				},
+				GoogleGrpc: googleGrpc,
 			},
 		},
 	}
