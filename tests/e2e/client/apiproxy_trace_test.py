@@ -26,6 +26,7 @@ import argparse
 import http.client
 import json
 import os
+import re
 import ssl
 import subprocess
 import sys
@@ -134,7 +135,7 @@ def poll_cloud_trace(
         TimeoutError: If no trace with spans is found before timeout_sec.
     """
     url = f"https://cloudtrace.googleapis.com/v1/projects/{project_id}/traces/{trace_id}"
-    curl_cmd = f'curl -H "Authorization: Bearer {access_token}" {url}'
+    curl_cmd = f'curl -H "Authorization: Bearer <TOKEN>" {url}'
     headers = {
         'Authorization': f"Bearer {access_token}",
         'Accept': 'application/json',
@@ -468,8 +469,13 @@ def send_traced_request(
         headers['Authorization'] = f"Bearer {auth_token}"
 
     if verbose:
-        print(f"Sending HTTP {method} to {url}")
-        print(f"Headers: {headers}")
+        sanitized_url = re.sub(r'([?&]key=)[^&]+', r'\1[REDACTED]', url)
+        sanitized_headers = {
+            k: ('Bearer [REDACTED]' if k.lower() in ('authorization', 'proxy-authorization') else v)
+            for k, v in headers.items()
+        }
+        print(f"Sending HTTP {method} to {sanitized_url}")
+        print(f"Headers: {sanitized_headers}")
 
     req = urllib.request.Request(url, headers=headers, method=method)
     ssl_ctx = None
