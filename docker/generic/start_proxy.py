@@ -16,6 +16,7 @@
 # limitations under the License.
 
 import argparse
+import json
 import logging
 import os
 import re
@@ -86,33 +87,73 @@ def fetch_project_id_from_metadata():
     return None
 
 
+def fetch_project_id_from_service_account_key(key_path):
+    """Extracts project_id from a Google service account JSON key file.
+
+    Handles missing file, permission errors, and invalid JSON gracefully.
+    Returns None if project_id cannot be determined.
+    """
+    if not key_path:
+        return None
+    try:
+        if not os.path.isfile(key_path):
+            return None
+        with open(key_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                project_id = data.get("project_id")
+                if project_id and isinstance(project_id, str):
+                    return project_id.strip()
+    except Exception as e:
+        logging.debug(f"Failed to extract project ID from service account key '{key_path}': {e}")
+    return None
+
+
 def setup_otel_resource_attributes(args):
     """Auto-injects gcp.project_id into OTEL_RESOURCE_ATTRIBUTES if tracing is enabled
 
-    and not already configured, resolving project ID from --tracing_project_id flag or GCP metadata server.
+    and not already configured, resolving project ID using 4-tier precedence:
+    1. OTEL_RESOURCE_ATTRIBUTES already set with gcp.project_id or gcp.project.id
+    2. --tracing_project_id flag
+    3. --service_account_key / GOOGLE_APPLICATION_CREDENTIALS JSON file
+    4. GCP metadata server (if not non-GCP)
     """
     if getattr(args, "disable_tracing", False):
         return
 
+    # Tier 1: Check if OTEL_RESOURCE_ATTRIBUTES already has project ID
+    existing = os.environ.get("OTEL_RESOURCE_ATTRIBUTES", "").strip()
+    if existing:
+        attrs = [attr.strip() for attr in existing.split(",") if attr.strip()]
+        has_project_id = any(
+            attr.startswith("gcp.project_id=") or attr.startswith("gcp.project.id=")
+            for attr in attrs
+        )
+        if has_project_id:
+            return
+
+    # Tier 2: --tracing_project_id CLI flag
     project_id = getattr(args, "tracing_project_id", None)
+
+    # Tier 3: Service account JSON key file
+    if not project_id:
+        key_path = getattr(args, "service_account_key", None) or os.environ.get(GOOGLE_CREDS_KEY)
+        project_id = fetch_project_id_from_service_account_key(key_path)
+
+    # Tier 4: GCP metadata server (only if not non-GCP)
     if not project_id and not getattr(args, "non_gcp", False):
         project_id = fetch_project_id_from_metadata()
 
     if not project_id:
         return
 
-    existing = os.environ.get("OTEL_RESOURCE_ATTRIBUTES", "").strip()
+    if not getattr(args, "tracing_project_id", None):
+        args.tracing_project_id = project_id
+
     if not existing:
         os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gcp.project_id={project_id}"
     else:
-        # Check if gcp.project_id or gcp.project.id is already configured
-        attrs = [attr.strip() for attr in existing.split(",") if attr.strip()]
-        has_project_id = any(
-            attr.startswith("gcp.project_id=") or attr.startswith("gcp.project.id=")
-            for attr in attrs
-        )
-        if not has_project_id:
-            os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"{existing},gcp.project_id={project_id}"
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"{existing},gcp.project_id={project_id}"
 
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
@@ -1167,7 +1208,23 @@ def enforce_conflict_args(args):
             return "If --non_gcp is specified, --service_account_key or --enable_application_default_credentials has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."
         if args.service_account_key and args.enable_application_default_credentials:
             return "Only one of --service_account_key or --enable_application_default_credentials can be supplied for credentials at once."
-        if not args.tracing_project_id:
+        has_otel_project_id = False
+        otel_attrs = os.environ.get("OTEL_RESOURCE_ATTRIBUTES", "").strip()
+        if otel_attrs:
+            attrs = [attr.strip() for attr in otel_attrs.split(",") if attr.strip()]
+            has_otel_project_id = any(
+                attr.startswith("gcp.project_id=") or attr.startswith("gcp.project.id=")
+                for attr in attrs
+            )
+
+        if not args.tracing_project_id and not has_otel_project_id:
+            key_path = args.service_account_key or os.environ.get(GOOGLE_CREDS_KEY)
+            sa_project_id = fetch_project_id_from_service_account_key(key_path)
+            if sa_project_id:
+                args.tracing_project_id = sa_project_id
+                setup_otel_resource_attributes(args)
+
+        if not args.tracing_project_id and not has_otel_project_id:
             # for non gcp case, disable tracing if tracing project id is not provided.
             args.disable_tracing = True
 

@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
+import json
+import os
 import sys
+import tempfile
 import unittest
 from unittest import mock
-import os, inspect
 
 currentdir = os.path.dirname(
     os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -27,6 +30,7 @@ from start_proxy import (
     gen_envoy_args,
     GOOGLE_CREDS_KEY,
     fetch_project_id_from_metadata,
+    fetch_project_id_from_service_account_key,
     setup_otel_resource_attributes,
 )
 
@@ -1268,92 +1272,203 @@ class TestStartProxy(unittest.TestCase):
             project_id = fetch_project_id_from_metadata()
             self.assertIsNone(project_id)
 
+    def test_fetch_project_id_from_service_account_key_valid(self):
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            json.dump({"project_id": "test-sa-proj-123", "client_email": "sa@example.com"}, f)
+            path = f.name
+        try:
+            self.assertEqual(fetch_project_id_from_service_account_key(path), "test-sa-proj-123")
+        finally:
+            os.remove(path)
+
+    def test_fetch_project_id_from_service_account_key_missing_file(self):
+        self.assertIsNone(fetch_project_id_from_service_account_key("/nonexistent/path/sa.json"))
+
+    def test_fetch_project_id_from_service_account_key_corrupted_json(self):
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            f.write("not valid json {[[")
+            path = f.name
+        try:
+            self.assertIsNone(fetch_project_id_from_service_account_key(path))
+        finally:
+            os.remove(path)
+
+    def test_fetch_project_id_from_service_account_key_missing_project_id(self):
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            json.dump({"client_email": "sa@example.com"}, f)
+            path = f.name
+        try:
+            self.assertIsNone(fetch_project_id_from_service_account_key(path))
+        finally:
+            os.remove(path)
+
+    def test_fetch_project_id_from_service_account_key_none_or_empty(self):
+        self.assertIsNone(fetch_project_id_from_service_account_key(None))
+        self.assertIsNone(fetch_project_id_from_service_account_key(""))
+
     def test_setup_otel_resource_attributes(self):
-        testcases = [
-            (
-                "Injects project ID from --tracing_project_id when env is empty",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
-                 "--tracing_project_id=flag-project-123"],
-                None,  # initial env
-                None,  # metadata return
-                "gcp.project_id=flag-project-123",  # expected env
-            ),
-            (
-                "Appends project ID to existing OTEL_RESOURCE_ATTRIBUTES",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
-                 "--tracing_project_id=flag-project-123"],
-                "service.name=my-svc,service.version=1.0",
-                None,
-                "service.name=my-svc,service.version=1.0,gcp.project_id=flag-project-123",
-            ),
-            (
-                "Does not duplicate if gcp.project_id already present in env",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
-                 "--tracing_project_id=flag-project-123"],
-                "gcp.project_id=existing-project",
-                None,
-                "gcp.project_id=existing-project",
-            ),
-            (
-                "Does not duplicate if legacy gcp.project.id already present in env",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
-                 "--tracing_project_id=flag-project-123"],
-                "gcp.project.id=existing-project,env=prod",
-                None,
-                "gcp.project.id=existing-project,env=prod",
-            ),
-            (
-                "Auto-detects from metadata server when flag is omitted on GCP",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080"],
-                None,
-                "metadata-project-456",
-                "gcp.project_id=metadata-project-456",
-            ),
-            (
-                "Skips metadata fetch when --non_gcp is set",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080", "--non_gcp"],
-                None,
-                "metadata-project-456",
-                None,  # should remain unset
-            ),
-            (
-                "Skips when --disable_tracing is set",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
-                 "--disable_tracing", "--tracing_project_id=flag-project-123"],
-                None,
-                "metadata-project-456",
-                None,
-            ),
-            (
-                "Leaves env unset when metadata fetch fails and no flag provided",
-                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080"],
-                None,
-                None,  # metadata returns None
-                None,
-            ),
-        ]
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            json.dump({"project_id": "sa-project-789"}, f)
+            sa_key_path = f.name
 
-        for desc, flags, initEnv, metadataReturn, expectedEnv in testcases:
-            with self.subTest(desc):
-                orig_env = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
-                try:
-                    if initEnv is not None:
-                        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = initEnv
-                    elif "OTEL_RESOURCE_ATTRIBUTES" in os.environ:
-                        del os.environ["OTEL_RESOURCE_ATTRIBUTES"]
+        try:
+            testcases = [
+                (
+                    "Injects project ID from --tracing_project_id when env is empty",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--tracing_project_id=flag-project-123"],
+                    None,  # initial env
+                    None,  # metadata return
+                    "gcp.project_id=flag-project-123",  # expected env
+                ),
+                (
+                    "Appends project ID to existing OTEL_RESOURCE_ATTRIBUTES",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--tracing_project_id=flag-project-123"],
+                    "service.name=my-svc,service.version=1.0",
+                    None,
+                    "service.name=my-svc,service.version=1.0,gcp.project_id=flag-project-123",
+                ),
+                (
+                    "Does not duplicate if gcp.project_id already present in env",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--tracing_project_id=flag-project-123"],
+                    "gcp.project_id=existing-project",
+                    None,
+                    "gcp.project_id=existing-project",
+                ),
+                (
+                    "Does not duplicate if legacy gcp.project.id already present in env",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--tracing_project_id=flag-project-123"],
+                    "gcp.project.id=existing-project,env=prod",
+                    None,
+                    "gcp.project.id=existing-project,env=prod",
+                ),
+                (
+                    "Auto-detects from metadata server when flag is omitted on GCP",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080"],
+                    None,
+                    "metadata-project-456",
+                    "gcp.project_id=metadata-project-456",
+                ),
+                (
+                    "Skips metadata fetch when --non_gcp is set",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080", "--non_gcp"],
+                    None,
+                    "metadata-project-456",
+                    None,  # should remain unset
+                ),
+                (
+                    "Skips when --disable_tracing is set",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--disable_tracing", "--tracing_project_id=flag-project-123"],
+                    None,
+                    "metadata-project-456",
+                    None,
+                ),
+                (
+                    "Leaves env unset when metadata fetch fails and no flag provided",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080"],
+                    None,
+                    None,  # metadata returns None
+                    None,
+                ),
+                (
+                    "Resolves project ID from --service_account_key when flag is omitted",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     f"--service_account_key={sa_key_path}"],
+                    None,
+                    None,
+                    "gcp.project_id=sa-project-789",
+                ),
+                (
+                    "--tracing_project_id flag takes precedence over --service_account_key",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--tracing_project_id=flag-project-123",
+                     f"--service_account_key={sa_key_path}"],
+                    None,
+                    None,
+                    "gcp.project_id=flag-project-123",
+                ),
+                (
+                    "OTEL_RESOURCE_ATTRIBUTES takes precedence over --service_account_key",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     f"--service_account_key={sa_key_path}"],
+                    "gcp.project_id=existing-env-project",
+                    None,
+                    "gcp.project_id=existing-env-project",
+                ),
+                (
+                    "Falls back to metadata server when --service_account_key is invalid on GCP",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--service_account_key=/invalid/path/key.json"],
+                    None,
+                    "metadata-project-456",
+                    "gcp.project_id=metadata-project-456",
+                ),
+                (
+                    "Resolves project ID from --service_account_key even on --non_gcp",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--non_gcp", f"--service_account_key={sa_key_path}"],
+                    None,
+                    None,
+                    "gcp.project_id=sa-project-789",
+                ),
+                (
+                    "Leaves env unset when --service_account_key is invalid on --non_gcp",
+                    ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                     "--non_gcp", "--service_account_key=/invalid/path/key.json"],
+                    None,
+                    "metadata-should-not-be-called",
+                    None,
+                ),
+            ]
 
-                    args = self.parser.parse_args(flags)
-                    with mock.patch("start_proxy.fetch_project_id_from_metadata", return_value=metadataReturn):
-                        setup_otel_resource_attributes(args)
+            for desc, flags, initEnv, metadataReturn, expectedEnv in testcases:
+                with self.subTest(desc):
+                    orig_env = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
+                    try:
+                        if initEnv is not None:
+                            os.environ["OTEL_RESOURCE_ATTRIBUTES"] = initEnv
+                        elif "OTEL_RESOURCE_ATTRIBUTES" in os.environ:
+                            del os.environ["OTEL_RESOURCE_ATTRIBUTES"]
 
-                    actualEnv = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
-                    self.assertEqual(actualEnv, expectedEnv,
-                                     f"{desc}: expected {expectedEnv}, got {actualEnv}")
-                finally:
-                    if orig_env is not None:
-                        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = orig_env
-                    elif "OTEL_RESOURCE_ATTRIBUTES" in os.environ:
-                        del os.environ["OTEL_RESOURCE_ATTRIBUTES"]
+                        args = self.parser.parse_args(flags)
+                        with mock.patch("start_proxy.fetch_project_id_from_metadata", return_value=metadataReturn):
+                            setup_otel_resource_attributes(args)
+
+                        actualEnv = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
+                        self.assertEqual(actualEnv, expectedEnv,
+                                         f"{desc}: expected {expectedEnv}, got {actualEnv}")
+                    finally:
+                        if orig_env is not None:
+                            os.environ["OTEL_RESOURCE_ATTRIBUTES"] = orig_env
+                        elif "OTEL_RESOURCE_ATTRIBUTES" in os.environ:
+                            del os.environ["OTEL_RESOURCE_ATTRIBUTES"]
+        finally:
+            os.remove(sa_key_path)
+
+    def test_gen_proxy_config_non_gcp_with_service_account_key_keeps_tracing(self):
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            json.dump({"project_id": "sa-test-proj-789"}, f)
+            sa_path = f.name
+        try:
+            flags = [
+                "--service=test_bookstore.gloud.run",
+                "--backend=http://127.0.0.1",
+                "--version=2019-11-09r0",
+                "--non_gcp",
+                f"--service_account_key={sa_path}",
+            ]
+            args = self.parser.parse_args(flags)
+            gotArgs = gen_proxy_config(args)
+            self.assertNotIn("--disable_tracing", gotArgs)
+            self.assertIn("--tracing_project_id", gotArgs)
+            idx = gotArgs.index("--tracing_project_id")
+            self.assertEqual(gotArgs[idx + 1], "sa-test-proj-789")
+        finally:
+            os.remove(sa_path)
 
 
 if __name__ == '__main__':

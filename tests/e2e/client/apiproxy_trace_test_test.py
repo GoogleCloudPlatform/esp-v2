@@ -39,6 +39,7 @@ from apiproxy_trace_test import (
     generate_w3c_traceparent,
     get_gcp_access_token,
     make_argparser,
+    normalize_span_id,
     poll_cloud_trace,
     run_trace_e2e_test,
     send_traced_request,
@@ -138,10 +139,10 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
     @mock.patch('time.sleep')
     @mock.patch('urllib.request.urlopen')
     def test_poll_cloud_trace_success_retry(self, mock_urlopen, mock_sleep):
-        """Verifies retry on 404s and empty span lists until success."""
+        """Verifies retry on 404s and empty span lists until success against Cloud Trace v1 URL."""
         # Call 1: 404 Not Found
         err_404 = urllib.error.HTTPError(
-            url='https://cloudtrace.googleapis.com/...',
+            url='https://cloudtrace.googleapis.com/v1/projects/test-project/traces/4bf92f3577b34da6a3ce929d0e0e4736',
             code=404,
             msg='Not Found',
             hdrs={},
@@ -176,13 +177,20 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
         self.assertEqual(mock_urlopen.call_count, 3)
         self.assertEqual(mock_sleep.call_count, 2)
 
+        # Verify that the URL queried uses Cloud Trace REST API v1
+        first_req = mock_urlopen.call_args_list[0][0][0]
+        self.assertEqual(
+            first_req.full_url,
+            'https://cloudtrace.googleapis.com/v1/projects/test-project/traces/4bf92f3577b34da6a3ce929d0e0e4736',
+        )
+
     @mock.patch('time.sleep')
     @mock.patch('time.time')
     @mock.patch('urllib.request.urlopen')
     def test_poll_cloud_trace_timeout(self, mock_urlopen, mock_time, mock_sleep):
         """Verifies timeout handling when trace is never ingested."""
         err_404 = urllib.error.HTTPError(
-            url='https://cloudtrace.googleapis.com/...',
+            url='https://cloudtrace.googleapis.com/v1/projects/test-project/traces/4bf92f3577b34da6a3ce929d0e0e4736',
             code=404,
             msg='Not Found',
             hdrs={},
@@ -201,6 +209,113 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
                 timeout_sec=20,
                 poll_interval_sec=5,
             )
+
+    def test_normalize_span_id(self):
+        """Verifies normalization of decimal strings, hex strings, 0x hex, and ints."""
+        # 1. Decimal strings (from Cloud Trace v1 proto3 JSON serialization of uint64)
+        self.assertEqual(
+            normalize_span_id("10577596205993833633"), "92cb2bb4f3c834a1"
+        )
+        self.assertEqual(
+            normalize_span_id("10580979624564887553"), "92d730e879d61001"
+        )
+        self.assertEqual(
+            normalize_span_id("4503599627370497"), "0010000000000001"
+        )
+
+        # 2. Hex strings (W3C headers & Cloud Trace v2)
+        self.assertEqual(
+            normalize_span_id("92cb2bb4f3c834a1"), "92cb2bb4f3c834a1"
+        )
+        self.assertEqual(
+            normalize_span_id("0010000000000001"), "0010000000000001"
+        )
+
+        # 3. Hex with 0x prefix
+        self.assertEqual(
+            normalize_span_id("0x92cb2bb4f3c834a1"), "92cb2bb4f3c834a1"
+        )
+        self.assertEqual(
+            normalize_span_id("0x1a"), "000000000000001a"
+        )
+
+        # 4. Integer input
+        self.assertEqual(
+            normalize_span_id(4503599627370497), "0010000000000001"
+        )
+
+        # 5. Empty / None
+        self.assertEqual(normalize_span_id(None), "")
+        self.assertEqual(normalize_span_id(""), "")
+
+    def test_verify_trace_spans_v1_decimal_ids(self):
+        """Mocks realistic Cloud Trace v1 JSON with decimal span IDs and verifies successful validation."""
+        trace_id = "4bf92f3577b34da6a3ce929d0e0e4736"
+        client_span_id = "0010000000000001"  # hex: 0x0010000000000001 = 4503599627370497 in decimal
+        espv2_span_decimal = "4503599627370498"  # hex: 0x0010000000000002
+        backend_span_decimal = "4503599627370499"  # hex: 0x0010000000000003
+
+        trace_json_v1 = {
+            "projectId": "test-project",
+            "traceId": trace_id,
+            "spans": [
+                {
+                    "spanId": espv2_span_decimal,
+                    "parentSpanId": "4503599627370497",  # decimal representation of client_span_id
+                    "name": "ingress router-backend",
+                    "labels": {
+                        "/http/status_code": "200",
+                        "http.method": "GET",
+                    },
+                },
+                {
+                    "spanId": backend_span_decimal,
+                    "parentSpanId": espv2_span_decimal,
+                    "name": "Bookstore.ListShelves",
+                    "labels": {
+                        "http.status_code": "200",
+                    },
+                },
+            ],
+        }
+
+        self.assertTrue(
+            verify_trace_spans(trace_json_v1, trace_id, client_span_id)
+        )
+
+    def test_verify_trace_spans_v1_labels_and_trace_id_field(self):
+        """Verifies matching traceId / trace_id field and v1 labels structure."""
+        trace_id = "4bf92f3577b34da6a3ce929d0e0e4736"
+        client_span_id = "92cb2bb4f3c834a1"
+        client_decimal = str(int(client_span_id, 16))
+        espv2_decimal = "111111111111111111"
+        backend_decimal = "222222222222222222"
+
+        trace_json_v1 = {
+            "trace_id": trace_id,
+            "spans": [
+                {
+                    "span_id": espv2_decimal,
+                    "parent_span_id": client_decimal,
+                    "name": "ESPv2 Span",
+                    "labels": {
+                        "status_code": "200",
+                    },
+                },
+                {
+                    "span_id": backend_decimal,
+                    "parent_span_id": espv2_decimal,
+                    "name": "Backend Span",
+                    "labels": {
+                        "/http/status": "200",
+                    },
+                },
+            ],
+        }
+
+        self.assertTrue(
+            verify_trace_spans(trace_json_v1, trace_id, client_span_id)
+        )
 
     def test_verify_trace_spans_success(self):
         """Mocks realistic Cloud Trace v2 JSON (ESPv2 span + Bookstore child span)

@@ -17,7 +17,7 @@
 """Automated Cloud Trace E2E assertion script for ESPv2.
 
 Verifies end-to-end W3C trace context propagation (traceparent header)
-through ESPv2 to the backend and into Google Cloud Trace v2.
+through ESPv2 to the backend and into Google Cloud Trace v1.
 
 Uses Python 3 standard library only without external pip dependencies.
 """
@@ -112,7 +112,7 @@ def poll_cloud_trace(
     poll_interval_sec: int = 5,
     verbose: bool = False,
 ) -> dict:
-    """Polls Google Cloud Trace v2 REST API for the trace object.
+    """Polls Google Cloud Trace v1 REST API for the trace object.
 
     Handles 404s and empty span lists gracefully with sleep/retry until
     timeout or trace found.
@@ -126,12 +126,13 @@ def poll_cloud_trace(
         verbose: If True, prints polling debug info.
 
     Returns:
-        dict: The Cloud Trace v2 Trace JSON object containing spans.
+        dict: The Cloud Trace Trace JSON object containing spans.
 
     Raises:
         TimeoutError: If no trace with spans is found before timeout_sec.
     """
-    url = f"https://cloudtrace.googleapis.com/v2/projects/{project_id}/traces/{trace_id}"
+    url = f"https://cloudtrace.googleapis.com/v1/projects/{project_id}/traces/{trace_id}"
+    curl_cmd = f'curl -H "Authorization: Bearer {access_token}" {url}'
     headers = {
         'Authorization': f"Bearer {access_token}",
         'Accept': 'application/json',
@@ -149,30 +150,88 @@ def poll_cloud_trace(
                         print(f"Found trace {trace_id} with {len(spans)} spans.")
                     return data
                 if verbose:
-                    print(f"Trace {trace_id} returned empty spans, retrying...")
+                    print(
+                        f"Trace {trace_id} returned empty spans at {url}.\n"
+                        f"Replication command: {curl_cmd}\n"
+                        f"Retrying..."
+                    )
         except urllib.error.HTTPError as e:
+            err_body = e.read().decode('utf-8') if e.fp else ''
             if e.code == 404:
                 if verbose:
-                    print(f"Trace {trace_id} not found (404), retrying...")
+                    print(
+                        f"Trace {trace_id} not found (404) at {url}.\n"
+                        f"Response body: {err_body}\n"
+                        f"Replication command: {curl_cmd}\n"
+                        f"Retrying..."
+                    )
             else:
+                print(
+                    f"HTTP error {e.code} fetching trace {trace_id} from {url}.\n"
+                    f"Response body: {err_body}\n"
+                    f"Replication command: {curl_cmd}",
+                    file=sys.stderr,
+                )
                 raise
         except (urllib.error.URLError, OSError) as e:
             if verbose:
-                print(f"Transient error fetching trace {trace_id}: {e}, retrying...")
+                print(
+                    f"Transient error fetching trace {trace_id} from {url}: {e}.\n"
+                    f"Replication command: {curl_cmd}\n"
+                    f"Retrying..."
+                )
 
         elapsed = time.time() - start_time
         if elapsed >= timeout_sec:
             raise TimeoutError(
                 f"Timed out after {timeout_sec}s polling Cloud Trace for trace ID "
-                f"'{trace_id}' in project '{project_id}'."
+                f"'{trace_id}' in project '{project_id}' at {url}.\n"
+                f"Replication command: {curl_cmd}"
             )
 
         sleep_duration = min(poll_interval_sec, max(0.1, timeout_sec - elapsed))
         time.sleep(sleep_duration)
 
 
+def normalize_span_id(val) -> str:
+    """Normalizes a span ID to a 16-character lowercase hex string.
+
+    Handles:
+    - Decimal integer strings from Cloud Trace v1 (e.g. "10580979624564887553").
+    - Hex strings from Cloud Trace v2 or W3C headers (e.g. "0010000000000001", "0xabc").
+    - int values.
+    """
+    if val is None:
+        return ""
+    if isinstance(val, int):
+        return f"{val:016x}"
+    s = str(val).strip().lower()
+    if not s:
+        return ""
+    if s.startswith("0x"):
+        s = s[2:]
+        return s.zfill(16)
+
+    # If it contains any non-digit hex characters (a-f), it is already hex.
+    if any(c in 'abcdef' for c in s):
+        return s.zfill(16)
+
+    # If it has leading zeros (and length > 1), it is a zero-padded hex string.
+    # Proto3 JSON decimal integers never have leading zeros.
+    if s.startswith("0") and len(s) > 1:
+        return s.zfill(16)
+
+    # Purely decimal digits without leading zeros:
+    # If it can be parsed as a base-10 integer, convert to 16 lowercase hex characters.
+    try:
+        int_val = int(s, 10)
+        return f"{int_val:016x}"
+    except (ValueError, TypeError):
+        return s.zfill(16)
+
+
 def _extract_attribute_value(val):
-    """Extracts scalar attribute value from Cloud Trace v2 AttributeValue structure."""
+    """Extracts scalar attribute value from Cloud Trace AttributeValue structure."""
     if isinstance(val, dict):
         if 'intValue' in val:
             return val['intValue']
@@ -187,11 +246,19 @@ def _extract_attribute_value(val):
 
 
 def _has_http_status_attribute(span: dict, expected_status=200) -> bool:
-    """Checks if span contains HTTP status code matching expected_status."""
-    attrs = span.get('attributes', {})
-    attr_map = attrs.get('attributeMap', attrs) if isinstance(attrs, dict) else {}
-    if not isinstance(attr_map, dict):
-        return False
+    """Checks if span contains HTTP status code matching expected_status.
+
+    Supports both Cloud Trace v1 (labels) and Cloud Trace v2 (attributes).
+    """
+    attr_map = {}
+    if isinstance(span.get('labels'), dict):
+        attr_map.update(span['labels'])
+    if isinstance(span.get('attributes'), dict):
+        attrs = span['attributes']
+        if isinstance(attrs.get('attributeMap'), dict):
+            attr_map.update(attrs['attributeMap'])
+        else:
+            attr_map.update(attrs)
 
     status_keys = {
         '/http/status_code',
@@ -201,6 +268,7 @@ def _has_http_status_attribute(span: dict, expected_status=200) -> bool:
         '/http/status',
         'http.status',
         'g.co/http/status_code',
+        'trace.cloud.google.com/http/status_code',
     }
 
     for k, v in attr_map.items():
@@ -225,16 +293,16 @@ def verify_trace_spans(
     expected_status=200,
     verbose: bool = False,
 ) -> bool:
-    """Validates Cloud Trace v2 JSON structure.
+    """Validates Cloud Trace JSON structure (supporting both v1 and v2 formats).
 
     Checks:
-    - Trace name ends with expected_trace_id.
-    - ESPv2 ingress span exists with parentSpanId == expected_client_span_id.
-    - Bookstore backend child span exists with parentSpanId == espv2_span_id.
+    - Trace ID matches expected_trace_id (via traceId, trace_id, or name suffix).
+    - ESPv2 ingress span exists with parentSpanId == expected_client_span_id (normalized).
+    - Bookstore backend child span exists with parentSpanId == espv2_span_id (normalized).
     - HTTP status code attribute (e.g. 200) is present on spans.
 
     Args:
-        trace_json: Parsed JSON from Cloud Trace v2 REST API.
+        trace_json: Parsed JSON from Cloud Trace REST API.
         expected_trace_id: 32-hex-char trace ID.
         expected_client_span_id: 16-hex-char client span ID.
         expected_status: Expected HTTP status code on spans (default 200).
@@ -248,13 +316,28 @@ def verify_trace_spans(
             print("Trace JSON is not a dictionary.")
         return False
 
-    trace_name = str(trace_json.get('name', ''))
-    if not trace_name.lower().endswith(expected_trace_id.lower()):
+    # Check trace ID: match traceId, trace_id, or name ending with expected_trace_id
+    trace_id_val = str(trace_json.get('traceId') or trace_json.get('trace_id') or '').strip().lower()
+    trace_name = str(trace_json.get('name', '')).strip().lower()
+    expected_lower = expected_trace_id.strip().lower()
+
+    if trace_id_val:
+        if trace_id_val != expected_lower:
+            if verbose:
+                print(
+                    f"Trace ID mismatch: got '{trace_id_val}', expected '{expected_lower}'."
+                )
+            return False
+    elif trace_name:
+        if not trace_name.endswith(expected_lower):
+            if verbose:
+                print(
+                    f"Trace name mismatch: got '{trace_name}', expected to end with '{expected_lower}'."
+                )
+            return False
+    else:
         if verbose:
-            print(
-                f"Trace name mismatch: got '{trace_name}', expected to end with "
-                f"'{expected_trace_id}'."
-            )
+            print("Trace JSON missing both traceId and name.")
         return False
 
     spans = trace_json.get('spans', [])
@@ -264,16 +347,20 @@ def verify_trace_spans(
         return False
 
     def get_span_id(s):
-        return str(s.get('spanId') or s.get('span_id') or '')
+        raw = s.get('spanId') or s.get('span_id') or ''
+        return normalize_span_id(raw)
 
     def get_parent_span_id(s):
-        return str(s.get('parentSpanId') or s.get('parent_span_id') or '')
+        raw = s.get('parentSpanId') or s.get('parent_span_id') or ''
+        return normalize_span_id(raw)
+
+    norm_client_span_id = normalize_span_id(expected_client_span_id)
 
     # 1. Find ESPv2 ingress span where parentSpanId == expected_client_span_id
     matched_pair = None
     for espv2_span in spans:
         parent_id = get_parent_span_id(espv2_span)
-        if parent_id.lower() == expected_client_span_id.lower():
+        if parent_id == norm_client_span_id:
             espv2_span_id = get_span_id(espv2_span)
             if not espv2_span_id:
                 continue
@@ -283,7 +370,7 @@ def verify_trace_spans(
                 if backend_span is espv2_span:
                     continue
                 backend_parent_id = get_parent_span_id(backend_span)
-                if backend_parent_id.lower() == espv2_span_id.lower():
+                if backend_parent_id == espv2_span_id:
                     # 3. Check HTTP status code attribute on spans
                     if _has_http_status_attribute(
                         espv2_span, expected_status
