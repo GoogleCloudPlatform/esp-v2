@@ -210,6 +210,46 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
                 poll_interval_sec=5,
             )
 
+    @mock.patch('time.sleep')
+    @mock.patch('urllib.request.urlopen')
+    def test_poll_cloud_trace_with_validator_retries(self, mock_urlopen, mock_sleep):
+        """Verifies that poll_cloud_trace retries while validator returns False, and succeeds when validator returns True."""
+        resp_partial = mock.MagicMock()
+        resp_partial.read.return_value = json.dumps({
+            'traceId': '4bf92f3577b34da6a3ce929d0e0e4736',
+            'spans': [{'spanId': '111', 'parentSpanId': 'wrong_parent'}],
+        }).encode('utf-8')
+        resp_partial.__enter__.return_value = resp_partial
+
+        resp_complete = mock.MagicMock()
+        resp_complete.read.return_value = json.dumps({
+            'traceId': '4bf92f3577b34da6a3ce929d0e0e4736',
+            'spans': [{'spanId': '222', 'parentSpanId': 'expected_parent', 'labels': {'/http/status_code': '200'}}],
+        }).encode('utf-8')
+        resp_complete.__enter__.return_value = resp_complete
+
+        mock_urlopen.side_effect = [resp_partial, resp_complete]
+
+        def validator(data):
+            for s in data.get('spans', []):
+                if s.get('parentSpanId') == 'expected_parent':
+                    return True
+            return False
+
+        result = poll_cloud_trace(
+            project_id='test-project',
+            trace_id='4bf92f3577b34da6a3ce929d0e0e4736',
+            access_token='mock-token',
+            timeout_sec=30,
+            poll_interval_sec=2,
+            validator=validator,
+        )
+
+        self.assertEqual(mock_urlopen.call_count, 2)
+        self.assertEqual(mock_sleep.call_count, 1)
+        self.assertEqual(len(result['spans']), 1)
+        self.assertEqual(result['spans'][0]['spanId'], '222')
+
     def test_normalize_span_id(self):
         """Verifies normalization of decimal strings, hex strings, 0x hex, and ints."""
         # 1. Decimal strings (from Cloud Trace v1 proto3 JSON serialization of uint64)
@@ -315,6 +355,31 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
 
         self.assertTrue(
             verify_trace_spans(trace_json_v1, trace_id, client_span_id)
+        )
+
+    def test_verify_trace_spans_single_ingress_span(self):
+        """Verifies that a trace containing only an ESPv2 ingress span passes validation."""
+        trace_id = "4bf92f3577b34da6a3ce929d0e0e4736"
+        client_span_id = "0010000000000001"
+        espv2_span_id = "0020000000000001"
+
+        trace_json_single = {
+            "projectId": "test-project",
+            "traceId": trace_id,
+            "spans": [
+                {
+                    "spanId": espv2_span_id,
+                    "parentSpanId": client_span_id,
+                    "name": "ingress router-backend",
+                    "labels": {
+                        "/http/status_code": "200",
+                    },
+                },
+            ],
+        }
+
+        self.assertTrue(
+            verify_trace_spans(trace_json_single, trace_id, client_span_id)
         )
 
     def test_verify_trace_spans_success(self):

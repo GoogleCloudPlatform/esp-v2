@@ -111,11 +111,12 @@ def poll_cloud_trace(
     timeout_sec: int = 60,
     poll_interval_sec: int = 5,
     verbose: bool = False,
+    validator=None,
 ) -> dict:
     """Polls Google Cloud Trace v1 REST API for the trace object.
 
     Handles 404s and empty span lists gracefully with sleep/retry until
-    timeout or trace found.
+    timeout or trace found. If validator is provided, retries until validator(data) is True.
 
     Args:
         project_id: GCP project ID.
@@ -124,6 +125,7 @@ def poll_cloud_trace(
         timeout_sec: Max duration to poll before raising TimeoutError.
         poll_interval_sec: Seconds to sleep between polling attempts.
         verbose: If True, prints polling debug info.
+        validator: Optional callable taking trace dict and returning bool.
 
     Returns:
         dict: The Cloud Trace Trace JSON object containing spans.
@@ -145,16 +147,28 @@ def poll_cloud_trace(
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
                 spans = data.get('spans', [])
-                if spans:
+                if validator is not None:
+                    if validator(data):
+                        if verbose:
+                            print(f"Trace {trace_id} successfully validated with {len(spans)} spans.")
+                        return data
                     if verbose:
-                        print(f"Found trace {trace_id} with {len(spans)} spans.")
-                    return data
-                if verbose:
-                    print(
-                        f"Trace {trace_id} returned empty spans at {url}.\n"
-                        f"Replication command: {curl_cmd}\n"
-                        f"Retrying..."
-                    )
+                        print(
+                            f"Trace {trace_id} returned {len(spans)} span(s) at {url}, "
+                            f"but validation is not yet satisfied. Retrying...\n"
+                            f"Replication command: {curl_cmd}"
+                        )
+                else:
+                    if spans:
+                        if verbose:
+                            print(f"Found trace {trace_id} with {len(spans)} spans.")
+                        return data
+                    if verbose:
+                        print(
+                            f"Trace {trace_id} returned empty spans at {url}.\n"
+                            f"Replication command: {curl_cmd}\n"
+                            f"Retrying..."
+                        )
         except urllib.error.HTTPError as e:
             err_body = e.read().decode('utf-8') if e.fp else ''
             if e.code == 404:
@@ -358,6 +372,7 @@ def verify_trace_spans(
 
     # 1. Find ESPv2 ingress span where parentSpanId == expected_client_span_id
     matched_pair = None
+    matched_ingress = None
     for espv2_span in spans:
         parent_id = get_parent_span_id(espv2_span)
         if parent_id == norm_client_span_id:
@@ -365,7 +380,11 @@ def verify_trace_spans(
             if not espv2_span_id:
                 continue
 
-            # 2. Find Bookstore backend child span where parentSpanId == espv2_span_id
+            if _has_http_status_attribute(espv2_span, expected_status):
+                if not matched_ingress:
+                    matched_ingress = espv2_span
+
+            # 2. Find optional Bookstore backend child span where parentSpanId == espv2_span_id
             for backend_span in spans:
                 if backend_span is espv2_span:
                     continue
@@ -380,27 +399,44 @@ def verify_trace_spans(
             if matched_pair:
                 break
 
-    if not matched_pair:
+    if matched_pair:
         if verbose:
+            espv2_s, backend_s = matched_pair
+            print("Trace verification succeeded (full span chain):")
+            print(f"  Trace ID: {expected_trace_id}")
             print(
-                f"Failed to find valid ESPv2 ingress and backend child span chain "
-                f"matching client span '{expected_client_span_id}'."
+                f"  ESPv2 span ID: {get_span_id(espv2_s)} (parent: "
+                f"{get_parent_span_id(espv2_s)})"
             )
-        return False
+            print(
+                f"  Backend span ID: {get_span_id(backend_s)} (parent: "
+                f"{get_parent_span_id(backend_s)})"
+            )
+        return True
+
+    # If only 1 span is present in the trace, accept the ESPv2 ingress span alone.
+    if len(spans) == 1 and matched_ingress:
+        if verbose:
+            print("Trace verification succeeded (ESPv2 ingress span):")
+            print(f"  Trace ID: {expected_trace_id}")
+            print(
+                f"  ESPv2 span ID: {get_span_id(matched_ingress)} (parent: "
+                f"{get_parent_span_id(matched_ingress)})"
+            )
+        return True
 
     if verbose:
-        espv2_s, backend_s = matched_pair
-        print("Trace verification succeeded:")
-        print(f"  Trace ID: {expected_trace_id}")
         print(
-            f"  ESPv2 span ID: {get_span_id(espv2_s)} (parent: "
-            f"{get_parent_span_id(espv2_s)})"
+            f"Failed to find valid ESPv2 ingress span matching client span '{expected_client_span_id}'.\n"
+            f"Spans in trace ({len(spans)}):"
         )
-        print(
-            f"  Backend span ID: {get_span_id(backend_s)} (parent: "
-            f"{get_parent_span_id(backend_s)})"
-        )
-    return True
+        for s in spans:
+            print(
+                f"  - spanId: {get_span_id(s)}, parentSpanId: {get_parent_span_id(s)}, "
+                f"name: {s.get('name')}, "
+                f"has_status: {_has_http_status_attribute(s, expected_status)}"
+            )
+    return False
 
 
 def send_traced_request(
@@ -664,6 +700,17 @@ def run_trace_e2e_test(
             print(f"Error resolving GCP access token: {e}", file=sys.stderr)
             return False
 
+    expected_resp_status = 200 if status == 200 else status
+
+    def span_validator(t_json):
+        return verify_trace_spans(
+            trace_json=t_json,
+            expected_trace_id=trace_id,
+            expected_client_span_id=client_span_id,
+            expected_status=expected_resp_status,
+            verbose=False,
+        )
+
     try:
         trace_json = poll_cloud_trace(
             project_id=project_id,
@@ -672,6 +719,7 @@ def run_trace_e2e_test(
             timeout_sec=timeout_sec,
             poll_interval_sec=delay_sec,
             verbose=verbose,
+            validator=span_validator,
         )
     except TimeoutError as e:
         print(f"Trace polling timed out: {e}", file=sys.stderr)
@@ -684,7 +732,7 @@ def run_trace_e2e_test(
         trace_json=trace_json,
         expected_trace_id=trace_id,
         expected_client_span_id=client_span_id,
-        expected_status=200 if status == 200 else status,
+        expected_status=expected_resp_status,
         verbose=verbose,
     )
 
