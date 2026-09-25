@@ -56,7 +56,7 @@ FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
 
   // `route` shouldn't be nullptr as the catch-all route match should catch all
   // the undefined requests.
-  if (route == nullptr || route->routeEntry() == nullptr) {
+  if (!route.has_value() || route->routeEntry() == nullptr) {
     return Envoy::Http::FilterHeadersStatus::Continue;
   }
 

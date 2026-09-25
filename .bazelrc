@@ -17,12 +17,13 @@ build --show_timestamps
 # Compilation modes
 build:release -c opt
 build:debug -c dbg
-
-build --experimental_local_memory_estimate
 build --incompatible_strict_action_env=true
 build --host_force_python=PY3
 build --action_env=BAZEL_LINKLIBS=-l%:libstdc++.a
 build --action_env=BAZEL_LINKOPTS=-lm
+build --linkopt=-Wl,-Bstatic
+build --linkopt=-latomic
+build --linkopt=-Wl,-Bdynamic
 
 # We already have absl in the build, define absl=1 to tell googletest to use absl for backtrace.
 build --define absl=1
@@ -30,10 +31,16 @@ build --define absl=1
 # Pass PATH variable from the environment. CC and CXX are always clang (no gcc).
 build --action_env=CC=clang-14
 build --action_env=CXX=clang++-14
+build --repo_env=CC=clang-14
+build --repo_env=CXX=clang++-14
 build --action_env=PATH
+build --repo_env=PATH
+
+# Disable bzlmod to use WORKSPACE properly
+build --noenable_bzlmod
 
 # Disable ICU linking for googleurl.
-build --@com_googlesource_googleurl//build_config:system_icu=0
+build --@googleurl//build_config:system_icu=0
 
 # Common flags for sanitizers
 build:sanitizer --define tcmalloc=disabled
@@ -75,6 +82,7 @@ build:asan --test_env=ASAN_SYMBOLIZER_PATH
 
 build:clang-asan --config=asan
 build:clang-asan --action_env=ENVOY_UBSAN_VPTR=1
+build:clang-asan --linkopt=-fuse-ld=lld-14
 build:clang-asan --copt -fno-sanitize=vptr,function
 build:clang-asan --linkopt -fno-sanitize=vptr,function
 build:clang-asan --copt -fno-optimize-sibling-calls
@@ -124,3 +132,8 @@ coverage:test-coverage --test_arg="--log-path /dev/null"
 coverage:test-coverage --test_arg="-l trace"
 coverage:fuzz-coverage --config=asan-fuzzer
 coverage:fuzz-coverage --run_under=@envoy//bazel/coverage:fuzz_coverage_wrapper.sh
+build:clang-release --copt=-Wno-unknown-warning-option
+build:clang-release --cxxopt=-Wno-unknown-warning-option
+build:clang-release --copt=-Wno-deprecated-declarations
+build:clang-release --cxxopt=-Wno-deprecated-declarations
+try-import %workspace%/.bazelrc.user

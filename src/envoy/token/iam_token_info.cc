@@ -80,7 +80,7 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
   Envoy::Http::RequestMessagePtr message(
       new Envoy::Http::RequestMessageImpl(std::move(headers)));
 
-  Envoy::ProtobufWkt::Value body;
+  Envoy::Protobuf::Value body;
   if (!delegates_.empty()) {
     insertStrListToProto(body, kDelegatesField, delegates_, kDelegatePrefix);
   }
@@ -90,7 +90,7 @@ Envoy::Http::RequestMessagePtr IamTokenInfo::prepareRequest(
   }
 
   if (include_email_) {
-    Envoy::ProtobufWkt::Value val;
+    Envoy::Protobuf::Value val;
     val.set_bool_value(true);
     (*body.mutable_struct_value()->mutable_fields())[kIncludeEmail].Swap(&val);
   }
@@ -181,10 +181,10 @@ bool IamTokenInfo::parseIdentityToken(absl::string_view response,
 }
 
 void IamTokenInfo::insertStrListToProto(
-    Envoy::ProtobufWkt::Value& body, const std::string& key,
+    Envoy::Protobuf::Value& body, const std::string& key,
     const ::google::protobuf::RepeatedPtrField<std::string>& val_list,
     const absl::string_view& val_prefix) const {
-  Envoy::ProtobufWkt::Value vals;
+  Envoy::Protobuf::Value vals;
   for (const auto& val : val_list) {
     vals.mutable_list_value()->add_values()->set_string_value(
         absl::StrCat(val_prefix, val));

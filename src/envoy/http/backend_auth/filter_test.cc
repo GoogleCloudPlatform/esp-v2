@@ -66,7 +66,7 @@ class BackendAuthFilterTest : public ::testing::Test {
     per_route_cfg.set_jwt_audience(jwt_audience);
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
     EXPECT_CALL(mock_decoder_callbacks_, route())
-        .WillRepeatedly(Return(mock_route_));
+        .WillRepeatedly(Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(mock_route_.get())));
     EXPECT_CALL(mock_decoder_callbacks_, mostSpecificPerFilterConfig())
         .WillRepeatedly(Invoke(
             [per_route]() -> const Envoy::Router::RouteSpecificFilterConfig* {
@@ -90,7 +90,7 @@ TEST_F(BackendAuthFilterTest, NoRouteRejectAllow) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
-  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
+  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(Envoy::OptRef<const Envoy::Router::Route>()));
 
   ASSERT_EQ(filter_->decodeHeaders(headers, false),
             Envoy::Http::FilterHeadersStatus::Continue);
@@ -100,7 +100,7 @@ TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
-      .WillRepeatedly(Return(mock_route_));
+      .WillRepeatedly(Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(mock_route_.get())));
   EXPECT_CALL(mock_decoder_callbacks_, mostSpecificPerFilterConfig())
       .WillRepeatedly(Return(nullptr));
 

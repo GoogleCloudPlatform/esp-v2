@@ -136,7 +136,7 @@ TEST_F(FilterTest, NoRouteRejected) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
-  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(nullptr));
+  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(Envoy::OptRef<const Envoy::Router::Route>()));
 
   EXPECT_EQ(filter_->decodeHeaders(headers, false),
             Envoy::Http::FilterHeadersStatus::Continue);
@@ -146,7 +146,7 @@ TEST_F(FilterTest, NotPerRouteConfigNotChanged) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
-      .WillRepeatedly(Return(mock_route_));
+      .WillRepeatedly(Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(mock_route_.get())));
   EXPECT_CALL(mock_decoder_callbacks_, mostSpecificPerFilterConfig())
       .WillRepeatedly(Return(nullptr));
 
@@ -170,7 +170,7 @@ TEST_F(FilterTest, RejectedByMismatchUrlTemplate) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
-      .WillRepeatedly(Return(mock_route_));
+      .WillRepeatedly(Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(mock_route_.get())));
   EXPECT_CALL(mock_decoder_callbacks_, mostSpecificPerFilterConfig())
       .WillRepeatedly(Return(per_route_config_.get()));
 
@@ -209,7 +209,7 @@ TEST_F(FilterTest, PathUpdated) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
-      .WillRepeatedly(Return(mock_route_));
+      .WillRepeatedly(Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(mock_route_.get())));
   EXPECT_CALL(mock_decoder_callbacks_, mostSpecificPerFilterConfig())
       .WillRepeatedly(Return(per_route_config_.get()));
 

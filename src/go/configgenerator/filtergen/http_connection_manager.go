@@ -99,6 +99,12 @@ func (g *HTTPConnectionManagerGenerator) GenFilterConfig() (proto.Message, error
 		// Security options for `path` header.
 		NormalizePath: &wrapperspb.BoolValue{Value: g.NormalizePath},
 		MergeSlashes:  g.MergeSlashesInPath,
+
+		Http2ProtocolOptions: &corepb.Http2ProtocolOptions{
+			MaxConcurrentStreams:        &wrapperspb.UInt32Value{Value: 2147483647},
+			InitialStreamWindowSize:     &wrapperspb.UInt32Value{Value: 268435456},
+			InitialConnectionWindowSize: &wrapperspb.UInt32Value{Value: 268435456},
+		},
 	}
 
 	// Converting the error message for requests rejected by Envoy to JSON format:
@@ -165,6 +171,15 @@ func (g *HTTPConnectionManagerGenerator) GenFilterConfig() (proto.Message, error
 		httpConMgr.Tracing, err = tracing.CreateTracing(*g.TracingOptions)
 		if err != nil {
 			return nil, err
+		}
+
+		// Inject early_header_mutation extension to handle incoming trace contexts or to aggressively delete them
+		mutationConfig, err := GenEarlyHeaderMutationConfig(g.TracingOptions.IncomingContext)
+		if err != nil {
+			return nil, err
+		}
+		if mutationConfig != nil {
+			httpConMgr.EarlyHeaderMutationExtensions = append(httpConMgr.EarlyHeaderMutationExtensions, mutationConfig)
 		}
 	}
 

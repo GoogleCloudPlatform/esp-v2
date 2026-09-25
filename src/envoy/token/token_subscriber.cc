@@ -120,7 +120,7 @@ void TokenSubscriber::refresh() {
     return;
   }
 
-  const struct Envoy::Http::AsyncClient::RequestOptions options =
+  const Envoy::Http::AsyncClient::RequestOptions options =
       Envoy::Http::AsyncClient::RequestOptions()
           .setTimeout(std::chrono::duration_cast<std::chrono::milliseconds>(
               fetch_timeout_))

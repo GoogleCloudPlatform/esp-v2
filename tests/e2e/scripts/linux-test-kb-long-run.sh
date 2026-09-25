@@ -101,6 +101,18 @@ while true; do
       --allow_unverified_cert=true \
     --host_header="${HOST_HEADER}" || ((BOOKSTORE_FAILURES++)))
 
+  echo "Starting Cloud Trace E2E verification test at $(date)."
+  PROJECT_ID="$(gcloud config get-value core/project 2>/dev/null || echo "${PROJECT_ID:-cloudesf-testing}")"
+  (set -x;
+    python3 ${ROOT}/tests/e2e/client/apiproxy_trace_test.py \
+      --host="${SCHEME}://${HOST}:${PORT}" \
+      --project="${PROJECT_ID}" \
+      --api_key="${API_KEY}" \
+      --auth_token="${JWT_TOKEN}" \
+      --host_header="${HOST_HEADER}" \
+      --verbose \
+    || ((BOOKSTORE_FAILURES++)))
+
   echo "Starting bookstore API Key restriction test at $(date)."
   (set -x;
     python3 ${ROOT}/tests/e2e/client/apiproxy_bookstore_key_restriction_test.py  \
