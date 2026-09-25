@@ -45,6 +45,7 @@ build: format
 	@go build -o bin/configmanager ./src/go/configmanager/main/server.go
 	@go build -o bin/bootstrap ./src/go/bootstrap/ads/main/main.go
 	@go build -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
+	@go build -o bin/startproxy ./src/go/startproxy/main/main.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
 build-msan: format
@@ -54,6 +55,7 @@ build-msan: format
 	@go build -msan -o bin/configmanager ./src/go/configmanager/main/server.go
 	@go build -msan  -o bin/bootstrap ./src/go/bootstrap/ads/main/main.go
 	@go build -msan -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
+	@go build -msan -o bin/startproxy ./src/go/startproxy/main/main.go
 	@go build -msan -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
 build-race: format
@@ -63,6 +65,7 @@ build-race: format
 	@go build -race -o bin/configmanager ./src/go/configmanager/main/server.go
 	@go build -race  -o bin/bootstrap ./src/go/bootstrap/ads/main/main.go
 	@go build -race -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
+	@go build -race -o bin/startproxy ./src/go/startproxy/main/main.go
 	@go build -race -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
 
@@ -155,8 +158,6 @@ test: format
 	else \
 		go test -msan ./src/go/...; \
 	fi
-	@python3 -m unittest tests/start_proxy/start_proxy_test.py
-	@python3 -m unittest tests/start_proxy/env_start_proxy_test.py
 
 test-debug: format
 	@echo "--> running unit tests"
