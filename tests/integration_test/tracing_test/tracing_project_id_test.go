@@ -94,7 +94,7 @@ func TestTracingProjectIdOtelEnv(t *testing.T) {
 
 	s := env.NewTestEnv(platform.TestTracingProjectIdOtelEnv, platform.EchoSidecar)
 	s.SetupFakeTraceServer(1.0)
-	s.SetOtelResourceAttributesEnv("gcp.project.id=otel-custom-project,service.name=my-echo-service")
+	s.SetOtelResourceAttributesEnv("gcp.project_id=test-project-otel,service.name=my-echo-service")
 
 	defer func() {
 		drainSpans(s)
@@ -114,8 +114,42 @@ func TestTracingProjectIdOtelEnv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetRequests returns error: %v", err)
 	}
-	wantScRequests := makeExpectedProjectReport("otel-custom-project", targetTraceId)
-	utils.CheckScRequest(t, scRequests, wantScRequests, "OTel resource attributes")
+	wantScRequests := makeExpectedProjectReport("test-project-otel", targetTraceId)
+	utils.CheckScRequest(t, scRequests, wantScRequests, "Standard OTel resource attributes (gcp.project_id)")
+}
+
+func TestTracingProjectIdOtelEnvLegacyDot(t *testing.T) {
+	t.Parallel()
+
+	targetTraceId := "0af7651916cd43dd8448eb211c80319c"
+	incomingHeaders := map[string]string{
+		"traceparent": createTraceparentContext(targetTraceId, "b7ad6b7169203331"),
+	}
+
+	s := env.NewTestEnv(platform.TestTracingProjectIdOtelEnvLegacyDot, platform.EchoSidecar)
+	s.SetupFakeTraceServer(1.0)
+	s.SetOtelResourceAttributesEnv("gcp.project.id=test-project-legacy-dot,service.name=my-echo-service")
+
+	defer func() {
+		drainSpans(s)
+		s.TearDown(t)
+	}()
+
+	if err := s.Setup(utils.CommonArgs()); err != nil {
+		t.Fatalf("fail to setup test env: %v", err)
+	}
+
+	url := fmt.Sprintf("http://%v:%v/echo/nokey", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+	if _, err := client.DoWithHeaders(url, "POST", `{"message":"hello"}`, incomingHeaders); err != nil {
+		t.Fatalf("fail to make call to backend: %v", err)
+	}
+
+	scRequests, err := s.ServiceControlServer.GetRequests(1)
+	if err != nil {
+		t.Fatalf("GetRequests returns error: %v", err)
+	}
+	wantScRequests := makeExpectedProjectReport("test-project-legacy-dot", targetTraceId)
+	utils.CheckScRequest(t, scRequests, wantScRequests, "Legacy OTel resource attributes (gcp.project.id)")
 }
 
 func TestTracingProjectIdPrecedence(t *testing.T) {
@@ -128,7 +162,7 @@ func TestTracingProjectIdPrecedence(t *testing.T) {
 
 	s := env.NewTestEnv(platform.TestTracingProjectIdPrecedence, platform.EchoSidecar)
 	s.SetupFakeTraceServer(1.0)
-	s.SetOtelResourceAttributesEnv("gcp.project.id=otel-override-project")
+	s.SetOtelResourceAttributesEnv("gcp.project_id=otel-override-project")
 
 	defer func() {
 		drainSpans(s)
@@ -153,6 +187,41 @@ func TestTracingProjectIdPrecedence(t *testing.T) {
 	utils.CheckScRequest(t, scRequests, wantScRequests, "OTel env var overrides legacy flag")
 }
 
+func TestTracingProjectIdPrecedenceUnderscoreOverDot(t *testing.T) {
+	t.Parallel()
+
+	targetTraceId := "0af7651916cd43dd8448eb211c80319c"
+	incomingHeaders := map[string]string{
+		"traceparent": createTraceparentContext(targetTraceId, "b7ad6b7169203331"),
+	}
+
+	s := env.NewTestEnv(platform.TestTracingProjectIdPrecedenceUnderscoreOverDot, platform.EchoSidecar)
+	s.SetupFakeTraceServer(1.0)
+	s.SetOtelResourceAttributesEnv("gcp.project.id=dot-project,gcp.project_id=underscore-project")
+
+	defer func() {
+		drainSpans(s)
+		s.TearDown(t)
+	}()
+
+	confArgs := append([]string{"--tracing_project_id=legacy-ignored-project"}, utils.CommonArgs()...)
+	if err := s.Setup(confArgs); err != nil {
+		t.Fatalf("fail to setup test env: %v", err)
+	}
+
+	url := fmt.Sprintf("http://%v:%v/echo/nokey", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+	if _, err := client.DoWithHeaders(url, "POST", `{"message":"hello"}`, incomingHeaders); err != nil {
+		t.Fatalf("fail to make call to backend: %v", err)
+	}
+
+	scRequests, err := s.ServiceControlServer.GetRequests(1)
+	if err != nil {
+		t.Fatalf("GetRequests returns error: %v", err)
+	}
+	wantScRequests := makeExpectedProjectReport("underscore-project", targetTraceId)
+	utils.CheckScRequest(t, scRequests, wantScRequests, "gcp.project_id overrides gcp.project.id and legacy flag")
+}
+
 func TestTracingProjectIdDefaultFallback(t *testing.T) {
 	t.Parallel()
 
@@ -164,6 +233,7 @@ func TestTracingProjectIdDefaultFallback(t *testing.T) {
 	s := env.NewTestEnv(platform.TestTracingProjectIdDefaultFallback, platform.EchoSidecar)
 	s.SetupFakeTraceServer(1.0)
 	// Neither OTEL_RESOURCE_ATTRIBUTES nor --tracing_project_id is set.
+	// ESPv2 discovers project ID from mock metadata server.
 
 	defer func() {
 		drainSpans(s)
@@ -184,5 +254,47 @@ func TestTracingProjectIdDefaultFallback(t *testing.T) {
 		t.Fatalf("GetRequests returns error: %v", err)
 	}
 	wantScRequests := makeExpectedProjectReport(comp.FakeProjectID, targetTraceId)
-	utils.CheckScRequest(t, scRequests, wantScRequests, "Default project ID fallback")
+	utils.CheckScRequest(t, scRequests, wantScRequests, "Default project ID fallback via metadata server")
+
+	// Verify that the metadata server was indeed queried for project ID
+	if reqCnt := s.MockMetadataServer.GetReqCnt(util.ProjectIDPath); reqCnt < 1 {
+		t.Errorf("MockMetadataServer received %d requests for %s, want at least 1", reqCnt, util.ProjectIDPath)
+	}
+}
+
+func TestTracingProjectIdNonGcpBypass(t *testing.T) {
+	t.Parallel()
+
+	customSa, err := utils.NewServiceAccountForTest()
+	if err != nil {
+		t.Fatalf("failed to create service account for test: %v", err)
+	}
+	defer customSa.MockTokenServer.Close()
+
+	s := env.NewTestEnv(platform.TestTracingProjectIdNonGcpBypass, platform.EchoSidecar)
+	// Tracing is disabled on non-GCP when no tracing project ID is specified.
+	defer s.TearDown(t)
+
+	confArgs := append([]string{
+		"--non_gcp",
+		"--service_account_key=" + customSa.FileName,
+		"--disable_tracing",
+	}, utils.CommonArgs()...)
+
+	if err := s.Setup(confArgs); err != nil {
+		t.Fatalf("fail to setup test env: %v", err)
+	}
+
+	url := fmt.Sprintf("http://%v:%v/echo/nokey", platform.GetLoopbackAddress(), s.Ports().ListenerPort)
+	if _, err := client.DoWithHeaders(url, "POST", `{"message":"hello"}`, nil); err != nil {
+		t.Fatalf("fail to make call to backend: %v", err)
+	}
+
+	// Verify that metadata server was never queried for project ID
+	if reqCnt := s.MockMetadataServer.GetReqCnt(util.ProjectIDPath); reqCnt != 0 {
+		t.Errorf("MockMetadataServer received %d requests for %s under --non_gcp, want 0", reqCnt, util.ProjectIDPath)
+	}
+	if totalReq := s.MockMetadataServer.GetTotalReqCnt(); totalReq != 0 {
+		t.Errorf("MockMetadataServer received %d total requests under --non_gcp, want 0", totalReq)
+	}
 }

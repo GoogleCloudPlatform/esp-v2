@@ -24,6 +24,8 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
+import urllib.request
 
 # The command to generate Envoy bootstrap config
 BOOTSTRAP_CMD = "bin/bootstrap"
@@ -63,6 +65,54 @@ SERVERLESS_XFF_NUM_TRUSTED_HOPS = 0
 
 # child pid list
 pid_list = []
+
+# Google Cloud metadata server URL for project ID
+METADATA_PROJECT_ID_URL = "http://metadata.google.internal/computeMetadata/v1/project/project-id"
+
+
+def fetch_project_id_from_metadata():
+    """Fetches the GCP project ID from the GCP metadata server."""
+    try:
+        req = urllib.request.Request(
+            METADATA_PROJECT_ID_URL,
+            headers={"Metadata-Flavor": "Google"}
+        )
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            project_id = resp.read().decode("utf-8").strip()
+            if project_id:
+                return project_id
+    except Exception as e:
+        logging.debug(f"Failed to fetch project ID from metadata server: {e}")
+    return None
+
+
+def setup_otel_resource_attributes(args):
+    """Auto-injects gcp.project_id into OTEL_RESOURCE_ATTRIBUTES if tracing is enabled
+
+    and not already configured, resolving project ID from --tracing_project_id flag or GCP metadata server.
+    """
+    if getattr(args, "disable_tracing", False):
+        return
+
+    project_id = getattr(args, "tracing_project_id", None)
+    if not project_id and not getattr(args, "non_gcp", False):
+        project_id = fetch_project_id_from_metadata()
+
+    if not project_id:
+        return
+
+    existing = os.environ.get("OTEL_RESOURCE_ATTRIBUTES", "").strip()
+    if not existing:
+        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"gcp.project_id={project_id}"
+    else:
+        # Check if gcp.project_id or gcp.project.id is already configured
+        attrs = [attr.strip() for attr in existing.split(",") if attr.strip()]
+        has_project_id = any(
+            attr.startswith("gcp.project_id=") or attr.startswith("gcp.project.id=")
+            for attr in attrs
+        )
+        if not has_project_id:
+            os.environ["OTEL_RESOURCE_ATTRIBUTES"] = f"{existing},gcp.project_id={project_id}"
 
 def gen_bootstrap_conf(args):
     cmd = [BOOTSTRAP_CMD, "--logtostderr"]
@@ -1634,6 +1684,8 @@ if __name__ == '__main__':
 
     parser = make_argparser()
     args = parser.parse_args()
+
+    setup_otel_resource_attributes(args)
 
     cm_proc = start_config_manager(gen_proxy_config(args))
     envoy_proc = start_envoy(args)

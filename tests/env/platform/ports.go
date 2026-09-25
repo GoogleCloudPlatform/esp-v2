@@ -178,8 +178,11 @@ const (
 	TestTracingProjectId
 	TestTracingProjectIdLegacyFlag
 	TestTracingProjectIdOtelEnv
+	TestTracingProjectIdOtelEnvLegacyDot
 	TestTracingProjectIdPrecedence
+	TestTracingProjectIdPrecedenceUnderscoreOverDot
 	TestTracingProjectIdDefaultFallback
+	TestTracingProjectIdNonGcpBypass
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

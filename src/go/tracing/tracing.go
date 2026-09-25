@@ -26,6 +26,8 @@ import (
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/glog"
+	"google.golang.org/protobuf/encoding/protowire"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -64,16 +66,21 @@ func parseResourceAttributes(rawAttrs string) map[string]string {
 
 // ResolveTracingProjectId resolves the GCP Project ID for tracing and Service Control
 // using the following precedence order:
-// 1. "gcp.project.id" attribute from the OTEL_RESOURCE_ATTRIBUTES environment variable.
+// 1. "gcp.project_id" (standard) or "gcp.project.id" attribute from the OTEL_RESOURCE_ATTRIBUTES environment variable.
 // 2. opts.ProjectId (fallback for the deprecated --tracing_project_id flag).
 // 3. Default: empty string "" (falls back to GCP metadata server / ADC resolution).
 func ResolveTracingProjectId(opts options.TracingOptions) string {
 	rawAttrs := os.Getenv("OTEL_RESOURCE_ATTRIBUTES")
 	if rawAttrs != "" {
 		attrs := parseResourceAttributes(rawAttrs)
-		if projectID, ok := attrs["gcp.project.id"]; ok && projectID != "" {
+		// Check standard "gcp.project_id" first, then legacy "gcp.project.id".
+		projectID, ok := attrs["gcp.project_id"]
+		if !ok || projectID == "" {
+			projectID, ok = attrs["gcp.project.id"]
+		}
+		if ok && projectID != "" {
 			if opts.ProjectId != "" {
-				glog.Infof("Both OTEL_RESOURCE_ATTRIBUTES (gcp.project.id=%q) and --tracing_project_id (%q) are configured. Using OTEL_RESOURCE_ATTRIBUTES.", projectID, opts.ProjectId)
+				glog.Infof("Both OTEL_RESOURCE_ATTRIBUTES (project_id=%q) and --tracing_project_id (%q) are configured. Using OTEL_RESOURCE_ATTRIBUTES.", projectID, opts.ProjectId)
 			}
 			return projectID
 		}
@@ -122,6 +129,27 @@ func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTeleme
 			},
 		},
 	}
+
+	// In the pinned go-control-plane version, tracepb.OpenTelemetryConfig lacks the
+	// ResourceDetectors field (field number 4 in Envoy's OpenTelemetryConfig proto).
+	// We serialize the environment resource detector into the message's unknown fields
+	// so Envoy v1.38 unmarshals it and enables the environment detector.
+	envDetector := &corev3.TypedExtensionConfig{
+		Name: "envoy.tracers.opentelemetry.resource_detectors.environment",
+		TypedConfig: &anypb.Any{
+			TypeUrl: "type.googleapis.com/envoy.extensions.tracers.opentelemetry.resource_detectors.v3.EnvironmentResourceDetectorConfig",
+		},
+	}
+	detectorBytes, err := proto.Marshal(envDetector)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal environment resource detector: %w", err)
+	}
+
+	// Field 4, WireType: BytesType (2) -> Tag = (4 << 3) | 2 = 34
+	var unknown []byte
+	unknown = protowire.AppendTag(unknown, 4, protowire.BytesType)
+	unknown = protowire.AppendBytes(unknown, detectorBytes)
+	cfg.ProtoReflect().SetUnknown(unknown)
 
 	return cfg, nil
 }

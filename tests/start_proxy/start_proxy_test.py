@@ -12,15 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import sys
-
+import unittest
+from unittest import mock
 import os, inspect
 
 currentdir = os.path.dirname(
     os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.insert(0, currentdir + "/../../docker/generic")
-from start_proxy import gen_bootstrap_conf, make_argparser, gen_proxy_config, gen_envoy_args, GOOGLE_CREDS_KEY
+from start_proxy import (
+    gen_bootstrap_conf,
+    make_argparser,
+    gen_proxy_config,
+    gen_envoy_args,
+    GOOGLE_CREDS_KEY,
+    fetch_project_id_from_metadata,
+    setup_otel_resource_attributes,
+)
 
 
 class TestStartProxy(unittest.TestCase):
@@ -1243,6 +1251,111 @@ class TestStartProxy(unittest.TestCase):
             else:
                 self.assertFalse(GOOGLE_CREDS_KEY in os.environ)
 
+    def test_fetch_project_id_from_metadata_success(self):
+        with mock.patch("urllib.request.urlopen") as mock_urlopen:
+            mock_resp = mock.MagicMock()
+            mock_resp.read.return_value = b"my-cloud-project\n"
+            mock_resp.__enter__.return_value = mock_resp
+            mock_urlopen.return_value = mock_resp
+
+            project_id = fetch_project_id_from_metadata()
+            self.assertEqual(project_id, "my-cloud-project")
+
+    def test_fetch_project_id_from_metadata_failure(self):
+        with mock.patch("urllib.request.urlopen") as mock_urlopen:
+            mock_urlopen.side_effect = Exception("network unreachable")
+
+            project_id = fetch_project_id_from_metadata()
+            self.assertIsNone(project_id)
+
+    def test_setup_otel_resource_attributes(self):
+        testcases = [
+            (
+                "Injects project ID from --tracing_project_id when env is empty",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                 "--tracing_project_id=flag-project-123"],
+                None,  # initial env
+                None,  # metadata return
+                "gcp.project_id=flag-project-123",  # expected env
+            ),
+            (
+                "Appends project ID to existing OTEL_RESOURCE_ATTRIBUTES",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                 "--tracing_project_id=flag-project-123"],
+                "service.name=my-svc,service.version=1.0",
+                None,
+                "service.name=my-svc,service.version=1.0,gcp.project_id=flag-project-123",
+            ),
+            (
+                "Does not duplicate if gcp.project_id already present in env",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                 "--tracing_project_id=flag-project-123"],
+                "gcp.project_id=existing-project",
+                None,
+                "gcp.project_id=existing-project",
+            ),
+            (
+                "Does not duplicate if legacy gcp.project.id already present in env",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                 "--tracing_project_id=flag-project-123"],
+                "gcp.project.id=existing-project,env=prod",
+                None,
+                "gcp.project.id=existing-project,env=prod",
+            ),
+            (
+                "Auto-detects from metadata server when flag is omitted on GCP",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080"],
+                None,
+                "metadata-project-456",
+                "gcp.project_id=metadata-project-456",
+            ),
+            (
+                "Skips metadata fetch when --non_gcp is set",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080", "--non_gcp"],
+                None,
+                "metadata-project-456",
+                None,  # should remain unset
+            ),
+            (
+                "Skips when --disable_tracing is set",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080",
+                 "--disable_tracing", "--tracing_project_id=flag-project-123"],
+                None,
+                "metadata-project-456",
+                None,
+            ),
+            (
+                "Leaves env unset when metadata fetch fails and no flag provided",
+                ["--service=echo", "--version=v1", "--backend=127.0.0.1:8080"],
+                None,
+                None,  # metadata returns None
+                None,
+            ),
+        ]
+
+        for desc, flags, initEnv, metadataReturn, expectedEnv in testcases:
+            with self.subTest(desc):
+                orig_env = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
+                try:
+                    if initEnv is not None:
+                        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = initEnv
+                    elif "OTEL_RESOURCE_ATTRIBUTES" in os.environ:
+                        del os.environ["OTEL_RESOURCE_ATTRIBUTES"]
+
+                    args = self.parser.parse_args(flags)
+                    with mock.patch("start_proxy.fetch_project_id_from_metadata", return_value=metadataReturn):
+                        setup_otel_resource_attributes(args)
+
+                    actualEnv = os.environ.get("OTEL_RESOURCE_ATTRIBUTES")
+                    self.assertEqual(actualEnv, expectedEnv,
+                                     f"{desc}: expected {expectedEnv}, got {actualEnv}")
+                finally:
+                    if orig_env is not None:
+                        os.environ["OTEL_RESOURCE_ATTRIBUTES"] = orig_env
+                    elif "OTEL_RESOURCE_ATTRIBUTES" in os.environ:
+                        del os.environ["OTEL_RESOURCE_ATTRIBUTES"]
+
 
 if __name__ == '__main__':
     unittest.main()
+

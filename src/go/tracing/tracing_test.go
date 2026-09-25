@@ -29,6 +29,9 @@ import (
 
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	"google.golang.org/protobuf/encoding/protowire"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -218,11 +221,89 @@ func TestOpenTelemetryConfig(t *testing.T) {
 					t.Errorf("failed, expected result should not be nil")
 				}
 
+				// The environment resource detector is serialized into unknown fields
+				// (field 4) for compatibility with Envoy v1.38 without updating go-control-plane.
+				// We attach the same unknown field to wantResult for protobuf comparison.
+				envDetector := &corev3.TypedExtensionConfig{
+					Name: "envoy.tracers.opentelemetry.resource_detectors.environment",
+					TypedConfig: &anypb.Any{
+						TypeUrl: "type.googleapis.com/envoy.extensions.tracers.opentelemetry.resource_detectors.v3.EnvironmentResourceDetectorConfig",
+					},
+				}
+				detectorBytes, err := proto.Marshal(envDetector)
+				if err != nil {
+					t.Fatalf("failed to marshal envDetector: %v", err)
+				}
+				var wantUnknown []byte
+				wantUnknown = protowire.AppendTag(wantUnknown, 4, protowire.BytesType)
+				wantUnknown = protowire.AppendBytes(wantUnknown, detectorBytes)
+				tc.wantResult.ProtoReflect().SetUnknown(wantUnknown)
+
 				if diff := cmp.Diff(tc.wantResult, got, protocmp.Transform()); diff != "" {
 					t.Errorf("createOpenTelemetryConfig(%v) diff (-want +got):\n%s", tc.opts, diff)
 				}
 			}
 		})
+	}
+}
+
+// Tests that the Environment resource detector is properly configured in OpenTelemetryConfig.
+func TestOpenTelemetryResourceDetectors(t *testing.T) {
+	opts := options.TracingOptions{
+		ProjectId: fakeOptsProjectId,
+	}
+
+	cfg, err := createOpenTelemetryConfig(opts)
+	if err != nil {
+		t.Fatalf("createOpenTelemetryConfig() failed: %v", err)
+	}
+
+	unknown := cfg.ProtoReflect().GetUnknown()
+	if len(unknown) == 0 {
+		t.Fatalf("expected unknown fields containing resource detectors, got empty")
+	}
+
+	// Parse unknown fields to verify field 4 contains the environment detector
+	var foundDetector bool
+	for len(unknown) > 0 {
+		num, typ, n := protowire.ConsumeTag(unknown)
+		if n < 0 {
+			t.Fatalf("invalid tag in unknown fields")
+		}
+		unknown = unknown[n:]
+		if num == 4 && typ == protowire.BytesType {
+			bytesVal, m := protowire.ConsumeBytes(unknown)
+			if m < 0 {
+				t.Fatalf("invalid bytes in field 4")
+			}
+			unknown = unknown[m:]
+
+			detector := &corev3.TypedExtensionConfig{}
+			if err := proto.Unmarshal(bytesVal, detector); err != nil {
+				t.Fatalf("failed to unmarshal field 4 into TypedExtensionConfig: %v", err)
+			}
+
+			const wantName = "envoy.tracers.opentelemetry.resource_detectors.environment"
+			if detector.Name != wantName {
+				t.Errorf("detector.Name = %q, want %q", detector.Name, wantName)
+			}
+
+			const wantTypeUrl = "type.googleapis.com/envoy.extensions.tracers.opentelemetry.resource_detectors.v3.EnvironmentResourceDetectorConfig"
+			if detector.TypedConfig == nil || detector.TypedConfig.TypeUrl != wantTypeUrl {
+				t.Errorf("detector.TypedConfig.TypeUrl = %v, want %q", detector.TypedConfig, wantTypeUrl)
+			}
+			foundDetector = true
+		} else {
+			m := protowire.ConsumeFieldValue(num, typ, unknown)
+			if m < 0 {
+				t.Fatalf("invalid field value in unknown fields")
+			}
+			unknown = unknown[m:]
+		}
+	}
+
+	if !foundDetector {
+		t.Errorf("field 4 (resource_detectors) not found in OpenTelemetryConfig unknown fields")
 	}
 }
 
@@ -499,10 +580,22 @@ func TestResolveTracingProjectId(t *testing.T) {
 		wantProjectId   string
 	}{
 		{
-			desc:            "Project ID resolved from OTEL_RESOURCE_ATTRIBUTES",
-			envResourceAttr: "gcp.project.id=otel-project",
+			desc:            "Project ID resolved from OTEL_RESOURCE_ATTRIBUTES with gcp.project_id",
+			envResourceAttr: "gcp.project_id=otel-project-underscore",
 			optsProjectId:   "",
-			wantProjectId:   "otel-project",
+			wantProjectId:   "otel-project-underscore",
+		},
+		{
+			desc:            "Project ID resolved from OTEL_RESOURCE_ATTRIBUTES with legacy gcp.project.id",
+			envResourceAttr: "gcp.project.id=otel-project-dot",
+			optsProjectId:   "",
+			wantProjectId:   "otel-project-dot",
+		},
+		{
+			desc:            "gcp.project_id takes precedence over gcp.project.id",
+			envResourceAttr: "gcp.project.id=dot-project,gcp.project_id=underscore-project",
+			optsProjectId:   "flag-project",
+			wantProjectId:   "underscore-project",
 		},
 		{
 			desc:            "OTEL_RESOURCE_ATTRIBUTES takes precedence over opts.ProjectId",
