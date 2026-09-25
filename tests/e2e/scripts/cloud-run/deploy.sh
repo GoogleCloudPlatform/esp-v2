@@ -117,6 +117,7 @@ function deployBackend() {
       cd ${ROOT}/tests/endpoints/bookstore
       gcloud functions deploy ${BACKEND_SERVICE_NAME}  --runtime nodejs12 \
         --trigger-http --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
+        --no-gen2 \
         --quiet --entry-point app
       cd ${ROOT}
 
