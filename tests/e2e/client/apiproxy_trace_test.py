@@ -469,13 +469,11 @@ def send_traced_request(
         headers['Authorization'] = f"Bearer {auth_token}"
 
     if verbose:
-        sanitized_url = re.sub(r'([?&]key=)[^&]+', r'\1[REDACTED]', url)
-        sanitized_headers = {
-            k: ('Bearer [REDACTED]' if k.lower() in ('authorization', 'proxy-authorization') else v)
-            for k, v in headers.items()
-        }
-        print(f"Sending HTTP {method} to {sanitized_url}")
-        print(f"Headers: {sanitized_headers}")
+        target_endpoint = host.rstrip('/') + path
+        print(
+            f"Sending HTTP {method} to {target_endpoint} "
+            f"(traceparent: {traceparent_header})"
+        )
 
     req = urllib.request.Request(url, headers=headers, method=method)
     ssl_ctx = None
