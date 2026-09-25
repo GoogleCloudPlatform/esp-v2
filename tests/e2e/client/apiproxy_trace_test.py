@@ -23,6 +23,7 @@ Uses Python 3 standard library only without external pip dependencies.
 """
 
 import argparse
+from datetime import datetime
 import http.client
 import json
 import os
@@ -301,6 +302,80 @@ def _has_http_status_attribute(span: dict, expected_status=200) -> bool:
     return False
 
 
+def _extract_span_name(span: dict) -> str:
+    """Extracts human-readable span name from Cloud Trace v1/v2 span structure."""
+    if not isinstance(span, dict):
+        return ""
+    display_name = span.get('displayName') or span.get('display_name')
+    if isinstance(display_name, dict):
+        val = display_name.get('value', '')
+        if val:
+            return str(val)
+    elif display_name:
+        return str(display_name)
+    name = span.get('name', '')
+    if isinstance(name, str):
+        # In Cloud Trace v2, name is 'projects/{p}/traces/{t}/spans/{s}'
+        if not name.startswith('projects/'):
+            return name
+    return ''
+
+
+def _parse_rfc3339_timestamp(ts_str: str):
+    """Parses RFC 3339 / ISO 8601 timestamp string into a datetime object."""
+    if not ts_str or not isinstance(ts_str, str):
+        return None
+    s = ts_str.strip()
+    if s.endswith(('Z', 'z')):
+        s = s[:-1] + '+00:00'
+    m = re.match(r"^(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})(?:\.(\d+))?(.*)$", s)
+    if m:
+        base, frac, tz = m.groups()
+        if frac:
+            frac = (frac + "000000")[:6]
+            s = f"{base}.{frac}{tz}"
+        else:
+            s = f"{base}{tz}"
+    try:
+        return datetime.fromisoformat(s)
+    except Exception:
+        return None
+
+
+def _calculate_span_duration(start_str: str, end_str: str) -> str:
+    """Calculates formatted span duration between start and end timestamps."""
+    start_dt = _parse_rfc3339_timestamp(start_str)
+    end_dt = _parse_rfc3339_timestamp(end_str)
+    if not start_dt or not end_dt:
+        return ""
+    diff_sec = (end_dt - start_dt).total_seconds()
+    diff_ms = diff_sec * 1000.0
+    if diff_ms >= 1000.0:
+        return f"{diff_ms:.2f} ms ({diff_sec:.2f}s)"
+    return f"{diff_ms:.2f} ms"
+
+
+def _format_span_details(span: dict, indent: str = "    ") -> str:
+    """Formats span name, start time, end time, and duration for logging."""
+    if not isinstance(span, dict):
+        return ""
+    lines = []
+    name = _extract_span_name(span)
+    if name:
+        lines.append(f"{indent}Name:       {name}")
+    start_time_str = span.get('startTime') or span.get('start_time') or ''
+    end_time_str = span.get('endTime') or span.get('end_time') or ''
+    if start_time_str:
+        lines.append(f"{indent}Start time: {start_time_str}")
+    if end_time_str:
+        lines.append(f"{indent}End time:   {end_time_str}")
+    if start_time_str and end_time_str:
+        duration = _calculate_span_duration(start_time_str, end_time_str)
+        if duration:
+            lines.append(f"{indent}Duration:   {duration}")
+    return "\n".join(lines)
+
+
 def verify_trace_spans(
     trace_json: dict,
     expected_trace_id: str,
@@ -409,10 +484,16 @@ def verify_trace_spans(
                 f"  ESPv2 span ID: {get_span_id(espv2_s)} (parent: "
                 f"{get_parent_span_id(espv2_s)})"
             )
+            espv2_details = _format_span_details(espv2_s)
+            if espv2_details:
+                print(espv2_details)
             print(
                 f"  Backend span ID: {get_span_id(backend_s)} (parent: "
                 f"{get_parent_span_id(backend_s)})"
             )
+            backend_details = _format_span_details(backend_s)
+            if backend_details:
+                print(backend_details)
         return True
 
     # If only 1 span is present in the trace, accept the ESPv2 ingress span alone.
@@ -424,6 +505,9 @@ def verify_trace_spans(
                 f"  ESPv2 span ID: {get_span_id(matched_ingress)} (parent: "
                 f"{get_parent_span_id(matched_ingress)})"
             )
+            ingress_details = _format_span_details(matched_ingress)
+            if ingress_details:
+                print(ingress_details)
         return True
 
     if verbose:
@@ -432,9 +516,10 @@ def verify_trace_spans(
             f"Spans in trace ({len(spans)}):"
         )
         for s in spans:
+            span_name = _extract_span_name(s) or s.get('name')
             print(
                 f"  - spanId: {get_span_id(s)}, parentSpanId: {get_parent_span_id(s)}, "
-                f"name: {s.get('name')}, "
+                f"name: {span_name}, "
                 f"has_status: {_has_http_status_attribute(s, expected_status)}"
             )
     return False

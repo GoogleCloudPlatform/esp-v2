@@ -36,6 +36,10 @@ if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
 from apiproxy_trace_test import (
+    _calculate_span_duration,
+    _extract_span_name,
+    _format_span_details,
+    _parse_rfc3339_timestamp,
     generate_w3c_traceparent,
     get_gcp_access_token,
     make_argparser,
@@ -780,6 +784,157 @@ class ApiProxyTraceUnitTest(unittest.TestCase):
         # Check default value for host_header
         default_args = parser.parse_args([])
         self.assertIsNone(default_args.host_header)
+
+    def test_extract_span_name(self):
+        """Verifies span name extraction from v1, v2, and display_name structures."""
+        # Cloud Trace v1 format
+        self.assertEqual(
+            _extract_span_name({'name': 'ingress router-backend'}),
+            'ingress router-backend',
+        )
+        # Cloud Trace v2 format with dict displayName
+        self.assertEqual(
+            _extract_span_name({'displayName': {'value': 'Bookstore.ListShelves'}}),
+            'Bookstore.ListShelves',
+        )
+        # Cloud Trace v2 format with string displayName
+        self.assertEqual(
+            _extract_span_name({'displayName': 'Bookstore.GetShelf'}),
+            'Bookstore.GetShelf',
+        )
+        # Cloud Trace v2 resource name without displayName ignored
+        self.assertEqual(
+            _extract_span_name({'name': 'projects/p/traces/t/spans/s'}),
+            '',
+        )
+        # Empty / non-dict
+        self.assertEqual(_extract_span_name({}), '')
+        self.assertEqual(_extract_span_name(None), '')
+
+    def test_parse_rfc3339_timestamp(self):
+        """Verifies parsing RFC 3339 / ISO 8601 timestamps."""
+        # Microseconds with Z
+        dt = _parse_rfc3339_timestamp('2026-09-25T05:22:28.123456Z')
+        self.assertIsNotNone(dt)
+        self.assertEqual(dt.microsecond, 123456)
+
+        # 9-digit nanoseconds with Z
+        dt_nano = _parse_rfc3339_timestamp('2026-09-25T05:22:28.123456789Z')
+        self.assertIsNotNone(dt_nano)
+        self.assertEqual(dt_nano.microsecond, 123456)
+
+        # No fractional seconds
+        dt_sec = _parse_rfc3339_timestamp('2026-09-25T05:22:28Z')
+        self.assertIsNotNone(dt_sec)
+        self.assertEqual(dt_sec.microsecond, 0)
+
+        # Timezone offset
+        dt_tz = _parse_rfc3339_timestamp('2026-09-25T05:22:28.500+00:00')
+        self.assertIsNotNone(dt_tz)
+
+        # Invalid formats
+        self.assertIsNone(_parse_rfc3339_timestamp('not-a-date'))
+        self.assertIsNone(_parse_rfc3339_timestamp(''))
+        self.assertIsNone(_parse_rfc3339_timestamp(None))
+
+    def test_calculate_span_duration(self):
+        """Verifies duration calculation and formatting."""
+        # Under 1 second
+        self.assertEqual(
+            _calculate_span_duration(
+                '2026-09-25T05:22:28.100000Z',
+                '2026-09-25T05:22:28.122220Z',
+            ),
+            '22.22 ms',
+        )
+        # Over 1 second
+        self.assertEqual(
+            _calculate_span_duration(
+                '2026-09-25T05:22:28.000Z',
+                '2026-09-25T05:22:30.000Z',
+            ),
+            '2000.00 ms (2.00s)',
+        )
+        # Invalid / missing timestamps
+        self.assertEqual(_calculate_span_duration('', ''), '')
+        self.assertEqual(_calculate_span_duration('invalid', 'invalid'), '')
+
+    def test_format_span_details(self):
+        """Verifies formatting of span details including name, start, end, and duration."""
+        span = {
+            'name': 'ingress router-backend',
+            'startTime': '2026-09-25T05:22:28.100000Z',
+            'endTime': '2026-09-25T05:22:28.122220Z',
+        }
+        details = _format_span_details(span, indent='  ')
+        self.assertIn('  Name:       ingress router-backend', details)
+        self.assertIn('  Start time: 2026-09-25T05:22:28.100000Z', details)
+        self.assertIn('  End time:   2026-09-25T05:22:28.122220Z', details)
+        self.assertIn('  Duration:   22.22 ms', details)
+
+        # Partial span (name only)
+        partial_span = {'name': 'partial'}
+        partial_details = _format_span_details(partial_span, indent='  ')
+        self.assertEqual(partial_details, '  Name:       partial')
+
+        # Empty span
+        self.assertEqual(_format_span_details({}), '')
+
+    def test_verify_trace_spans_verbose_logging_timing(self):
+        """Verifies that verify_trace_spans logs span timing and duration when verbose=True."""
+        trace_id = '4bf92f3577b34da6a3ce929d0e0e4736'
+        client_span_id = '0010000000000001'
+        espv2_span_id = '0020000000000001'
+        backend_span_id = '0030000000000001'
+
+        trace_json = {
+            'name': f'projects/test-project/traces/{trace_id}',
+            'spans': [
+                {
+                    'spanId': espv2_span_id,
+                    'parentSpanId': client_span_id,
+                    'displayName': {'value': 'ingress router-backend'},
+                    'startTime': '2026-09-25T05:22:28.100000Z',
+                    'endTime': '2026-09-25T05:22:28.122220Z',
+                    'attributes': {
+                        'attributeMap': {
+                            '/http/status_code': {'intValue': '200'},
+                        }
+                    },
+                },
+                {
+                    'spanId': backend_span_id,
+                    'parentSpanId': espv2_span_id,
+                    'displayName': {'value': 'Bookstore.ListShelves'},
+                    'startTime': '2026-09-25T05:22:28.105000Z',
+                    'endTime': '2026-09-25T05:22:28.120000Z',
+                    'attributes': {
+                        'attributeMap': {
+                            'http.status_code': {'intValue': '200'},
+                        }
+                    },
+                },
+            ],
+        }
+
+        import io
+        stdout_capture = io.StringIO()
+        with mock.patch('sys.stdout', stdout_capture):
+            result = verify_trace_spans(
+                trace_json, trace_id, client_span_id, verbose=True
+            )
+
+        self.assertTrue(result)
+        output = stdout_capture.getvalue()
+        self.assertIn('Trace verification succeeded (full span chain):', output)
+        self.assertIn('ESPv2 span ID: 0020000000000001', output)
+        self.assertIn('Name:       ingress router-backend', output)
+        self.assertIn('Start time: 2026-09-25T05:22:28.100000Z', output)
+        self.assertIn('End time:   2026-09-25T05:22:28.122220Z', output)
+        self.assertIn('Duration:   22.22 ms', output)
+        self.assertIn('Backend span ID: 0030000000000001', output)
+        self.assertIn('Name:       Bookstore.ListShelves', output)
+        self.assertIn('Duration:   15.00 ms', output)
 
 
 if __name__ == '__main__':
