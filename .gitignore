@@ -15,6 +15,3 @@ src/go/proto/
 # C++ coverage
 generated/
 third_party/tools/coverage/BUILD
-
-# Local user overrides
-.bazelrc.user

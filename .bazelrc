@@ -132,8 +132,3 @@ coverage:test-coverage --test_arg="--log-path /dev/null"
 coverage:test-coverage --test_arg="-l trace"
 coverage:fuzz-coverage --config=asan-fuzzer
 coverage:fuzz-coverage --run_under=@envoy//bazel/coverage:fuzz_coverage_wrapper.sh
-build:clang-release --copt=-Wno-unknown-warning-option
-build:clang-release --cxxopt=-Wno-unknown-warning-option
-build:clang-release --copt=-Wno-deprecated-declarations
-build:clang-release --cxxopt=-Wno-deprecated-declarations
-try-import %workspace%/.bazelrc.user
