@@ -1,0 +1,9 @@
+--- a/source/common/router/router_ratelimit.h
++++ b/source/common/router/router_ratelimit.h
+@@ -350,5 +350,5 @@
+ private:
+   // An empty vector that will be returned for any getApplicableRateLimit() invocation.
+-  const std::vector<std::reference_wrapper<const RateLimitPolicyEntry>> empty_vector_;
++  const std::vector<std::reference_wrapper<const RateLimitPolicyEntry>> empty_vector_{};
+ };
+ using DefaultRateLimitPolicy = ConstSingleton<DefaultRateLimitPolicyImpl>;

@@ -44,7 +44,7 @@ class ServiceControlHandlerImpl
       public ServiceControlHandler {
  public:
   ServiceControlHandlerImpl(
-      const Envoy::Http::RequestHeaderMap& headers,
+      const Envoy::Http::RequestHeaderMap* headers,
       Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
       const std::string& uuid, const FilterConfigParser& cfg_parser,
       Envoy::TimeSource& timeSource, ServiceControlFilterStats& filter_stats);
@@ -152,7 +152,7 @@ class ServiceControlHandlerFactoryImpl : public ServiceControlHandlerFactory {
       : random_(random), cfg_parser_(cfg_parser), time_source_(time_source) {}
 
   ServiceControlHandlerPtr createHandler(
-      const Envoy::Http::RequestHeaderMap& headers,
+      const Envoy::Http::RequestHeaderMap* headers,
       Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
       ServiceControlFilterStats& filter_stats) const override {
     return std::make_unique<ServiceControlHandlerImpl>(

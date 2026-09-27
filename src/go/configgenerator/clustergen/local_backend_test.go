@@ -41,11 +41,12 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 			},
 			WantClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-					ConnectTimeout:       durationpb.New(20 * time.Second),
-					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
-					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
+					Name:                          "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+					ConnectTimeout:                durationpb.New(20 * time.Second),
+					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+					LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
+					TypedExtensionProtocolOptions: util.CreateHttp1UpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
@@ -60,11 +61,12 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 			},
 			WantClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-					ConnectTimeout:       durationpb.New(20 * time.Second),
-					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
-					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
+					Name:                          "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+					ConnectTimeout:                durationpb.New(20 * time.Second),
+					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+					LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
+					TypedExtensionProtocolOptions: util.CreateHttp1UpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 					CircuitBreakers: &clusterpb.CircuitBreakers{
 						Thresholds: []*clusterpb.CircuitBreakers_Thresholds{
 							{
@@ -90,12 +92,13 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 			},
 			WantClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-					ConnectTimeout:       durationpb.New(20 * time.Second),
-					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("mybackend.com", 443),
-					TransportSocket:      clustergentest.CreateDefaultTLS(t, "mybackend.com", false),
-					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
+					Name:                          "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+					ConnectTimeout:                durationpb.New(20 * time.Second),
+					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
+					TypedExtensionProtocolOptions: util.CreateHttp1UpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
+					TransportSocket:               clustergentest.CreateDefaultTLS(t, "mybackend.com", false),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
 		},
@@ -113,7 +116,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
-					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
 					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
@@ -133,7 +136,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:               clustergentest.CreateDefaultTLS(t, "mybackend.com", true),
-					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
 					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 				},
 			},
@@ -153,7 +156,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 					ConnectTimeout:                durationpb.New(20 * time.Second),
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
-					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
 					HealthChecks: []*corepb.HealthCheck{
 						{
 							Timeout:            durationpb.New(1 * time.Second),
@@ -189,7 +192,7 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
 					LoadAssignment:                util.CreateLoadAssignment("mybackend.com", 443),
 					TransportSocket:               clustergentest.CreateDefaultTLS(t, "mybackend.com", true),
-					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(),
+					TypedExtensionProtocolOptions: util.CreateUpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
 					HealthChecks: []*corepb.HealthCheck{
 						{
 							Timeout:            durationpb.New(10 * time.Second),
@@ -219,11 +222,12 @@ func TestNewLocalBackendClusterFromOPConfig_GenConfig(t *testing.T) {
 			},
 			WantClusters: []*clusterpb.Cluster{
 				{
-					Name:                 "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-					ConnectTimeout:       durationpb.New(20 * time.Second),
-					ClusterDiscoveryType: &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
-					LoadAssignment:       util.CreateLoadAssignment("127.0.0.1", 80),
-					DnsLookupFamily:      clusterpb.Cluster_V4_PREFERRED,
+					Name:                          "backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+					ConnectTimeout:                durationpb.New(20 * time.Second),
+					ClusterDiscoveryType:          &clusterpb.Cluster_Type{Type: clusterpb.Cluster_LOGICAL_DNS},
+					LoadAssignment:                util.CreateLoadAssignment("127.0.0.1", 80),
+					TypedExtensionProtocolOptions: util.CreateHttp1UpstreamProtocolOptions(clustergentest.ExpectedUpstreamFilters()),
+					DnsLookupFamily:               clusterpb.Cluster_V4_PREFERRED,
 					DnsResolvers: []*corepb.Address{
 						{
 							Address: &corepb.Address_SocketAddress{

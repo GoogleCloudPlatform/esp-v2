@@ -18,8 +18,8 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":token_info_lib",
-        "//external:protobuf",
         "//src/envoy/utils:json_struct_lib",
+        "@com_google_protobuf//:protobuf",
         "@envoy//source/common/common:empty_string",
         "@envoy//source/common/http:headers_lib",
         "@envoy//source/common/http:message_lib",

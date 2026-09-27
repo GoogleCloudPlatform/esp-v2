@@ -21,7 +21,7 @@ import (
 )
 
 func TestCreateUpstreamProtocolOptionsIncludesKeepalive(t *testing.T) {
-	options, ok := CreateUpstreamProtocolOptions()[UpstreamProtocolOptions]
+	options, ok := CreateUpstreamProtocolOptions(nil)[UpstreamProtocolOptions]
 	if !ok {
 		t.Fatalf("CreateUpstreamProtocolOptions() did not return %q", UpstreamProtocolOptions)
 	}

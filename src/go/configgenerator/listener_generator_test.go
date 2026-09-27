@@ -104,6 +104,11 @@ func TestMakeListeners(t *testing.T) {
             "httpProtocolOptions": {
               "enableTrailers": true
             },
+            "http2ProtocolOptions": {
+              "initialConnectionWindowSize": 268435456,
+              "initialStreamWindowSize": 268435456,
+              "maxConcurrentStreams": 2147483647
+            },
             "localReplyConfig": {
               "bodyFormat": {
                 "jsonFormat": {
@@ -264,6 +269,11 @@ func TestMakeListeners(t *testing.T) {
             ],
             "httpProtocolOptions": {
               "enableTrailers": true
+            },
+            "http2ProtocolOptions": {
+              "initialConnectionWindowSize": 268435456,
+              "initialStreamWindowSize": 268435456,
+              "maxConcurrentStreams": 2147483647
             },
             "localReplyConfig": {
               "bodyFormat": {

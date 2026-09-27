@@ -33,8 +33,18 @@ alias(
 )
 
 alias(
+    name = "trace_context",
+    actual = "//src/envoy/http/trace_context:filter_factory",
+)
+
+alias(
     name = "main",
     actual = "@envoy//source/exe:envoy_main_entry_lib",
+)
+
+alias(
+    name = "early_header_mutation",
+    actual = "//src/envoy/http/early_header_mutation/trace_context:early_header_mutation_factory",
 )
 
 envoy_cc_binary(
@@ -42,10 +52,12 @@ envoy_cc_binary(
     repository = "@envoy",
     deps = [
         ":backend_auth",
+        ":early_header_mutation",
         ":grpc_metadata_scrubber",
         ":header_sanitizer",
         ":main",
         ":path_rewrite",
         ":service_control",
+        ":trace_context",
     ],
 )

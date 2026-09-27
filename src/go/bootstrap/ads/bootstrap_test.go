@@ -70,7 +70,10 @@ func TestCreateBootstrapConfig(t *testing.T) {
          {
             "name": "static-runtime",
             "staticLayer": {
-          "http.max_requests_per_io_cycle":1,
+              "envoy.reloadable_features.explicit_internal_address_config":false,
+              "envoy.reloadable_features.filter_access_loggers_first":false,
+              "envoy.reloadable_features.http2_use_oghttp2":false,
+              "http.max_requests_per_io_cycle":1,
               "re2.max_program_size.error_level":1000
             }
          }
@@ -89,6 +92,9 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
                   "explicitHttpConfig":{
                      "http2ProtocolOptions":{
+                       "initialConnectionWindowSize": 268435456,
+                       "initialStreamWindowSize": 268435456,
+                       "maxConcurrentStreams": 2147483647
                      }
                   }
                }
@@ -167,7 +173,10 @@ func TestCreateBootstrapConfig(t *testing.T) {
          {
             "name": "static-runtime",
             "staticLayer": {
-          "http.max_requests_per_io_cycle":1,
+              "envoy.reloadable_features.explicit_internal_address_config":false,
+              "envoy.reloadable_features.filter_access_loggers_first":false,
+              "envoy.reloadable_features.http2_use_oghttp2":false,
+              "http.max_requests_per_io_cycle":1,
               "re2.max_program_size.error_level":1000
             }
          }
@@ -186,6 +195,9 @@ func TestCreateBootstrapConfig(t *testing.T) {
                   "@type":"type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions",
                   "explicitHttpConfig":{
                      "http2ProtocolOptions":{
+                       "initialConnectionWindowSize": 268435456,
+                       "initialStreamWindowSize": 268435456,
+                       "maxConcurrentStreams": 2147483647
                      }
                   }
                }

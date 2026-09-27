@@ -12,3 +12,5 @@ build --google_default_credentials=true
 build --host_platform_remote_properties_override='properties:{name:"cache-silo-key" value:"CACHE_SILO_NAME"}'
 build --remote_instance_name=projects/CACHE_PROJECT_ID/instances/default_instance
 build --remote_timeout=3600
+build --remote_download_outputs=all
+

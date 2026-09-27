@@ -42,7 +42,7 @@ class IamTokenInfo : public TokenInfo {
 
  private:
   void insertStrListToProto(
-      Envoy::ProtobufWkt::Value& body, const std::string& key,
+      Envoy::Protobuf::Value& body, const std::string& key,
       const ::google::protobuf::RepeatedPtrField<std::string>& val_list,
       const absl::string_view& val_prefix) const;
 

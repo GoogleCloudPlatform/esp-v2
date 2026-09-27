@@ -152,6 +152,9 @@ const (
 	TestStatistics
 	TestStatisticsServiceControlCallStatus
 	TestTraceContextPropagationHeaders
+	TestTraceContextPropagationW3C
+	TestTraceContextPropagationIngress
+	TestTraceContextPropagationEgress
 	TestTraceContextPropagationHeadersForScCheck
 	TestTracesDynamicRouting
 	TestTracesFetchingJwks
@@ -166,6 +169,20 @@ const (
 	TestTranscodingIgnoreQueryParameters
 	TestTranscodingPrintOptions
 	TestWebsocket
+	TestTracingOtlpEndpoint
+	TestTracingOtlpEndpointPrecedence
+	TestTracingOtlpEndpointFallback
+	TestTracingOtlpEndpointSchemeHttps
+	TestTracingOtlpEndpointSchemeBare
+	TestTracingOtlpEndpointSchemeDns
+	TestTracingProjectId
+	TestTracingProjectIdLegacyFlag
+	TestTracingProjectIdOtelEnv
+	TestTracingProjectIdOtelEnvLegacyDot
+	TestTracingProjectIdPrecedence
+	TestTracingProjectIdPrecedenceUnderscoreOverDot
+	TestTracingProjectIdDefaultFallback
+	TestTracingProjectIdNonGcpBypass
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

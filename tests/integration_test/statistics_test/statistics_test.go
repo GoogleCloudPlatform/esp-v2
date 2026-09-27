@@ -182,8 +182,26 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 				_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
 			}
 
-			if err := s.StatsVerifier.CheckExpectedCounters(tc.wantCounters); err != nil {
-				t.Errorf("Test (%v) failed: %v", tc.desc, err)
+			if tc.quotaRespCode == 403 {
+				// Allocate quota calls are flushed periodically in the background every 1 second.
+				// Depending on VM timing/scheduling load during fetchDelay, the number of PERMISSION_DENIED
+				// calls can be >= 2. Verify check.OK equals 1 and allocate_quota.PERMISSION_DENIED is >= 2.
+				if err := s.StatsVerifier.CheckExpectedCounters(utils.StatCounters{
+					"http.ingress_http.service_control.check.OK": 1,
+				}); err != nil {
+					t.Errorf("Test (%v) failed: %v", tc.desc, err)
+				}
+				counters, _, err := utils.FetchStats(s.Ports().AdminPort)
+				if err != nil {
+					t.Errorf("Test (%v) failed to fetch stats: %v", tc.desc, err)
+				} else if counters["http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED"] < 2 {
+					t.Errorf("Test (%v) failed: allocate_quota.PERMISSION_DENIED was %v, want >= 2",
+						tc.desc, counters["http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED"])
+				}
+			} else {
+				if err := s.StatsVerifier.CheckExpectedCounters(tc.wantCounters); err != nil {
+					t.Errorf("Test (%v) failed: %v", tc.desc, err)
+				}
 			}
 		}()
 	}

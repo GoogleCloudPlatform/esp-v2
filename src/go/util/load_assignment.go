@@ -19,9 +19,11 @@ import (
 
 	corepb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointpb "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	httppb "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const (
@@ -30,8 +32,8 @@ const (
 )
 
 // CreateUpstreamProtocolOptions creates a http2 protocol option as a typed upstream extension.
-func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
-	return createUpstreamProtocolOptions(&corepb.KeepaliveSettings{
+func CreateUpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter) map[string]*anypb.Any {
+	return createUpstreamProtocolOptions(upstreamHttpFilters, &corepb.KeepaliveSettings{
 		Interval: durationpb.New(Http2KeepaliveInterval),
 		Timeout:  durationpb.New(Http2KeepaliveTimeout),
 	})
@@ -39,20 +41,43 @@ func CreateUpstreamProtocolOptions() map[string]*anypb.Any {
 
 // CreateUpstreamProtocolOptionsWithoutKeepalive creates HTTP/2 protocol options without connection keepalive.
 func CreateUpstreamProtocolOptionsWithoutKeepalive() map[string]*anypb.Any {
-	return createUpstreamProtocolOptions(nil)
+	return createUpstreamProtocolOptions(nil, nil)
 }
 
-func createUpstreamProtocolOptions(connectionKeepalive *corepb.KeepaliveSettings) map[string]*anypb.Any {
+func createUpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter, connectionKeepalive *corepb.KeepaliveSettings) map[string]*anypb.Any {
 	o := &httppb.HttpProtocolOptions{
 		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
 				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{
 					Http2ProtocolOptions: &corepb.Http2ProtocolOptions{
-						ConnectionKeepalive: connectionKeepalive,
+						MaxConcurrentStreams:        &wrapperspb.UInt32Value{Value: 2147483647},
+						InitialStreamWindowSize:     &wrapperspb.UInt32Value{Value: 268435456},
+						InitialConnectionWindowSize: &wrapperspb.UInt32Value{Value: 268435456},
+						ConnectionKeepalive:         connectionKeepalive,
 					},
 				},
 			},
 		},
+		HttpFilters: upstreamHttpFilters,
+	}
+	a, _ := anypb.New(o)
+
+	return map[string]*anypb.Any{
+		UpstreamProtocolOptions: a,
+	}
+}
+
+// CreateHttp1UpstreamProtocolOptions creates an HTTP/1 protocol option as a typed upstream extension.
+func CreateHttp1UpstreamProtocolOptions(upstreamHttpFilters []*hcmpb.HttpFilter) map[string]*anypb.Any {
+	o := &httppb.HttpProtocolOptions{
+		UpstreamProtocolOptions: &httppb.HttpProtocolOptions_ExplicitHttpConfig_{
+			ExplicitHttpConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig{
+				ProtocolConfig: &httppb.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{
+					HttpProtocolOptions: &corepb.Http1ProtocolOptions{},
+				},
+			},
+		},
+		HttpFilters: upstreamHttpFilters,
 	}
 	a, _ := anypb.New(o)
 

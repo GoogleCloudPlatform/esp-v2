@@ -2,6 +2,7 @@ bazel-*/
 bazel-*
 vendor/
 bin/
+!third_party/bin/
 *.pyc
 node_modules/
 src/go/proto/
@@ -9,6 +10,7 @@ src/go/proto/
 .clwb/
 .ijwb/
 .idea/
+
 
 # C++ coverage
 generated/

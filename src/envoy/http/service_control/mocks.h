@@ -49,7 +49,7 @@ class MockServiceControlHandler : public ServiceControlHandler {
 class MockServiceControlHandlerFactory : public ServiceControlHandlerFactory {
  public:
   MOCK_METHOD(ServiceControlHandlerPtr, createHandler,
-              (const Envoy::Http::RequestHeaderMap& headers,
+              (const Envoy::Http::RequestHeaderMap* headers,
                Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks,
                ServiceControlFilterStats& filter_stats),
               (const, override));

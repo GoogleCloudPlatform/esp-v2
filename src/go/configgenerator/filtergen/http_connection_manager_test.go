@@ -44,6 +44,11 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	"commonHttpProtocolOptions": {
 		"headersWithUnderscoresAction": "REJECT_REQUEST"
 	},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
@@ -94,6 +99,11 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 	"commonHttpProtocolOptions": {
 		"headersWithUnderscoresAction": "REJECT_REQUEST"
 	},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
@@ -129,48 +139,7 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 			OptsMergeBehavior:     mergo.WithOverwriteWithEmptyValue,
 			OnlyCheckFilterConfig: true,
 			WantFilterConfigs: []string{
-				`
-{
-	"commonHttpProtocolOptions": {
-		"headersWithUnderscoresAction": "REJECT_REQUEST"
-	},
-	"localReplyConfig": {
-		"bodyFormat": {
-			"jsonFormat": {
-				"code": "%RESPONSE_CODE%",
-				"message": "%LOCAL_REPLY_BODY%"
-			}
-		}
-	},
-	"normalizePath": false,
-	"pathWithEscapedSlashesAction": "KEEP_UNCHANGED",
-	"statPrefix": "ingress_http",
-	"tracing":{
-		"clientSampling":{},
-		"overallSampling":{
-			"value": 100
-		},
-		"provider":{
-			"name":"envoy.tracers.opencensus",
-			"typedConfig":{
-				 "@type":"type.googleapis.com/envoy.config.trace.v3.OpenCensusConfig",
-				 "stackdriverExporterEnabled":true,
-				 "stackdriverProjectId":"test-project",
-				 "traceConfig":{}
-			}
-		},
-		"randomSampling":{
-			"value": 100
-		}
-	},
-	"upgradeConfigs": [
-		{
-			"upgradeType": "websocket"
-		}
-	],
-	"useRemoteAddress": false
-}
-`,
+				`{"commonHttpProtocolOptions":{"headersWithUnderscoresAction":"REJECT_REQUEST"},"earlyHeaderMutationExtensions":[{"name":"com.google.espv2.filters.http.early_header_mutation.trace_context","typedConfig":{"@type":"type.googleapis.com/envoy.v12.http.trace_context.TraceContextTranslatorConfig"}}],"http2ProtocolOptions":{"initialConnectionWindowSize":268435456,"initialStreamWindowSize":268435456,"maxConcurrentStreams":2147483647},"localReplyConfig":{"bodyFormat":{"jsonFormat":{"code":"%RESPONSE_CODE%","message":"%LOCAL_REPLY_BODY%"}}},"normalizePath":false,"pathWithEscapedSlashesAction":"KEEP_UNCHANGED","statPrefix":"ingress_http","tracing":{"clientSampling":{},"overallSampling":{"value":100},"provider":{"name":"envoy.tracers.opentelemetry","typedConfig":{"@type":"type.googleapis.com/envoy.config.trace.v3.OpenTelemetryConfig","grpcService":{"googleGrpc":{"channelCredentials":{"googleDefault":{}},"statPrefix":"opentelemetry","targetUri":"telemetry.googleapis.com"}},"serviceName":"espv2"}},"randomSampling":{"value":100}},"upgradeConfigs":[{"upgradeType":"websocket"}],"useRemoteAddress":false}`,
 			},
 		},
 		{
@@ -189,6 +158,11 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 				`
 {
 	"commonHttpProtocolOptions": {},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
@@ -227,7 +201,12 @@ func TestNewHTTPConnectionManagerGenFromOPConfig_GenConfig(t *testing.T) {
 				`
 {
 	"commonHttpProtocolOptions": {},
-																"httpProtocolOptions": {"enableTrailers": true},
+	"http2ProtocolOptions": {
+		"initialConnectionWindowSize": 268435456,
+		"initialStreamWindowSize": 268435456,
+		"maxConcurrentStreams": 2147483647
+	},
+	"httpProtocolOptions": {"enableTrailers": true},
 	"localReplyConfig": {
 		"bodyFormat": {
 			"jsonFormat": {
