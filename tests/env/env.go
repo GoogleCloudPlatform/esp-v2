@@ -79,6 +79,7 @@ type TestEnv struct {
 	FakeJwtService                  *components.FakeJwtService
 	skipHealthChecks                bool
 	skipEnvoyHealthChecks           bool
+	envoyHealthCheckRetries         int
 	StatsVerifier                   *components.StatsVerifier
 
 	// Only implemented for a subset of backends.
@@ -276,6 +277,13 @@ func (e *TestEnv) SkipEnvoyHealthChecks() {
 	e.skipEnvoyHealthChecks = true
 }
 
+// SetEnvoyHealthCheckRetries overrides how many times the health check on the
+// Envoy listener port is attempted, for tests in which Envoy is expected to get
+// its listener late.
+func (e *TestEnv) SetEnvoyHealthCheckRetries(retries int) {
+	e.envoyHealthCheckRetries = retries
+}
+
 // In the service config for each backend, the backend port is represented with 2 constants.
 // Replace them as needed.
 func addDynamicRoutingBackendPort(serviceConfig *confpb.Service, port uint16) error {
@@ -440,6 +448,7 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		glog.Errorf("unable to create Envoy %v", err)
 		return err
 	}
+	e.envoy.HealthCheckRetries = e.envoyHealthCheckRetries
 	if !e.skipEnvoyHealthChecks {
 		e.healthRegistry.RegisterHealthChecker(e.envoy)
 	}
