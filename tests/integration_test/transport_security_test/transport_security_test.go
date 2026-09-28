@@ -15,8 +15,10 @@
 package transport_security_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
@@ -294,7 +296,7 @@ func TestDownstreamMTLS(t *testing.T) {
 
 			for _, version := range tc.httpVersions {
 				t.Run(fmt.Sprintf("HTTP version %d", version), func(t *testing.T) {
-					_, resp, err = client.DoHttpsGet(url, version, tc.clientRootCertPath, tc.clientCertPath, tc.clientKeyPath)
+					resp, err = doHttpsGet(t, url, version, tc.clientRootCertPath, tc.clientCertPath, tc.clientKeyPath, tc.wantError)
 
 					if cmpErr := utils.CompareErrors(err, tc.wantError); cmpErr != nil {
 						t.Fatal(cmpErr)
@@ -306,6 +308,24 @@ func TestDownstreamMTLS(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+// doHttpsGet calls client.DoHttpsGet. When an error is expected, it retries on
+// a new connection if the connection broke before the proxy's TLS alert could
+// be read: with TLS 1.3, the client completes the handshake before the proxy
+// verifies the client cert, so the client may write the request after the
+// proxy has already rejected the cert and closed the connection. The write
+// error then hides the alert.
+func doHttpsGet(t *testing.T, url string, httpVersion int, rootCertPath, certPath, keyPath string, wantError error) ([]byte, error) {
+	const maxAttempts = 5
+	for attempt := 1; ; attempt++ {
+		_, resp, err := client.DoHttpsGet(url, httpVersion, rootCertPath, certPath, keyPath)
+		connBroken := errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET)
+		if wantError == nil || !connBroken || attempt == maxAttempts {
+			return resp, err
+		}
+		t.Logf("attempt %d: connection broke before the TLS alert was read, retrying: %v", attempt, err)
 	}
 }
 
