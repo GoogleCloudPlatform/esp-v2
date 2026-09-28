@@ -16,14 +16,22 @@ package access_log_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/echo/client"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
+)
+
+const (
+	// Envoy writes the access log asynchronously, possibly after the client has
+	// received the response, and flushes it to the file at least every 10s
+	// (--file-flush-interval-msec). Wait a bit longer than that.
+	accessLogWaitTimeout  = 15 * time.Second
+	accessLogPollInterval = 100 * time.Millisecond
 )
 
 func tryRemoveFile(path string) error {
@@ -32,6 +40,27 @@ func tryRemoveFile(path string) error {
 		return nil
 	}
 	return os.Remove(path)
+}
+
+// readAccessLog polls the access log file until its content is want, and
+// returns the last content read.
+func readAccessLog(path, want string) (string, error) {
+	deadline := time.Now().Add(accessLogWaitTimeout)
+	for {
+		bytes, err := os.ReadFile(path)
+		if err != nil && !os.IsNotExist(err) {
+			return "", err
+		}
+		got := string(bytes)
+		// The file is only appended to, so stop early if it can no longer match.
+		if got == want || !strings.HasPrefix(want, got) {
+			return got, nil
+		}
+		if time.Now().After(deadline) {
+			return got, err
+		}
+		time.Sleep(accessLogPollInterval)
+	}
 }
 
 func makeOneRequest(t *testing.T, s *env.TestEnv, path, wantError string) {
@@ -103,12 +132,12 @@ func TestAccessLog(t *testing.T) {
 			defer s.TearDown(t)
 			makeOneRequest(t, s, tc.requestPath, tc.wantError)
 
-			bytes, err := ioutil.ReadFile(accessLogFilePath)
+			gotAccessLog, err := readAccessLog(accessLogFilePath, tc.wantAccessLog)
 			if err != nil {
 				t.Fatalf("fail to read access log file: %v", err)
 			}
 
-			if gotAccessLog := string(bytes); tc.wantAccessLog != gotAccessLog {
+			if tc.wantAccessLog != gotAccessLog {
 				t.Errorf("expect access log: %s, get acccess log: %v", tc.wantAccessLog, gotAccessLog)
 			}
 

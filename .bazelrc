@@ -87,6 +87,12 @@ build:clang-tsan --define ENVOY_CONFIG_TSAN=1
 build:clang-tsan --copt -fsanitize=thread
 build:clang-tsan --linkopt -fsanitize=thread
 build:clang-tsan --copt -DEVENT__DISABLE_DEBUG_MODE
+# TSan in clang-14 aborts with "FATAL: ThreadSanitizer: unexpected memory
+# mapping" when a PIE binary is loaded outside of its fixed memory layout, which
+# happens on hosts with a high vm.mmap_rnd_bits. Run the tests with ASLR
+# disabled, as the integration tests do for Envoy.
+# See https://github.com/google/sanitizers/issues/1716.
+test:clang-tsan --run_under="setarch --addr-no-randomize"
 
 # Fuzz builds
 build:asan-fuzzer --config=clang-asan

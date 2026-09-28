@@ -115,7 +115,9 @@ function deployBackend() {
       ;;
     "cloud-function")
       cd ${ROOT}/tests/endpoints/bookstore
-      gcloud functions deploy ${BACKEND_SERVICE_NAME}  --runtime nodejs12 \
+      # Deploy a 1st gen function: gcloud defaults to 2nd gen, but the steps
+      # below rely on the 1st gen httpsTrigger.url and cloudfunctions.invoker.
+      gcloud functions deploy ${BACKEND_SERVICE_NAME} --no-gen2 --runtime nodejs22 \
         --trigger-http --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
         --quiet --entry-point app
       cd ${ROOT}

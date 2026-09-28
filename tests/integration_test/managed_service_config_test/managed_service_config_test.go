@@ -140,6 +140,13 @@ func TestRetryCallServiceManagement(t *testing.T) {
 		rejectWith429Times: 1,
 	}
 
+	// After the 429, ConfigManager waits 10s before retrying, and only serves
+	// ADS once it has the service config. Meanwhile, Envoy keeps retrying to
+	// connect to ADS with a jittered exponential backoff of up to 30s, so it
+	// can get its listener ~40s after starting, which is later than the
+	// default health check allows. 20 retries, 3s apart, allow for 60s.
+	s.SetEnvoyHealthCheckRetries(20)
+
 	if err := s.Setup(args); err != nil {
 		t.Fatalf("fail to setup test env, %v", err)
 	}

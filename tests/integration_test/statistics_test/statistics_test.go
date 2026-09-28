@@ -103,6 +103,9 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 		quotaRespCode  int
 		reportRespCode int
 		wantCounters   utils.StatCounters
+		// Counters that keep increasing in the background, so only a minimum
+		// value can be asserted.
+		wantMinCounters utils.StatCounters
 	}{
 		{
 			desc:          "check call, quota call and report call are successful",
@@ -137,7 +140,13 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 			desc:          "quota call is 403",
 			quotaRespCode: 403,
 			wantCounters: utils.StatCounters{
-				"http.ingress_http.service_control.check.OK":                         1,
+				"http.ingress_http.service_control.check.OK": 1,
+			},
+			wantMinCounters: utils.StatCounters{
+				// One quota call for the incoming request. After that, the denied
+				// cache entry is re-checked with the server on cache flushes, every
+				// 1-2s, so the count keeps growing and its exact value depends on
+				// when the stats are fetched.
 				"http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED": 3,
 			},
 		},
@@ -184,6 +193,11 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 
 			if err := s.StatsVerifier.CheckExpectedCounters(tc.wantCounters); err != nil {
 				t.Errorf("Test (%v) failed: %v", tc.desc, err)
+			}
+			if tc.wantMinCounters != nil {
+				if err := s.StatsVerifier.CheckMinimumCounters(tc.wantMinCounters); err != nil {
+					t.Errorf("Test (%v) failed: %v", tc.desc, err)
+				}
 			}
 		}()
 	}

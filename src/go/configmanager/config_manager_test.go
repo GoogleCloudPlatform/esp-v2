@@ -165,11 +165,13 @@ func TestRetryCallServiceManagement(t *testing.T) {
 
 	// The mock server will reject the first 3 requests with 429 and it has a
 	//silent interval, during which it will reject incoming requests with 500.
+	// The silent interval is much longer than the "too short" retry interval
+	// below, so that the test still passes when it runs slowly, e.g. with -race.
 	initMockServer = func(t *testing.T, config *safeData) *httptest.Server {
 		rejectWith429Times := 3
 		rejectCnt := 0
 		var lastCallTime time.Time
-		silentInterval := time.Millisecond * 150
+		silentInterval := time.Second
 		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if rejectCnt < rejectWith429Times {
 				rejectCnt += 1
@@ -226,7 +228,7 @@ func TestRetryCallServiceManagement(t *testing.T) {
 			retryConfigs: map[int]util.RetryConfig{
 				http.StatusTooManyRequests: {
 					RetryNum:      3,
-					RetryInterval: time.Millisecond * 200,
+					RetryInterval: time.Second,
 				},
 			},
 		},
