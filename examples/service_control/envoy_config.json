@@ -5,6 +5,9 @@
       {
         "name": "static-runtime",
         "staticLayer": {
+          "envoy.reloadable_features.explicit_internal_address_config": false,
+          "envoy.reloadable_features.filter_access_loggers_first": false,
+          "envoy.reloadable_features.http2_use_oghttp2": false,
           "http.max_requests_per_io_cycle": 1,
           "re2.max_program_size.error_level": 1000
         }
@@ -123,6 +126,11 @@
                   "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
                   "commonHttpProtocolOptions": {
                     "headersWithUnderscoresAction": "REJECT_REQUEST"
+                  },
+                  "http2ProtocolOptions": {
+                    "initialConnectionWindowSize": 268435456,
+                    "initialStreamWindowSize": 268435456,
+                    "maxConcurrentStreams": 2147483647
                   },
                   "httpFilters": [
                     {

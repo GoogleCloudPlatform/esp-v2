@@ -86,3 +86,70 @@ func TestServiceControlCredential(t *testing.T) {
 
 	}
 }
+
+func TestResolveTracingProjectIdInCommonOptions(t *testing.T) {
+	orig := *TracingProjectId
+	defer flag.Set("tracing_project_id", orig)
+
+	testCases := []struct {
+		desc            string
+		envResourceAttr string
+		flagProjectId   string
+		wantProjectId   string
+	}{
+		{
+			desc:            "Default: no env var, flag is empty -> empty project ID",
+			envResourceAttr: "",
+			flagProjectId:   "",
+			wantProjectId:   "",
+		},
+		{
+			desc:            "Standard OTel Env Var: gcp.project_id resolves project ID",
+			envResourceAttr: "gcp.project_id=test-project-otel",
+			flagProjectId:   "",
+			wantProjectId:   "test-project-otel",
+		},
+		{
+			desc:            "Legacy OTel Env Var: gcp.project.id resolves project ID",
+			envResourceAttr: "gcp.project.id=test-project-legacy-dot",
+			flagProjectId:   "",
+			wantProjectId:   "test-project-legacy-dot",
+		},
+		{
+			desc:            "Legacy CLI Flag: --tracing_project_id resolves project ID when env var is unset",
+			envResourceAttr: "",
+			flagProjectId:   "test-project-flag",
+			wantProjectId:   "test-project-flag",
+		},
+		{
+			desc:            "Precedence: OTEL_RESOURCE_ATTRIBUTES overrides --tracing_project_id flag",
+			envResourceAttr: "gcp.project_id=test-project-otel",
+			flagProjectId:   "test-project-flag",
+			wantProjectId:   "test-project-otel",
+		},
+		{
+			desc:            "Precedence: gcp.project_id takes precedence over gcp.project.id",
+			envResourceAttr: "gcp.project.id=dot-project,gcp.project_id=underscore-project",
+			flagProjectId:   "flag-project",
+			wantProjectId:   "underscore-project",
+		},
+		{
+			desc:            "Precedence: gcp.project.id overrides --tracing_project_id flag when gcp.project_id is absent",
+			envResourceAttr: "gcp.project.id=dot-override-project",
+			flagProjectId:   "flag-project",
+			wantProjectId:   "dot-override-project",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Setenv("OTEL_RESOURCE_ATTRIBUTES", tc.envResourceAttr)
+			flag.Set("tracing_project_id", tc.flagProjectId)
+
+			opts := DefaultCommonOptionsFromFlags()
+			if got := opts.TracingOptions.ProjectId; got != tc.wantProjectId {
+				t.Errorf("DefaultCommonOptionsFromFlags().TracingOptions.ProjectId = %q, want %q", got, tc.wantProjectId)
+			}
+		})
+	}
+}

@@ -1,0 +1,2 @@
+#!/bin/bash
+exec $(which llvm-symbolizer-14 2>/dev/null || which llvm-symbolizer 2>/dev/null || echo /usr/bin/llvm-symbolizer-14) "$@"

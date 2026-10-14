@@ -86,10 +86,10 @@ genrule(
         "proto/grpc-test.proto",
     ],
     outs = ["grpc-test.descriptor"],
-    cmd = """$(location //external:protoc) $(location :proto/grpc-test.proto) \
+    cmd = """$(location @com_google_protobuf//:protoc) $(location :proto/grpc-test.proto) \
         -I$$(dirname $(location @com_github_googleapis_googleapis//google/rpc:status.proto))/../.. \
         -Iexternal/com_google_protobuf/src \
         -I$$(dirname $(location :proto/grpc-test.proto)) \
         --include_imports --descriptor_set_out=$@""",
-    tools = ["//external:protoc"],
+    tools = ["@com_google_protobuf//:protoc"],
 )

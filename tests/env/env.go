@@ -90,6 +90,12 @@ type TestEnv struct {
 	backendRejectRequestStatus  int
 	disableHttp2ForHttpsBackend bool
 	useIPv6Address              bool
+
+	otlpEndpointEnv               string
+	hasOtlpEndpointEnv            bool
+	otelResourceAttributesEnv     string
+	hasOtelResourceAttributesEnv  bool
+	omitTracingStackdriverAddress bool
 }
 
 func NewTestEnv(testId uint16, backend platform.Backend) *TestEnv {
@@ -299,6 +305,24 @@ func (e *TestEnv) SetupFakeTraceServer(sampleRate float32) {
 	e.tracingSampleRate = sampleRate
 }
 
+// SetOtlpEndpointEnv configures TestEnv to pass OTEL_EXPORTER_OTLP_ENDPOINT to child processes.
+func (e *TestEnv) SetOtlpEndpointEnv(endpoint string) {
+	e.otlpEndpointEnv = endpoint
+	e.hasOtlpEndpointEnv = true
+}
+
+// SetOtelResourceAttributesEnv configures TestEnv to pass OTEL_RESOURCE_ATTRIBUTES to child processes.
+func (e *TestEnv) SetOtelResourceAttributesEnv(attrs string) {
+	e.otelResourceAttributesEnv = attrs
+	e.hasOtelResourceAttributesEnv = true
+}
+
+// SetOmitTracingStackdriverAddress controls whether TestEnv automatically adds
+// the --tracing_stackdriver_address flag.
+func (e *TestEnv) SetOmitTracingStackdriverAddress(omit bool) {
+	e.omitTracingStackdriverAddress = omit
+}
+
 func (e *TestEnv) DisableHttp2ForHttpsBackend() {
 	e.disableHttp2ForHttpsBackend = true
 }
@@ -388,7 +412,9 @@ func (e *TestEnv) Setup(confArgs []string) error {
 	if e.enableTracing {
 		confArgs = append(confArgs, fmt.Sprintf("--tracing_sample_rate=%v", e.tracingSampleRate))
 		// This address must be in gRPC format: https://github.com/grpc/grpc/blob/master/doc/naming.md
-		confArgs = append(confArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), e.ports.FakeStackdriverPort))
+		if !e.omitTracingStackdriverAddress {
+			confArgs = append(confArgs, fmt.Sprintf("--tracing_stackdriver_address=%v:%v:%v", platform.GetIpProtocol(), platform.GetLoopbackAddress(), e.ports.FakeStackdriverPort))
+		}
 	} else {
 		confArgs = append(confArgs, "--disable_tracing")
 	}
@@ -414,7 +440,15 @@ func (e *TestEnv) Setup(confArgs []string) error {
 		confArgs = append(confArgs, "--backend_address", e.backendAddress)
 	}
 
-	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, e.ports, confArgs)
+	var customEnvs []string
+	if e.hasOtlpEndpointEnv {
+		customEnvs = append(customEnvs, fmt.Sprintf("OTEL_EXPORTER_OTLP_ENDPOINT=%s", e.otlpEndpointEnv))
+	}
+	if e.hasOtelResourceAttributesEnv {
+		customEnvs = append(customEnvs, fmt.Sprintf("OTEL_RESOURCE_ATTRIBUTES=%s", e.otelResourceAttributesEnv))
+	}
+
+	e.configMgr, err = components.NewConfigManagerServer(debugConfigMgr, e.ports, confArgs, customEnvs...)
 	if err != nil {
 		return err
 	}

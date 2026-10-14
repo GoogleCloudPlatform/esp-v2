@@ -11,6 +11,7 @@
 EXTENSIONS = {
     # All extensions explicitly referenced by config generator and our tests.
     "envoy.clusters.static": "//source/extensions/clusters/static:static_cluster_lib",
+    "envoy.clusters.dns": "//source/extensions/clusters/dns:dns_cluster_lib",
     "envoy.clusters.strict_dns": "//source/extensions/clusters/strict_dns:strict_dns_cluster_lib",
     "envoy.clusters.logical_dns": "//source/extensions/clusters/logical_dns:logical_dns_cluster_lib",
     "envoy.access_loggers.file": "//source/extensions/access_loggers/file:config",
@@ -24,7 +25,8 @@ EXTENSIONS = {
     "envoy.filters.http.jwt_authn": "//source/extensions/filters/http/jwt_authn:config",
     "envoy.filters.http.router": "//source/extensions/filters/http/router:config",
     "envoy.filters.network.http_connection_manager": "//source/extensions/filters/network/http_connection_manager:config",
-    "envoy.tracers.opencensus": "//source/extensions/tracers/opencensus:config",
+    "envoy.tracers.opentelemetry": "//source/extensions/tracers/opentelemetry:config",
+    "envoy.tracers.opentelemetry.resource_detectors.environment": "//source/extensions/tracers/opentelemetry/resource_detectors/environment:config",
 
     # Implicitly needed for TLS config.
     "envoy.transport_sockets.raw_buffer": "//source/extensions/transport_sockets/raw_buffer:config",

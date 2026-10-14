@@ -69,6 +69,7 @@ func NewLocalBackendClustersFromOPConfig(serviceConfig *servicepb.Service, opts 
 				BackendDnsLookupFamily: opts.BackendDnsLookupFamily,
 				DNS:                    helpers.NewClusterDNSConfigerFromOPConfig(opts),
 				TLS:                    tls,
+				UpstreamHttpFilters:    helpers.CreateUpstreamHttpFilters(serviceConfig, opts),
 			},
 			GRPCHealth: helpers.NewClusterGRPCHealthCheckConfigerFromOPConfig(opts),
 		},

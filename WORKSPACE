@@ -32,6 +32,33 @@ local_repository(
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "3b5b49006181f5f8ff626ef8ddceaa95e9bb8ad294f7b5d7b11ea9f7ddaf8c59",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.9.0/bazel-skylib-1.9.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.9.0/bazel-skylib-1.9.0.tar.gz",
+    ],
+)
+
+http_archive(
+    name = "com_google_absl",
+    sha256 = "4314e2a7cbac89cac25a2f2322870f343d81579756ceff7f431803c2c9090195",
+    strip_prefix = "abseil-cpp-20260107.1",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/20260107.1.tar.gz"],
+)
+
+http_archive(
+    name = "quiche",
+    build_file = "@envoy//bazel/external:quiche.BUILD",
+    patch_args = ["-p1"],
+    patch_cmds = ["find quiche/ -type f -name \"*.bazel\" -delete"],
+    patches = ["//third_party/envoy:quiche.patch"],
+    sha256 = "08033a0886b470d4ea836a6b785ef6ef7d638265e5523a37718cdd6d1ef6a409",
+    strip_prefix = "quiche-e68fe05e70da74a3ea282d927c76f76b4bc4e710",
+    urls = ["https://github.com/google/quiche/archive/e68fe05e70da74a3ea282d927c76f76b4bc4e710.tar.gz"],
+)
+
 # Updating Envoy version:
 # 1) Modify `ENVOY_SHA1` and the corresponding date.
 # 2) Check if there was any change in WORKSPACE of Envoy upstream. GCP Proxy
@@ -39,12 +66,20 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # 3) Check if envoy_build_config/extensions_build_config.bzl is up-to-date.
 # Try to match it with the one in source/extensions and comment out unneeded extensions.
 
-ENVOY_SHA1 = "349011c2ebd40f070510e34f4605bff1da64fb0e"  # v1.30.7
+ENVOY_SHA1 = "f1dd21b16c244bda00edfb5ffce577e12d0d2ec2"  # v1.38.0
 
-ENVOY_SHA256 = "fee4d8c1005cac9a241e29d51a903b1b369515a8a77e5b7fe320520ae7c7b855"
+ENVOY_SHA256 = "230a3c99b7813967939db2e39563e5f63e054a5758b2425fcbdc07d8c7c2ea1f"
 
 http_archive(
     name = "envoy",
+    patch_args = ["-p1"],
+    patches = [
+        "//third_party/envoy:histogram_impl.patch",
+        "//third_party/envoy:session_idle_list.patch",
+        "//third_party/envoy:prometheus_stats.patch",
+        "//third_party/envoy:router_ratelimit.patch",
+        "//third_party/envoy:google_async_client_impl.patch",
+    ],
     sha256 = ENVOY_SHA256,
     strip_prefix = "envoy-" + ENVOY_SHA1,
     url = "https://github.com/envoyproxy/envoy/archive/" + ENVOY_SHA1 + ".zip",
@@ -62,15 +97,49 @@ http_archive(
     url = "https://github.com/madler/zlib/archive/cacf7f1d4e3d44d871b605da3b647f07d718623f.tar.gz",
 )
 
+# Override proto-converter to silence -Werror on deprecated protobuf RepeatedPtrField
+http_archive(
+    name = "proto-converter",
+    patch_args = ["-p1"],
+    patch_cmds = [
+        "rm src/google/protobuf/stubs/common.cc",
+        "rm src/google/protobuf/stubs/common.h",
+        "rm src/google/protobuf/stubs/common_unittest.cc",
+        "rm src/google/protobuf/util/converter/port_def.inc",
+        "rm src/google/protobuf/util/converter/port_undef.inc",
+        "sed -i 's/\"-Werror\"/\"-Wno-deprecated-declarations\"/g' build_defs/cpp_opts.bzl",
+    ],
+    patches = ["@envoy//bazel:com_google_protoconverter.patch"],
+    repo_mapping = {"@com_google_absl": "@abseil-cpp"},
+    sha256 = "9555d9cf7bd541ea5fdb67d7d6b72ea44da77df3e27b960b4155dc0c6b81d476",
+    strip_prefix = "proto-converter-1db76535b86b80aa97489a1edcc7009e18b67ab7",
+    urls = ["https://github.com/grpc-ecosystem/proto-converter/archive/1db76535b86b80aa97489a1edcc7009e18b67ab7.zip"],
+)
+
 # ==============================================================================
 # Load remaining envoy dependencies.
 load("@envoy//bazel:api_binding.bzl", "envoy_api_binding")
 
 envoy_api_binding()
 
+http_archive(
+    name = "bazel_features",
+    sha256 = "adfdb3cffab3a99a63363d844d559a81965d2b61a6062dd51a3d2478d416768f",
+    strip_prefix = "bazel_features-1.45.0",
+    url = "https://github.com/bazel-contrib/bazel_features/releases/download/v1.45.0/bazel_features-v1.45.0.tar.gz",
+)
+
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+
+bazel_features_deps()
+
 load("@envoy//bazel:api_repositories.bzl", "envoy_api_dependencies")
 
 envoy_api_dependencies()
+
+load("@envoy//bazel:repo.bzl", "envoy_repo")
+
+envoy_repo()
 
 load("@envoy//bazel:repositories.bzl", "envoy_dependencies")
 
@@ -119,3 +188,25 @@ grpc_test_only_deps()
 load("//bazel:grpc.bzl", "grpc_bindings")
 
 grpc_bindings()
+
+new_local_repository(
+    name = "llvm_toolchain_llvm_obsolete",
+    build_file_content = """
+filegroup(name = "symbolizer", srcs = ["bin/llvm-symbolizer"], visibility = ["//visibility:public"])
+filegroup(name = "bin/clang", srcs = [], visibility = ["//visibility:public"])
+    """,
+    path = "third_party",
+)
+
+new_local_repository(
+    name = "llvm_toolchain_llvm",
+    build_file_content = """
+filegroup(name = "symbolizer", srcs = ["bin/llvm-symbolizer"], visibility = ["//visibility:public"])
+filegroup(name = "bin/clang", srcs = [], visibility = ["//visibility:public"])
+exports_files([
+    "bin/llvm-symbolizer",
+    "lib/clang/18/include/fuzzer/FuzzedDataProvider.h",
+], visibility = ["//visibility:public"])
+    """,
+    path = "third_party",
+)

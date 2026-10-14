@@ -54,7 +54,7 @@ class FilterFactory
     };
   }
 
-  Envoy::Router::RouteSpecificFilterConfigConstSharedPtr
+  absl::StatusOr<Envoy::Router::RouteSpecificFilterConfigConstSharedPtr>
   createRouteSpecificFilterConfigTyped(
       const ::espv2::api::envoy::v12::http::service_control::
           PerRouteFilterConfig& per_route,

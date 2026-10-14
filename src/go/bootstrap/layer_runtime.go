@@ -41,6 +41,21 @@ func CreateLayeredRuntime() *bootstrappb.LayeredRuntime {
 									NumberValue: 1,
 								},
 							},
+							"envoy.reloadable_features.explicit_internal_address_config": {
+								Kind: &structpb.Value_BoolValue{
+									BoolValue: false,
+								},
+							},
+							"envoy.reloadable_features.http2_use_oghttp2": {
+								Kind: &structpb.Value_BoolValue{
+									BoolValue: false,
+								},
+							},
+							"envoy.reloadable_features.filter_access_loggers_first": {
+								Kind: &structpb.Value_BoolValue{
+									BoolValue: false,
+								},
+							},
 						},
 					},
 				},

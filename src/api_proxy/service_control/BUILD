@@ -32,9 +32,9 @@ envoy_basic_cc_library(
     # relevant code to utils to remove this dependency in the future.
     deps = [
         ":request_info_lib",
-        "//external:abseil_strings",
         "//src/api_proxy/utils",
         "@com_github_googleapis_googleapis//google/api:service_cc_proto",
+        "@com_google_absl//absl/strings",
         "@envoy//source/common/common:assert_lib",
         "@envoy//source/common/common:base64_lib",
         "@envoy//source/common/grpc:status_lib",
@@ -51,9 +51,9 @@ envoy_basic_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":request_info_lib",
-        "//external:abseil_strings",
         "//src/api_proxy/utils",
         "@com_github_googleapis_googleapis//google/api:service_cc_proto",
+        "@com_google_absl//absl/strings",
         "@servicecontrol_client_git//:service_control_client_lib",
     ],
 )

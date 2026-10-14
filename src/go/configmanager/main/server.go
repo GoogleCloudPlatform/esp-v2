@@ -24,6 +24,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/GoogleCloudPlatform/esp-v2/src/go/commonflags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/flags"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
@@ -40,6 +41,15 @@ import (
 func main() {
 	flag.Parse()
 	opts := flags.EnvoyConfigOptionsFromFlags()
+	if opts.TracingOptions.MaxNumAttributes != 32 || opts.TracingOptions.MaxNumAnnotations != 32 || opts.TracingOptions.MaxNumMessageEvents != 128 || opts.TracingOptions.MaxNumLinks != 128 {
+		glog.Warning("The tracing span limit flags (tracing_max_num_attributes, tracing_max_num_annotations, tracing_max_num_message_events, tracing_max_num_links) are DEPRECATED and ignored. Envoy's OpenTelemetry tracer does not enforce per-span limits.")
+	}
+	if *commonflags.TracingProjectId != "" || (opts.TracingOptions.ProjectId != "" && os.Getenv("OTEL_RESOURCE_ATTRIBUTES") == "") {
+		glog.Warning("The flag --tracing_project_id is DEPRECATED and will be removed in a future release. Please migrate to standard OpenTelemetry resource attributes (e.g., OTEL_RESOURCE_ATTRIBUTES=\"gcp.project.id=YOUR_PROJECT\") or rely on ADC metadata.")
+	}
+	if opts.TracingOptions.StackdriverAddress != "" {
+		glog.Warning("The flag --tracing_stackdriver_address is DEPRECATED and will be removed in a future release. Please migrate to the standard environment variable OTEL_EXPORTER_OTLP_ENDPOINT.")
+	}
 
 	// Create context that allows cancellation.
 	// Allows shutting down downstream servers gracefully.

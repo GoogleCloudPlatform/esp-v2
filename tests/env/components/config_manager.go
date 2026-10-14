@@ -28,7 +28,7 @@ type ConfigManagerServer struct {
 	adsNamedPipe string
 }
 
-func NewConfigManagerServer(debugMode bool, ports *platform.Ports, args []string) (*ConfigManagerServer, error) {
+func NewConfigManagerServer(debugMode bool, ports *platform.Ports, args []string, customEnvs ...string) (*ConfigManagerServer, error) {
 
 	adsNamedPipe := fmt.Sprintf("@espv2-ads-cluster-integ-test-%v", ports.TestId)
 
@@ -45,6 +45,9 @@ func NewConfigManagerServer(debugMode bool, ports *platform.Ports, args []string
 	cmd := exec.Command(platform.GetFilePath(platform.ConfigManager), args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
+	if len(customEnvs) > 0 {
+		cmd.Env = append(os.Environ(), customEnvs...)
+	}
 	return &ConfigManagerServer{
 		Cmd: &Cmd{
 			name: "ConfigManager",

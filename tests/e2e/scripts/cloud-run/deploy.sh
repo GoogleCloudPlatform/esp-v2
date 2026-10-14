@@ -32,6 +32,8 @@ echo "Installing tools if necessary"
 install_e2e_dependencies
 update_wrk
 gcloud components update -q
+unset CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+gcloud config unset auth/credential_file_override --quiet || true
 
 PROJECT_ID="cloudesf-testing"
 TEST_ID="cloud-run-${BACKEND}"
@@ -182,8 +184,11 @@ function setup() {
 
   # Get the service account for the prow job due to b/144867112
   # TODO(b/144445217): We should let prow handle this instead of manually doing so
+  unset CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+  gcloud config unset auth/credential_file_override --quiet || true
   get_test_client_key "gob-prow-jobs-service-account.json" "${JOB_KEY_PATH}"
   gcloud auth activate-service-account --key-file="${JOB_KEY_PATH}"
+  export GOOGLE_APPLICATION_CREDENTIALS="${JOB_KEY_PATH}"
 
 
   if [[ -n ${CLUSTER_NAME} ]] ;
@@ -335,7 +340,7 @@ function setup() {
     -i "${APIPROXY_IMAGE}"
 
   # Redeploy ESPv2 to update the service config. Set flags as follows:
-  proxy_args="^++^--tracing_sample_rate=0.0005"
+  proxy_args="^++^--tracing_sample_rate=1.0"
 
   if [[ ${PROXY_PLATFORM} == "cloud-run" ]];
   then

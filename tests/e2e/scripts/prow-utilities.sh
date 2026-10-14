@@ -236,13 +236,19 @@ function sed_i() {
 # Creating and activating a service
 function create_service() {
   echo 'Deploying service'
+  local active_account
+  active_account="$(gcloud config get-value core/account 2>/dev/null || true)"
+  local account_arg=()
+  if [[ -n "${active_account}" && "${active_account}" != "(unset)" ]]; then
+    account_arg=("--account=${active_account}")
+  fi
   case "$#" in
     '1')
       local swagger_json="${1}"
-      retry -n 3 ${GCLOUD} endpoints services deploy "${swagger_json}"
+      retry -n 3 ${GCLOUD} "${account_arg[@]}" endpoints services deploy "${swagger_json}"
       ;;
     '2')
-      retry -n 3 ${GCLOUD} endpoints services deploy ${@:1}
+      retry -n 3 ${GCLOUD} "${account_arg[@]}" endpoints services deploy ${@:1}
       ;;
     *)
       echo "Invalid arguments ${@} provided for create service"

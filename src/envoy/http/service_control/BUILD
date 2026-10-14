@@ -63,6 +63,7 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         "//api/envoy/v12/http/common:base_proto_cc_proto",
+        "//src/api_proxy/tracing:trace_context_utils_lib",
         "@envoy//envoy/event:deferred_deletable",
         "@envoy//envoy/upstream:cluster_manager_interface",
         "@envoy//source/common/common:empty_string",
