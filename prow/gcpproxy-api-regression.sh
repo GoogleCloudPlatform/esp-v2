@@ -62,8 +62,9 @@ VERSION=$(cat ${ROOT}/VERSION)
 
 # Checkout to the head of master
 git reset --hard
+# --no-overlay removes files added by the PR so the tree matches master exactly (except prow/).
 # Keep ':(exclude)prow' permanently to prevent overwriting this running test script.
-git checkout ${SHA} -- . ':(exclude)prow'
+git checkout --no-overlay ${SHA} -- . ':(exclude)prow'
 
 # Keep files
 echo ${VERSION} > ${ROOT}/VERSION
