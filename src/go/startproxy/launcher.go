@@ -115,10 +115,11 @@ func (l *launcher) start(argv []string) int {
 			fmt.Print(p.formatHelp(helpWidth()))
 			return 0
 		}
-		// Like argparse: usage, the error, and exit status 2.
-		fmt.Fprint(os.Stderr, p.formatUsage(helpWidth()))
+		// Like start_proxy.py's ArgumentParser.error(): the full help, then
+		// the error, on stderr, and exit status 1.
+		fmt.Fprint(os.Stderr, p.formatHelp(helpWidth()))
 		fmt.Fprintf(os.Stderr, "%s: error: %v\n", progName, err)
-		return 2
+		return 1
 	}
 
 	// Resolve the tracing project ID and export it via OTEL_RESOURCE_ATTRIBUTES

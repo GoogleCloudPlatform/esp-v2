@@ -19,7 +19,9 @@ package startproxy
 // actions; type=int; choices; prefix abbreviations (allow_abbrev); and the
 // default help formatter with RawDescriptionHelpFormatter. Parsing follows
 // argparse's algorithm step by step, so every command line keeps its meaning:
-// the same lines are accepted, rejected or answered with help.
+// the same lines are accepted, rejected or answered with help. Errors are
+// reported like start_proxy.py's ArgumentParser.error() override: the full
+// help and the message on stderr, and exit status 1.
 //
 // Known deviations, all outside realistic use: int options reject non-ASCII
 // digits and values that overflow int, and help is wrapped to $COLUMNS (80 by
@@ -384,11 +386,12 @@ func contains(list []string, s string) bool {
 	return false
 }
 
-// pyAtoi converts s like Python's int(s): surrounding whitespace, a sign and
-// single underscores between digits are accepted.
+// pyAtoi converts s like Python's int(s): surrounding whitespace (exactly the
+// characters unicode.IsSpace accepts), a sign and single underscores between
+// digits are allowed.
 func pyAtoi(s string) (int, error) {
 	invalid := fmt.Errorf("invalid int value: %s", pyRepr(s))
-	t := strings.TrimFunc(s, isPySpace)
+	t := strings.TrimFunc(s, unicode.IsSpace)
 	digits := t
 	if digits != "" && (digits[0] == '+' || digits[0] == '-') {
 		digits = digits[1:]
@@ -406,11 +409,6 @@ func pyAtoi(s string) (int, error) {
 		return 0, invalid
 	}
 	return n, nil
-}
-
-// isPySpace reports whether Python's str.isspace() is true for r.
-func isPySpace(r rune) bool {
-	return unicode.IsSpace(r) || (r >= 0x1c && r <= 0x1f)
 }
 
 // pyRepr formats s like Python's repr() of a str, which argparse uses to quote
@@ -481,11 +479,6 @@ func helpWidth() int {
 		columns = 80
 	}
 	return columns - 2
-}
-
-// formatUsage renders the usage message printed before parse errors.
-func (p *argParser) formatUsage(width int) string {
-	return strings.Trim(p.usageBlock(width), "\n") + "\n"
 }
 
 // usageBlock mirrors HelpFormatter._format_usage.

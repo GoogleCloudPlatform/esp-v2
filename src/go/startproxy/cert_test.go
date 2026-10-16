@@ -78,8 +78,10 @@ func TestGenerateSelfSignedCert(t *testing.T) {
 	if _, err := x509.ParsePKCS8PrivateKey(readPEM(t, filepath.Join(dir, "server.key"), "PRIVATE KEY")); err != nil {
 		t.Fatal(err)
 	}
-	if info, err := os.Stat(filepath.Join(dir, "server.key")); err != nil || info.Mode().Perm() != 0600 {
-		t.Errorf("server.key mode = %v, %v; want 0600", info.Mode().Perm(), err)
+	if info, err := os.Stat(filepath.Join(dir, "server.key")); err != nil {
+		t.Error(err)
+	} else if info.Mode().Perm() != 0600 {
+		t.Errorf("server.key mode = %v, want 0600", info.Mode().Perm())
 	}
 
 	// A client that trusts the certificate can connect to "localhost".

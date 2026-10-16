@@ -130,7 +130,7 @@ type proxyArgs struct {
 	OnServerless                                  bool
 }
 
-// defaultArgs returns an proxyArgs struct populated with the default values from start_proxy.py.
+// defaultArgs returns a proxyArgs struct populated with the default values from start_proxy.py.
 func defaultArgs() *proxyArgs {
 	return &proxyArgs{
 		Service:                                "",

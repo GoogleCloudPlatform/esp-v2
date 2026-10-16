@@ -40,10 +40,6 @@ func TestHelpMatchesStartProxyPy(t *testing.T) {
 		}
 		t.Fatalf("help has %d lines, want %d", len(gotLines), len(wantLines))
 	}
-	usage := p.formatUsage(78)
-	if !strings.HasPrefix(string(want), usage+"\n") {
-		t.Errorf("usage is not the start of the help output:\n%s", usage)
-	}
 }
 
 func TestEveryVisibleFlagHasHelp(t *testing.T) {
@@ -62,11 +58,12 @@ func TestRunHelp(t *testing.T) {
 	}
 }
 
-func TestRunUsageError(t *testing.T) {
-	// argparse exits with status 2 on command line errors.
+func TestRunParseError(t *testing.T) {
+	// start_proxy.py's ArgumentParser.error() exits with status 1, not
+	// argparse's usual 2.
 	for _, argv := range [][]string{{"--bogus"}, {"--version"}, {"--he"}, {"--listener_port=x"}} {
-		if code := Run(argv); code != 2 {
-			t.Errorf("Run(%q) = %d, want 2", argv, code)
+		if code := Run(argv); code != 1 {
+			t.Errorf("Run(%q) = %d, want 1", argv, code)
 		}
 	}
 }
@@ -156,6 +153,9 @@ func TestPyAtoi(t *testing.T) {
 		{"8080", 8080, true}, {" 8080\n", 8080, true}, {"8_080", 8080, true}, {"-1", -1, true}, {"+1", 1, true},
 		{"010", 10, true}, {"", 0, false}, {"_1", 0, false}, {"1_", 0, false}, {"1__0", 0, false},
 		{"+-1", 0, false}, {"- 1", 0, false}, {"0x10", 0, false}, {"1.0", 0, false},
+		// int() strips Unicode whitespace, but not U+001C..U+001F, which
+		// str.isspace() does count as whitespace.
+		{"\u30008080\u00a0", 8080, true}, {"\x1c8080", 0, false}, {"8080\x1f", 0, false},
 	} {
 		got, err := pyAtoi(tc.in)
 		if (err == nil) != tc.ok || got != tc.want {

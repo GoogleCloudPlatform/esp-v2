@@ -15,8 +15,12 @@
 package startproxy
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -595,4 +599,38 @@ func TestGenProxyConfigNonGcpWithServiceAccountKeyKeepsTracing(t *testing.T) {
 	if tracingProjectID != "sa-test-proj-789" {
 		t.Errorf("--tracing_project_id = %q, want %q; args: %v", tracingProjectID, "sa-test-proj-789", got)
 	}
+}
+
+// serverlessPlatform duplicates util.ServerlessPlatform because importing
+// package util would pull the Envoy and generated API protos into startproxy
+// (and into this test, which then could not build without them). Read the
+// value from util's source instead, so the two cannot drift apart.
+func TestServerlessPlatformMatchesUtil(t *testing.T) {
+	f, err := parser.ParseFile(token.NewFileSet(), "../util/util.go", nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, decl := range f.Decls {
+		gen, ok := decl.(*ast.GenDecl)
+		if !ok || gen.Tok != token.CONST {
+			continue
+		}
+		for _, spec := range gen.Specs {
+			vs := spec.(*ast.ValueSpec)
+			for i, name := range vs.Names {
+				if name.Name != "ServerlessPlatform" {
+					continue
+				}
+				lit, ok := vs.Values[i].(*ast.BasicLit)
+				if !ok {
+					t.Fatalf("util.ServerlessPlatform is not a string literal")
+				}
+				if got, err := strconv.Unquote(lit.Value); err != nil || got != serverlessPlatform {
+					t.Errorf("util.ServerlessPlatform = %s, startproxy uses %q", lit.Value, serverlessPlatform)
+				}
+				return
+			}
+		}
+	}
+	t.Fatal("util.ServerlessPlatform not found in ../util/util.go")
 }

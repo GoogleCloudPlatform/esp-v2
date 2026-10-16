@@ -15,12 +15,20 @@
 package startproxy
 
 import (
+	"bytes"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 )
+
+func TestMain(m *testing.M) {
+	// Log to stderr instead of leaving glog files in $TMPDIR.
+	_ = flag.Set("logtostderr", "true")
+	os.Exit(m.Run())
+}
 
 // unsetEnvForTest unsets key for the duration of the test and restores its
 // original value afterwards.
@@ -47,10 +55,12 @@ func writeMockScript(t *testing.T, path, content string) {
 	}
 }
 
+// waitForFile waits until path holds at least one complete line. Mock scripts
+// write files with "echo ... > path", which creates the file before writing.
 func waitForFile(path string, timeout time.Duration) ([]byte, error) {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		if data, err := os.ReadFile(path); err == nil {
+		if data, err := os.ReadFile(path); err == nil && bytes.HasSuffix(data, []byte("\n")) {
 			return data, nil
 		}
 		time.Sleep(20 * time.Millisecond)
