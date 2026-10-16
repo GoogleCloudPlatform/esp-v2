@@ -30,6 +30,10 @@ import (
 type Envoy struct {
 	*Cmd
 	listenerPort uint16
+
+	// If non-zero, overrides the default number of health check attempts on
+	// the listener port.
+	HealthCheckRetries int
 }
 
 // createEnvoyConf create envoy config.
@@ -96,5 +100,8 @@ func (s Envoy) String() string {
 
 func (s Envoy) CheckHealth() error {
 	opts := NewHealthCheckOptions()
+	if s.HealthCheckRetries > 0 {
+		opts.HealthCheckRetries = s.HealthCheckRetries
+	}
 	return HttpConnectionCheck(platform.GetLoopbackAddress(), fmt.Sprintf("%v", s.listenerPort), opts)
 }

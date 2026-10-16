@@ -103,6 +103,9 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 		quotaRespCode  int
 		reportRespCode int
 		wantCounters   utils.StatCounters
+		// Counters that keep increasing in the background, so only a minimum
+		// value can be asserted.
+		wantMinCounters utils.StatCounters
 	}{
 		{
 			desc:          "check call, quota call and report call are successful",
@@ -137,7 +140,13 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 			desc:          "quota call is 403",
 			quotaRespCode: 403,
 			wantCounters: utils.StatCounters{
-				"http.ingress_http.service_control.check.OK":                         1,
+				"http.ingress_http.service_control.check.OK": 1,
+			},
+			wantMinCounters: utils.StatCounters{
+				// One quota call for the incoming request. After that, the denied
+				// cache entry is re-checked with the server on cache flushes, every
+				// 1-2s, so the count keeps growing and its exact value depends on
+				// when the stats are fetched.
 				"http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED": 3,
 			},
 		},
@@ -182,24 +191,11 @@ func TestStatisticsServiceControlCallStatus(t *testing.T) {
 				_, _ = bsclient.MakeCall("http", addr, "GET", "/v1/shelves/100/books?key=api-key", "", nil)
 			}
 
-			if tc.quotaRespCode == 403 {
-				// Allocate quota calls are flushed periodically in the background every 1 second.
-				// Depending on VM timing/scheduling load during fetchDelay, the number of PERMISSION_DENIED
-				// calls can be >= 2. Verify check.OK equals 1 and allocate_quota.PERMISSION_DENIED is >= 2.
-				if err := s.StatsVerifier.CheckExpectedCounters(utils.StatCounters{
-					"http.ingress_http.service_control.check.OK": 1,
-				}); err != nil {
-					t.Errorf("Test (%v) failed: %v", tc.desc, err)
-				}
-				counters, _, err := utils.FetchStats(s.Ports().AdminPort)
-				if err != nil {
-					t.Errorf("Test (%v) failed to fetch stats: %v", tc.desc, err)
-				} else if counters["http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED"] < 2 {
-					t.Errorf("Test (%v) failed: allocate_quota.PERMISSION_DENIED was %v, want >= 2",
-						tc.desc, counters["http.ingress_http.service_control.allocate_quota.PERMISSION_DENIED"])
-				}
-			} else {
-				if err := s.StatsVerifier.CheckExpectedCounters(tc.wantCounters); err != nil {
+			if err := s.StatsVerifier.CheckExpectedCounters(tc.wantCounters); err != nil {
+				t.Errorf("Test (%v) failed: %v", tc.desc, err)
+			}
+			if tc.wantMinCounters != nil {
+				if err := s.StatsVerifier.CheckMinimumCounters(tc.wantMinCounters); err != nil {
 					t.Errorf("Test (%v) failed: %v", tc.desc, err)
 				}
 			}

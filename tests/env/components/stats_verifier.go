@@ -27,6 +27,14 @@ const (
 	// Ensure the stats are available in admin.
 	fetchDelay = time.Second * 3
 
+	// How long to keep polling for counters that have not reached their
+	// expected values yet. Some counters are updated asynchronously, e.g. by
+	// the periodic flush of the service control cache.
+	counterPollTimeout = time.Second * 10
+
+	// Time to wait between two polls of the counters.
+	counterPollInterval = time.Millisecond * 500
+
 	// Margin of error for latency equality.
 	latencyMargin = 0.8
 )
@@ -41,24 +49,60 @@ func NewStatsVerifier(ports *platform.Ports) *StatsVerifier {
 	}
 }
 
+// CheckExpectedCounters verifies that every counter in wantCounters reaches
+// exactly its expected value. Counters never decrease, so it keeps polling
+// while a counter is below its expected value, and fails as soon as a counter
+// exceeds it.
 func (sv StatsVerifier) CheckExpectedCounters(wantCounters utils.StatCounters) error {
 	glog.Infof("Checking envoy counters")
 	time.Sleep(fetchDelay)
+	return sv.pollCounters(wantCounters, true)
+}
 
-	counters, _, err := utils.FetchStats(sv.adminPort)
-	if err != nil {
-		return err
+// CheckMinimumCounters verifies that every counter in wantCounters reaches at
+// least the given value. Use it for counters that keep increasing in the
+// background, e.g. through periodic cache refreshes, whose exact value at any
+// given time depends on timing.
+func (sv StatsVerifier) CheckMinimumCounters(wantCounters utils.StatCounters) error {
+	glog.Infof("Checking envoy counters for minimum values")
+	return sv.pollCounters(wantCounters, false)
+}
+
+func (sv StatsVerifier) pollCounters(wantCounters utils.StatCounters, exact bool) error {
+	qualifier := ""
+	if !exact {
+		qualifier = "at least "
 	}
 
-	for wantCounter, wantCounterVal := range wantCounters {
-		if getCountVal, ok := counters[wantCounter]; !ok {
-			return fmt.Errorf("expected counter %v not in the got counters: %v", wantCounter, counters)
-		} else if getCountVal != wantCounterVal {
-			return fmt.Errorf("for counter %v, expected value: %v, got value: %v ", wantCounter, wantCounterVal, getCountVal)
+	deadline := time.Now().Add(counterPollTimeout)
+	for {
+		counters, _, err := utils.FetchStats(sv.adminPort)
+		if err != nil {
+			return err
 		}
-	}
 
-	return nil
+		var notReached error
+		for wantCounter, wantCounterVal := range wantCounters {
+			getCountVal, ok := counters[wantCounter]
+			switch {
+			case !ok:
+				notReached = fmt.Errorf("expected counter %v not in the got counters: %v", wantCounter, counters)
+			case exact && getCountVal > wantCounterVal:
+				// Waiting longer cannot bring the counter back down.
+				return fmt.Errorf("for counter %v, expected value: %v, got value: %v ", wantCounter, wantCounterVal, getCountVal)
+			case getCountVal < wantCounterVal:
+				notReached = fmt.Errorf("for counter %v, expected value: %v%v, got value: %v ", wantCounter, qualifier, wantCounterVal, getCountVal)
+			}
+		}
+
+		if notReached == nil {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return notReached
+		}
+		time.Sleep(counterPollInterval)
+	}
 }
 
 func (sv StatsVerifier) CheckExpectedHistograms(wantHistograms utils.StatHistograms) error {
