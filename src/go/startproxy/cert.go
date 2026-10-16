@@ -17,6 +17,7 @@ package startproxy
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -30,61 +31,67 @@ import (
 // defaultSelfSignedCertDir is the directory where self-signed certs are written.
 const defaultSelfSignedCertDir = "/tmp/ssl/endpoints"
 
-// generateSelfSignedCert generates a 2048-bit RSA self-signed X.509 certificate
-// and private key in certDir (server.crt and server.key), replacing the openssl CLI call.
-func generateSelfSignedCert(certDir string) error {
-	if err := os.MkdirAll(certDir, 0755); err != nil {
-		return fmt.Errorf("failed to create cert directory %s: %w", certDir, err)
+// generateSelfSignedCert writes a self-signed certificate for localhost and
+// its private key to dir/server.crt and dir/server.key.
+//
+// The certificate matches what start_proxy.py generated with
+//
+//	openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj /CN=localhost
+//
+// (a CA certificate with subject and authority key identifiers, and a PKCS #8
+// key), plus a DNS:localhost subject alternative name, because modern TLS
+// clients ignore the common name, and a NotBefore five minutes in the past to
+// tolerate clock skew.
+func generateSelfSignedCert(dir string) error {
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
 	}
-
-	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return fmt.Errorf("failed to generate RSA private key: %w", err)
+		return fmt.Errorf("generating key: %v", err)
 	}
-
-	serialLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-	serialNumber, err := rand.Int(rand.Reader, serialLimit)
+	// openssl uses a random, positive 160-bit serial number.
+	serial, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 159))
 	if err != nil {
-		return fmt.Errorf("failed to generate serial number: %w", err)
+		return fmt.Errorf("generating serial number: %v", err)
 	}
+	// Key identifier: SHA-1 of the public key (RFC 5280, section 4.2.1.2).
+	keyID := sha1.Sum(x509.MarshalPKCS1PublicKey(&key.PublicKey))
 
 	now := time.Now()
-	template := x509.Certificate{
-		SerialNumber: serialNumber,
-		Subject: pkix.Name{
-			CommonName: "localhost",
-		},
-		NotBefore:             now,
+	template := &x509.Certificate{
+		SerialNumber:          serial,
+		Subject:               pkix.Name{CommonName: "localhost"},
+		DNSNames:              []string{"localhost"},
+		NotBefore:             now.Add(-5 * time.Minute),
 		NotAfter:              now.Add(3650 * 24 * time.Hour),
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
+		IsCA:                  true,
+		SubjectKeyId:          keyID[:],
+		AuthorityKeyId:        keyID[:],
 	}
-
-	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privKey.PublicKey, privKey)
+	certDER, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
 	if err != nil {
-		return fmt.Errorf("failed to create self-signed X.509 certificate: %w", err)
+		return fmt.Errorf("creating certificate: %v", err)
 	}
-
-	certPath := filepath.Join(certDir, "server.crt")
-	certOut, err := os.OpenFile(certPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	keyDER, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
-		return fmt.Errorf("failed to open %s for writing: %w", certPath, err)
+		return fmt.Errorf("encoding key: %v", err)
 	}
-	defer certOut.Close()
-	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
-		return fmt.Errorf("failed to write PEM certificate: %w", err)
+	if err := writePEM(filepath.Join(dir, "server.crt"), "CERTIFICATE", certDER, 0644); err != nil {
+		return err
 	}
+	return writePEM(filepath.Join(dir, "server.key"), "PRIVATE KEY", keyDER, 0600)
+}
 
-	keyPath := filepath.Join(certDir, "server.key")
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+func writePEM(path, blockType string, der []byte, perm os.FileMode) error {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
-		return fmt.Errorf("failed to open %s for writing: %w", keyPath, err)
+		return err
 	}
-	defer keyOut.Close()
-	if err := pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privKey)}); err != nil {
-		return fmt.Errorf("failed to write PEM private key: %w", err)
+	if err := pem.Encode(f, &pem.Block{Type: blockType, Bytes: der}); err != nil {
+		f.Close()
+		return err
 	}
-
-	return nil
+	return f.Close()
 }

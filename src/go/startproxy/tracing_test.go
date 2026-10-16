@@ -18,28 +18,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
-
-// unsetEnvForTest unsets key for the duration of the test and restores its
-// original value afterwards.
-func unsetEnvForTest(t *testing.T, key string) {
-	t.Helper()
-	t.Setenv(key, "")
-	_ = os.Unsetenv(key)
-}
-
-// writeServiceAccountKey writes content to a temporary key file and returns its path.
-func writeServiceAccountKey(t *testing.T, content string) string {
-	t.Helper()
-	path := filepath.Join(t.TempDir(), "sa.json")
-	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
-		t.Fatalf("failed to write service account key: %v", err)
-	}
-	return path
-}
 
 func TestFetchProjectIDFromMetadata(t *testing.T) {
 	t.Run("success", func(t *testing.T) {

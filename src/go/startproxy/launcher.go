@@ -19,12 +19,13 @@ package startproxy
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 // launcher holds the settings Run takes from its environment. Production uses
@@ -75,57 +76,49 @@ func Run(argv []string) int {
 	return newLauncher().run(argv)
 }
 
-// run executes the ESPv2 startup and supervision loop.
 func (l *launcher) run(argv []string) int {
-	// Check if invoked in serverless mode via --serverless flag or binary name.
-	if len(argv) > 0 && argv[0] == "--serverless" {
-		flags, port, serveErrPage, err := serverlessFlags()
-		if err != nil {
-			if serveErrPage && port != "" {
-				log.Println(err.Error())
-				if serveErr := serveErrorPage(port, err.Error()); serveErr != nil {
-					log.Printf("Failed to serve error message: %v", serveErr)
-				}
-				return 1
-			}
-			log.Printf("Serverless startup error: %v", err)
-			return 1
-		}
-		argv = append(flags, argv[1:]...)
+	if len(argv) > 0 && argv[0] == serverlessModeArg {
+		return l.runServerless(argv[1:])
 	}
+	return l.start(argv)
+}
 
-	args, err := parseArgs(argv)
+// runServerless starts ESPv2 configured by environment variables, like
+// env_start_proxy.py. Like env_start_proxy.py, it ignores container arguments.
+func (l *launcher) runServerless(ignored []string) int {
+	if len(ignored) > 0 {
+		glog.Warningf("Ignoring container arguments in serverless mode, set ESPv2_ARGS instead: %q", ignored)
+	}
+	flags, err := serverlessFlags()
 	if err != nil {
-		if errors.Is(err, errHelpRequested) {
-			printUsage(os.Stdout)
-			return 0
+		var se *serverlessError
+		if errors.As(err, &se) && se.port != "" {
+			if se.warning {
+				glog.Warning(se.msg)
+			} else {
+				glog.Error(se.msg)
+			}
+			return l.serveErrorPage(se.port, se.msg)
 		}
-		fmt.Fprintf(os.Stderr, "startproxy: error: %v\n", err)
+		glog.Error(err)
 		return 1
 	}
+	return l.start(flags)
+}
 
-	if args.ServerlessEntrypoint {
-		flags, port, serveErrPage, err := serverlessFlags()
-		if err != nil {
-			if serveErrPage && port != "" {
-				log.Println(err.Error())
-				if serveErr := serveErrorPage(port, err.Error()); serveErr != nil {
-					log.Printf("Failed to serve error message: %v", serveErr)
-				}
-				return 1
-			}
-			log.Printf("Serverless startup error: %v", err)
-			return 1
+// start parses argv, then starts and supervises Config Manager and Envoy.
+func (l *launcher) start(argv []string) int {
+	args, err := parseArgs(argv)
+	if err != nil {
+		p := newArgParser(flagDefs(defaultArgs()))
+		if errors.Is(err, errHelpRequested) {
+			fmt.Print(p.formatHelp(helpWidth()))
+			return 0
 		}
-		args, err = parseArgs(flags)
-		if err != nil {
-			if errors.Is(err, errHelpRequested) {
-				printUsage(os.Stdout)
-				return 0
-			}
-			fmt.Fprintf(os.Stderr, "startproxy: error: %v\n", err)
-			return 1
-		}
+		// Like argparse: usage, the error, and exit status 2.
+		fmt.Fprint(os.Stderr, p.formatUsage(helpWidth()))
+		fmt.Fprintf(os.Stderr, "%s: error: %v\n", progName, err)
+		return 2
 	}
 
 	// Resolve the tracing project ID and export it via OTEL_RESOURCE_ATTRIBUTES
@@ -134,7 +127,7 @@ func (l *launcher) run(argv []string) int {
 
 	proxyConf, err := l.genProxyConfig(args)
 	if err != nil {
-		log.Printf("ERROR: %v", err)
+		glog.Error(err)
 		return 1
 	}
 
@@ -145,34 +138,32 @@ func (l *launcher) run(argv []string) int {
 	l.notifySignals(sigCh)
 	defer l.stopSignals(sigCh)
 
-	fmt.Printf("Starting Config Manager with args: %v\n", proxyConf)
-	cmCmd, cmWaitCh, err := startSubprocess(proxyConf)
+	glog.Infof("Starting Config Manager with args: %q", proxyConf)
+	cm, err := startChild("Config Manager", "Config Manager", proxyConf)
 	if err != nil {
-		log.Printf("Failed to start Config Manager: %v", err)
+		glog.Errorf("Failed to start Config Manager: %v", err)
 		return 1
 	}
 
-	bootstrapCmdArgs := l.genBootstrapConf(args)
-	fmt.Printf("%v\n", bootstrapCmdArgs)
-	bootstrapCmd := exec.Command(bootstrapCmdArgs[0], bootstrapCmdArgs[1:]...)
-	bootstrapCmd.Stdout = os.Stdout
-	bootstrapCmd.Stderr = os.Stderr
-	_ = bootstrapCmd.Run()
+	bootstrapArgs := l.genBootstrapConf(args)
+	glog.Infof("Generating Envoy bootstrap config with args: %q", bootstrapArgs)
+	bootstrap := exec.Command(bootstrapArgs[0], bootstrapArgs[1:]...)
+	bootstrap.Stdout = os.Stdout
+	bootstrap.Stderr = os.Stderr
+	if err := bootstrap.Run(); err != nil {
+		glog.Errorf("Failed to generate the Envoy bootstrap config: %v", err)
+		cm.kill()
+		return 1
+	}
 
 	envoyArgs := l.genEnvoyArgs(args)
-	fmt.Printf("Starting Envoy with args: %v\n", envoyArgs)
-	envoyCmd, envoyWaitCh, err := startSubprocess(envoyArgs)
+	glog.Infof("Starting Envoy with args: %q", envoyArgs)
+	envoy, err := startChild("Envoy", "envoy", envoyArgs)
 	if err != nil {
-		log.Printf("Failed to start Envoy: %v", err)
-		if cmCmd.Process != nil {
-			_ = cmCmd.Process.Kill()
-		}
+		glog.Errorf("Failed to start Envoy: %v", err)
+		cm.kill()
 		return 1
 	}
 
-	return l.supervise(
-		&child{name: "Config Manager", cmd: cmCmd, waitCh: cmWaitCh},
-		&child{name: "Envoy", cmd: envoyCmd, waitCh: envoyWaitCh},
-		sigCh,
-	)
+	return l.supervise(cm, envoy, sigCh)
 }

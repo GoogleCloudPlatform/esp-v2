@@ -15,16 +15,20 @@
 package main
 
 import (
+	"flag"
 	"os"
-	"path/filepath"
 
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/startproxy"
+	"github.com/golang/glog"
 )
 
 func main() {
-	argv := os.Args[1:]
-	if filepath.Base(os.Args[0]) == "env_start_proxy" {
-		argv = append([]string{"--serverless"}, argv...)
-	}
-	os.Exit(startproxy.Run(argv))
+	// startproxy parses its own argparse-compatible command line, so glog is
+	// configured here rather than through Go flags.
+	_ = flag.Set("logtostderr", "true")
+	_ = flag.CommandLine.Parse(nil)
+
+	code := startproxy.Run(os.Args[1:])
+	glog.Flush()
+	os.Exit(code)
 }

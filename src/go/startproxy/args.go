@@ -128,7 +128,6 @@ type proxyArgs struct {
 	SslClientCertPath                             *string
 	SslClientRootCertsFile                        *string
 	OnServerless                                  bool
-	ServerlessEntrypoint                          bool
 }
 
 // defaultArgs returns an proxyArgs struct populated with the default values from start_proxy.py.

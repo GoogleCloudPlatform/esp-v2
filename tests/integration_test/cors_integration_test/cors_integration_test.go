@@ -297,7 +297,7 @@ func TestProxyHandlesCorsPreflightRequestsBasic(t *testing.T) {
 	}
 }
 
-// Default --cors_allow_origin=* from start_proxy.py for basic.
+// Default --cors_allow_origin=* from startproxy for basic.
 // Tests preflight requests. These are actual OPTIONS requests.
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#preflighted_requests
 func TestProxyHandlesCorsPreflightWithDefaultAllowOrigin(t *testing.T) {

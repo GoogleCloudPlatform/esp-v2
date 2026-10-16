@@ -45,7 +45,7 @@ build: format
 	@go build -o bin/configmanager ./src/go/configmanager/main/server.go
 	@go build -o bin/bootstrap ./src/go/bootstrap/ads/main/main.go
 	@go build -o bin/gcsrunner ./src/go/gcsrunner/main/runner.go
-	@go build -o bin/startproxy ./src/go/startproxy/main/main.go
+	@CGO_ENABLED=0 go build -o bin/startproxy ./src/go/startproxy/main/main.go
 	@go build -o bin/echo/server ./tests/endpoints/echo/server/app.go
 
 build-msan: format
@@ -333,8 +333,8 @@ test-ssl-files:
 	@openssl genrsa -out tests/env/testdata/mismatch.key 2048
 	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/mismatch.key -out tests/env/testdata/mismatch.crt
 	@openssl req -nodes -new -x509 -sha256 -days 1825 -config tests/env/testdata/cert.conf -extensions 'req_ext' -key tests/env/testdata/server.key -out tests/env/testdata/server.crt
-    # The client.crt and client.key are for upstream client certs.
-    # https://github.com/GoogleCloudPlatform/esp-v2/blob/f963f0318a8981e5713b99652f62438ca174fe4b/docker/generic/start_proxy.py#L188
+    # The client.crt and client.key are for upstream client certs: the
+    # directory given to --ssl_backend_client_cert_path must contain both files.
 	@cp tests/env/testdata/server.crt tests/env/testdata/client.crt
 	@cp tests/env/testdata/server.key tests/env/testdata/client.key
 

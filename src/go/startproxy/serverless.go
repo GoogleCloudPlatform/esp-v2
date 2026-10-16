@@ -15,11 +15,17 @@
 package startproxy
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/golang/glog"
 )
+
+// serverlessModeArg, as the first argument, selects serverless mode: ESPv2 is
+// configured by environment variables, like env_start_proxy.py did.
+const serverlessModeArg = "--serverless"
 
 // missingServiceConfigMsg is the help text served when ENDPOINTS_SERVICE_PATH and ENDPOINTS_SERVICE_NAME are both absent.
 const missingServiceConfigMsg = `
@@ -51,71 +57,65 @@ const malformedESPv2ArgsMsg = `
  https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options#setting-configuration-flags
 `
 
-// serverlessFlags translates serverless environment variables (PORT,
-// ENDPOINTS_SERVICE_PATH, ENDPOINTS_SERVICE_NAME, ENDPOINTS_SERVICE_VERSION, ESPv2_ARGS)
-// into startproxy command-line flags.
-func serverlessFlags() ([]string, string, bool, error) {
-	port, hasPort := os.LookupEnv("PORT")
-	if !hasPort {
-		return nil, "", false, fmt.Errorf("Serverless ESPv2 expects PORT in environment variables.\n")
-	}
+// serverlessError reports a misconfigured serverless environment.
+type serverlessError struct {
+	msg string
+	// port, if set, is where msg is served as a 503 page instead of exiting,
+	// so callers of the service can see what is wrong.
+	port string
+	// warning logs msg at WARNING rather than ERROR level.
+	warning bool
+}
 
-	flags := []string{
-		"--on_serverless",
-		fmt.Sprintf("--http_port=%s", port),
+func (e *serverlessError) Error() string { return e.msg }
+
+// serverlessFlags translates the serverless environment variables (PORT,
+// ENDPOINTS_SERVICE_PATH, ENDPOINTS_SERVICE_NAME, ENDPOINTS_SERVICE_VERSION and
+// ESPv2_ARGS) into startproxy flags, like env_start_proxy.py's gen_args.
+func serverlessFlags() ([]string, error) {
+	port, ok := os.LookupEnv("PORT")
+	if !ok {
+		// Without a port there is nowhere to serve an error page.
+		return nil, &serverlessError{msg: "Serverless ESPv2 expects PORT in environment variables.\n"}
 	}
+	flags := []string{"--on_serverless", "--http_port=" + port}
 
 	if servicePath, ok := os.LookupEnv("ENDPOINTS_SERVICE_PATH"); ok {
-		flags = append(flags,
-			"--rollout_strategy=fixed",
-			fmt.Sprintf("--service_json_path=%s", servicePath),
-		)
+		flags = append(flags, "--rollout_strategy=fixed", "--service_json_path="+servicePath)
 	} else {
-		serviceName, hasServiceName := os.LookupEnv("ENDPOINTS_SERVICE_NAME")
-		if !hasServiceName {
-			return nil, port, true, fmt.Errorf("Serverless ESPv2 expects ENDPOINTS_SERVICE_NAME in environment variables.\n%s", missingServiceConfigMsg)
+		serviceName, ok := os.LookupEnv("ENDPOINTS_SERVICE_NAME")
+		if !ok {
+			return nil, &serverlessError{
+				msg:     "Serverless ESPv2 expects ENDPOINTS_SERVICE_NAME in environment variables.\n" + missingServiceConfigMsg,
+				port:    port,
+				warning: true,
+			}
 		}
-		flags = append(flags, fmt.Sprintf("--service=%s", serviceName))
-
-		if serviceVersion, hasVersion := os.LookupEnv("ENDPOINTS_SERVICE_VERSION"); hasVersion {
-			flags = append(flags,
-				"--rollout_strategy=fixed",
-				fmt.Sprintf("--version=%s", serviceVersion),
-			)
+		flags = append(flags, "--service="+serviceName)
+		if version, ok := os.LookupEnv("ENDPOINTS_SERVICE_VERSION"); ok {
+			flags = append(flags, "--rollout_strategy=fixed", "--version="+version)
 		} else {
 			flags = append(flags, "--rollout_strategy=managed")
 		}
 	}
 
-	if argValue, ok := os.LookupEnv("ESPv2_ARGS"); ok {
+	if value, ok := os.LookupEnv("ESPv2_ARGS"); ok {
+		// ESPv2_ARGS is comma-separated by default. If an argument needs a
+		// comma, pick another delimiter and put it between carets first:
+		// ^++^--cors_allow_methods="GET,POST,PUT,OPTIONS"++--cors_allow_credentials
 		delim := ","
-		if strings.HasPrefix(argValue, "^") && strings.Contains(argValue[1:], "^") {
-			parts := strings.SplitN(argValue[1:], "^", 2)
-			delim = parts[0]
-			argValue = parts[1]
+		if strings.HasPrefix(value, "^") && strings.Contains(value[1:], "^") {
+			delim, value, _ = strings.Cut(value[1:], "^")
 		}
 		if delim == "" {
-			return nil, port, true, fmt.Errorf("%s", malformedESPv2ArgsMsg)
+			return nil, &serverlessError{msg: malformedESPv2ArgsMsg, port: port}
 		}
-		flags = append(flags, strings.Split(argValue, delim)...)
+		flags = append(flags, strings.Split(value, delim)...)
 	}
-
-	return flags, port, false, nil
+	return flags, nil
 }
 
-// genServerlessArgs builds the full command argument slice matching env_start_proxy.py's gen_args(cmd).
-func genServerlessArgs(cmd string) ([]string, error) {
-	flags, _, _, err := serverlessFlags()
-	if err != nil {
-		return nil, err
-	}
-	res := make([]string, 0, len(flags)+2)
-	res = append(res, cmd, "/apiproxy/start_proxy.py")
-	res = append(res, flags...)
-	return res, nil
-}
-
-// errorPageHandler returns an http.Handler that responds with 503 Service Unavailable and msg.
+// errorPageHandler responds to every request with 503 Service Unavailable and msg.
 func errorPageHandler(msg string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
@@ -124,7 +124,26 @@ func errorPageHandler(msg string) http.Handler {
 	})
 }
 
-// serveErrorPage starts an HTTP server on port responding with 503 Service Unavailable and msg.
-func serveErrorPage(port string, msg string) error {
-	return http.ListenAndServe(":"+port, errorPageHandler(msg))
+// serveErrorPage serves msg as a 503 page on port until a shutdown signal
+// arrives. It returns the process exit code.
+func (l *launcher) serveErrorPage(port, msg string) int {
+	srv := &http.Server{
+		Addr:              ":" + port,
+		Handler:           errorPageHandler(msg),
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	sigCh := make(chan os.Signal, 1)
+	l.notifySignals(sigCh)
+	defer l.stopSignals(sigCh)
+
+	errCh := make(chan error, 1)
+	go func() { errCh <- srv.ListenAndServe() }()
+	select {
+	case err := <-errCh:
+		glog.Errorf("Failed to serve error message: %v", err)
+	case sig := <-sigCh:
+		glog.Warningf("got signal: %s", signalName(sig))
+		_ = srv.Close()
+	}
+	return 1
 }

@@ -16,11 +16,12 @@ package startproxy
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
 const (
@@ -42,7 +43,9 @@ const (
 	// googleCredsEnv is the Google default application credentials environment variable.
 	googleCredsEnv = "GOOGLE_APPLICATION_CREDENTIALS"
 
-	// serverlessPlatform is the platform string when running on serverless.
+	// serverlessPlatform is passed as --compute_platform_override on
+	// serverless. It must equal util.ServerlessPlatform; it is not imported
+	// because package util pulls in the Envoy and generated API protos.
 	serverlessPlatform = "Cloud Run(ESPv2)"
 
 	// serverlessXffNumTrustedHops is the default XFF num trusted hops on serverless.
@@ -64,36 +67,42 @@ func (l *launcher) genBootstrapConf(args *proxyArgs) []string {
 	return cmd
 }
 
+// usageError is a startup error caused by the command line. Its text is shown
+// to the user verbatim and matches start_proxy.py's messages.
+type usageError string
+
+func (e usageError) Error() string { return string(e) }
+
 // enforceConflictArgs checks for conflicting or missing flags and updates defaults when needed.
 func (l *launcher) enforceConflictArgs(args *proxyArgs) error {
 	if args.RolloutStrategy == "managed" {
 		if args.Version != "" {
-			return fmt.Errorf("Flag --version cannot be used if --rollout_strategy=managed.")
+			return usageError("Flag --version cannot be used if --rollout_strategy=managed.")
 		}
 		if args.ServiceJSONPath != nil && *args.ServiceJSONPath != "" {
-			return fmt.Errorf("Flag -R or --rollout_strategy must be fixed with --service_json_path.")
+			return usageError("Flag -R or --rollout_strategy must be fixed with --service_json_path.")
 		}
 	} else {
 		if args.Version == "" && (args.ServiceJSONPath == nil || *args.ServiceJSONPath == "") {
-			return fmt.Errorf("Flag --version is required if --rollout_strategy=fixed.")
+			return usageError("Flag --version is required if --rollout_strategy=fixed.")
 		}
 	}
 
 	if args.ServiceJSONPath != nil && *args.ServiceJSONPath != "" {
 		if args.Service != "" {
-			return fmt.Errorf("Flag --service cannot be used together with --service_json_path.")
+			return usageError("Flag --service cannot be used together with --service_json_path.")
 		}
 		if args.Version != "" {
-			return fmt.Errorf("Flag --version cannot be used together with --service_json_path.")
+			return usageError("Flag --version cannot be used together with --service_json_path.")
 		}
 	}
 
 	if args.NonGcp {
-		if (args.ServiceAccountKey == nil || *args.ServiceAccountKey == "") && !args.EnableApplicationDefaultCredentials {
-			return fmt.Errorf("If --non_gcp is specified, --service_account_key or --enable_application_default_credentials has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ.")
+		if args.ServiceAccountKey == nil && !args.EnableApplicationDefaultCredentials {
+			return usageError("If --non_gcp is specified, --service_account_key or --enable_application_default_credentials has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ.")
 		}
 		if args.ServiceAccountKey != nil && *args.ServiceAccountKey != "" && args.EnableApplicationDefaultCredentials {
-			return fmt.Errorf("Only one of --service_account_key or --enable_application_default_credentials can be supplied for credentials at once.")
+			return usageError("Only one of --service_account_key or --enable_application_default_credentials can be supplied for credentials at once.")
 		}
 		hasOtelProjectID := otelAttrsHaveProjectID(os.Getenv(otelResourceAttributesEnv))
 		if args.TracingProjectID == "" && !hasOtelProjectID {
@@ -109,20 +118,20 @@ func (l *launcher) enforceConflictArgs(args *proxyArgs) error {
 	}
 
 	if (args.AccessLog == nil || *args.AccessLog == "") && (args.AccessLogFormat != nil && *args.AccessLogFormat != "") {
-		return fmt.Errorf("Flag --access_log_format has to be used together with --access_log.")
+		return usageError("Flag --access_log_format has to be used together with --access_log.")
 	}
 
 	if args.SslPort != nil && *args.SslPort != 0 && args.SslServerCertPath != nil && *args.SslServerCertPath != "" {
-		return fmt.Errorf("Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only.")
+		return usageError("Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only.")
 	}
 	if args.TLSMutualAuth && ((args.SslBackendClientCertPath != nil && *args.SslBackendClientCertPath != "") || (args.SslClientCertPath != nil && *args.SslClientCertPath != "")) {
-		return fmt.Errorf("Flag --tls_mutual_auth is going to be deprecated, please use --ssl_backend_client_cert_path only.")
+		return usageError("Flag --tls_mutual_auth is going to be deprecated, please use --ssl_backend_client_cert_path only.")
 	}
 	if ((args.SslBackendClientRootCertsFile != nil && *args.SslBackendClientRootCertsFile != "") || (args.SslClientRootCertsFile != nil && *args.SslClientRootCertsFile != "")) && args.EnableGrpcBackendSsl {
-		return fmt.Errorf("Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_backend_client_root_certs_file only.")
+		return usageError("Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_backend_client_root_certs_file only.")
 	}
 	if args.GenerateSelfSignedCert && args.SslServerCertPath != nil && *args.SslServerCertPath != "" {
-		return fmt.Errorf("Flag --generate_self_signed_cert and --ssl_server_cert_path cannot be used simutaneously.")
+		return usageError("Flag --generate_self_signed_cert and --ssl_server_cert_path cannot be used simultaneously.")
 	}
 
 	var portFlags []string
@@ -145,42 +154,42 @@ func (l *launcher) enforceConflictArgs(args *proxyArgs) error {
 	}
 
 	if len(portFlags) > 1 {
-		return fmt.Errorf("Multiple port flags %s are not allowed, use only the --listener_port flag", strings.Join(portFlags, ","))
+		return usageError(fmt.Sprintf("Multiple port flags %s are not allowed, use only the --listener_port flag", strings.Join(portFlags, ",")))
 	} else if portNum < 1024 {
-		return fmt.Errorf("Port %d is a privileged port. For security purposes, the ESPv2 container cannot bind to it. Use any port above 1024 instead.", portNum)
+		return usageError(fmt.Sprintf("Port %d is a privileged port. For security purposes, the ESPv2 container cannot bind to it. Use any port above 1024 instead.", portNum))
 	}
 
 	if len(args.SslProtocols) > 0 && ((args.SslMinimumProtocol != nil && *args.SslMinimumProtocol != "") || (args.SslMaximumProtocol != nil && *args.SslMaximumProtocol != "")) {
-		return fmt.Errorf("Flag --ssl_protocols is going to be deprecated, please use --ssl_minimum_protocol and --ssl_maximum_protocol.")
+		return usageError("Flag --ssl_protocols is going to be deprecated, please use --ssl_minimum_protocol and --ssl_maximum_protocol.")
 	}
 
 	if args.TranscodingIgnoreQueryParameters != nil && *args.TranscodingIgnoreQueryParameters != "" && args.TranscodingIgnoreUnknownQueryParameters {
-		return fmt.Errorf("Flag --transcoding_ignore_query_parameters cannot be used together with --transcoding_ignore_unknown_query_parameters.")
+		return usageError("Flag --transcoding_ignore_query_parameters cannot be used together with --transcoding_ignore_unknown_query_parameters.")
 	}
 
 	if args.DNSResolverAddresses != nil && *args.DNSResolverAddresses != "" && args.DNS != nil && *args.DNS != "" {
-		return fmt.Errorf("Flag --dns_resolver_addresses cannot be used together with together with --dns.")
+		return usageError("Flag --dns_resolver_addresses cannot be used together with --dns.")
 	}
 
 	if args.SslBackendClientCertPath != nil && *args.SslBackendClientCertPath != "" && args.SslClientCertPath != nil && *args.SslClientCertPath != "" {
-		return fmt.Errorf("Flag --ssl_client_cert_path is renamed to --ssl_backend_client_cert_path, only use the latter flag.")
+		return usageError("Flag --ssl_client_cert_path is renamed to --ssl_backend_client_cert_path, only use the latter flag.")
 	}
 
 	if args.SslBackendClientRootCertsFile != nil && *args.SslBackendClientRootCertsFile != "" && args.SslClientRootCertsFile != nil && *args.SslClientRootCertsFile != "" {
-		return fmt.Errorf("Flag --ssl_client_root_certs_file is renamed to --ssl_backend_client_root_certs_file, only use the latter flag.")
+		return usageError("Flag --ssl_client_root_certs_file is renamed to --ssl_backend_client_root_certs_file, only use the latter flag.")
 	}
 
 	if args.HealthCheckGrpcBackend && !strings.HasPrefix(args.Backend, "grpc") {
-		return fmt.Errorf("Flag --health_check_grpc_backend requires the flag --backend to use grpc scheme.")
+		return usageError("Flag --health_check_grpc_backend requires the flag --backend to use grpc scheme.")
 	}
 	if !args.HealthCheckGrpcBackend && args.HealthCheckGrpcBackendInterval != nil && *args.HealthCheckGrpcBackendInterval != "" {
-		return fmt.Errorf("Flag --health_check_grpc_backend_interval requires the flag --health_check_grpc_backend to be used.")
+		return usageError("Flag --health_check_grpc_backend_interval requires the flag --health_check_grpc_backend to be used.")
 	}
 	if !args.HealthCheckGrpcBackend && args.HealthCheckGrpcBackendService != nil && *args.HealthCheckGrpcBackendService != "" {
-		return fmt.Errorf("Flag --health_check_grpc_backend_service requires the flag --health_check_grpc_backend to be used.")
+		return usageError("Flag --health_check_grpc_backend_service requires the flag --health_check_grpc_backend to be used.")
 	}
 	if !args.HealthCheckGrpcBackend && args.HealthCheckGrpcBackendNoTrafficInterval != nil && *args.HealthCheckGrpcBackendNoTrafficInterval != "" {
-		return fmt.Errorf("Flag --health_check_grpc_backend_no_traffic_interval requires the flag --health_check_grpc_backend to be used.")
+		return usageError("Flag --health_check_grpc_backend_no_traffic_interval requires the flag --health_check_grpc_backend to be used.")
 	}
 
 	return nil
@@ -367,11 +376,11 @@ func (l *launcher) genProxyConfig(args *proxyArgs) ([]string, error) {
 	}
 
 	if args.GenerateSelfSignedCert {
-		log.Println("Generating self-signed certificate...")
+		glog.Info("Generating self-signed certificate...")
 		if err := generateSelfSignedCert(l.certDir); err != nil {
-			return nil, fmt.Errorf("Failed to create self-signed cert: %w", err)
+			return nil, fmt.Errorf("failed to create self-signed cert: %v", err)
 		}
-		proxyConf = append(proxyConf, "--ssl_server_cert_path", defaultSelfSignedCertDir)
+		proxyConf = append(proxyConf, "--ssl_server_cert_path", l.certDir)
 	}
 
 	if args.EnableStrictTransportSecurity {

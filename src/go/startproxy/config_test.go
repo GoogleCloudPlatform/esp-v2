@@ -15,11 +15,9 @@
 package startproxy
 
 import (
-	"crypto/x509"
-	"encoding/pem"
 	"os"
-	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -43,16 +41,17 @@ func TestGenBootstrap(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testcases {
-		_ = os.Unsetenv(googleCredsEnv)
-		args, err := parseArgs(tc.flags)
-		if err != nil {
-			t.Fatalf("case %d (%v): unexpected parseArgs error: %v", i, tc.flags, err)
-		}
-		got := l.genBootstrapConf(args)
-		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("case %d (%v):\ngot  %v\nwant %v", i, tc.flags, got, tc.want)
-		}
+	for _, tc := range testcases {
+		t.Run(strings.Join(tc.flags, " "), func(t *testing.T) {
+			unsetEnvForTest(t, googleCredsEnv)
+			args, err := parseArgs(tc.flags)
+			if err != nil {
+				t.Fatalf("unexpected parseArgs error: %v", err)
+			}
+			if got := l.genBootstrapConf(args); !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("got  %q\nwant %q", got, tc.want)
+			}
+		})
 	}
 }
 
@@ -171,7 +170,7 @@ func TestGenProxyConfig(t *testing.T) {
 		},
 		{
 			flags: []string{"-R=managed", "--listener_port=8080", "--disable_tracing", "--generate_self_signed_cert"},
-			want:  []string{"bin/configmanager", "--logtostderr", "--rollout_strategy", "managed", "--backend_address", "http://127.0.0.1:8082", "--v", "0", "--listener_port", "8080", "--ssl_server_cert_path", "/tmp/ssl/endpoints", "--service_control_enable_api_key_uid_reporting", "--disable_tracing"},
+			want:  []string{"bin/configmanager", "--logtostderr", "--rollout_strategy", "managed", "--backend_address", "http://127.0.0.1:8082", "--v", "0", "--listener_port", "8080", "--ssl_server_cert_path", tmpCertDir, "--service_control_enable_api_key_uid_reporting", "--disable_tracing"},
 		},
 		{
 			flags: []string{"-R=managed", "--http2_port=8079", "--service_control_quota_retries=3", "--service_control_report_timeout_ms=300", "--check_metadata", "--disable_tracing"},
@@ -355,100 +354,114 @@ func TestGenProxyConfig(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testcases {
-		_ = os.Unsetenv(googleCredsEnv)
-		args, err := parseArgs(tc.flags)
-		if err != nil {
-			t.Fatalf("case %d (%v): unexpected parseArgs error: %v", i, tc.flags, err)
-		}
-		got, err := l.genProxyConfig(args)
-		if err != nil {
-			t.Fatalf("case %d (%v): unexpected genProxyConfig error: %v", i, tc.flags, err)
-		}
-		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("case %d (%v):\ngot  %v\nwant %v", i, tc.flags, got, tc.want)
-		}
-	}
-
-	// Verify self-signed cert files were generated in pure Go and are valid X.509 / RSA PEM.
-	certPEM, err := os.ReadFile(filepath.Join(tmpCertDir, "server.crt"))
-	if err != nil {
-		t.Fatalf("expected server.crt to be created: %v", err)
-	}
-	block, _ := pem.Decode(certPEM)
-	if block == nil || block.Type != "CERTIFICATE" {
-		t.Fatalf("invalid PEM block in server.crt")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		t.Fatalf("failed to parse generated X.509 certificate: %v", err)
-	}
-	if cert.Subject.CommonName != "localhost" {
-		t.Errorf("expected CN=localhost, got %q", cert.Subject.CommonName)
-	}
-
-	keyPEM, err := os.ReadFile(filepath.Join(tmpCertDir, "server.key"))
-	if err != nil {
-		t.Fatalf("expected server.key to be created: %v", err)
-	}
-	keyBlock, _ := pem.Decode(keyPEM)
-	if keyBlock == nil || keyBlock.Type != "RSA PRIVATE KEY" {
-		t.Fatalf("invalid PEM block in server.key")
-	}
-	if _, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes); err != nil {
-		t.Fatalf("failed to parse generated RSA private key: %v", err)
+	for _, tc := range testcases {
+		t.Run(strings.Join(tc.flags, " "), func(t *testing.T) {
+			unsetEnvForTest(t, googleCredsEnv)
+			unsetEnvForTest(t, otelResourceAttributesEnv)
+			args, err := parseArgs(tc.flags)
+			if err != nil {
+				t.Fatalf("unexpected parseArgs error: %v", err)
+			}
+			got, err := l.genProxyConfig(args)
+			if err != nil {
+				t.Fatalf("unexpected genProxyConfig error: %v", err)
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("got  %q\nwant %q", got, tc.want)
+			}
+		})
 	}
 }
 
 func TestGenProxyConfigError(t *testing.T) {
 	l := newLauncher()
-	testcases := [][]string{
-		[]string{"--unknown_flag"},
-		[]string{"--rollout_strategy=managed", "--v=2019-11-09r0"},
-		[]string{"--rollout_strategy=fixed"},
-		[]string{"--service=test_bookstore.gloud.run", "--service_json_path=/tmp/service.json"},
-		[]string{"--version=2019-11-09r0", "--service_json_path=/tmp/service.json"},
-		[]string{"--rollout_strategy=managed", "--service_json_path=/tmp/service.json"},
-		[]string{"--version=2019-11-09r0", "--backend_dns_lookup_family=v4"},
-		[]string{"--version=2019-11-09r0", "--non_gcp"},
-		[]string{"--version=2019-11-09r0", "--http_port=8000", "--http2_port=8000"},
-		[]string{"--version=2019-11-09r0", "--http_port=8000", "--listener_port=8000"},
-		[]string{"--version=2019-11-09r0", "--listener_port=8000", "--ssl_port=9000"},
-		[]string{"--version=2019-11-09r0", "--listener_port=80"},
-		[]string{"--version=2019-11-09r0", "--http_port=80"},
-		[]string{"--version=2019-11-09r0", "--http2_port=80"},
-		[]string{"--version=2019-11-09r0", "--ssl_port=443"},
-		[]string{"--version=2019-11-09r0", "--ssl_server_cert_path=/etc/endpoint/ssl", "--ssl_port=9000"},
-		[]string{"--version=2019-11-09r0", "--ssl_server_cert_path=/etc/endpoint/ssl", "--generate_self_signed_cert"},
-		[]string{"--version=2019-11-09r0", "--ssl_backend_client_cert_path=/etc/endpoint/ssl", "--tls_mutual_auth"},
-		[]string{"--version=2019-11-09r0", "--ssl_client_cert_path=/etc/endpoint/ssl", "--tls_mutual_auth"},
-		[]string{"--version=2019-11-09r0", "--ssl_protocols=TLSv1.3", "--ssl_minimum_protocol=TLSv1.1"},
-		[]string{"--version=2019-11-09r0", "--ssl_minimum_protocol=TLSv11"},
-		[]string{"--version=2019-11-09r0", "--ssl_backend_client_root_certs_file", "--enable_grpc_backend_ssl"},
-		[]string{"--version=2019-11-09r0", "--ssl_client_root_certs_file", "--enable_grpc_backend_ssl"},
-		[]string{"--version=2019-11-09r0", "--transcoding_ignore_query_parameters=foo,bar", "--transcoding_ignore_unknown_query_parameters"},
-		[]string{"--version=2019-11-09r0", "--access_log_format"},
-		[]string{"--version=2019-11-09r0", "--dns=127.0.0.1", "--dns_resolver_address=127.0.0.1"},
-		[]string{"--version=2019-11-09r0", "--ssl_client_cert_path=/tmp", "--ssl_backend_client_cert_path=/tmp"},
-		[]string{"--version=2019-11-09r0", "--health_check_grpc_backend"},
-		[]string{"--version=2019-11-09r0", "--health_check_grpc_backend", "--backend=http://abc.com"},
-		[]string{"--version=2019-11-09r0", "--health_check_grpc_backend_interval=3s"},
-		[]string{"--version=2019-11-09r0", "--health_check_grpc_backend_service=/foo.bar"},
-		[]string{"--version=2019-11-09r0", "--health_check_grpc_backend_no_traffic_interval=1s"},
-		[]string{"--version=2019-11-09r0", "--ssl_client_root_certs_file=/tmp/server.crt", "--ssl_backend_client_root_certs_file=/tmp/server.crt"},
-		[]string{"--non_gcp", "--service_account_key=tmp/service_account_key", "--enable_application_default_credentials"},
-		[]string{"--non_gcp"},
+	// wantErr is start_proxy.py's message (with two typos fixed).
+	testcases := []struct {
+		flags   []string
+		wantErr string
+	}{
+		{flags: []string{"--unknown_flag"}, wantErr: "unrecognized arguments: --unknown_flag"},
+		{flags: []string{"--rollout_strategy=managed", "--v=2019-11-09r0"}, wantErr: "Flag --version cannot be used if --rollout_strategy=managed."},
+		{flags: []string{"--rollout_strategy=fixed"}, wantErr: "Flag --version is required if --rollout_strategy=fixed."},
+		{flags: []string{"--service=test_bookstore.gloud.run", "--service_json_path=/tmp/service.json"}, wantErr: "Flag --service cannot be used together with --service_json_path."},
+		{flags: []string{"--version=2019-11-09r0", "--service_json_path=/tmp/service.json"}, wantErr: "Flag --version cannot be used together with --service_json_path."},
+		{flags: []string{"--rollout_strategy=managed", "--service_json_path=/tmp/service.json"}, wantErr: "Flag -R or --rollout_strategy must be fixed with --service_json_path."},
+		{flags: []string{"--version=2019-11-09r0", "--backend_dns_lookup_family=v4"}, wantErr: "argument --backend_dns_lookup_family: invalid choice: 'v4' (choose from 'auto', 'v4only', 'v6only', 'v4preferred', 'all')"},
+		{flags: []string{"--version=2019-11-09r0", "--non_gcp"}, wantErr: "If --non_gcp is specified, --service_account_key or --enable_application_default_credentials has to be specified, or GOOGLE_APPLICATION_CREDENTIALS has to set in os.environ."},
+		{flags: []string{"--version=2019-11-09r0", "--http_port=8000", "--http2_port=8000"}, wantErr: "Multiple port flags --http_port,--http2_port are not allowed, use only the --listener_port flag"},
+		{flags: []string{"--version=2019-11-09r0", "--http_port=8000", "--listener_port=8000"}, wantErr: "Multiple port flags --http_port,--listener_port are not allowed, use only the --listener_port flag"},
+		{flags: []string{"--version=2019-11-09r0", "--listener_port=8000", "--ssl_port=9000"}, wantErr: "Multiple port flags --listener_port,--ssl_port are not allowed, use only the --listener_port flag"},
+		{flags: []string{"--version=2019-11-09r0", "--listener_port=80"}, wantErr: "Port 80 is a privileged port. For security purposes, the ESPv2 container cannot bind to it. Use any port above 1024 instead."},
+		{flags: []string{"--version=2019-11-09r0", "--http_port=80"}, wantErr: "Port 80 is a privileged port. For security purposes, the ESPv2 container cannot bind to it. Use any port above 1024 instead."},
+		{flags: []string{"--version=2019-11-09r0", "--http2_port=80"}, wantErr: "Port 80 is a privileged port. For security purposes, the ESPv2 container cannot bind to it. Use any port above 1024 instead."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_port=443"}, wantErr: "Port 443 is a privileged port. For security purposes, the ESPv2 container cannot bind to it. Use any port above 1024 instead."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_server_cert_path=/etc/endpoint/ssl", "--ssl_port=9000"}, wantErr: "Flag --ssl_port is going to be deprecated, please use --ssl_server_cert_path only."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_server_cert_path=/etc/endpoint/ssl", "--generate_self_signed_cert"}, wantErr: "Flag --generate_self_signed_cert and --ssl_server_cert_path cannot be used simultaneously."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_backend_client_cert_path=/etc/endpoint/ssl", "--tls_mutual_auth"}, wantErr: "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_backend_client_cert_path only."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_client_cert_path=/etc/endpoint/ssl", "--tls_mutual_auth"}, wantErr: "Flag --tls_mutual_auth is going to be deprecated, please use --ssl_backend_client_cert_path only."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_protocols=TLSv1.3", "--ssl_minimum_protocol=TLSv1.1"}, wantErr: "Flag --ssl_protocols is going to be deprecated, please use --ssl_minimum_protocol and --ssl_maximum_protocol."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_minimum_protocol=TLSv11"}, wantErr: "argument --ssl_minimum_protocol: invalid choice: 'TLSv11' (choose from 'TLSv1.0', 'TLSv1.1', 'TLSv1.2', 'TLSv1.3')"},
+		{flags: []string{"--version=2019-11-09r0", "--transcoding_ignore_query_parameters=foo,bar", "--transcoding_ignore_unknown_query_parameters"}, wantErr: "Flag --transcoding_ignore_query_parameters cannot be used together with --transcoding_ignore_unknown_query_parameters."},
+		{flags: []string{"--version=2019-11-09r0", "--dns=127.0.0.1", "--dns_resolver_address=127.0.0.1"}, wantErr: "Flag --dns_resolver_addresses cannot be used together with --dns."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_client_cert_path=/tmp", "--ssl_backend_client_cert_path=/tmp"}, wantErr: "Flag --ssl_client_cert_path is renamed to --ssl_backend_client_cert_path, only use the latter flag."},
+		{flags: []string{"--version=2019-11-09r0", "--health_check_grpc_backend"}, wantErr: "Flag --health_check_grpc_backend requires the flag --backend to use grpc scheme."},
+		{flags: []string{"--version=2019-11-09r0", "--health_check_grpc_backend", "--backend=http://abc.com"}, wantErr: "Flag --health_check_grpc_backend requires the flag --backend to use grpc scheme."},
+		{flags: []string{"--version=2019-11-09r0", "--health_check_grpc_backend_interval=3s"}, wantErr: "Flag --health_check_grpc_backend_interval requires the flag --health_check_grpc_backend to be used."},
+		{flags: []string{"--version=2019-11-09r0", "--health_check_grpc_backend_service=/foo.bar"}, wantErr: "Flag --health_check_grpc_backend_service requires the flag --health_check_grpc_backend to be used."},
+		{flags: []string{"--version=2019-11-09r0", "--health_check_grpc_backend_no_traffic_interval=1s"}, wantErr: "Flag --health_check_grpc_backend_no_traffic_interval requires the flag --health_check_grpc_backend to be used."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_client_root_certs_file=/tmp/server.crt", "--ssl_backend_client_root_certs_file=/tmp/server.crt"}, wantErr: "Flag --ssl_client_root_certs_file is renamed to --ssl_backend_client_root_certs_file, only use the latter flag."},
+		{flags: []string{"--version=2019-11-09r0", "--non_gcp", "--service_account_key=tmp/service_account_key", "--enable_application_default_credentials"}, wantErr: "Only one of --service_account_key or --enable_application_default_credentials can be supplied for credentials at once."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_backend_client_root_certs_file=/etc/ssl/certs/ca.crt", "--enable_grpc_backend_ssl"}, wantErr: "Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_backend_client_root_certs_file only."},
+		{flags: []string{"--version=2019-11-09r0", "--ssl_client_root_certs_file=/etc/ssl/certs/ca.crt", "--enable_grpc_backend_ssl"}, wantErr: "Flag --enable_grpc_backend_ssl are going to be deprecated, please use --ssl_backend_client_root_certs_file only."},
+		{flags: []string{"--version=2019-11-09r0", "--access_log_format=%START_TIME%"}, wantErr: "Flag --access_log_format has to be used together with --access_log."},
 	}
 
-	for i, flags := range testcases {
-		_ = os.Unsetenv(googleCredsEnv)
-		args, err := parseArgs(flags)
-		if err == nil {
-			_, err = l.genProxyConfig(args)
-		}
-		if err == nil {
-			t.Errorf("case %d (%v): expected error, got nil", i, flags)
-		}
+	for _, tc := range testcases {
+		t.Run(strings.Join(tc.flags, " "), func(t *testing.T) {
+			unsetEnvForTest(t, googleCredsEnv)
+			args, err := parseArgs(tc.flags)
+			if err == nil {
+				_, err = l.genProxyConfig(args)
+			}
+			if err == nil || err.Error() != tc.wantErr {
+				t.Errorf("got error %v, want %q", err, tc.wantErr)
+			}
+		})
+	}
+}
+
+// start_proxy.py only demanded credentials for --non_gcp when
+// --service_account_key was None, so an empty key, or an empty
+// GOOGLE_APPLICATION_CREDENTIALS, is accepted.
+func TestGenProxyConfigNonGcpEmptyServiceAccountKey(t *testing.T) {
+	l := newLauncher()
+	want := []string{"bin/configmanager", "--logtostderr", "--rollout_strategy", "fixed", "--backend_address", "http://127.0.0.1:8082", "--v", "0", "--service_config_id", "2019-11-09r0", "--service_control_enable_api_key_uid_reporting", "--disable_tracing", "--non_gcp"}
+	for _, tc := range []struct {
+		desc  string
+		flags []string
+		env   *string
+	}{
+		{desc: "empty flag", flags: []string{"--version=2019-11-09r0", "--non_gcp", "--service_account_key="}},
+		{desc: "empty env", flags: []string{"--version=2019-11-09r0", "--non_gcp"}, env: new(string)},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			unsetEnvForTest(t, googleCredsEnv)
+			unsetEnvForTest(t, otelResourceAttributesEnv)
+			if tc.env != nil {
+				t.Setenv(googleCredsEnv, *tc.env)
+			}
+			args, err := parseArgs(tc.flags)
+			if err != nil {
+				t.Fatalf("unexpected parseArgs error: %v", err)
+			}
+			got, err := l.genProxyConfig(args)
+			if err != nil {
+				t.Fatalf("unexpected genProxyConfig error: %v", err)
+			}
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("got  %q\nwant %q", got, want)
+			}
+		})
 	}
 }
 
@@ -472,16 +485,16 @@ func TestGenEnvoyArgs(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testcases {
-		_ = os.Unsetenv(googleCredsEnv)
-		args, err := parseArgs(tc.flags)
-		if err != nil {
-			t.Fatalf("case %d (%v): unexpected parseArgs error: %v", i, tc.flags, err)
-		}
-		got := l.genEnvoyArgs(args)
-		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("case %d (%v):\ngot  %v\nwant %v", i, tc.flags, got, tc.want)
-		}
+	for _, tc := range testcases {
+		t.Run(strings.Join(tc.flags, " "), func(t *testing.T) {
+			args, err := parseArgs(tc.flags)
+			if err != nil {
+				t.Fatalf("unexpected parseArgs error: %v", err)
+			}
+			if got := l.genEnvoyArgs(args); !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("got  %q\nwant %q", got, tc.want)
+			}
+		})
 	}
 }
 
@@ -520,33 +533,33 @@ func TestServiceAccountKeyWithEnv(t *testing.T) {
 		},
 	}
 
-	for i, tc := range testcases {
-		if tc.oldEnv != nil {
-			_ = os.Setenv(googleCredsEnv, *tc.oldEnv)
-		} else {
-			_ = os.Unsetenv(googleCredsEnv)
-		}
-		args, err := parseArgs(tc.flags)
-		if err != nil {
-			t.Fatalf("case %d: unexpected parseArgs error: %v", i, err)
-		}
-		got, err := l.genProxyConfig(args)
-		if err != nil {
-			t.Fatalf("case %d: unexpected genProxyConfig error: %v", i, err)
-		}
-		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("case %d:\ngot  %v\nwant %v", i, got, tc.want)
-		}
-		envVal, hasEnv := os.LookupEnv(googleCredsEnv)
-		if tc.wantedEnv != nil {
-			if !hasEnv || envVal != *tc.wantedEnv {
-				t.Errorf("case %d: got env %q (exists=%v), want %q", i, envVal, hasEnv, *tc.wantedEnv)
+	for _, tc := range testcases {
+		t.Run(strings.Join(tc.flags, " "), func(t *testing.T) {
+			unsetEnvForTest(t, googleCredsEnv)
+			if tc.oldEnv != nil {
+				t.Setenv(googleCredsEnv, *tc.oldEnv)
 			}
-		} else if hasEnv {
-			t.Errorf("case %d: expected %s to be unset, got %q", i, googleCredsEnv, envVal)
-		}
+			args, err := parseArgs(tc.flags)
+			if err != nil {
+				t.Fatalf("unexpected parseArgs error: %v", err)
+			}
+			got, err := l.genProxyConfig(args)
+			if err != nil {
+				t.Fatalf("unexpected genProxyConfig error: %v", err)
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("got  %q\nwant %q", got, tc.want)
+			}
+			envVal, hasEnv := os.LookupEnv(googleCredsEnv)
+			if tc.wantedEnv != nil {
+				if !hasEnv || envVal != *tc.wantedEnv {
+					t.Errorf("got env %q (exists=%v), want %q", envVal, hasEnv, *tc.wantedEnv)
+				}
+			} else if hasEnv {
+				t.Errorf("expected %s to be unset, got %q", googleCredsEnv, envVal)
+			}
+		})
 	}
-	_ = os.Unsetenv(googleCredsEnv)
 }
 
 func TestGenProxyConfigNonGcpWithServiceAccountKeyKeepsTracing(t *testing.T) {

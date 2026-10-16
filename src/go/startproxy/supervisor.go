@@ -15,51 +15,71 @@
 package startproxy
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"syscall"
 	"time"
+
+	"github.com/golang/glog"
 )
 
-func startSubprocess(cmdArgs []string) (*exec.Cmd, <-chan error, error) {
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+// child is a supervised subprocess.
+type child struct {
+	// name is used in "<name> is down" messages.
+	name string
+	// killName is used in "killing <killName> process" messages. Both match
+	// start_proxy.py's log text.
+	killName string
+	cmd      *exec.Cmd
+	waitCh   <-chan error
+	exited   bool
+}
+
+// startChild starts argv with its stdout and stderr merged into ours, like
+// start_proxy.py relayed child output.
+func startChild(name, killName string, argv []string) (*child, error) {
+	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
-
 	if err := cmd.Start(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
 	waitCh := make(chan error, 1)
 	go func() {
 		waitCh <- cmd.Wait()
 	}()
-
-	return cmd, waitCh, nil
+	return &child{name: name, killName: killName, cmd: cmd, waitCh: waitCh}, nil
 }
 
-// child is a supervised subprocess.
-type child struct {
-	name   string
-	cmd    *exec.Cmd
-	waitCh <-chan error
-	exited bool
+func (c *child) terminate() {
+	if c.exited {
+		return
+	}
+	glog.Infof("sending TERM to PID=%d", c.cmd.Process.Pid)
+	if err := c.cmd.Process.Signal(syscall.SIGTERM); err != nil {
+		glog.Errorf("error sending TERM to PID=%d continuing", c.cmd.Process.Pid)
+	}
 }
 
-func (c *child) signal(sig syscall.Signal) {
-	if c.exited || c.cmd.Process == nil {
+func (c *child) kill() {
+	if c.exited {
 		return
 	}
-	if sig == syscall.SIGKILL {
-		log.Printf("INFO: Killing process: pid=%d", c.cmd.Process.Pid)
-		_ = c.cmd.Process.Kill()
-		return
+	glog.Infof("Killing process: pid=%d", c.cmd.Process.Pid)
+	if err := c.cmd.Process.Kill(); err != nil {
+		glog.Errorf("The child process: pid=%d may not exist.", c.cmd.Process.Pid)
 	}
-	log.Printf("INFO: sending TERM to PID=%d", c.cmd.Process.Pid)
-	if err := c.cmd.Process.Signal(sig); err != nil {
-		log.Printf("ERROR: error sending TERM to PID=%d continuing", c.cmd.Process.Pid)
+}
+
+// signalName returns the signal's name as start_proxy.py logged it.
+func signalName(sig os.Signal) string {
+	switch sig {
+	case syscall.SIGTERM:
+		return "SIGTERM"
+	case syscall.SIGINT:
+		return "SIGINT"
 	}
+	return sig.String()
 }
 
 // supervise monitors Config Manager and Envoy until both have exited.
@@ -80,24 +100,24 @@ func (l *launcher) supervise(cm, envoy *child, sigCh <-chan os.Signal) int {
 		c.exited = true
 		c.waitCh = nil // never selected again
 		if terminating {
-			log.Printf("INFO: %s exited", c.name)
+			glog.Infof("%s exited", c.name)
 			return cm.exited && envoy.exited
 		}
 		other := envoy
 		if c == envoy {
 			other = cm
 		}
-		log.Printf("FATAL: %s is down, killing %s process.", c.name, other.name)
-		other.signal(syscall.SIGKILL)
+		glog.Errorf("%s is down, killing %s process.", c.name, other.killName)
+		other.kill()
 		return true
 	}
 
 	for {
 		select {
 		case sig := <-sigCh:
-			log.Printf("WARNING: got signal: %v", sig)
+			glog.Warningf("got signal: %s", signalName(sig))
 			for _, c := range children {
-				c.signal(syscall.SIGTERM)
+				c.terminate()
 			}
 			if !terminating {
 				terminating = true
@@ -112,9 +132,9 @@ func (l *launcher) supervise(cm, envoy *child, sigCh <-chan os.Signal) int {
 				return 1
 			}
 		case <-graceTimeout:
-			log.Printf("WARNING: child processes did not exit within %v of signal", l.shutdownGrace)
+			glog.Warningf("child processes did not exit within %v of signal", l.shutdownGrace)
 			for _, c := range children {
-				c.signal(syscall.SIGKILL)
+				c.kill()
 			}
 			return 1
 		}
