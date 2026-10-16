@@ -15,20 +15,16 @@
 package startproxy
 
 import (
-	"bytes"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 )
 
 func TestGenBootstrap(t *testing.T) {
+	l := newLauncher()
 	testcases := []struct {
 		flags []string
 		want  []string
@@ -48,12 +44,12 @@ func TestGenBootstrap(t *testing.T) {
 	}
 
 	for i, tc := range testcases {
-		_ = os.Unsetenv(GoogleCredsKey)
-		args, err := ParseArgs(tc.flags)
+		_ = os.Unsetenv(googleCredsEnv)
+		args, err := parseArgs(tc.flags)
 		if err != nil {
-			t.Fatalf("case %d (%v): unexpected ParseArgs error: %v", i, tc.flags, err)
+			t.Fatalf("case %d (%v): unexpected parseArgs error: %v", i, tc.flags, err)
 		}
-		got := GenBootstrapConf(args)
+		got := l.genBootstrapConf(args)
 		if !reflect.DeepEqual(got, tc.want) {
 			t.Errorf("case %d (%v):\ngot  %v\nwant %v", i, tc.flags, got, tc.want)
 		}
@@ -62,9 +58,8 @@ func TestGenBootstrap(t *testing.T) {
 
 func TestGenProxyConfig(t *testing.T) {
 	tmpCertDir := t.TempDir()
-	origCertDir := SelfSignedCertDir
-	SelfSignedCertDir = tmpCertDir
-	defer func() { SelfSignedCertDir = origCertDir }()
+	l := newLauncher()
+	l.certDir = tmpCertDir
 
 	testcases := []struct {
 		flags []string
@@ -361,14 +356,14 @@ func TestGenProxyConfig(t *testing.T) {
 	}
 
 	for i, tc := range testcases {
-		_ = os.Unsetenv(GoogleCredsKey)
-		args, err := ParseArgs(tc.flags)
+		_ = os.Unsetenv(googleCredsEnv)
+		args, err := parseArgs(tc.flags)
 		if err != nil {
-			t.Fatalf("case %d (%v): unexpected ParseArgs error: %v", i, tc.flags, err)
+			t.Fatalf("case %d (%v): unexpected parseArgs error: %v", i, tc.flags, err)
 		}
-		got, err := GenProxyConfig(args)
+		got, err := l.genProxyConfig(args)
 		if err != nil {
-			t.Fatalf("case %d (%v): unexpected GenProxyConfig error: %v", i, tc.flags, err)
+			t.Fatalf("case %d (%v): unexpected genProxyConfig error: %v", i, tc.flags, err)
 		}
 		if !reflect.DeepEqual(got, tc.want) {
 			t.Errorf("case %d (%v):\ngot  %v\nwant %v", i, tc.flags, got, tc.want)
@@ -406,6 +401,7 @@ func TestGenProxyConfig(t *testing.T) {
 }
 
 func TestGenProxyConfigError(t *testing.T) {
+	l := newLauncher()
 	testcases := [][]string{
 		[]string{"--unknown_flag"},
 		[]string{"--rollout_strategy=managed", "--v=2019-11-09r0"},
@@ -445,10 +441,10 @@ func TestGenProxyConfigError(t *testing.T) {
 	}
 
 	for i, flags := range testcases {
-		_ = os.Unsetenv(GoogleCredsKey)
-		args, err := ParseArgs(flags)
+		_ = os.Unsetenv(googleCredsEnv)
+		args, err := parseArgs(flags)
 		if err == nil {
-			_, err = GenProxyConfig(args)
+			_, err = l.genProxyConfig(args)
 		}
 		if err == nil {
 			t.Errorf("case %d (%v): expected error, got nil", i, flags)
@@ -457,6 +453,7 @@ func TestGenProxyConfigError(t *testing.T) {
 }
 
 func TestGenEnvoyArgs(t *testing.T) {
+	l := newLauncher()
 	testcases := []struct {
 		flags []string
 		want  []string
@@ -476,12 +473,12 @@ func TestGenEnvoyArgs(t *testing.T) {
 	}
 
 	for i, tc := range testcases {
-		_ = os.Unsetenv(GoogleCredsKey)
-		args, err := ParseArgs(tc.flags)
+		_ = os.Unsetenv(googleCredsEnv)
+		args, err := parseArgs(tc.flags)
 		if err != nil {
-			t.Fatalf("case %d (%v): unexpected ParseArgs error: %v", i, tc.flags, err)
+			t.Fatalf("case %d (%v): unexpected parseArgs error: %v", i, tc.flags, err)
 		}
-		got := GenEnvoyArgs(args)
+		got := l.genEnvoyArgs(args)
 		if !reflect.DeepEqual(got, tc.want) {
 			t.Errorf("case %d (%v):\ngot  %v\nwant %v", i, tc.flags, got, tc.want)
 		}
@@ -489,6 +486,7 @@ func TestGenEnvoyArgs(t *testing.T) {
 }
 
 func TestServiceAccountKeyWithEnv(t *testing.T) {
+	l := newLauncher()
 	strPtr := func(s string) *string { return &s }
 	testcases := []struct {
 		oldEnv    *string
@@ -524,299 +522,40 @@ func TestServiceAccountKeyWithEnv(t *testing.T) {
 
 	for i, tc := range testcases {
 		if tc.oldEnv != nil {
-			_ = os.Setenv(GoogleCredsKey, *tc.oldEnv)
+			_ = os.Setenv(googleCredsEnv, *tc.oldEnv)
 		} else {
-			_ = os.Unsetenv(GoogleCredsKey)
+			_ = os.Unsetenv(googleCredsEnv)
 		}
-		args, err := ParseArgs(tc.flags)
+		args, err := parseArgs(tc.flags)
 		if err != nil {
-			t.Fatalf("case %d: unexpected ParseArgs error: %v", i, err)
+			t.Fatalf("case %d: unexpected parseArgs error: %v", i, err)
 		}
-		got, err := GenProxyConfig(args)
+		got, err := l.genProxyConfig(args)
 		if err != nil {
-			t.Fatalf("case %d: unexpected GenProxyConfig error: %v", i, err)
+			t.Fatalf("case %d: unexpected genProxyConfig error: %v", i, err)
 		}
 		if !reflect.DeepEqual(got, tc.want) {
 			t.Errorf("case %d:\ngot  %v\nwant %v", i, got, tc.want)
 		}
-		envVal, hasEnv := os.LookupEnv(GoogleCredsKey)
+		envVal, hasEnv := os.LookupEnv(googleCredsEnv)
 		if tc.wantedEnv != nil {
 			if !hasEnv || envVal != *tc.wantedEnv {
 				t.Errorf("case %d: got env %q (exists=%v), want %q", i, envVal, hasEnv, *tc.wantedEnv)
 			}
 		} else if hasEnv {
-			t.Errorf("case %d: expected %s to be unset, got %q", i, GoogleCredsKey, envVal)
+			t.Errorf("case %d: expected %s to be unset, got %q", i, googleCredsEnv, envVal)
 		}
 	}
-	_ = os.Unsetenv(GoogleCredsKey)
-}
-
-func TestHelpFlag(t *testing.T) {
-	for _, flag := range []string{"-h", "--help"} {
-		_, err := ParseArgs([]string{flag})
-		if !errors.Is(err, ErrHelpRequested) {
-			t.Errorf("expected ErrHelpRequested for flag %q, got: %v", flag, err)
-		}
-
-		if exitCode := Run([]string{flag}); exitCode != 0 {
-			t.Errorf("expected Run(%q) to return 0, got %d", flag, exitCode)
-		}
-	}
-}
-
-func TestPrintUsage(t *testing.T) {
-	var buf bytes.Buffer
-	PrintUsage(&buf)
-	out := buf.String()
-	if !strings.Contains(out, "usage: startproxy [-h]") {
-		t.Errorf("expected usage line, got:\n%s", out)
-	}
-	if !strings.Contains(out, "--service") {
-		t.Errorf("expected --service in usage, got:\n%s", out)
-	}
-	if !strings.Contains(out, "--help") {
-		t.Errorf("expected --help in usage, got:\n%s", out)
-	}
-}
-
-// unsetEnvForTest unsets key for the duration of the test and restores its
-// original value afterwards.
-func unsetEnvForTest(t *testing.T, key string) {
-	t.Helper()
-	t.Setenv(key, "")
-	_ = os.Unsetenv(key)
-}
-
-// stubMetadataProjectID makes the metadata server lookup return projectID ("" =
-// lookup failed) for the duration of the test.
-func stubMetadataProjectID(t *testing.T, projectID string) {
-	t.Helper()
-	orig := fetchProjectIDFromMetadataFn
-	t.Cleanup(func() { fetchProjectIDFromMetadataFn = orig })
-	fetchProjectIDFromMetadataFn = func() string { return projectID }
-}
-
-// writeServiceAccountKey writes content to a temporary key file and returns its path.
-func writeServiceAccountKey(t *testing.T, content string) string {
-	t.Helper()
-	path := filepath.Join(t.TempDir(), "sa.json")
-	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
-		t.Fatalf("failed to write service account key: %v", err)
-	}
-	return path
-}
-
-func TestFetchProjectIDFromMetadata(t *testing.T) {
-	origURL := MetadataProjectIDURL
-	t.Cleanup(func() { MetadataProjectIDURL = origURL })
-
-	t.Run("success", func(t *testing.T) {
-		flavor := make(chan string, 1)
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			flavor <- r.Header.Get("Metadata-Flavor")
-			_, _ = w.Write([]byte("my-cloud-project\n"))
-		}))
-		defer srv.Close()
-		MetadataProjectIDURL = srv.URL
-
-		if got := FetchProjectIDFromMetadata(); got != "my-cloud-project" {
-			t.Errorf("got %q, want %q", got, "my-cloud-project")
-		}
-		select {
-		case got := <-flavor:
-			if got != "Google" {
-				t.Errorf("Metadata-Flavor header = %q, want %q", got, "Google")
-			}
-		default:
-			t.Errorf("metadata server was not called")
-		}
-	})
-
-	t.Run("error status", func(t *testing.T) {
-		srv := httptest.NewServer(http.NotFoundHandler())
-		defer srv.Close()
-		MetadataProjectIDURL = srv.URL
-
-		if got := FetchProjectIDFromMetadata(); got != "" {
-			t.Errorf("got %q, want empty", got)
-		}
-	})
-
-	t.Run("network unreachable", func(t *testing.T) {
-		srv := httptest.NewServer(http.NotFoundHandler())
-		MetadataProjectIDURL = srv.URL
-		srv.Close()
-
-		if got := FetchProjectIDFromMetadata(); got != "" {
-			t.Errorf("got %q, want empty", got)
-		}
-	})
-}
-
-func TestFetchProjectIDFromServiceAccountKey(t *testing.T) {
-	testcases := []struct {
-		desc string
-		path string
-		want string
-	}{
-		{
-			desc: "valid key",
-			path: writeServiceAccountKey(t, `{"project_id": "test-sa-proj-123", "client_email": "sa@example.com"}`),
-			want: "test-sa-proj-123",
-		},
-		{
-			desc: "missing file",
-			path: "/nonexistent/path/sa.json",
-		},
-		{
-			desc: "corrupted JSON",
-			path: writeServiceAccountKey(t, "not valid json {[["),
-		},
-		{
-			desc: "missing project_id",
-			path: writeServiceAccountKey(t, `{"client_email": "sa@example.com"}`),
-		},
-		{
-			desc: "non-string project_id",
-			path: writeServiceAccountKey(t, `{"project_id": 123}`),
-		},
-		{
-			desc: "directory instead of file",
-			path: t.TempDir(),
-		},
-		{
-			desc: "empty path",
-			path: "",
-		},
-	}
-	for _, tc := range testcases {
-		if got := FetchProjectIDFromServiceAccountKey(tc.path); got != tc.want {
-			t.Errorf("%s: got %q, want %q", tc.desc, got, tc.want)
-		}
-	}
-}
-
-func TestSetupOtelResourceAttributes(t *testing.T) {
-	saKeyPath := writeServiceAccountKey(t, `{"project_id": "sa-project-789"}`)
-	strPtr := func(s string) *string { return &s }
-
-	testcases := []struct {
-		desc           string
-		flags          []string
-		initEnv        *string // nil: OTEL_RESOURCE_ATTRIBUTES is unset.
-		metadataReturn string  // "": the metadata server lookup fails.
-		wantEnv        *string // nil: OTEL_RESOURCE_ATTRIBUTES stays unset.
-	}{
-		{
-			desc:    "Injects project ID from --tracing_project_id when env is empty",
-			flags:   []string{"--tracing_project_id=flag-project-123"},
-			wantEnv: strPtr("gcp.project_id=flag-project-123"),
-		},
-		{
-			desc:    "Appends project ID to existing OTEL_RESOURCE_ATTRIBUTES",
-			flags:   []string{"--tracing_project_id=flag-project-123"},
-			initEnv: strPtr("service.name=my-svc,service.version=1.0"),
-			wantEnv: strPtr("service.name=my-svc,service.version=1.0,gcp.project_id=flag-project-123"),
-		},
-		{
-			desc:    "Does not duplicate if gcp.project_id already present in env",
-			flags:   []string{"--tracing_project_id=flag-project-123"},
-			initEnv: strPtr("gcp.project_id=existing-project"),
-			wantEnv: strPtr("gcp.project_id=existing-project"),
-		},
-		{
-			desc:    "Does not duplicate if legacy gcp.project.id already present in env",
-			flags:   []string{"--tracing_project_id=flag-project-123"},
-			initEnv: strPtr("gcp.project.id=existing-project,env=prod"),
-			wantEnv: strPtr("gcp.project.id=existing-project,env=prod"),
-		},
-		{
-			desc:           "Auto-detects from metadata server when flag is omitted on GCP",
-			metadataReturn: "metadata-project-456",
-			wantEnv:        strPtr("gcp.project_id=metadata-project-456"),
-		},
-		{
-			desc:           "Skips metadata fetch when --non_gcp is set",
-			flags:          []string{"--non_gcp"},
-			metadataReturn: "metadata-project-456",
-		},
-		{
-			desc:           "Skips when --disable_tracing is set",
-			flags:          []string{"--disable_tracing", "--tracing_project_id=flag-project-123"},
-			metadataReturn: "metadata-project-456",
-		},
-		{
-			desc: "Leaves env unset when metadata fetch fails and no flag provided",
-		},
-		{
-			desc:    "Resolves project ID from --service_account_key when flag is omitted",
-			flags:   []string{"--service_account_key=" + saKeyPath},
-			wantEnv: strPtr("gcp.project_id=sa-project-789"),
-		},
-		{
-			desc:    "--tracing_project_id flag takes precedence over --service_account_key",
-			flags:   []string{"--tracing_project_id=flag-project-123", "--service_account_key=" + saKeyPath},
-			wantEnv: strPtr("gcp.project_id=flag-project-123"),
-		},
-		{
-			desc:    "OTEL_RESOURCE_ATTRIBUTES takes precedence over --service_account_key",
-			flags:   []string{"--service_account_key=" + saKeyPath},
-			initEnv: strPtr("gcp.project_id=existing-env-project"),
-			wantEnv: strPtr("gcp.project_id=existing-env-project"),
-		},
-		{
-			desc:           "Falls back to metadata server when --service_account_key is invalid on GCP",
-			flags:          []string{"--service_account_key=/invalid/path/key.json"},
-			metadataReturn: "metadata-project-456",
-			wantEnv:        strPtr("gcp.project_id=metadata-project-456"),
-		},
-		{
-			desc:    "Resolves project ID from --service_account_key even on --non_gcp",
-			flags:   []string{"--non_gcp", "--service_account_key=" + saKeyPath},
-			wantEnv: strPtr("gcp.project_id=sa-project-789"),
-		},
-		{
-			desc:           "Leaves env unset when --service_account_key is invalid on --non_gcp",
-			flags:          []string{"--non_gcp", "--service_account_key=/invalid/path/key.json"},
-			metadataReturn: "metadata-should-not-be-called",
-		},
-	}
-
-	for _, tc := range testcases {
-		t.Run(tc.desc, func(t *testing.T) {
-			unsetEnvForTest(t, GoogleCredsKey)
-			if tc.initEnv != nil {
-				t.Setenv(OtelResourceAttributesEnv, *tc.initEnv)
-			} else {
-				unsetEnvForTest(t, OtelResourceAttributesEnv)
-			}
-			stubMetadataProjectID(t, tc.metadataReturn)
-
-			flags := append([]string{"--service=echo", "--version=v1", "--backend=127.0.0.1:8080"}, tc.flags...)
-			args, err := ParseArgs(flags)
-			if err != nil {
-				t.Fatalf("unexpected ParseArgs error: %v", err)
-			}
-			SetupOtelResourceAttributes(args)
-
-			got, ok := os.LookupEnv(OtelResourceAttributesEnv)
-			if tc.wantEnv == nil {
-				if ok {
-					t.Errorf("%s = %q, want unset", OtelResourceAttributesEnv, got)
-				}
-			} else if !ok || got != *tc.wantEnv {
-				t.Errorf("%s = %q (set=%v), want %q", OtelResourceAttributesEnv, got, ok, *tc.wantEnv)
-			}
-		})
-	}
+	_ = os.Unsetenv(googleCredsEnv)
 }
 
 func TestGenProxyConfigNonGcpWithServiceAccountKeyKeepsTracing(t *testing.T) {
-	unsetEnvForTest(t, GoogleCredsKey)
-	unsetEnvForTest(t, OtelResourceAttributesEnv)
+	l := newLauncher()
+	unsetEnvForTest(t, googleCredsEnv)
+	unsetEnvForTest(t, otelResourceAttributesEnv)
 	saPath := writeServiceAccountKey(t, `{"project_id": "sa-test-proj-789"}`)
 
-	args, err := ParseArgs([]string{
+	args, err := parseArgs([]string{
 		"--service=test_bookstore.gloud.run",
 		"--backend=http://127.0.0.1",
 		"--version=2019-11-09r0",
@@ -824,11 +563,11 @@ func TestGenProxyConfigNonGcpWithServiceAccountKeyKeepsTracing(t *testing.T) {
 		"--service_account_key=" + saPath,
 	})
 	if err != nil {
-		t.Fatalf("unexpected ParseArgs error: %v", err)
+		t.Fatalf("unexpected parseArgs error: %v", err)
 	}
-	got, err := GenProxyConfig(args)
+	got, err := l.genProxyConfig(args)
 	if err != nil {
-		t.Fatalf("unexpected GenProxyConfig error: %v", err)
+		t.Fatalf("unexpected genProxyConfig error: %v", err)
 	}
 
 	tracingProjectID := ""

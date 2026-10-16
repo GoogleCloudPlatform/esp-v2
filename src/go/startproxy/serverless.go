@@ -21,8 +21,8 @@ import (
 	"strings"
 )
 
-// MissingServiceConfigError is the help text served when ENDPOINTS_SERVICE_PATH and ENDPOINTS_SERVICE_NAME are both absent.
-const MissingServiceConfigError = `
+// missingServiceConfigMsg is the help text served when ENDPOINTS_SERVICE_PATH and ENDPOINTS_SERVICE_NAME are both absent.
+const missingServiceConfigMsg = `
  Did you forget to build the Endpoints service configuration
  into the ESPv2 image? Please refer to the official serverless
  quickstart tutorials (below) for more information.
@@ -41,8 +41,8 @@ const MissingServiceConfigError = `
  It is recommended that you follow the tutorials linked above.
 `
 
-// MalformedESPv2ArgsError is the help text served when ESPv2_ARGS has an invalid custom delimiter.
-const MalformedESPv2ArgsError = `
+// malformedESPv2ArgsMsg is the help text served when ESPv2_ARGS has an invalid custom delimiter.
+const malformedESPv2ArgsMsg = `
  Malformed ESPv2_ARGS environment variable.
  
  Please refer to the official ESPv2 startup reference
@@ -51,10 +51,10 @@ const MalformedESPv2ArgsError = `
  https://cloud.google.com/endpoints/docs/openapi/specify-esp-v2-startup-options#setting-configuration-flags
 `
 
-// BuildServerlessFlags translates serverless environment variables (PORT,
+// serverlessFlags translates serverless environment variables (PORT,
 // ENDPOINTS_SERVICE_PATH, ENDPOINTS_SERVICE_NAME, ENDPOINTS_SERVICE_VERSION, ESPv2_ARGS)
 // into startproxy command-line flags.
-func BuildServerlessFlags() ([]string, string, bool, error) {
+func serverlessFlags() ([]string, string, bool, error) {
 	port, hasPort := os.LookupEnv("PORT")
 	if !hasPort {
 		return nil, "", false, fmt.Errorf("Serverless ESPv2 expects PORT in environment variables.\n")
@@ -73,7 +73,7 @@ func BuildServerlessFlags() ([]string, string, bool, error) {
 	} else {
 		serviceName, hasServiceName := os.LookupEnv("ENDPOINTS_SERVICE_NAME")
 		if !hasServiceName {
-			return nil, port, true, fmt.Errorf("Serverless ESPv2 expects ENDPOINTS_SERVICE_NAME in environment variables.\n%s", MissingServiceConfigError)
+			return nil, port, true, fmt.Errorf("Serverless ESPv2 expects ENDPOINTS_SERVICE_NAME in environment variables.\n%s", missingServiceConfigMsg)
 		}
 		flags = append(flags, fmt.Sprintf("--service=%s", serviceName))
 
@@ -95,7 +95,7 @@ func BuildServerlessFlags() ([]string, string, bool, error) {
 			argValue = parts[1]
 		}
 		if delim == "" {
-			return nil, port, true, fmt.Errorf("%s", MalformedESPv2ArgsError)
+			return nil, port, true, fmt.Errorf("%s", malformedESPv2ArgsMsg)
 		}
 		flags = append(flags, strings.Split(argValue, delim)...)
 	}
@@ -103,9 +103,9 @@ func BuildServerlessFlags() ([]string, string, bool, error) {
 	return flags, port, false, nil
 }
 
-// GenServerlessArgs builds the full command argument slice matching env_start_proxy.py's gen_args(cmd).
-func GenServerlessArgs(cmd string) ([]string, error) {
-	flags, _, _, err := BuildServerlessFlags()
+// genServerlessArgs builds the full command argument slice matching env_start_proxy.py's gen_args(cmd).
+func genServerlessArgs(cmd string) ([]string, error) {
+	flags, _, _, err := serverlessFlags()
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +115,8 @@ func GenServerlessArgs(cmd string) ([]string, error) {
 	return res, nil
 }
 
-// MakeErrorHandler returns an http.Handler that responds with 503 Service Unavailable and msg.
-func MakeErrorHandler(msg string) http.Handler {
+// errorPageHandler returns an http.Handler that responds with 503 Service Unavailable and msg.
+func errorPageHandler(msg string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusServiceUnavailable)
@@ -124,7 +124,7 @@ func MakeErrorHandler(msg string) http.Handler {
 	})
 }
 
-// ServeErrorMsg starts an HTTP server on port responding with 503 Service Unavailable and msg.
-func ServeErrorMsg(port string, msg string) error {
-	return http.ListenAndServe(":"+port, MakeErrorHandler(msg))
+// serveErrorPage starts an HTTP server on port responding with 503 Service Unavailable and msg.
+func serveErrorPage(port string, msg string) error {
+	return http.ListenAndServe(":"+port, errorPageHandler(msg))
 }

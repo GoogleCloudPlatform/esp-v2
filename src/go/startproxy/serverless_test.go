@@ -102,7 +102,7 @@ func TestEnvStartProxyMain(t *testing.T) {
 		}
 		_ = os.Setenv("ESPv2_ARGS", tc.args)
 
-		gotArgs, err := GenServerlessArgs("/apiproxy/start_proxy.py")
+		gotArgs, err := genServerlessArgs("/apiproxy/start_proxy.py")
 		if err != nil {
 			t.Fatalf("case %d: unexpected error: %v", i, err)
 		}
@@ -117,7 +117,7 @@ func TestEnvStartProxyErrorsAndHandler(t *testing.T) {
 
 	// Missing PORT -> error with serveErrPage=false
 	clearServerlessEnv()
-	_, _, serveErrPage, err := BuildServerlessFlags()
+	_, _, serveErrPage, err := serverlessFlags()
 	if err == nil || serveErrPage {
 		t.Fatalf("expected missing PORT error with serveErrPage=false, got err=%v serveErrPage=%v", err, serveErrPage)
 	}
@@ -125,7 +125,7 @@ func TestEnvStartProxyErrorsAndHandler(t *testing.T) {
 	// Missing ENDPOINTS_SERVICE_NAME and ENDPOINTS_SERVICE_PATH -> serveErrPage=true
 	clearServerlessEnv()
 	_ = os.Setenv("PORT", "8080")
-	_, port, serveErrPage, err := BuildServerlessFlags()
+	_, port, serveErrPage, err := serverlessFlags()
 	if err == nil || !serveErrPage || port != "8080" {
 		t.Fatalf("expected missing service config error with serveErrPage=true on port 8080, got err=%v serveErrPage=%v port=%q", err, serveErrPage, port)
 	}
@@ -135,7 +135,7 @@ func TestEnvStartProxyErrorsAndHandler(t *testing.T) {
 	_ = os.Setenv("PORT", "8080")
 	_ = os.Setenv("ENDPOINTS_SERVICE_NAME", "test.goog.cloud")
 	_ = os.Setenv("ESPv2_ARGS", "^^--disable_tracing")
-	_, port, serveErrPage, err = BuildServerlessFlags()
+	_, port, serveErrPage, err = serverlessFlags()
 	if err == nil || !serveErrPage || port != "8080" {
 		t.Fatalf("expected malformed ESPv2_ARGS error with serveErrPage=true, got err=%v serveErrPage=%v", err, serveErrPage)
 	}
@@ -143,11 +143,11 @@ func TestEnvStartProxyErrorsAndHandler(t *testing.T) {
 	// Verify 503 error HTTP handler
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	MakeErrorHandler(MissingServiceConfigError).ServeHTTP(rec, req)
+	errorPageHandler(missingServiceConfigMsg).ServeHTTP(rec, req)
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("expected status 503, got %d", rec.Code)
 	}
-	if rec.Body.String() != MissingServiceConfigError {
+	if rec.Body.String() != missingServiceConfigMsg {
 		t.Errorf("unexpected response body: %q", rec.Body.String())
 	}
 }

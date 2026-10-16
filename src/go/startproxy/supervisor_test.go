@@ -55,7 +55,7 @@ func waitForProcessExit(pid int, timeout time.Duration) bool {
 	return false
 }
 
-// supervisorHarness runs Run() against mock child scripts.
+// supervisorHarness runs launcher.run() against mock child scripts.
 type supervisorHarness struct {
 	t      *testing.T
 	dir    string
@@ -64,41 +64,39 @@ type supervisorHarness struct {
 }
 
 // newSupervisorHarness installs mock bootstrap/configmanager/envoy scripts,
-// starts Run in the background, and intercepts signal registration so tests
-// inject SIGTERM directly into Run's signal channel instead of signalling the
+// starts run in the background, and intercepts signal registration so tests
+// inject SIGTERM directly into run's signal channel instead of signalling the
 // shared test process. scripts receives the harness directory and returns the
-// mock configmanager and envoy script bodies.
-func newSupervisorHarness(t *testing.T, scripts func(dir string) (cm, envoy string)) *supervisorHarness {
+// mock configmanager and envoy script bodies. configure, if non-nil, adjusts
+// the launcher before run starts.
+func newSupervisorHarness(t *testing.T, scripts func(dir string) (cm, envoy string), configure func(l *launcher)) *supervisorHarness {
 	t.Helper()
 	h := &supervisorHarness{t: t, dir: t.TempDir(), exitCh: make(chan int, 1)}
 	cmScript, envoyScript := scripts(h.dir)
 
-	mockBootstrap := filepath.Join(h.dir, "bootstrap")
-	mockCM := filepath.Join(h.dir, "configmanager")
-	mockEnvoy := filepath.Join(h.dir, "envoy")
-	writeMockScript(t, mockBootstrap, "#!/bin/sh\nexit 0\n")
-	writeMockScript(t, mockCM, cmScript)
-	writeMockScript(t, mockEnvoy, envoyScript)
-
-	origBootstrap, origCM, origEnvoy := BootstrapCmd, ConfigManagerBin, EnvoyBin
-	origNotify, origStop := notifySignals, stopSignals
-	t.Cleanup(func() {
-		BootstrapCmd, ConfigManagerBin, EnvoyBin = origBootstrap, origCM, origEnvoy
-		notifySignals, stopSignals = origNotify, origStop
-	})
-	BootstrapCmd, ConfigManagerBin, EnvoyBin = mockBootstrap, mockCM, mockEnvoy
+	l := newLauncher()
+	l.bootstrapBin = filepath.Join(h.dir, "bootstrap")
+	l.configManagerBin = filepath.Join(h.dir, "configmanager")
+	l.envoyBin = filepath.Join(h.dir, "envoy")
+	writeMockScript(t, l.bootstrapBin, "#!/bin/sh\nexit 0\n")
+	writeMockScript(t, l.configManagerBin, cmScript)
+	writeMockScript(t, l.envoyBin, envoyScript)
 
 	registered := make(chan chan<- os.Signal, 1)
-	notifySignals = func(c chan<- os.Signal) { registered <- c }
-	stopSignals = func(chan<- os.Signal) {}
+	l.notifySignals = func(c chan<- os.Signal) { registered <- c }
+	l.stopSignals = func(chan<- os.Signal) {}
 
-	// Keep Run hermetic: never query a real metadata server for the tracing
+	// Keep run hermetic: never query a real metadata server for the tracing
 	// project ID, and don't leak OTEL_RESOURCE_ATTRIBUTES into other tests.
-	stubMetadataProjectID(t, "")
-	unsetEnvForTest(t, OtelResourceAttributesEnv)
+	l.metadataProjectID = func() string { return "" }
+	unsetEnvForTest(t, otelResourceAttributesEnv)
+
+	if configure != nil {
+		configure(l)
+	}
 
 	go func() {
-		h.exitCh <- Run([]string{"--service=test.com", "--version=v1"})
+		h.exitCh <- l.run([]string{"--service=test.com", "--version=v1"})
 	}()
 
 	select {
@@ -154,7 +152,7 @@ func TestSupervisorSIGTERMForwarding(t *testing.T) {
 		cm := trappingChild(filepath.Join(dir, "cm.pid"), "echo term > "+filepath.Join(dir, "cm.term")+"; exit 0")
 		envoy := trappingChild(filepath.Join(dir, "envoy.pid"), "echo term > "+filepath.Join(dir, "envoy.term")+"; exit 0")
 		return cm, envoy
-	})
+	}, nil)
 	cmPid := h.waitForPid("cm.pid")
 	envoyPid := h.waitForPid("envoy.pid")
 
@@ -187,7 +185,7 @@ func TestSupervisorSIGTERMWaitsForSlowChild(t *testing.T) {
 		// Envoy takes 500ms to drain after SIGTERM.
 		envoy := trappingChild(filepath.Join(dir, "envoy.pid"), "sleep 0.5; echo done > "+filepath.Join(dir, "envoy.done")+"; exit 0")
 		return cm, envoy
-	})
+	}, nil)
 	h.waitForPid("cm.pid")
 	h.waitForPid("envoy.pid")
 
@@ -200,17 +198,13 @@ func TestSupervisorSIGTERMWaitsForSlowChild(t *testing.T) {
 }
 
 // TestSupervisorSIGTERMGracePeriodExpires verifies that children which ignore
-// SIGTERM are SIGKILLed once ShutdownGracePeriod elapses.
+// SIGTERM are SIGKILLed once the shutdown grace period elapses.
 func TestSupervisorSIGTERMGracePeriodExpires(t *testing.T) {
-	origGrace := ShutdownGracePeriod
-	ShutdownGracePeriod = 300 * time.Millisecond
-	t.Cleanup(func() { ShutdownGracePeriod = origGrace })
-
 	h := newSupervisorHarness(t, func(dir string) (string, string) {
 		// ":" is a no-op, so both children ignore SIGTERM.
 		return trappingChild(filepath.Join(dir, "cm.pid"), ":"),
 			trappingChild(filepath.Join(dir, "envoy.pid"), ":")
-	})
+	}, func(l *launcher) { l.shutdownGrace = 300 * time.Millisecond })
 	cmPid := h.waitForPid("cm.pid")
 	envoyPid := h.waitForPid("envoy.pid")
 
@@ -236,7 +230,7 @@ func TestSupervisorKillsEnvoyWhenConfigManagerDies(t *testing.T) {
 		// Envoy would run indefinitely unless killed.
 		envoy := fmt.Sprintf("#!/bin/sh\necho $$ > %s\nwhile true; do sleep 0.05; done\n", filepath.Join(dir, "envoy.pid"))
 		return cm, envoy
-	})
+	}, nil)
 	envoyPid := h.waitForPid("envoy.pid")
 
 	if code := h.waitForRunExit(5 * time.Second); code != 1 {
@@ -256,7 +250,7 @@ func TestSupervisorKillsConfigManagerWhenEnvoyDies(t *testing.T) {
 		// Envoy exits after 150ms with error code 42.
 		envoy := fmt.Sprintf("#!/bin/sh\necho $$ > %s\nsleep 0.15\nexit 42\n", filepath.Join(dir, "envoy.pid"))
 		return cm, envoy
-	})
+	}, nil)
 	cmPid := h.waitForPid("cm.pid")
 
 	if code := h.waitForRunExit(5 * time.Second); code != 1 {
