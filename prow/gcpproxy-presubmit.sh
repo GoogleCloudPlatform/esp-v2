@@ -62,7 +62,7 @@ make tools
 make depend.install
 
 # GOOGLE_APPLICATION_CREDENTIALS will be set in our test environment but this env
-# var if set will be used by start_proxy.py as service_json_path.
+# var if set will be used by startproxy as service_account_key.
 (unset GOOGLE_APPLICATION_CREDENTIALS; make test)
 
 # c++ test

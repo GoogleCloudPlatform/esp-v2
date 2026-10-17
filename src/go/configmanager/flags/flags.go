@@ -164,7 +164,7 @@ Normally JWT based64 encode doesn’t add padding. If this flag is true, the hea
 
 	ComputePlatformOverride = flag.String("compute_platform_override", defaults.ComputePlatformOverride, "the overridden platform where the proxy is running at")
 
-	// Flags for testing purpose. They are not exposed to the user via start_proxy.py
+	// Flags for testing purpose. They are not exposed to the user via startproxy
 	SkipJwtAuthnFilter       = flag.Bool("skip_jwt_authn_filter", defaults.SkipJwtAuthnFilter, "skip jwt authn filter, for test purpose")
 	SkipServiceControlFilter = flag.Bool("skip_service_control_filter", defaults.SkipServiceControlFilter, "skip service control filter, for test purpose")
 	StreamIdleTimeout        = flag.Duration("stream_idle_timeout_test_only", defaults.StreamIdleTimeout, "The amount of time HTTP/2 streams can exist without any activity. "+

@@ -78,6 +78,13 @@ SPELLING_WHITELIST_WORDS_FILE="${ROOTDIR}/third_party/tools/spelling/spelling_wh
 WHITELIST_WORDS=$(echo -n $(cat "${SPELLING_WHITELIST_WORDS_FILE}" | \
   grep -v "^#"|grep -v "^$") | tr ' ' ',')
 
-SKIP_FILES=$(echo $(cat "${SPELLING_SKIP_FILES}") | sed "s| | -e |g")
-git ls-files | grep -v -e "${SKIP_FILES}" | xargs "${TMP_DIR}/misspell" -i \
+# One "-e <path>" per non-empty line. (Joining the lines into a single quoted
+# pattern only worked while the file had a single entry.)
+SKIP_FILES=()
+while IFS= read -r skip_file || [[ -n "${skip_file}" ]]; do
+  if [[ -n "${skip_file}" ]]; then
+    SKIP_FILES+=(-e "${skip_file}")
+  fi
+done < "${SPELLING_SKIP_FILES}"
+git ls-files | grep -v -F "${SKIP_FILES[@]}" | xargs "${TMP_DIR}/misspell" -i \
   "${WHITELIST_WORDS}" ${MISSPELL_ARGS}

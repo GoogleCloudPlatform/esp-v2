@@ -1,0 +1,838 @@
+usage: startproxy [-h] [-s SERVICE] [-v VERSION]
+                  [--service_json_path SERVICE_JSON_PATH] [-a BACKEND]
+                  [--enable_backend_address_override]
+                  [--listener_port LISTENER_PORT] [-N STATUS_PORT]
+                  [--ssl_server_cert_path SSL_SERVER_CERT_PATH]
+                  [--ssl_server_cipher_suites SSL_SERVER_CIPHER_SUITES]
+                  [--ssl_server_root_cert_path SSL_SERVER_ROOT_CERT_PATH]
+                  [--ssl_backend_client_cert_path SSL_BACKEND_CLIENT_CERT_PATH]
+                  [--ssl_backend_client_root_certs_file SSL_BACKEND_CLIENT_ROOT_CERTS_FILE]
+                  [--ssl_backend_client_cipher_suites SSL_BACKEND_CLIENT_CIPHER_SUITES]
+                  [--ssl_minimum_protocol {TLSv1.0,TLSv1.1,TLSv1.2,TLSv1.3}]
+                  [--ssl_maximum_protocol {TLSv1.0,TLSv1.1,TLSv1.2,TLSv1.3}]
+                  [--enable_strict_transport_security]
+                  [--generate_self_signed_cert] [-z HEALTHZ]
+                  [--health_check_grpc_backend]
+                  [--health_check_grpc_backend_service HEALTH_CHECK_GRPC_BACKEND_SERVICE]
+                  [--health_check_grpc_backend_interval HEALTH_CHECK_GRPC_BACKEND_INTERVAL]
+                  [--health_check_grpc_backend_no_traffic_interval HEALTH_CHECK_GRPC_BACKEND_NO_TRAFFIC_INTERVAL]
+                  [--add_request_header ADD_REQUEST_HEADER]
+                  [--append_request_header APPEND_REQUEST_HEADER]
+                  [--add_response_header ADD_RESPONSE_HEADER]
+                  [--append_response_header APPEND_RESPONSE_HEADER]
+                  [--enable_operation_name_header] [-R {fixed,managed}]
+                  [--cors_preset CORS_PRESET]
+                  [--cors_allow_origin CORS_ALLOW_ORIGIN]
+                  [--cors_allow_origin_regex CORS_ALLOW_ORIGIN_REGEX]
+                  [--cors_allow_methods CORS_ALLOW_METHODS]
+                  [--cors_allow_headers CORS_ALLOW_HEADERS]
+                  [--cors_expose_headers CORS_EXPOSE_HEADERS]
+                  [--cors_allow_credentials] [--cors_max_age CORS_MAX_AGE]
+                  [--check_metadata] [--underscores_in_headers]
+                  [--disable_normalize_path] [--disable_merge_slashes_in_path]
+                  [--disallow_escaped_slashes_in_path]
+                  [--envoy_use_remote_address]
+                  [--envoy_xff_num_trusted_hops ENVOY_XFF_NUM_TRUSTED_HOPS]
+                  [--envoy_connection_buffer_limit_bytes ENVOY_CONNECTION_BUFFER_LIMIT_BYTES]
+                  [--log_request_headers LOG_REQUEST_HEADERS]
+                  [--log_response_headers LOG_RESPONSE_HEADERS]
+                  [--log_jwt_payloads LOG_JWT_PAYLOADS]
+                  [--service_control_network_fail_policy {open,close}]
+                  [--service_control_enable_api_key_uid_reporting | --no-service_control_enable_api_key_uid_reporting]
+                  [--disable_jwks_async_fetch]
+                  [--jwks_async_fetch_fast_listener]
+                  [--jwt_cache_size JWT_CACHE_SIZE]
+                  [--jwks_cache_duration_in_s JWKS_CACHE_DURATION_IN_S]
+                  [--jwks_fetch_num_retries JWKS_FETCH_NUM_RETRIES]
+                  [--jwks_fetch_retry_back_off_base_interval_ms JWKS_FETCH_RETRY_BACK_OFF_BASE_INTERVAL_MS]
+                  [--jwks_fetch_retry_back_off_max_interval_ms JWKS_FETCH_RETRY_BACK_OFF_MAX_INTERVAL_MS]
+                  [--jwt_pad_forward_payload_header]
+                  [--disable_jwt_audience_service_name_check]
+                  [--http_request_timeout_s HTTP_REQUEST_TIMEOUT_S]
+                  [--service_control_url SERVICE_CONTROL_URL]
+                  [--service_control_check_timeout_ms SERVICE_CONTROL_CHECK_TIMEOUT_MS]
+                  [--service_control_quota_timeout_ms SERVICE_CONTROL_QUOTA_TIMEOUT_MS]
+                  [--service_control_report_timeout_ms SERVICE_CONTROL_REPORT_TIMEOUT_MS]
+                  [--service_control_check_retries SERVICE_CONTROL_CHECK_RETRIES]
+                  [--service_control_quota_retries SERVICE_CONTROL_QUOTA_RETRIES]
+                  [--service_control_report_retries SERVICE_CONTROL_REPORT_RETRIES]
+                  [--backend_retry_ons BACKEND_RETRY_ONS]
+                  [--backend_retry_on_status_codes BACKEND_RETRY_ON_STATUS_CODES]
+                  [--backend_retry_num BACKEND_RETRY_NUM]
+                  [--backend_per_try_timeout BACKEND_PER_TRY_TIMEOUT]
+                  [--access_log ACCESS_LOG]
+                  [--access_log_format ACCESS_LOG_FORMAT] [--disable_tracing]
+                  [--tracing_project_id TRACING_PROJECT_ID]
+                  [--tracing_sample_rate TRACING_SAMPLE_RATE]
+                  [--disable_cloud_trace_auto_sampling]
+                  [--tracing_incoming_context TRACING_INCOMING_CONTEXT]
+                  [--tracing_outgoing_context TRACING_OUTGOING_CONTEXT]
+                  [--cloud_trace_url_override CLOUD_TRACE_URL_OVERRIDE]
+                  [--non_gcp] [--service_account_key SERVICE_ACCOUNT_KEY]
+                  [--enable_application_default_credentials]
+                  [--dns_resolver_addresses DNS_RESOLVER_ADDRESSES]
+                  [--backend_dns_lookup_family {auto,v4only,v6only,v4preferred,all}]
+                  [--enable_debug]
+                  [--transcoding_always_print_primitive_fields]
+                  [--transcoding_always_print_enums_as_ints]
+                  [--transcoding_stream_newline_delimited]
+                  [--transcoding_case_insensitive_enum_parsing]
+                  [--transcoding_preserve_proto_field_names]
+                  [--transcoding_ignore_query_parameters TRANSCODING_IGNORE_QUERY_PARAMETERS]
+                  [--transcoding_ignore_unknown_query_parameters]
+                  [--transcoding_query_parameters_disable_unescape_plus]
+                  [--transcoding_match_unregistered_custom_verb]
+                  [--disallow_colon_in_wildcard_path_segment]
+                  [--ads_named_pipe ADS_NAMED_PIPE]
+                  [--envoy_extra_config_yaml ENVOY_EXTRA_CONFIG_YAML]
+                  [--enable_response_compression] [--enable_backend_routing]
+                  [--backend_protocol {http1,http2,grpc}]
+                  [--http_port HTTP_PORT] [--http2_port HTTP2_PORT]
+                  [--ssl_port SSL_PORT] [--dns DNS] [-t]
+                  [--ssl_protocols SSL_PROTOCOLS] [--enable_grpc_backend_ssl]
+                  [--grpc_backend_ssl_root_certs_file GRPC_BACKEND_SSL_ROOT_CERTS_FILE]
+                  [--ssl_client_cert_path SSL_CLIENT_CERT_PATH]
+                  [--ssl_client_root_certs_file SSL_CLIENT_ROOT_CERTS_FILE]
+                  [--on_serverless]
+
+ESPv2 start-up script. This script starts Config Manager and Envoy.
+
+The service name and config ID are optional. If not supplied, the Config Manager
+fetches the service name and the config ID from the metadata service as
+attributes "service_name" and "service_config_id".
+
+ESPv2 relies on the metadata service to fetch access tokens for Google
+services. If you deploy ESPv2 outside of Google Cloud environment, you need
+to provide a service account credentials file by setting "creds_key"
+environment variable or by passing "-k" flag to this script.
+            
+
+options:
+  -h, --help            show this help message and exit
+  -s SERVICE, --service SERVICE
+                        Set the name of the Endpoints service. If omitted,
+                        ESPv2 contacts the metadata service to fetch the
+                        service name.
+  -v VERSION, --version VERSION
+                        Set the service config ID of the Endpoints service. It
+                        is required if the "fixed" rollout strategy is used.
+  --service_json_path SERVICE_JSON_PATH
+                        Specify a path for ESPv2 to load the endpoint service
+                        config. With this flag, ESPv2 will use "fixed" rollout
+                        strategy and following flags will be ignored:
+                        --service, --version, and --rollout_strategy.
+  -a BACKEND, --backend BACKEND
+                        Specify the local backend application server address
+                        when using ESPv2 as a sidecar. Default value is
+                        http://127.0.0.1:8082. Follow the same format when
+                        setting manually. Valid schemes are `http`, `https`,
+                        `grpc`, and `grpcs`. See the flag
+                        --enable_backend_address_override for details on how
+                        ESPv2 decides between using this flag vs using the
+                        backend addresses specified in the service
+                        configuration.
+  --enable_backend_address_override
+                        Backend addresses can be specified using either the
+                        --backend flag or the `backend.rule.address` field in
+                        the service configuration. For OpenAPI users, note the
+                        `backend.rule.address` field is set by the `address`
+                        field in the `x-google-backend` extension.
+                        `backend.rule.address` is usually specified when
+                        routing to different backends based on the route. By
+                        default, the `backend.rule.address` will take priority
+                        over the --backend flag for each individual operation.
+                        Enable this flag if you want the --backend flag to
+                        take priority instead. This is useful if you are
+                        developing on a local workstation. Then you use a the
+                        same production service config but override the
+                        backend address via the --backend flag for local
+                        testing. Note: Only the address will be overridden.
+                        All other components of `backend.rule` will still
+                        apply (deadlines, backend auth, path translation,
+                        etc).
+  --listener_port LISTENER_PORT
+                        The port to accept downstream connections. It supports
+                        HTTP/1.x, HTTP/2, and gRPC connections. Default is
+                        8080
+  -N STATUS_PORT, --status_port STATUS_PORT, --admin_port STATUS_PORT
+                        Enable ESPv2 Envoy admin on this port. Please refer to
+                        https://www.envoyproxy.io/docs/envoy/latest/operations
+                        /admin. By default the admin port is disabled.
+  --ssl_server_cert_path SSL_SERVER_CERT_PATH
+                        Proxy's server cert path. When configured, ESPv2 only
+                        accepts HTTP/1.x and HTTP/2 secure connections on
+                        listener_port. Requires the certificate and key files
+                        "server.crt" and "server.key" within this path. Before
+                        using this feature, please make sure TLS isn't
+                        terminated before ESPv2 in your deployment model. In
+                        general, Cloud Run, GKE(GCLB enforced in ingress) and
+                        GCE with GCLB configured terminates TLS before ESPv2.
+                        If that's the case, please don't set up flag.
+  --ssl_server_cipher_suites SSL_SERVER_CIPHER_SUITES
+                        Cipher suites to use for downstream connections as a
+                        comma-separated list. Please refer to https://www.envo
+                        yproxy.io/docs/envoy/latest/api-
+                        v2/api/v2/auth/common.proto#auth-tlsparameters
+  --ssl_server_root_cert_path SSL_SERVER_ROOT_CERT_PATH
+                        The file path of root certificates that ESPv2 uses to
+                        verify downstream client certificate. If not
+                        specified, ESPv2 doesn't verify client certificates by
+                        default. Before using this feature, please make sure
+                        mTLS isn't terminated before ESPv2 in your deployment
+                        model. In general, Cloud Run, GKE with container-
+                        native load balancing and GCE with GCLB configured
+                        terminates mTLS before ESPv2. If that's the case,
+                        please don't set up flag.
+  --ssl_backend_client_cert_path SSL_BACKEND_CLIENT_CERT_PATH
+                        Proxy's client cert path. When configured, ESPv2
+                        enables TLS mutual authentication for HTTPS backends.
+                        Requires the certificate and key files "client.crt"
+                        and "client.key" within this path.
+  --ssl_backend_client_root_certs_file SSL_BACKEND_CLIENT_ROOT_CERTS_FILE
+                        The file path of root certificates that ESPv2 uses to
+                        verify backend server certificate. If not specified,
+                        ESPv2 uses '/etc/ssl/certs/ca-certificates.crt' by
+                        default.
+  --ssl_backend_client_cipher_suites SSL_BACKEND_CLIENT_CIPHER_SUITES
+                        Cipher suites to use for HTTPS backends as a comma-
+                        separated list. Please refer to https://www.envoyproxy
+                        .io/docs/envoy/latest/api-
+                        v2/api/v2/auth/common.proto#auth-tlsparameters
+  --ssl_minimum_protocol {TLSv1.0,TLSv1.1,TLSv1.2,TLSv1.3}
+                        Minimum TLS protocol version for client side
+                        connection. Please refer to https://www.envoyproxy.io/
+                        docs/envoy/latest/api-
+                        v2/api/v2/auth/cert.proto#common-tls-configuration.
+  --ssl_maximum_protocol {TLSv1.0,TLSv1.1,TLSv1.2,TLSv1.3}
+                        Maximum TLS protocol version for client side
+                        connection. Please refer to https://www.envoyproxy.io/
+                        docs/envoy/latest/api-
+                        v2/api/v2/auth/cert.proto#common-tls-configuration.
+  --enable_strict_transport_security
+                        Enable HSTS (HTTP Strict Transport Security). "Strict-
+                        Transport-Security" response header with value "max-
+                        age=31536000; includeSubdomains;" is added for all
+                        responses.
+  --generate_self_signed_cert
+                        Generate a self-signed certificate and key at start,
+                        then store them in /tmp/ssl/endpoints/server.crt and
+                        /tmp/ssl/endponts/server.key. This is useful when only
+                        a random self-sign cert is needed to serve HTTPS
+                        requests. Generated certificate will have Common Name
+                        "localhost" and valid for 10 years.
+  -z HEALTHZ, --healthz HEALTHZ
+                        Define a health checking endpoint on the same ports as
+                        the application backend. For example, "-z healthz"
+                        makes ESPv2 return code 200 for location "/healthz",
+                        instead of forwarding the request to the backend.
+                        Please don't use any paths conflicting with your
+                        normal requests. Default: not used. If the flag "--
+                        heath_check_grpc_backend" is used, ESPv2 periodically
+                        checks the backend gRPC Health service, its result
+                        will be reflected when answering the health check
+                        calls.
+  --health_check_grpc_backend
+                        If enabled, periodically check gRPC Health service to
+                        the backend specified by the flag "--backend". The
+                        backend must use gRPC protocol and implement the gRPC
+                        Health Checking Protocol defined in
+                        https://github.com/grpc/grpc/blob/master/doc/health-
+                        checking.md. The health check endpoint enabled by the
+                        flag --healthz will reflect the backend health check
+                        result too.
+  --health_check_grpc_backend_service HEALTH_CHECK_GRPC_BACKEND_SERVICE
+                        Specify the service name when calling the backend gRPC
+                        Health Checking Protocol. It only applied when the
+                        flag "--health_check_grpc_backend" is used. It is
+                        optional, if not set, default is empty. An empty
+                        service name is to query the gRPC server overall
+                        health status.
+  --health_check_grpc_backend_interval HEALTH_CHECK_GRPC_BACKEND_INTERVAL
+                        Specify the checking interval and timeout when
+                        checking the backend gRPC Health service. It only
+                        applied when the flag "--health_check_grpc_backend" is
+                        used. Default is 1 second. The acceptable format is a
+                        sequence of decimal numbers, each with optional
+                        fraction and a unit suffix, such as "5s", "100ms" or
+                        "2m". Valid time units are "m" for minutes, "s" for
+                        seconds, and "ms" for milliseconds.
+  --health_check_grpc_backend_no_traffic_interval HEALTH_CHECK_GRPC_BACKEND_NO_TRAFFIC_INTERVAL
+                        Specify the checking interval to call the backend gRPC
+                        Health service when at start up or the backend did not
+                        have any traffic. Default is 60 seconds. It only
+                        applies when the flag "--health_check_grpc_backend" is
+                        used. The acceptable format is a sequence of decimal
+                        numbers, each with optional fraction and a unit
+                        suffix, such as "5s", "100ms" or "2m". Valid time
+                        units are "m" for minutes, "s" for seconds, and "ms"
+                        for milliseconds.
+  --add_request_header ADD_REQUEST_HEADER
+                        Add a HTTP header to the request before sent to the
+                        upstream backend. If the header is already in the
+                        request, its value will be replaced with the new one.
+                        It supports envoy variable defined at https://www.envo
+                        yproxy.io/docs/envoy/latest/configuration/http/http_co
+                        nn_man/headers#custom-request-response-headers. This
+                        argument can be repeated multiple times to specify
+                        multiple headers. For example:
+                        --add_request_header=key1=value1
+                        --add_request_header=key2=value2.
+  --append_request_header APPEND_REQUEST_HEADER
+                        Append a HTTP header to the request before sent to the
+                        upstream backend. If the header is already in the
+                        request, the new value will be appended. It supports
+                        envoy variable defined at https://www.envoyproxy.io/do
+                        cs/envoy/latest/configuration/http/http_conn_man/heade
+                        rs#custom-request-response-headers. This argument can
+                        be repeated multiple times to specify multiple
+                        headers. For example:
+                        --append_request_header=key1=value1
+                        --append_request_header=key2=value2.
+  --add_response_header ADD_RESPONSE_HEADER
+                        Add a HTTP header to the response before sent to the
+                        downstream client. If the header is already in the
+                        response, it will be replaced with the new one. It
+                        supports envoy variable defined at https://www.envoypr
+                        oxy.io/docs/envoy/latest/configuration/http/http_conn_
+                        man/headers#custom-request-response-headers. This
+                        argument can be repeated multiple times to specify
+                        multiple headers. For example:
+                        --add_response_header=key1=value1
+                        --add_response_header=key2=value2.
+  --append_response_header APPEND_RESPONSE_HEADER
+                        Append a HTTP header to the response before sent to
+                        the downstream client. If the header is already in the
+                        response, the new one will be appended. It supports
+                        envoy variable defined at https://www.envoyproxy.io/do
+                        cs/envoy/latest/configuration/http/http_conn_man/heade
+                        rs#custom-request-response-headers. This argument can
+                        be repeated multiple times to specify multiple
+                        headers. For example:
+                        --append_response_header=key1=value1
+                        --append_response_header=key2=value2.
+  --enable_operation_name_header
+                        When enabled, ESPv2 will attach the operation name of
+                        the matched route in the request to the backend. The
+                        operation name: - For OpenAPI: Is derived from the
+                        `operationId` field. - For gRPC: Is the fully-
+                        qualified name of the RPC. The header will be attached
+                        with key `X-Endpoint-API-Operation-Name`. NOTE: We do
+                        NOT recommend relying on this feature. There are no
+                        guarantees that the operation name will remain
+                        consistent across multiple service configuration IDs.
+                        NOTE: If you are using this feature with OpenAPI,
+                        please only use the last segment of the operation
+                        name. For example: `1.echo_api_endpoints_cloudesf_test
+                        ing_cloud_goog.EchoHeader` Your backend should parse
+                        past the last `.` and only use `EchoHeader`. NOTE: For
+                        OpenAPI, the operation name may not match the
+                        `operationId` field exactly. For example, some
+                        sanitization may occur that only allows alphanumeric
+                        characters. The exact sanitization is internal
+                        implementation detail and is not guaranteed to be
+                        consistent.
+  -R {fixed,managed}, --rollout_strategy {fixed,managed}
+                        The service config rollout strategy, [fixed|managed],
+                        Default value: fixed
+  --cors_preset CORS_PRESET
+                        Enables setting of CORS headers. This is useful when
+                        using a GRPC backend, since a GRPC backend cannot set
+                        CORS headers. Specify one of available presets to
+                        configure CORS response headers in nginx. Defaults to
+                        no preset and therefore no CORS response headers. If
+                        no preset is suitable for the use case, use the
+                        --nginx_config arg to use a custom nginx config file.
+                        Available presets: - basic - Assumes all location
+                        paths have the same CORS policy. Responds to preflight
+                        OPTIONS requests with an empty 204, and the results of
+                        preflight are allowed to be cached for up to 20 days
+                        (1728000 seconds). See descriptions for args
+                        --cors_allow_origin, --cors_allow_methods,
+                        --cors_allow_headers, --cors_expose_headers,
+                        --cors_allow_credentials for more granular
+                        configurations. - cors_with_regex - Same as basic
+                        preset, except that specifying allowed origins in
+                        regular expression. See descriptions for args
+                        --cors_allow_origin_regex, --cors_allow_methods,
+                        --cors_allow_headers, --cors_expose_headers,
+                        --cors_allow_credentials for more granular
+                        configurations.
+  --cors_allow_origin CORS_ALLOW_ORIGIN
+                        Only works when --cors_preset is 'basic'. Configures
+                        the CORS header Access-Control-Allow-Origin. Defaults
+                        to "*" which allows all origins.
+  --cors_allow_origin_regex CORS_ALLOW_ORIGIN_REGEX
+                        Only works when --cors_preset is 'cors_with_regex'.
+                        Configures the whitelists of CORS header Access-
+                        Control-Allow-Origin with regular expression.
+  --cors_allow_methods CORS_ALLOW_METHODS
+                        Only works when --cors_preset is in use. Configures
+                        the CORS header Access-Control-Allow-Methods. Defaults
+                        to allow common HTTP methods.
+  --cors_allow_headers CORS_ALLOW_HEADERS
+                        Only works when --cors_preset is in use. Configures
+                        the CORS header Access-Control-Allow-Headers. Defaults
+                        to allow common HTTP headers.
+  --cors_expose_headers CORS_EXPOSE_HEADERS
+                        Only works when --cors_preset is in use. Configures
+                        the CORS header Access-Control-Expose-Headers.
+                        Defaults to allow common response headers.
+  --cors_allow_credentials
+                        Only works when --cors_preset is in use. Enable the
+                        CORS header Access-Control-Allow-Credentials. By
+                        default, this header is disabled.
+  --cors_max_age CORS_MAX_AGE
+                        Only works when --cors_preset is in use. Configures
+                        the CORS header Access-Control-Max-Age. Defaults to 20
+                        days (1728000 seconds). The acceptable format is a
+                        sequence of decimal numbers, each with optional
+                        fraction and a unit suffix, such as "300m", "1.5h" or
+                        "2h45m". Valid time units are "m" for minutes, "h" for
+                        hours.
+  --check_metadata      Enable fetching service name, service config ID and
+                        rollout strategy from the metadata service.
+  --underscores_in_headers
+                        Allow headers contain underscores to pass through. By
+                        default ESPv2 rejects requests that have headers with
+                        underscores.
+  --disable_normalize_path
+                        Disable normalization of the `path` HTTP header
+                        according to RFC 3986. It is recommended to keep this
+                        option enabled if your backend performs path
+                        normalization by default. The following table provides
+                        examples of the request `path` the backend will
+                        receive from ESPv2 based on the configuration of this
+                        flag. ------------------------------------------------
+                        ----------------- | Request Path | Without
+                        Normalization | With Normalization | -----------------
+                        ------------------------------------------------ |
+                        /hello/../world | Rejected | /world | | /%4A | /%4A |
+                        /J | | /%4a | /%4a | /J | ----------------------------
+                        ------------------------------------- By default,
+                        ESPv2 will normalize paths. Disable the feature only
+                        if your traffic is affected by the behavior. Note:
+                        Following RFC 3986, this option does not unescape
+                        percent-encoded slash characters. See flag
+                        `--disallow_escaped_slashes_in_path` to enable this
+                        non-compliant behavior. Note: Case normalization from
+                        RFC 3986 is not supported, even if this option is
+                        enabled. For more details, see:
+                        https://cloud.google.com/api-gateway/docs/path-
+                        templating
+  --disable_merge_slashes_in_path
+                        Disable merging of adjacent slashes in the `path` HTTP
+                        header. It is recommended to keep this option enabled
+                        if your backend performs merging by default. The
+                        following table provides examples of the request
+                        `path` the backend will receive from ESPv2 based on
+                        the configuration of this flag. ----------------------
+                        ------------------------------------------- | Request
+                        Path | Without Normalization | With Normalization | --
+                        ------------------------------------------------------
+                        --------- | /hello//world | Rejected | /hello/world |
+                        | /hello/// | Rejected | /hello | --------------------
+                        --------------------------------------------- By
+                        default, ESPv2 will merge slashes. Disable the feature
+                        only if your traffic is affected by the behavior. For
+                        more details, see: https://cloud.google.com/api-
+                        gateway/docs/path-templating
+  --disallow_escaped_slashes_in_path
+                        Disallows requests with escaped percent-encoded slash
+                        characters: - %2F or %2f is treated as a / - %5C or
+                        %5c is treated as a When enabled, the behavior depends
+                        on the protocol: - For OpenAPI backends, request paths
+                        with unescaped percent-encoded slashes will be
+                        automatically escaped via a redirect. - For gRPC
+                        backends, request paths with unescaped percent-encoded
+                        slashes will be rejected (gRPC does not support
+                        redirects). This option is **not** RFC 3986 compliant,
+                        so it is turned off by default. If your backend is
+                        **not** RFC 3986 compliant and escapes slashes, you
+                        **must** enable this option in ESPv2. This will
+                        prevent against path confusion attacks that result in
+                        security requirements not being enforced. For more
+                        details, see: https://cloud.google.com/api-
+                        gateway/docs/path-templating and https://github.com/en
+                        voyproxy/envoy/security/advisories/GHSA-4987-27fx-x6cf
+  --envoy_use_remote_address
+                        Envoy HttpConnectionManager configuration, please
+                        refer to envoy documentation for detailed information.
+  --envoy_xff_num_trusted_hops ENVOY_XFF_NUM_TRUSTED_HOPS
+                        Envoy HttpConnectionManager configuration, please
+                        refer to envoy documentation for detailed information.
+                        The default value is 2 for sidecar deployments and 0
+                        for serverless deployments.
+  --envoy_connection_buffer_limit_bytes ENVOY_CONNECTION_BUFFER_LIMIT_BYTES
+                        Configure the maximum amount of data that is buffered
+                        for each request/response body, in bytes. If not set,
+                        default is decided by Envoy. https://www.envoyproxy.io
+                        /docs/envoy/latest/api-
+                        v3/config/listener/v3/listener.proto
+  --log_request_headers LOG_REQUEST_HEADERS
+                        Log corresponding request headers through service
+                        control, separated by comma. Example, when
+                        --log_request_headers=foo,bar, endpoint log will have
+                        request_headers: foo=foo_value;bar=bar_value if values
+                        are available;
+  --log_response_headers LOG_RESPONSE_HEADERS
+                        Log corresponding response headers through service
+                        control, separated by comma. Example, when
+                        --log_response_headers=foo,bar, endpoint log will have
+                        response_headers: foo=foo_value;bar=bar_value if
+                        values are available;
+  --log_jwt_payloads LOG_JWT_PAYLOADS
+                        Log corresponding JWT JSON payload primitive fields
+                        through service control, separated by comma. Example,
+                        when --log_jwt_payload=sub,project_id, log will have
+                        jwt_payload: sub=[SUBJECT];project_id=[PROJECT_ID] if
+                        the fields are available. The value must be a
+                        primitive field, JSON objects and arrays will not be
+                        logged.
+  --service_control_network_fail_policy {open,close}
+                        Specify the policy to handle the request in case of
+                        network failures when connecting to Google service
+                        control. If it is `open`, the request will be allowed,
+                        otherwise, it will be rejected. Default is `open`.
+  --service_control_enable_api_key_uid_reporting, --no-service_control_enable_api_key_uid_reporting
+                        Enable when need to report api_key_uid in the
+                        telemetry report.
+  --disable_jwks_async_fetch
+                        Disable fetching JWKS for JWT authentication to be
+                        done before processing any requests. If disabled, JWKS
+                        fetching is done when authenticating the JWT, the
+                        fetching will add to the request processing latency.
+                        Default is enabled.
+  --jwks_async_fetch_fast_listener
+                        Only apply when --disable_jwks_async_fetch flag is not
+                        set. This flag determines if the envoy will wait for
+                        jwks_async_fetch to complete before binding the
+                        listener port. If false, it will wait. Default is
+                        false.
+  --jwt_cache_size JWT_CACHE_SIZE
+                        Specify JWT cache size, the number of unique JWT
+                        tokens in the cache. The cache only stores verified
+                        good tokens. If 0, JWT cache is disabled. It limits
+                        the memory usage. The cache used memory is roughly (at
+                        most 4 KB data + 64 bytes metadata) per token. If not
+                        specified, the default is 1000, which represents a max
+                        memory usage of 4.35 MB.
+  --jwks_cache_duration_in_s JWKS_CACHE_DURATION_IN_S
+                        Specify JWT public key cache duration in seconds. The
+                        default is 5 minutes.
+  --jwks_fetch_num_retries JWKS_FETCH_NUM_RETRIES
+                        Specify the remote JWKS fetch retry policy's number of
+                        retries. default None.
+  --jwks_fetch_retry_back_off_base_interval_ms JWKS_FETCH_RETRY_BACK_OFF_BASE_INTERVAL_MS
+                        Specify JWKS fetch retry exponential back off base
+                        interval in milliseconds. default 200 ms if not set
+  --jwks_fetch_retry_back_off_max_interval_ms JWKS_FETCH_RETRY_BACK_OFF_MAX_INTERVAL_MS
+                        Specify JWKS fetch retry exponential back off maximum
+                        interval in milliseconds. default 32s if not set.
+  --jwt_pad_forward_payload_header
+                        For the JWT in request, the JWT payload is forwarded
+                        to backend in the `X-Endpoint-API-UserInfo` header by
+                        default. Normally JWT based64 encode doesn’t add
+                        padding. If this flag is true, the header will be
+                        padded.
+  --disable_jwt_audience_service_name_check
+                        Normally JWT "aud" field is checked against audiences
+                        specified in OpenAPI "x-google-audiences" field. This
+                        flag changes the behaviour when the "x-google-
+                        audiences" is not specified. When the "x-google-
+                        audiences" is not specified, normally the service name
+                        is used to check the JWT "aud" field. If this flag is
+                        true, the service name is not used, JWT "aud" field
+                        will not be checked.
+  --http_request_timeout_s HTTP_REQUEST_TIMEOUT_S
+                        Set the timeout in seconds for all requests made to
+                        all external services from ESPv2 (ie. Service
+                        Management, Instance Metadata Server, etc.). This
+                        timeout does not apply to requests proxied to the
+                        backend. Must be > 0 and the default is 30 seconds if
+                        not set.
+  --service_control_url SERVICE_CONTROL_URL
+                        Set the url of service control server. The default is
+                        "https://servicecontrol.googleapis.com" if not set.
+  --service_control_check_timeout_ms SERVICE_CONTROL_CHECK_TIMEOUT_MS
+                        Set the timeout in millisecond for service control
+                        Check request. Must be > 0 and the default is 1000 if
+                        not set. Default
+  --service_control_quota_timeout_ms SERVICE_CONTROL_QUOTA_TIMEOUT_MS
+                        Set the timeout in millisecond for service control
+                        Quota request. Must be > 0 and the default is 1000 if
+                        not set.
+  --service_control_report_timeout_ms SERVICE_CONTROL_REPORT_TIMEOUT_MS
+                        Set the timeout in millisecond for service control
+                        Report request. Must be > 0 and the default is 2000 if
+                        not set.
+  --service_control_check_retries SERVICE_CONTROL_CHECK_RETRIES
+                        Set the retry times for service control Check request.
+                        Must be >= 0 and the default is 3 if not set.
+  --service_control_quota_retries SERVICE_CONTROL_QUOTA_RETRIES
+                        Set the retry times for service control Quota request.
+                        Must be >= 0 and the default is 1 if not set.
+  --service_control_report_retries SERVICE_CONTROL_REPORT_RETRIES
+                        Set the retry times for service control Report
+                        request. Must be >= 0 and the default is 5 if not set.
+  --backend_retry_ons BACKEND_RETRY_ONS
+                        The conditions under which ESPv2 does retry on the
+                        backends. One or more retryOn conditions can be
+                        specified by comma-separated list. The default is
+                        `reset,connect-failure,refused-stream`. Disable retry
+                        by setting this flag to empty. All the retryOn
+                        conditions are defined in the x-envoy-retry-on(https:/
+                        /www.envoyproxy.io/docs/envoy/latest/configuration/htt
+                        p/http_filters/router_filter#x-envoy-retry-on) and
+                        x-envoy-retry-grpc-on(https://www.envoyproxy.io/docs/e
+                        nvoy/latest/configuration/http/http_filters/router_fil
+                        ter#x-envoy-retry-on).
+  --backend_retry_on_status_codes BACKEND_RETRY_ON_STATUS_CODES
+                        The list of backend http status codes will be retried,
+                        in addition to the status codes enabled for retry
+                        through other retry policies set in
+                        `--backend_retry_ons`. The format is a comma-delimited
+                        String, like "501, 503".
+  --backend_retry_num BACKEND_RETRY_NUM
+                        The allowed number of retries. Must be >= 0 and
+                        defaults to 1.
+  --backend_per_try_timeout BACKEND_PER_TRY_TIMEOUT
+                        The backend timeout per retry attempt. Valid time
+                        units are "ns", "us", "ms", "s", "m", "h". Please note
+                        the `deadline` in the `x-google-backend` extension is
+                        the total time wait for a full response from one
+                        request, including all retries. If the flag is
+                        unspecified, ESPv2 will use the `deadline` in the
+                        `x-google-backend` extension. Consequently, a request
+                        that times out will not be retried as the total
+                        timeout budget would have been exhausted.
+  --access_log ACCESS_LOG
+                        Path to a local file to which the access log entries
+                        will be written.
+  --access_log_format ACCESS_LOG_FORMAT
+                        String format to specify the format of access log. If
+                        unset, the following format will be used. https://www.
+                        envoyproxy.io/docs/envoy/latest/configuration/observab
+                        ility/access_log#default-format-string For the
+                        detailed format grammar, please refer to the following
+                        document. https://www.envoyproxy.io/docs/envoy/latest/
+                        configuration/observability/access_log#format-strings
+  --disable_tracing     Disable Stackdriver tracing. By default, tracing is
+                        enabled with 1 out of 1000 requests being sampled.
+                        This sampling rate can be changed with the
+                        --tracing_sample_rate flag.
+  --tracing_project_id TRACING_PROJECT_ID
+                        The Google project id for Stack driver tracing
+  --tracing_sample_rate TRACING_SAMPLE_RATE
+                        Tracing sampling rate from 0.0 to 1.0. By default, 1
+                        out of 1000 requests are sampled. Cloud trace can
+                        still be enabled from request HTTP headers with trace
+                        context regardless this flag value.
+  --disable_cloud_trace_auto_sampling
+                        An alias to override --tracing_sample_rate to 0
+  --tracing_incoming_context TRACING_INCOMING_CONTEXT
+                        Comma separated incoming trace contexts
+                        (traceparent|grpc-trace-bin|x-cloud-trace-context).
+                        Note the order matters. Default is
+                        'traceparent,x-cloud-trace-context'. See official
+                        documentation for more details: https://cloud.google.c
+                        om/endpoints/docs/openapi/tracing
+  --tracing_outgoing_context TRACING_OUTGOING_CONTEXT
+                        Comma separated outgoing trace contexts
+                        (traceparent|grpc-trace-bin|x-cloud-trace-context).
+                        Note the order matters. Default is
+                        'traceparent,x-cloud-trace-context'. See official
+                        documentation for more details: https://cloud.google.c
+                        om/endpoints/docs/openapi/tracing
+  --cloud_trace_url_override CLOUD_TRACE_URL_OVERRIDE
+                        By default, traces will be sent to production
+                        Stackdriver Tracing. If this is non-empty, ESPv2 will
+                        send traces to this gRPC service instead. The url must
+                        be in gRPC format.
+                        https://github.com/grpc/grpc/blob/master/doc/naming.md
+                        The gRPC service must implement the cloud trace v2
+                        RPCs. https://github.com/googleapis/googleapis/tree/ma
+                        ster/google/devtools/cloudtrace/v2
+  --non_gcp             By default, the proxy tries to talk to GCP metadata
+                        server to get VM location in the first few requests.
+                        Setting this flag to true to skip this step. This will
+                        also disable the following features: - Backend
+                        authentication
+  --service_account_key SERVICE_ACCOUNT_KEY
+                        Use the service account key JSON file to access the
+                        service control and the service management. You can
+                        also set GOOGLE_APPLICATION_CREDENTIALS environment
+                        variable to the location of the service account
+                        credentials JSON file. If the option is omitted, the
+                        proxy contacts the metadata service to fetch an access
+                        token.
+  --enable_application_default_credentials
+                        Enable application default credentials to communicate
+                        with service management APIs. Google auth libraries
+                        use a strategy called Application Default Credentials
+                        (ADC) to detect and select credentials based on
+                        environment or context automatically. For more detail,
+                        see: https://google.aip.dev/auth/4110.
+  --dns_resolver_addresses DNS_RESOLVER_ADDRESSES
+                        The addresses of dns resolvers. Each address should be
+                        in format of IP_ADDR or IP_ADDR:PORT and they are
+                        separated by ';'. For the IP_ADDR case, the default
+                        DNS port 52 will be used. (e.g., --dns_resolver_addres
+                        ses=127.0.0.1;127.0.0.2;127.0.0.3:8000) If unset, will
+                        use the default resolver configured in
+                        /etc/resolv.conf.
+  --backend_dns_lookup_family {auto,v4only,v6only,v4preferred,all}
+                        Define the dns lookup family for all backends. The
+                        options are "auto", "v4only", "v6only", "v4preferred",
+                        and "all". The default is "v4preferred". "auto" is a
+                        legacy name, it behaves as "v6preferred".
+  --enable_debug        Enables a variety of debug features in both Config
+                        Manager and Envoy, such as: - Debug level per-request
+                        application logs in Envoy - Debug level service
+                        configuration logs in Config Manager - Debug HTTP
+                        response headers
+  --transcoding_always_print_primitive_fields
+                        Whether to always print primitive fields for grpc-json
+                        transcoding. By default primitive fields with default
+                        values will be omitted in JSON output. For example, an
+                        int32 field set to 0 will be omitted. Setting this
+                        flag to true will override the default behavior and
+                        print primitive fields regardless of their values.
+                        Defaults to false
+  --transcoding_always_print_enums_as_ints
+                        Whether to always print enums as ints for grpc-json
+                        transcoding. By default they are rendered as strings.
+                        Defaults to false.
+  --transcoding_stream_newline_delimited
+                        If true, use new line delimiter to separate response
+                        streaming messages. If false, all response streaming
+                        messages will be transcoded into a JSON array.
+  --transcoding_case_insensitive_enum_parsing
+                        Proto enum values are supposed to be in upper cases
+                        when used in JSON. Set this flag to true if your JSON
+                        request uses non uppercase enum values.
+  --transcoding_preserve_proto_field_names
+                        Whether to preserve proto field names for grpc-json
+                        transcoding. By default protobuf will generate JSON
+                        field names using the json_name option, or lower camel
+                        case, in that order. Setting this flag will preserve
+                        the original field names. Defaults to false
+  --transcoding_ignore_query_parameters TRANSCODING_IGNORE_QUERY_PARAMETERS
+                        A list of query parameters(separated by comma) to be
+                        ignored for transcoding method mapping in grpc-json
+                        transcoding. By default, the transcoder filter will
+                        not transcode a request if there are any
+                        unknown/invalid query parameters.
+  --transcoding_ignore_unknown_query_parameters
+                        Whether to ignore query parameters that cannot be
+                        mapped to a corresponding protobuf field in grpc-json
+                        transcoding. Use this if you cannot control the query
+                        parameters and do not know them beforehand. Otherwise
+                        use ignored_query_parameters. Defaults to false.
+  --transcoding_query_parameters_disable_unescape_plus
+                        By default, unescape "+" to space when extracting
+                        variables in the query parameters in grpc-json
+                        transcoding. This is to support HTML 2.0<https://tools
+                        .ietf.org/html/rfc1866#section-8.2.1>. Set this flag
+                        to true to disable this feature.
+  --transcoding_match_unregistered_custom_verb
+                        According to the http template[1], the custom verb is
+                        `":" LITERAL` at the end of http template. For a
+                        request with `/foo/bar:baz` and `:baz` is not
+                        registered in any url_template, here is the behavior
+                        change - By default, `:baz` will not be treated as
+                        custom verb, so it will match `/foo/{x=*}`. - If the
+                        flag is provided, `:baz` is treated as custom verb, so
+                        it will NOT match `/foo/{x=*}` since the template
+                        doesn't use any custom verb. [1](https://github.com/go
+                        ogleapis/googleapis/blob/master/google/api/http.proto#
+                        L226-L231)
+  --disallow_colon_in_wildcard_path_segment
+                        Whether disallow colon in the url wildcard path
+                        segment for route match. According to Google http url
+                        template spec[1], the literal colon cannot be used in
+                        url wildcard path segment. This flag isn't enabled for
+                        backward compatibility. [1]https://github.com/googleap
+                        is/googleapis/blob/165280d3deea4d225a079eb5c34717b214a
+                        5b732/google/api/http.proto#L226-L252
+  --ads_named_pipe ADS_NAMED_PIPE
+                        Unix domain socket to use internally for xDs between
+                        config manager and envoy. Only change if running
+                        multiple ESPv2 instances on the same host.
+  --envoy_extra_config_yaml ENVOY_EXTRA_CONFIG_YAML
+                        Specify extra bootstrap configuration for Envoy in the
+                        form of a YAML string. Values will override and merge
+                        with any bootstrap configuration loaded with '--
+                        config-path'. This will not override any value which
+                        has been set dynamically. For more details see: https:
+                        //www.envoyproxy.io/docs/envoy/latest/operations/cli
+  --enable_response_compression
+                        Enable both gzip and brotli compression for response
+                        data with default envoy compression settings. Please
+                        see envoy document for detail. https://www.envoyproxy.
+                        io/docs/envoy/latest/configuration/http/http_filters/c
+                        ompressor_filter.
+  --enable_backend_routing
+                        === DEPRECATED: This flag will automatically be
+                        enabled if needed, so it does NOT need to be set
+                        manually. === Enable ESPv2 to route requests according
+                        to the "x-google-backend" or "backend" configuration
+  --backend_protocol {http1,http2,grpc}
+                        === DEPRECATED: This flag will automatically be set
+                        based on the scheme specified in the --backend flag.
+                        Overrides are no longer needed. === Backend Protocol.
+                        Overrides the protocol in --backend. Choices:
+                        [http1|http2|grpc]. Default value: http1.
+  --http_port HTTP_PORT
+                        This flag is exactly same as --listener_port. It is
+                        added for backward compatible for ESPv1 and will be
+                        deprecated. Please use the flag --listener_port.
+  --http2_port HTTP2_PORT
+                        This flag is exactly same as --listener_port. It is
+                        added for backward compatible for ESPv1 and will be
+                        deprecated. Please use the flag --listener_port.
+  --ssl_port SSL_PORT   This flag added for backward compatible for ESPv1 and
+                        will be deprecated. Please use the flags
+                        --listener_port and --ssl_server_cert_path instead.
+                        When configured, ESPv2 accepts HTTP/1.x and HTTP/2
+                        secure connections on this port, Requires the
+                        certificate and key files /etc/nginx/ssl/nginx.crt and
+                        /etc/nginx/ssl/nginx.key
+  --dns DNS             This flag is exactly same as --dns_resolver_addresses.
+                        This flag is added for backward compatible for ESPv1
+                        and will be deprecated. Please use the flag
+                        --dns_resolver_addresses instead.
+  -t, --tls_mutual_auth
+                        This flag added for backward compatible for ESPv1 and
+                        will be deprecated. Please use the flag
+                        --ssl_backend_client_cert_path instead. Enable TLS
+                        mutual authentication for HTTPS backends. Default
+                        value: Not enabled. Please provide the certificate and
+                        key files /etc/nginx/ssl/backend.crt and
+                        /etc/nginx/ssl/backend.key.
+  --ssl_protocols SSL_PROTOCOLS
+                        This flag added for backward compatible for ESPv1 and
+                        will be deprecated. Please use the flag
+                        --ssl_minimum_protocol and --ssl_maximum_protocol
+                        instead. Enable the specified SSL protocols. Please
+                        refer to https://nginx.org/en/docs/http/ngx_http_ssl_m
+                        odule.html#ssl_protocols. The "ssl_protocols" argument
+                        can be repeated multiple times to specify multiple SSL
+                        protocols (e.g., --ssl_protocols=TLSv1.1
+                        --ssl_protocols=TLSv1.2).
+  --enable_grpc_backend_ssl
+                        This flag added for backward compatible for ESPv1 and
+                        will be deprecated. Enable SSL for gRPC backend. ESPv2
+                        auto enables SSL if schema `grpcs` is detected.
+  --grpc_backend_ssl_root_certs_file GRPC_BACKEND_SSL_ROOT_CERTS_FILE
+                        This flag added for backward compatible for ESPv1 and
+                        will be deprecated. ESPv2 uses `/etc/ssl/certs/ca-
+                        certificates.crt` by default. The file path for gRPC
+                        backend SSL root certificates.
+  --ssl_client_cert_path SSL_CLIENT_CERT_PATH
+                        This flag is renamed and deprecated for clarity. Use
+                        `--ssl_backend_client_cert_path` instead.
+  --ssl_client_root_certs_file SSL_CLIENT_ROOT_CERTS_FILE
+                        This flag is renamed and deprecated for clarity. Use
+                        `--ssl_backend_client_root_certs_file` instead.
+  --on_serverless       When ESPv2 is started via the serverless image, this
+                        is true.
