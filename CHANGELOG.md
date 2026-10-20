@@ -1,3 +1,8 @@
+# Release 2.56.1 20-10-2026
+
+- Migrate ESPv2 base OS to Distroless Debian 12 (#1040)
+- Resolve base OS security vulnerabilities (CVE-2026-19445, CVE-2026-93990, CVE-2026-77214, CVE-2026-19553, CVE-2026-82049, CVE-2026-85091, CVE-2026-102633, CVE-2026-15806, CVE-2026-17084, CVE-2026-19672, CVE-2026-87910, CVE-2026-15310)
+
 # Release 2.56.0 09-09-2026
 
 - Update version to 2.56.0 (#1038)
