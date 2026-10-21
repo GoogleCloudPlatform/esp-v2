@@ -1,3 +1,18 @@
+# Release 2.57.0 20-10-2026
+
+> **Note:** This release is published as a **Beta / Pre-release** for a ~2-week canary qualification period. The stable `:2` tag will continue pointing to `2.56.1` during this time. To test this release, pull `gcr.io/endpoints-release/endpoints-runtime:2.57.0` (or `endpoints-runtime-serverless:2.57.0`) directly.
+
+- **Envoy v1.38 & OpenTelemetry Migration ([#1041](https://github.com/GoogleCloudPlatform/esp-v2/pull/1041))**:
+  - Upgraded Envoy data plane from v1.30 to v1.38.0.
+  - Migrated distributed tracing from deprecated OpenCensus to OpenTelemetry.
+  - Added zero-configuration, direct in-process export to Google Cloud Trace (`telemetry.googleapis.com`) with no external collector sidecar required.
+  - Added bidirectional W3C `traceparent` context propagation and automatic translation for legacy `x-cloud-trace-context` and `grpc-trace-bin` headers.
+- **Native Go Startup Binary ([#1042](https://github.com/GoogleCloudPlatform/esp-v2/pull/1042))**:
+  - Rewrote container startup scripts in native Go. Container images no longer ship Python or OpenSSL, significantly reducing image size and attack surface.
+- **CI & Test Hardening ([#1044](https://github.com/GoogleCloudPlatform/esp-v2/pull/1044), [#1045](https://github.com/GoogleCloudPlatform/esp-v2/pull/1045))**:
+  - Cleaned up API regression test exclusions post-OTel migration and hardened test suites.
+- **Update version to 2.57.0 ([#1046](https://github.com/GoogleCloudPlatform/esp-v2/pull/1046))**
+
 # Release 2.56.1 20-10-2026
 
 - Migrate ESPv2 base OS to Distroless Debian 12 (#1040)
