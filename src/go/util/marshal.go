@@ -45,6 +45,7 @@ import (
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/tracers/opentelemetry/resource_detectors/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
