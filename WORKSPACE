@@ -66,9 +66,9 @@ http_archive(
 # 3) Check if envoy_build_config/extensions_build_config.bzl is up-to-date.
 # Try to match it with the one in source/extensions and comment out unneeded extensions.
 
-ENVOY_SHA1 = "f1dd21b16c244bda00edfb5ffce577e12d0d2ec2"  # v1.38.0
+ENVOY_SHA1 = "9b5f29d242e093ab555c8d337127db1d871f5318"  # v1.38.7
 
-ENVOY_SHA256 = "230a3c99b7813967939db2e39563e5f63e054a5758b2425fcbdc07d8c7c2ea1f"
+ENVOY_SHA256 = "7c3d27c6cfc8164958bf7c7bc0b3f70f3ec9ced17a4f860bdd92ab4faec3a685"
 
 http_archive(
     name = "envoy",
