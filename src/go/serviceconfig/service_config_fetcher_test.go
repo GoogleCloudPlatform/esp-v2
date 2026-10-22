@@ -24,8 +24,8 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"google.golang.org/protobuf/proto"
 
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 func initServiceManagementForTestServiceConfigFetcher(t *testing.T,

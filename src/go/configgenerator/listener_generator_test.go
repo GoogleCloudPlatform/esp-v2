@@ -21,9 +21,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
 )
 

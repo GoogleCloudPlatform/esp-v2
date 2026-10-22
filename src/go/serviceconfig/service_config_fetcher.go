@@ -19,10 +19,10 @@ import (
 	"net/http"
 	"time"
 
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 type ServiceConfigFetcher struct {

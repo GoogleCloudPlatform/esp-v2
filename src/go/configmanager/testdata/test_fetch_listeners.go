@@ -2770,6 +2770,14 @@ var (
                       "targetUri": "telemetry.googleapis.com"
                     }
                   },
+                  "resourceDetectors": [
+                    {
+                      "name": "envoy.tracers.opentelemetry.resource_detectors.environment",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/envoy.extensions.tracers.opentelemetry.resource_detectors.v3.EnvironmentResourceDetectorConfig"
+                      }
+                    }
+                  ],
                   "serviceName": "espv2"
                 }
               },

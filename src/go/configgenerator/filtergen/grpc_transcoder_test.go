@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configgenerator/filtergen/filtergentest"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -28,7 +29,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	ahpb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"

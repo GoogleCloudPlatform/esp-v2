@@ -17,13 +17,15 @@ package util
 import (
 	"fmt"
 
+	"cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
 	// Import all protos that should be linked into the binary here.
+	_ "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
+	_ "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/backend_auth"
 	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/grpc_metadata_scrubber"
 	_ "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/header_sanitizer"
@@ -45,12 +47,11 @@ import (
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/jwt_authn/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/router/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/tracers/opentelemetry/resource_detectors/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	_ "google.golang.org/genproto/googleapis/api/serviceconfig"
-	_ "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
-	_ "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	_ "google.golang.org/genproto/googleapis/api/visibility"
 	_ "google.golang.org/protobuf/types/known/wrapperspb"
 )

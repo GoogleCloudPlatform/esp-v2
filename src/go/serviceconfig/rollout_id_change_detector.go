@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"time"
 
+	scpb "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"github.com/golang/glog"
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 type RolloutIdChangeDetector struct {

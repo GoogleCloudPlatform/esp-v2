@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/configmanager/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/metadata"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
@@ -39,8 +41,6 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	servicecontrolpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"

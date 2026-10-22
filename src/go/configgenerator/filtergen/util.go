@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strings"
 
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	commonpb "github.com/GoogleCloudPlatform/esp-v2/src/go/proto/api/envoy/v12/http/common"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
@@ -26,7 +27,6 @@ import (
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/glog"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"

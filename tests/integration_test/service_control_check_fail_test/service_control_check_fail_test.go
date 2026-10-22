@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	scpb "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
 )
 
 func TestServiceControlCheckError(t *testing.T) {

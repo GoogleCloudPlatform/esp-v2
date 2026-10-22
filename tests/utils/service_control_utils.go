@@ -24,8 +24,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	scpb "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
 	structpb "github.com/golang/protobuf/ptypes/struct"
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 	ltypepb "google.golang.org/genproto/googleapis/logging/type"
 )
 
