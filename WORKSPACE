@@ -160,8 +160,7 @@ install_deps()
 load("@envoy//bazel:dependency_imports.bzl", "envoy_dependency_imports")
 
 # Build with the Go SDK on the build machine (`go` on PATH) instead of
-# downloading one. Every place that runs Bazel already has Go installed,
-# because `make build` and `make test` need it too.
+# downloading one. The Makefile puts the Go version from go.mod first on PATH.
 envoy_dependency_imports(go_version = "host")
 
 # ==============================================================================
