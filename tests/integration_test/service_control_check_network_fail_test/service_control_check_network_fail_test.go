@@ -27,9 +27,9 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/testdata"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/utils"
 
+	scpb "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
 	bsclient "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/client"
 	comp "github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
 )
 
 func TestServiceControlCheckNetworkFail(t *testing.T) {

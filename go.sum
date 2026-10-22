@@ -172,10 +172,6 @@ google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 h1:XzmzkmB14QhVhgn
 google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7/go.mod h1:L43LFes82YgSonw6iTXTxXUX1OlULt4AQtkik4ULL/I=
 google.golang.org/genproto/googleapis/api v0.0.0-20261012220534-4341edf3f941 h1:DS/w3N8rsfrwxwgGSj6WhMsPo7aNQGmDx74J81zd0NQ=
 google.golang.org/genproto/googleapis/api v0.0.0-20261012220534-4341edf3f941/go.mod h1:AuGAdi9KnXss7xbLxIKhCvk+Ro/SxpET/iS45DNYN+M=
-google.golang.org/genproto/googleapis/api/servicecontrol v0.0.0-20261019180522-ce908d29299b h1:+FTies1nswh/f9730ugHk9eythD1d6ggYdimjGbD4W4=
-google.golang.org/genproto/googleapis/api/servicecontrol v0.0.0-20261019180522-ce908d29299b/go.mod h1:f5vdivEhDNspy6B8/GVm4b/OxdkxynTIHLaM5fbXhJQ=
-google.golang.org/genproto/googleapis/api/servicemanagement v0.0.0-20261019180522-ce908d29299b h1:o2WNwAHc0AYgr8jWAmEhdzkNexXvJrnub1Lqutcs2zo=
-google.golang.org/genproto/googleapis/api/servicemanagement v0.0.0-20261019180522-ce908d29299b/go.mod h1:7fPhremiD2hUtC/M+cumepuw3svZwsQnVAFIa79wRPs=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941 h1:QG6hS4zFplRZvOQedzei4t2pT/zkQc3VR1u+S9/rcAw=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941/go.mod h1:OaIUM3+LpYcK2GXM4FTmhWoIq371Owdr+Cc7/BsYHHc=
 google.golang.org/grpc v1.83.2 h1:EManeRomTObA0BU7I8vXgg/78uE5MJ9M8B39EX2WscU=

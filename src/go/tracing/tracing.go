@@ -24,10 +24,9 @@ import (
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tracepb "github.com/envoyproxy/go-control-plane/envoy/config/trace/v3"
 	hcmpb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	resourcedetectorspb "github.com/envoyproxy/go-control-plane/envoy/extensions/tracers/opentelemetry/resource_detectors/v3"
 	typepb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/glog"
-	"google.golang.org/protobuf/encoding/protowire"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -121,6 +120,11 @@ func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTeleme
 		}
 	}
 
+	envDetector, err := anypb.New(&resourcedetectorspb.EnvironmentResourceDetectorConfig{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal environment resource detector: %w", err)
+	}
+
 	cfg := &tracepb.OpenTelemetryConfig{
 		ServiceName: "espv2", // Provide a default service name.
 		GrpcService: &corev3.GrpcService{
@@ -128,28 +132,14 @@ func createOpenTelemetryConfig(opts options.TracingOptions) (*tracepb.OpenTeleme
 				GoogleGrpc: googleGrpc,
 			},
 		},
-	}
-
-	// In the pinned go-control-plane version, tracepb.OpenTelemetryConfig lacks the
-	// ResourceDetectors field (field number 4 in Envoy's OpenTelemetryConfig proto).
-	// We serialize the environment resource detector into the message's unknown fields
-	// so Envoy v1.38 unmarshals it and enables the environment detector.
-	envDetector := &corev3.TypedExtensionConfig{
-		Name: "envoy.tracers.opentelemetry.resource_detectors.environment",
-		TypedConfig: &anypb.Any{
-			TypeUrl: "type.googleapis.com/envoy.extensions.tracers.opentelemetry.resource_detectors.v3.EnvironmentResourceDetectorConfig",
+		// Enable Envoy's environment resource detector.
+		ResourceDetectors: []*corev3.TypedExtensionConfig{
+			{
+				Name:        "envoy.tracers.opentelemetry.resource_detectors.environment",
+				TypedConfig: envDetector,
+			},
 		},
 	}
-	detectorBytes, err := proto.Marshal(envDetector)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal environment resource detector: %w", err)
-	}
-
-	// Field 4, WireType: BytesType (2) -> Tag = (4 << 3) | 2 = 34
-	var unknown []byte
-	unknown = protowire.AppendTag(unknown, 4, protowire.BytesType)
-	unknown = protowire.AppendBytes(unknown, detectorBytes)
-	cfg.ProtoReflect().SetUnknown(unknown)
 
 	return cfg, nil
 }

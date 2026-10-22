@@ -3,6 +3,8 @@ module github.com/GoogleCloudPlatform/esp-v2
 go 1.26.9
 
 require (
+	cloud.google.com/go/servicecontrol v1.20.0
+	cloud.google.com/go/servicemanagement v1.17.0
 	cloud.google.com/go/storage v1.56.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/envoyproxy/go-control-plane v0.14.0
@@ -22,8 +24,6 @@ require (
 	google.golang.org/api v0.287.1
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
 	google.golang.org/genproto/googleapis/api v0.0.0-20261012220534-4341edf3f941
-	google.golang.org/genproto/googleapis/api/servicecontrol v0.0.0-20261019180522-ce908d29299b
-	google.golang.org/genproto/googleapis/api/servicemanagement v0.0.0-20261019180522-ce908d29299b
 	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12
 )
@@ -37,8 +37,6 @@ require (
 	cloud.google.com/go/iam v1.11.0 // indirect
 	cloud.google.com/go/longrunning v1.2.0 // indirect
 	cloud.google.com/go/monitoring v1.24.3 // indirect
-	cloud.google.com/go/servicecontrol v1.20.0 // indirect
-	cloud.google.com/go/servicemanagement v1.17.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.33.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 // indirect

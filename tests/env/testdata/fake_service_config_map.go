@@ -23,9 +23,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	anypb "github.com/golang/protobuf/ptypes/any"
 	scpb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 )
 
 var (

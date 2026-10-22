@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	smpb "cloud.google.com/go/servicemanagement/apiv1/servicemanagementpb"
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/options"
 	"github.com/google/go-cmp/cmp"
 	servicepb "google.golang.org/genproto/googleapis/api/serviceconfig"
-	smpb "google.golang.org/genproto/googleapis/api/servicemanagement/v1"
 	apipb "google.golang.org/genproto/protobuf/api"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"

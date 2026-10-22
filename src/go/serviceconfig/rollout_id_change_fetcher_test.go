@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/esp-v2/src/go/util"
 	"google.golang.org/protobuf/proto"
 
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	scpb "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
 )
 
 func genFakeReport(serviceRolloutId string) string {

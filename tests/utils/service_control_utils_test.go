@@ -20,7 +20,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	scpb "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
 )
 
 const expectedCheck = `

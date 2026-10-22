@@ -28,7 +28,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 
-	scpb "google.golang.org/genproto/googleapis/api/servicecontrol/v1"
+	scpb "cloud.google.com/go/servicecontrol/apiv1/servicecontrolpb"
 )
 
 const defaultTimeout = 2500 * time.Millisecond
