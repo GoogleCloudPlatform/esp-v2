@@ -19,6 +19,12 @@
 SHELL 	:= /bin/bash
 BINDIR	:= bin
 
+# Bazel builds with the Go on PATH (go_version = "host" in WORKSPACE). Put the Go
+# version that go.mod asks for first on PATH, so that Bazel and `go build` use
+# the same Go. If the installed Go is older, the go command downloads that
+# version (see https://go.dev/doc/toolchain).
+export PATH := $(shell go env GOROOT)/bin:$(PATH)
+
 IMG="gcr.io/cloudesf-testing/gcpproxy-prow"
 TAG := $(shell date +v%Y%m%d)-$(shell git describe --tags --always)
 K8S := master

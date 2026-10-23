@@ -100,6 +100,15 @@ go test -v -timeout 20m ./tests/integration_test/iam_imds_data_path_test/iam_imd
 
 Reference [the official golang installation instructions](https://golang.org/doc/install) for your OS. The latest go version should work.
 
+Bazel builds use the Go on your `PATH` too (`go_version = "host"` in `WORKSPACE`).
+The `make` targets put the Go version from `go.mod` first on `PATH`, and the go
+command downloads it if your installed Go is older. If you run Bazel directly,
+do the same first, from the repository root:
+
+```
+export PATH="$(go env GOROOT)/bin:$PATH"
+```
+
 Add the following setting in .profile, then source it:
 
 ```
