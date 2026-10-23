@@ -400,11 +400,11 @@ absl::StatusOr<std::string> extractIPFromForwardedHeader(
 
       // IPv2 address is wrapped with \"[]\".
       // Remove double quote.
-      if (ip[0] == '"' && ip[ip.size() - 1] == '"') {
+      if (ip.size() >= 2 && ip.front() == '"' && ip.back() == '"') {
         ip = ip.substr(1, ip.size() - 2);
       }
       // Remove [].
-      if (ip[0] == '[' && ip[ip.size() - 1] == ']') {
+      if (ip.size() >= 2 && ip.front() == '[' && ip.back() == ']') {
         ip = ip.substr(1, ip.size() - 2);
       }
       std::string ip_str(ip);
