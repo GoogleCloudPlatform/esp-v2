@@ -1,3 +1,12 @@
+# Release 2.57.1 23-10-2026
+
+> **Note:** This release is published as a **Beta / Pre-release** for a ~2-week canary qualification period. The stable `:2` tag will continue pointing to `2.56.1` during this time. To test this release, pull `gcr.io/endpoints-release/endpoints-runtime:2.57.1` (or `endpoints-runtime-serverless:2.57.1`) directly.
+
+- **Bump Envoy from v1.38.0 to v1.38.7 ([#1050](https://github.com/GoogleCloudPlatform/esp-v2/pull/1050))**
+- **Upgrade Go to 1.26.9 and grpc-go to v1.83.2 ([#1051](https://github.com/GoogleCloudPlatform/esp-v2/pull/1051))**:
+  - Resolves Go stdlib and dependency security vulnerabilities (`CVE-2026-33186`, `CVE-2026-56857`, `CVE-2026-56866`, `CVE-2026-78659`, `CVE-2026-78660`, `CVE-2026-78663`, `CVE-2026-78667`, `CVE-2026-78669`, `CVE-2026-84303`, `CVE-2026-84304`, `CVE-2026-84445`, `CVE-2026-94439`, `CVE-2026-94440`, `CVE-2026-94444`, `CVE-2026-94447`, `CVE-2026-94448`, `CVE-2026-97030`, `CVE-2026-97031`, `CVE-2026-97032`, `GHSA-hrxh-6v49-42gf`).
+- **Update version to 2.57.1 ([#1055](https://github.com/GoogleCloudPlatform/esp-v2/pull/1055))**
+
 # Release 2.57.0 20-10-2026
 
 > **Note:** This release is published as a **Beta / Pre-release** for a ~2-week canary qualification period. The stable `:2` tag will continue pointing to `2.56.1` during this time. To test this release, pull `gcr.io/endpoints-release/endpoints-runtime:2.57.0` (or `endpoints-runtime-serverless:2.57.0`) directly.
