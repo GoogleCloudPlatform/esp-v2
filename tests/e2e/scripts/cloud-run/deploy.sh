@@ -121,6 +121,7 @@ function deployBackend() {
       # below rely on the 1st gen httpsTrigger.url and cloudfunctions.invoker.
       gcloud functions deploy ${BACKEND_SERVICE_NAME} --no-gen2 --runtime nodejs22 \
         --trigger-http --service-account "${BACKEND_RUNTIME_SERVICE_ACCOUNT}" \
+        --no-gen2 \
         --quiet --entry-point app
       cd ${ROOT}
 
