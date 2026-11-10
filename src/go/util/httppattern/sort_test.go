@@ -16,6 +16,7 @@ package httppattern
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -139,9 +140,9 @@ func TestSort(t *testing.T) {
 				"GET /a/x",
 				"GET /a/x/b",
 				"GET /a/x/b/c",
-				"GET /a/*",
 				"GET /a/*/b",
 				"GET /a/*/b/c",
+				"GET /a/*",
 				"GET /a/**/b",
 				"GET /a/**/b/c",
 				"GET /a/**",
@@ -162,8 +163,8 @@ func TestSort(t *testing.T) {
 			},
 			sortedHttpPattern: []string{
 				"GET /a/b/c/{x=**}",
-				"GET /a/b/{x=*}",
 				"GET /a/{x=b/*}/{y=d/**}",
+				"GET /a/b/{x=*}",
 				"GET /{x=a/*}/b/{y=*}/c",
 				"GET /a/{x=*}/c/d/e",
 				"GET /alpha/{x=*}/beta/{y=**}/gamma",
@@ -189,8 +190,8 @@ func TestSort(t *testing.T) {
 			sortedHttpPattern: []string{
 				"GET /a/{y=d/**}:verb",
 				"GET /a/{y=d/**}",
-				"GET /a/{y=*}",
 				"GET /a/{y=*}:verb",
+				"GET /a/{y=*}",
 				"GET /g/{x=**}/h",
 				"GET /g/{x=**}/h:verb",
 				"GET /{x=*}/a",
@@ -257,6 +258,100 @@ func TestSort(t *testing.T) {
 				if getHttpPattern := fmt.Sprintf("%s %s", r.HttpMethod, r.UriTemplate.ExactMatchString(false)); getHttpPattern != tc.sortedHttpPattern[idx] {
 					t.Errorf("expect http pattern: % s, get http pattern: %s", tc.sortedHttpPattern[idx], getHttpPattern)
 				}
+			}
+		})
+	}
+}
+
+func TestSortVerbNotShadowedByWildcard(t *testing.T) {
+	testCases := []struct {
+		desc            string
+		httpPatterns    []string
+		wantSortedOrder []string
+		probePath       string
+		wantMatched     string
+	}{
+		{
+			desc: "single wildcard with and without verb",
+			httpPatterns: []string{
+				"GET /a/{x=*}",
+				"GET /a/{x=*}:act",
+			},
+			wantSortedOrder: []string{
+				"GET /a/{x=*}:act",
+				"GET /a/{x=*}",
+			},
+			probePath:   "/a/item1:act",
+			wantMatched: "GET /a/{x=*}:act",
+		},
+		{
+			desc: "root single parameter with and without verb",
+			httpPatterns: []string{
+				"POST /{x}",
+				"POST /{x}:cancel",
+			},
+			wantSortedOrder: []string{
+				"POST /{x=*}:cancel",
+				"POST /{x=*}",
+			},
+			probePath:   "/order123:cancel",
+			wantMatched: "POST /{x=*}:cancel",
+		},
+		{
+			desc: "double wildcard with literal segment and verb",
+			httpPatterns: []string{
+				"GET /a/{x=**}/b",
+				"GET /a/{x=**}/b:act",
+			},
+			wantSortedOrder: []string{
+				"GET /a/{x=**}/b",
+				"GET /a/{x=**}/b:act",
+			},
+			probePath:   "/a/foo/b:act",
+			wantMatched: "GET /a/{x=**}/b:act",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			methods := &MethodSlice{}
+			for _, hp := range tc.httpPatterns {
+				httpMethod, uriTemplate := parsePattern(hp)
+				u, err := ParseUriTemplate(uriTemplate)
+				if err != nil {
+					t.Fatalf("ParseUriTemplate(%q) failed: %v", uriTemplate, err)
+				}
+				methods.AppendMethod(&Method{
+					Pattern: &Pattern{
+						HttpMethod:  httpMethod,
+						UriTemplate: u,
+					},
+				})
+			}
+
+			if err := Sort(methods); err != nil {
+				t.Fatalf("Sort failed: %v", err)
+			}
+
+			for idx, m := range *methods {
+				got := fmt.Sprintf("%s %s", m.HttpMethod, m.UriTemplate.ExactMatchString(false))
+				if got != tc.wantSortedOrder[idx] {
+					t.Errorf("index %d: want %q, got %q", idx, tc.wantSortedOrder[idx], got)
+				}
+			}
+
+			// Verify first-match-wins Envoy SafeRegex evaluation on probePath
+			// with default disallowColonInWildcardPathSegment = false.
+			var firstMatched string
+			for _, m := range *methods {
+				re := regexp.MustCompile(m.UriTemplate.Regex(false))
+				if re.MatchString(tc.probePath) {
+					firstMatched = fmt.Sprintf("%s %s", m.HttpMethod, m.UriTemplate.ExactMatchString(false))
+					break
+				}
+			}
+			if firstMatched != tc.wantMatched {
+				t.Errorf("probePath %q first matched route %q, want %q", tc.probePath, firstMatched, tc.wantMatched)
 			}
 		})
 	}

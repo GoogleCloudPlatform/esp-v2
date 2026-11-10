@@ -2207,8 +2207,8 @@ func TestMakeRouteConfig(t *testing.T) {
 		// In this test, the route configs will be in the order of
 		//    GET /foo/bar
 		//    * /foo/bar,
-		//    GET /foo/*
 		//    GET /foo/*/bar
+		//    GET /foo/*
 		//    GET /foo/**/bar
 		//    GET /foo/**:verb
 		//    GET /foo/**
@@ -2406,7 +2406,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress Foo"
+            "operation": "ingress Bar"
           },
           "match": {
             "headers": [
@@ -2416,10 +2416,10 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "regex": "^/foo/[^\\/]+\\/?$"
+              "regex": "^/foo/[^\\/]+/bar\\/?$"
             }
           },
-          "name": "endpoints.examples.bookstore.Bookstore.Foo",
+          "name": "endpoints.examples.bookstore.Bookstore.Bar",
           "responseHeadersToAdd": [
             {
               "header": {
@@ -2440,7 +2440,7 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress Bar"
+            "operation": "ingress Foo"
           },
           "match": {
             "headers": [
@@ -2450,10 +2450,10 @@ func TestMakeRouteConfig(t *testing.T) {
               }
             ],
             "safeRegex": {
-              "regex": "^/foo/[^\\/]+/bar\\/?$"
+              "regex": "^/foo/[^\\/]+\\/?$"
             }
           },
-          "name": "endpoints.examples.bookstore.Bookstore.Bar",
+          "name": "endpoints.examples.bookstore.Bookstore.Foo",
           "responseHeadersToAdd": [
             {
               "header": {
@@ -2604,22 +2604,6 @@ func TestMakeRouteConfig(t *testing.T) {
         },
         {
           "decorator": {
-            "operation": "ingress UnknownHttpMethodForPath_/foo/*"
-          },
-          "directResponse": {
-            "body": {
-              "inlineString": "The current request is matched to the defined url template \"/foo/*\" but its http method is not allowed"
-            },
-            "status": 405
-          },
-          "match": {
-            "safeRegex": {
-              "regex": "^/foo/[^\\/]+\\/?$"
-            }
-          }
-        },
-        {
-          "decorator": {
             "operation": "ingress UnknownHttpMethodForPath_/foo/*/bar"
           },
           "directResponse": {
@@ -2631,6 +2615,22 @@ func TestMakeRouteConfig(t *testing.T) {
           "match": {
             "safeRegex": {
               "regex": "^/foo/[^\\/]+/bar\\/?$"
+            }
+          }
+        },
+        {
+          "decorator": {
+            "operation": "ingress UnknownHttpMethodForPath_/foo/*"
+          },
+          "directResponse": {
+            "body": {
+              "inlineString": "The current request is matched to the defined url template \"/foo/*\" but its http method is not allowed"
+            },
+            "status": 405
+          },
+          "match": {
+            "safeRegex": {
+              "regex": "^/foo/[^\\/]+\\/?$"
             }
           }
         },

@@ -623,8 +623,8 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
 			// In this test, the route configs will be in the order of
 			//    GET /foo/bar
 			//    * /foo/bar,
-			//    GET /foo/*
 			//    GET /foo/*/bar
+			//    GET /foo/*
 			//    GET /foo/**/bar
 			//    GET /foo/**:verb
 			//    GET /foo/**
@@ -792,34 +792,6 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
     },
     {
       "decorator":{
-        "operation":"ingress Foo"
-      },
-      "match":{
-        "headers":[
-          {
-            "stringMatch":{
-              "exact":"GET"
-            },
-            "name":":method"
-          }
-        ],
-        "safeRegex":{
-          "regex":"^/foo/[^\\/]+\\/?$"
-        }
-      },
-      "name":"endpoints.examples.bookstore.Bookstore.Foo",
-      "route":{
-        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
-        "idleTimeout":"300s",
-        "retryPolicy":{
-          "numRetries":1,
-          "retryOn":"reset,connect-failure,refused-stream"
-        },
-        "timeout":"15s"
-      }
-    },
-    {
-      "decorator":{
         "operation":"ingress Bar"
       },
       "match":{
@@ -836,6 +808,34 @@ func TestNewBackendRouteGenFromOPConfig(t *testing.T) {
         }
       },
       "name":"endpoints.examples.bookstore.Bookstore.Bar",
+      "route":{
+        "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
+        "idleTimeout":"300s",
+        "retryPolicy":{
+          "numRetries":1,
+          "retryOn":"reset,connect-failure,refused-stream"
+        },
+        "timeout":"15s"
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress Foo"
+      },
+      "match":{
+        "headers":[
+          {
+            "stringMatch":{
+              "exact":"GET"
+            },
+            "name":":method"
+          }
+        ],
+        "safeRegex":{
+          "regex":"^/foo/[^\\/]+\\/?$"
+        }
+      },
+      "name":"endpoints.examples.bookstore.Bookstore.Foo",
       "route":{
         "cluster":"backend-cluster-bookstore.endpoints.project123.cloud.goog_local",
         "idleTimeout":"300s",
