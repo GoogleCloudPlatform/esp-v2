@@ -445,3 +445,64 @@ func TestMakeListeners(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeListenersWithServerEcdhCurves(t *testing.T) {
+	opts := options.DefaultConfigGeneratorOptions()
+	opts.SslServerCertPath = "/etc/endpoints/ssl"
+	opts.SslServerEcdhCurves = "X25519MLKEM768,X25519,P-256"
+	opts.CommonOptions.TracingOptions.DisableTracing = true
+	fakeServiceConfig := &confpb.Service{
+		Name: testProjectName,
+		Apis: []*apipb.Api{
+			{
+				Name: testApiName,
+				Methods: []*apipb.Method{
+					{
+						Name: "CreateShelf",
+					},
+				},
+			},
+		},
+	}
+	fakeServiceInfo, err := configinfo.NewServiceInfoFromServiceConfig(fakeServiceConfig, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	listeners, err := MakeListeners(fakeServiceInfo, filtergen.ServiceControlOPFactoryParams{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(listeners) != 1 || len(listeners[0].GetFilterChains()) != 1 {
+		t.Fatalf("MakeListeners() got %d listener(s), want 1 listener with 1 filter chain", len(listeners))
+	}
+	got, err := util.ProtoToJson(listeners[0].GetFilterChains()[0].GetTransportSocket())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `{
+		"name":"envoy.transport_sockets.tls",
+		"typedConfig":{
+			"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
+			"commonTlsContext":{
+				"alpnProtocols":["h2","http/1.1"],
+				"tlsCertificates":[
+					{
+						"certificateChain":{
+							"filename":"/etc/endpoints/ssl/server.crt"
+						},
+						"privateKey":{
+							"filename":"/etc/endpoints/ssl/server.key"
+						}
+					}
+				],
+				"tlsParams":{
+					"ecdhCurves":["X25519MLKEM768","X25519","P-256"]
+				}
+			}
+		}
+	}`
+	if err := util.JsonEqual(want, got); err != nil {
+		t.Errorf("MakeListeners() created an unexpected transport socket:\n%v", err)
+	}
+}
