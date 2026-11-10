@@ -38,6 +38,12 @@ type ClusterTLSConfiger struct {
 	RootCertsPath      string
 	ClientCertsPath    string
 	ClientCipherSuites string
+	// ClientMaximumProtocol is the maximum TLS version, for example "TLSv1.3".
+	// Empty means Envoy's default.
+	ClientMaximumProtocol string
+	// ClientEcdhCurves is a comma-separated list of key exchange groups in
+	// preference order. Empty means Envoy's default.
+	ClientEcdhCurves string
 }
 
 // NewClusterTLSConfigerFromOPConfig creates a ClusterTLSConfiger from
@@ -45,14 +51,18 @@ type ClusterTLSConfiger struct {
 func NewClusterTLSConfigerFromOPConfig(opts options.ConfigGeneratorOptions, isBackendCluster bool) *ClusterTLSConfiger {
 	if !isBackendCluster {
 		return &ClusterTLSConfiger{
-			RootCertsPath: opts.SslSidestreamClientRootCertsPath,
+			RootCertsPath:         opts.SslSidestreamClientRootCertsPath,
+			ClientMaximumProtocol: opts.SslSidestreamClientMaximumProtocol,
+			ClientEcdhCurves:      opts.SslSidestreamClientEcdhCurves,
 		}
 	}
 
 	return &ClusterTLSConfiger{
-		RootCertsPath:      opts.SslBackendClientRootCertsPath,
-		ClientCertsPath:    opts.SslBackendClientCertPath,
-		ClientCipherSuites: opts.SslBackendClientCipherSuites,
+		RootCertsPath:         opts.SslBackendClientRootCertsPath,
+		ClientCertsPath:       opts.SslBackendClientCertPath,
+		ClientCipherSuites:    opts.SslBackendClientCipherSuites,
+		ClientMaximumProtocol: opts.SslBackendClientMaximumProtocol,
+		ClientEcdhCurves:      opts.SslBackendClientEcdhCurves,
 	}
 }
 
@@ -61,6 +71,9 @@ func (c *ClusterTLSConfiger) MakeTLSConfig(hostname string, alpnProtocols []stri
 	if c.RootCertsPath == "" {
 		return nil, fmt.Errorf("root certs path cannot be empty")
 	}
+	if err := util.ValidateTLSProtocolVersion(c.ClientMaximumProtocol); err != nil {
+		return nil, err
+	}
 
 	sslFileName := DefaultClientSslFilename
 	// Backward compatible for ESPv1
@@ -68,7 +81,7 @@ func (c *ClusterTLSConfiger) MakeTLSConfig(hostname string, alpnProtocols []stri
 		sslFileName = "backend"
 	}
 
-	commonTls, err := util.CreateCommonTlsContext(c.RootCertsPath, c.ClientCertsPath, sslFileName, "", "", c.ClientCipherSuites)
+	commonTls, err := util.CreateCommonTlsContext(c.RootCertsPath, c.ClientCertsPath, sslFileName, "", c.ClientMaximumProtocol, c.ClientCipherSuites, c.ClientEcdhCurves)
 	if err != nil {
 		return nil, err
 	}

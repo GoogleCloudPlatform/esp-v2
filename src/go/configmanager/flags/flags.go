@@ -79,6 +79,12 @@ var (
 	EnableHSTS                       = flag.Bool("enable_strict_transport_security", defaults.EnableHSTS, "Enable HSTS (HTTP Strict Transport Security).")
 	DnsResolverAddresses             = flag.String("dns_resolver_addresses", defaults.DnsResolverAddresses, `The addresses of dns resolvers. Each address should be in format of either IP_ADDR or IP_ADDR:PORT and they are separated by ';'.`)
 
+	SslServerEcdhCurves                = flag.String("ssl_server_ecdh_curves", defaults.SslServerEcdhCurves, "Key exchange groups (ECDH curves) for downstream connections as a comma-separated list in preference order, for example X25519MLKEM768,X25519,P-256. If empty, Envoy's default is used.")
+	SslSidestreamClientEcdhCurves      = flag.String("ssl_sidestream_client_ecdh_curves", defaults.SslSidestreamClientEcdhCurves, "Key exchange groups (ECDH curves) for TLS connections to all external services other than the backend, as a comma-separated list in preference order. If empty, Envoy's default is used.")
+	SslSidestreamClientMaximumProtocol = flag.String("ssl_sidestream_client_maximum_protocol", defaults.SslSidestreamClientMaximumProtocol, "Maximum TLS protocol version for connections to all external services other than the backend: TLSv1.0, TLSv1.1, TLSv1.2 or TLSv1.3. If empty, Envoy's default is used.")
+	SslBackendClientEcdhCurves         = flag.String("ssl_backend_client_ecdh_curves", defaults.SslBackendClientEcdhCurves, "Key exchange groups (ECDH curves) for TLS connections to the HTTPS backend, as a comma-separated list in preference order. If empty, Envoy's default is used.")
+	SslBackendClientMaximumProtocol    = flag.String("ssl_backend_client_maximum_protocol", defaults.SslBackendClientMaximumProtocol, "Maximum TLS protocol version for connections to the HTTPS backend: TLSv1.0, TLSv1.1, TLSv1.2 or TLSv1.3. If empty, Envoy's default is used.")
+
 	AddRequestHeaders = flag.String("add_request_headers", defaults.AddRequestHeaders, `Add HTTP headers to the request before sent to the upstream backend. Multiple headers are separated by ';'.
          For example --add_request_headers=key1=value1;key2=value2. If a header is already in the request, its value will be replaced with the new one.`)
 	AppendRequestHeaders = flag.String("append_request_headers", defaults.AppendRequestHeaders, `Append HTTP headers to the request before sent to the upstream backend. Multiple headers are separated by ';'.
@@ -265,6 +271,11 @@ func EnvoyConfigOptionsFromFlags() options.ConfigGeneratorOptions {
 		SslMaximumProtocol:                            *SslMaximumProtocol,
 		EnableHSTS:                                    *EnableHSTS,
 		DnsResolverAddresses:                          *DnsResolverAddresses,
+		SslServerEcdhCurves:                           *SslServerEcdhCurves,
+		SslSidestreamClientEcdhCurves:                 *SslSidestreamClientEcdhCurves,
+		SslSidestreamClientMaximumProtocol:            *SslSidestreamClientMaximumProtocol,
+		SslBackendClientEcdhCurves:                    *SslBackendClientEcdhCurves,
+		SslBackendClientMaximumProtocol:               *SslBackendClientMaximumProtocol,
 		AddRequestHeaders:                             *AddRequestHeaders,
 		AppendRequestHeaders:                          *AppendRequestHeaders,
 		AddResponseHeaders:                            *AddResponseHeaders,
