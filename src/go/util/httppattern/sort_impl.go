@@ -124,7 +124,7 @@ func (hn *httpPatternTrieNode) insertTemplate(pathParts []string, pathPartsIdxCu
 	}
 
 	child, _ := hn.Children[curSeg]
-	if curSeg == DoubleWildCardKey {
+	if curSeg == DoubleWildCardKey || curSeg == SingleWildCardKey || curSeg == SingleParameterKey {
 		child.WildCard = true
 	}
 
@@ -200,7 +200,7 @@ func (hn *httpPatternTrieNode) traverse(result *MethodSlice) {
 		}
 	}
 
-	// If the current node is wildcard(**), its children has higher priority.
+	// If the current node is a wildcard, its children have higher priority.
 	// For the wildcard case, it is necessary to traverse children then collect
 	// the current node.
 	// ex. /**/a

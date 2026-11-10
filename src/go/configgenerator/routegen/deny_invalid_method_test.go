@@ -187,8 +187,8 @@ func TestNewDenyInvalidMethodRouteGenFromOPConfig(t *testing.T) {
 			// In this test, the route configs will be in the order of:
 			//    GET /foo/bar
 			//    * /foo/bar, -- Not generated (no unknown method)
-			//    GET /foo/*
 			//    GET /foo/*/bar
+			//    GET /foo/*
 			//    GET /foo/**/bar
 			//    GET /foo/**:verb
 			//    GET /foo/**
@@ -299,22 +299,6 @@ func TestNewDenyInvalidMethodRouteGenFromOPConfig(t *testing.T) {
     },
     {
       "decorator":{
-        "operation":"ingress UnknownHttpMethodForPath_/foo/*"
-      },
-      "directResponse":{
-        "body":{
-          "inlineString":"The current request is matched to the defined url template \"/foo/*\" but its http method is not allowed"
-        },
-        "status":405
-      },
-      "match":{
-        "safeRegex":{
-          "regex":"^/foo/[^\\/]+\\/?$"
-        }
-      }
-    },
-    {
-      "decorator":{
         "operation":"ingress UnknownHttpMethodForPath_/foo/*/bar"
       },
       "directResponse":{
@@ -326,6 +310,22 @@ func TestNewDenyInvalidMethodRouteGenFromOPConfig(t *testing.T) {
       "match":{
         "safeRegex":{
           "regex":"^/foo/[^\\/]+/bar\\/?$"
+        }
+      }
+    },
+    {
+      "decorator":{
+        "operation":"ingress UnknownHttpMethodForPath_/foo/*"
+      },
+      "directResponse":{
+        "body":{
+          "inlineString":"The current request is matched to the defined url template \"/foo/*\" but its http method is not allowed"
+        },
+        "status":405
+      },
+      "match":{
+        "safeRegex":{
+          "regex":"^/foo/[^\\/]+\\/?$"
         }
       }
     },
