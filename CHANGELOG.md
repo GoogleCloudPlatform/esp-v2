@@ -1,3 +1,10 @@
+# Release 2.57.2 13-11-2026
+
+- **Fix route ordering for paths with a custom verb ([#1058](https://github.com/GoogleCloudPlatform/esp-v2/pull/1058))**: a route such as `/v1/{name=foos/*}:decrypt` is now matched before `/v1/{name=foos/*}`.
+- **Remove distrusted root CAs from the images** (`CVE-2026-111943`): `emSign Root CA - C1`, `emSign Root CA - G1`, `emSign ECC Root CA - C3`, `emSign ECC Root CA - G3` and `AAA Certificate Services` are no longer in `/etc/ssl/certs/ca-certificates.crt`.
+- **Release images are built with Go 1.26.10** (`crypto/x509` security fixes).
+- **Update version to 2.57.2 ([#1057](https://github.com/GoogleCloudPlatform/esp-v2/pull/1057))**
+
 # Release 2.57.1 23-10-2026
 
 > **Note:** This release is published as a **Beta / Pre-release** for a ~2-week canary qualification period. The stable `:2` tag will continue pointing to `2.56.1` during this time. To test this release, pull `gcr.io/endpoints-release/endpoints-runtime:2.57.1` (or `endpoints-runtime-serverless:2.57.1`) directly.
