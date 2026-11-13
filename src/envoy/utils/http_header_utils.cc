@@ -37,14 +37,17 @@ absl::string_view readHeaderEntry(const Envoy::Http::HeaderEntry* entry) {
   return Envoy::EMPTY_STRING;
 }
 
-absl::string_view extractHeader(const Envoy::Http::HeaderMap& headers,
-                                const Envoy::Http::LowerCaseString& header) {
+std::string extractHeader(const Envoy::Http::HeaderMap& headers,
+                          const Envoy::Http::LowerCaseString& header) {
   const auto result =
       Envoy::Http::HeaderUtility::getAllOfHeaderAsString(headers, header);
   if (!result.result().has_value()) {
     return Envoy::EMPTY_STRING;
   }
-  return result.result().value();
+  // When the header has multiple values, result().value() points into the
+  // local result's backing string, so it must be copied out before result
+  // goes out of scope.
+  return std::string(result.result().value());
 }
 
 bool handleHttpMethodOverride(Envoy::Http::RequestHeaderMap& headers) {
