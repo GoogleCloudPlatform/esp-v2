@@ -32,7 +32,25 @@ using Envoy::Http::FilterHeadersStatus;
 using Envoy::Http::FilterTrailersStatus;
 using Envoy::Http::RequestHeaderMap;
 
+namespace {
+
+const Envoy::Http::LowerCaseString kXEndpointApiUserInfo{
+    "x-endpoint-api-userinfo"};
+const Envoy::Http::LowerCaseString kXForwardedAuthorization{
+    "x-forwarded-authorization"};
+const Envoy::Http::LowerCaseString kXEndpointApiConsumerType{
+    "x-endpoint-api-consumer-type"};
+const Envoy::Http::LowerCaseString kXEndpointApiConsumerNumber{
+    "x-endpoint-api-consumer-number"};
+
+}  // namespace
+
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
+  headers.remove(kXEndpointApiUserInfo);
+  headers.remove(kXForwardedAuthorization);
+  headers.remove(kXEndpointApiConsumerType);
+  headers.remove(kXEndpointApiConsumerNumber);
+
   if (utils::handleHttpMethodOverride(headers)) {
     // Update later filters that the HTTP method has changed by clearing the
     // route cache.
