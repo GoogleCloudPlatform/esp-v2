@@ -51,8 +51,8 @@ const Envoy::Http::LowerCaseString kXForwardedAuthorization{
 }  // namespace
 
 FilterHeadersStatus Filter::decodeHeaders(RequestHeaderMap& headers, bool) {
-  // b/176165002: Clear out pre-existing header to prevent backends from
-  // unintentionally using the wrong value.
+  // Clear out pre-existing header to prevent backends from unintentionally
+  // using the wrong value.
   headers.remove(kXForwardedAuthorization);
 
   // Make sure route is calculated
