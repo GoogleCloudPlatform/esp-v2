@@ -1,0 +1,26 @@
+# Dependabot version updates for ESPv2.
+# https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+#
+# Covers the Go modules that end up in the release images (config manager,
+# bootstrap, start-up binary, gcsrunner). The Bazel dependencies in WORKSPACE,
+# Envoy first among them, are left out on purpose: an Envoy upgrade needs code
+# changes and is done by hand.
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    # Propose a release only after it has been out for 14 days, so that broken
+    # or malicious releases have time to be caught. Security updates are not
+    # delayed.
+    cooldown:
+      default-days: 14
+    groups:
+      # One PR a week for all minor and patch updates; major updates get
+      # their own PRs.
+      go-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
