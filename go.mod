@@ -1,6 +1,6 @@
 module github.com/GoogleCloudPlatform/esp-v2
 
-go 1.26.9
+go 1.26.11
 
 require (
 	cloud.google.com/go/servicecontrol v1.20.0
