@@ -28,6 +28,7 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 		sslMinimumProtocol  string
 		sslMaximumProtocol  string
 		cipherSuites        string
+		ecdhCurves          string
 		wantTransportSocket string
 	}{
 		{
@@ -155,10 +156,37 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 				}
 			}`,
 		},
+		{
+			desc:       "Downstream Transport Socket with ECDH curves",
+			sslPath:    "/etc/ssl/endpoints/",
+			ecdhCurves: "X25519MLKEM768,X25519,P-256",
+			wantTransportSocket: `{
+				"name":"envoy.transport_sockets.tls",
+				"typedConfig":{
+					"@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
+					"commonTlsContext":{
+						"alpnProtocols":["h2","http/1.1"],
+						"tlsCertificates":[
+							{
+								"certificateChain":{
+									"filename":"/etc/ssl/endpoints/server.crt"
+								},
+								"privateKey":{
+									"filename":"/etc/ssl/endpoints/server.key"
+								}
+							}
+						],
+						"tlsParams":{
+							"ecdhCurves":["X25519MLKEM768","X25519","P-256"]
+						}
+					}
+				}
+			}`,
+		},
 	}
 
 	for i, tc := range testData {
-		gotTransportSocket, err := CreateDownstreamTransportSocket(tc.sslPath, tc.sslRootCertPath, tc.sslMinimumProtocol, tc.sslMaximumProtocol, tc.cipherSuites)
+		gotTransportSocket, err := CreateDownstreamTransportSocket(tc.sslPath, tc.sslRootCertPath, tc.sslMinimumProtocol, tc.sslMaximumProtocol, tc.cipherSuites, tc.ecdhCurves)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -169,6 +197,25 @@ func TestCreateDownstreamTransportSocket(t *testing.T) {
 		}
 		if err := JsonEqual(tc.wantTransportSocket, gotConfig); err != nil {
 			t.Errorf("Test Desc(%d): %s, CreateDownstreamTransportSocket failed,\n %v", i, tc.desc, err)
+		}
+	}
+}
+
+func TestValidateTLSProtocolVersion(t *testing.T) {
+	testData := []struct {
+		version string
+		wantErr bool
+	}{
+		{version: ""},
+		{version: "TLSv1.2"},
+		{version: "TLSv1.3"},
+		{version: "TLSv1_3", wantErr: true},
+		{version: "1.3", wantErr: true},
+	}
+	for _, tc := range testData {
+		err := ValidateTLSProtocolVersion(tc.version)
+		if gotErr := err != nil; gotErr != tc.wantErr {
+			t.Errorf("ValidateTLSProtocolVersion(%q) = %v, want error: %t", tc.version, err, tc.wantErr)
 		}
 	}
 }

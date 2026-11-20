@@ -77,6 +77,15 @@ type ConfigGeneratorOptions struct {
 	SslBackendClientCipherSuites     string
 	DnsResolverAddresses             string
 
+	// TLS key exchange groups (comma-separated ECDH curve names, in preference
+	// order) and maximum TLS versions of the upstream clusters. Empty means
+	// Envoy's default.
+	SslServerEcdhCurves                string
+	SslSidestreamClientEcdhCurves      string
+	SslSidestreamClientMaximumProtocol string
+	SslBackendClientEcdhCurves         string
+	SslBackendClientMaximumProtocol    string
+
 	// Headers manipulation:
 	AddRequestHeaders              string
 	AppendRequestHeaders           string

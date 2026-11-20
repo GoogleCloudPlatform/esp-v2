@@ -38,7 +38,7 @@ var (
 )
 
 // CreateDownstreamTransportSocket creates a TransportSocket for Downstream
-func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*corepb.TransportSocket, error) {
+func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string, ecdhCurves string) (*corepb.TransportSocket, error) {
 	if sslServerPath == "" {
 		return nil, fmt.Errorf("SSL path cannot be empty.")
 	}
@@ -49,7 +49,7 @@ func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimu
 		sslFileName = "nginx"
 	}
 
-	commonTls, err := CreateCommonTlsContext(sslServerRootPath, sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites)
+	commonTls, err := CreateCommonTlsContext(sslServerRootPath, sslServerPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol, cipherSuites, ecdhCurves)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,9 @@ func CreateDownstreamTransportSocket(sslServerPath, sslServerRootPath, sslMinimu
 	}, nil
 }
 
-func CreateCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string) (*tlspb.CommonTlsContext, error) {
+// CreateCommonTlsContext creates a CommonTlsContext. cipherSuites and
+// ecdhCurves are comma-separated lists; empty values keep Envoy's defaults.
+func CreateCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProtocol, sslMaximumProtocol string, cipherSuites string, ecdhCurves string) (*tlspb.CommonTlsContext, error) {
 	commonTls := &tlspb.CommonTlsContext{}
 	// Add TLS certificate
 	if sslPath != "" && sslFileName != "" {
@@ -111,7 +113,7 @@ func CreateCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProto
 		}
 	}
 
-	if sslMinimumProtocol != "" || sslMaximumProtocol != "" || cipherSuites != "" {
+	if sslMinimumProtocol != "" || sslMaximumProtocol != "" || cipherSuites != "" || ecdhCurves != "" {
 		commonTls.TlsParams = &tlspb.TlsParameters{}
 		if minVersion, ok := tlsProtocolVersionMap[sslMinimumProtocol]; ok {
 			commonTls.TlsParams.TlsMinimumProtocolVersion = minVersion
@@ -124,7 +126,24 @@ func CreateCommonTlsContext(rootCertsPath, sslPath, sslFileName, sslMinimumProto
 			cipherSuitesList := strings.Split(cipherSuites, ",")
 			commonTls.TlsParams.CipherSuites = cipherSuitesList
 		}
+
+		if ecdhCurves != "" {
+			commonTls.TlsParams.EcdhCurves = strings.Split(ecdhCurves, ",")
+		}
 	}
 
 	return commonTls, nil
+}
+
+// ValidateTLSProtocolVersion returns an error unless version is empty or one of
+// TLSv1.0, TLSv1.1, TLSv1.2 and TLSv1.3. CreateCommonTlsContext ignores an
+// unknown version, which would silently keep Envoy's default.
+func ValidateTLSProtocolVersion(version string) error {
+	if version == "" {
+		return nil
+	}
+	if _, ok := tlsProtocolVersionMap[version]; !ok {
+		return fmt.Errorf("invalid TLS protocol version %q, must be one of TLSv1.0, TLSv1.1, TLSv1.2 or TLSv1.3", version)
+	}
+	return nil
 }

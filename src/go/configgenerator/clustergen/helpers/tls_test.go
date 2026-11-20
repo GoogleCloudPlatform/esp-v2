@@ -145,6 +145,85 @@ func TestNewClusterTLSConfigerFromOPConfig(t *testing.T) {
 }
 `,
 		},
+		{
+			desc: "Upstream Transport Socket for a sidestream cluster with maximum TLS version and ECDH curves",
+			opts: options.ConfigGeneratorOptions{
+				SslSidestreamClientRootCertsPath:   "/etc/ssl/certs/ca-certificates.crt",
+				SslSidestreamClientMaximumProtocol: "TLSv1.3",
+				SslSidestreamClientEcdhCurves:      "X25519MLKEM768,X25519,P-256",
+				SslBackendClientMaximumProtocol:    "TLSv1.2",
+				SslBackendClientEcdhCurves:         "P-256",
+			},
+			isBackendCluster: false,
+			hostname:         "www.googleapis.com",
+			wantTransportSocket: `
+{
+   "name":"envoy.transport_sockets.tls",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+      "commonTlsContext":{
+         "tlsParams":{
+            "tlsMaximumProtocolVersion":"TLSv1_3",
+            "ecdhCurves":[
+               "X25519MLKEM768",
+               "X25519",
+               "P-256"
+            ]
+         },
+         "validationContext":{
+            "trustedCa":{
+               "filename":"/etc/ssl/certs/ca-certificates.crt"
+            }
+         }
+      },
+      "sni":"www.googleapis.com"
+   }
+}
+`,
+		},
+		{
+			desc: "Upstream Transport Socket for a backend cluster with maximum TLS version and ECDH curves",
+			opts: options.ConfigGeneratorOptions{
+				SslBackendClientRootCertsPath:      "/etc/ssl/certs/ca-certificates.crt",
+				SslBackendClientCipherSuites:       "ECDHE-ECDSA-AES128-GCM-SHA256",
+				SslBackendClientMaximumProtocol:    "TLSv1.3",
+				SslBackendClientEcdhCurves:         "X25519MLKEM768,X25519",
+				SslSidestreamClientMaximumProtocol: "TLSv1.2",
+				SslSidestreamClientEcdhCurves:      "P-256",
+			},
+			isBackendCluster: true,
+			hostname:         "https://echo-http-12345-uc.a.run.app",
+			alpnProtocols:    []string{"h2"},
+			wantTransportSocket: `
+{
+   "name":"envoy.transport_sockets.tls",
+   "typedConfig":{
+      "@type":"type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+      "commonTlsContext":{
+         "alpnProtocols":[
+            "h2"
+         ],
+         "tlsParams":{
+            "tlsMaximumProtocolVersion":"TLSv1_3",
+            "cipherSuites":[
+               "ECDHE-ECDSA-AES128-GCM-SHA256"
+            ],
+            "ecdhCurves":[
+               "X25519MLKEM768",
+               "X25519"
+            ]
+         },
+         "validationContext":{
+            "trustedCa":{
+               "filename":"/etc/ssl/certs/ca-certificates.crt"
+            }
+         }
+      },
+      "sni":"https://echo-http-12345-uc.a.run.app"
+   }
+}
+`,
+		},
 	}
 
 	for _, tc := range testData {
@@ -165,6 +244,38 @@ func TestNewClusterTLSConfigerFromOPConfig(t *testing.T) {
 			}
 			if err := util.JsonEqual(tc.wantTransportSocket, gotConfig); err != nil {
 				t.Errorf("NewClusterTLSConfigerFromOPConfig failed,\n %v", err)
+			}
+		})
+	}
+}
+
+func TestMakeTLSConfigRejectsInvalidMaximumProtocol(t *testing.T) {
+	testData := []struct {
+		desc             string
+		opts             options.ConfigGeneratorOptions
+		isBackendCluster bool
+	}{
+		{
+			desc: "sidestream cluster",
+			opts: options.ConfigGeneratorOptions{
+				SslSidestreamClientRootCertsPath:   "/etc/ssl/certs/ca-certificates.crt",
+				SslSidestreamClientMaximumProtocol: "TLSv1_3",
+			},
+		},
+		{
+			desc: "backend cluster",
+			opts: options.ConfigGeneratorOptions{
+				SslBackendClientRootCertsPath:   "/etc/ssl/certs/ca-certificates.crt",
+				SslBackendClientMaximumProtocol: "1.3",
+			},
+			isBackendCluster: true,
+		},
+	}
+	for _, tc := range testData {
+		t.Run(tc.desc, func(t *testing.T) {
+			configer := NewClusterTLSConfigerFromOPConfig(tc.opts, tc.isBackendCluster)
+			if _, err := configer.MakeTLSConfig("www.googleapis.com", nil); err == nil {
+				t.Errorf("MakeTLSConfig() with maximum protocol %q succeeded, want error", configer.ClientMaximumProtocol)
 			}
 		})
 	}

@@ -133,6 +133,7 @@ func MakeListener(opts options.ConfigGeneratorOptions, httpFilterGenerators []fi
 			opts.SslMinimumProtocol,
 			opts.SslMaximumProtocol,
 			opts.SslServerCipherSuites,
+			opts.SslServerEcdhCurves,
 		)
 		if err != nil {
 			return nil, err
