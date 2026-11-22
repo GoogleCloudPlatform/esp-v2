@@ -149,6 +149,31 @@ func TestServiceConfigFetcherFetchConfig(t *testing.T) {
 	}
 }
 
+func TestServiceConfigFetcherLoadLatestRollout(t *testing.T) {
+	serviceName := "service-name"
+	serviceRolloutId := "test-rollout-id"
+	serviceConfigId := "test-config-id"
+	listServiceRolloutsResponse, serviceConfig := genRolloutAndConfig(serviceRolloutId, serviceConfigId)
+
+	serviceManagementServer := initServiceManagementForTestServiceConfigFetcher(t, listServiceRolloutsResponse, serviceConfig, serviceName)
+	accessToken := func() (string, time.Duration, error) { return "access-token", time.Duration(60), nil }
+
+	scf := NewServiceConfigFetcher(&http.Client{}, serviceManagementServer.URL, "service-name", accessToken)
+
+	getRolloutId, getConfigId, err := scf.LoadLatestRollout()
+	if err != nil {
+		t.Fatalf("fail in LoadLatestRollout: %v", err)
+	}
+
+	if getRolloutId != serviceRolloutId {
+		t.Errorf("want rolloutId: %s, get rolloutId: %s", serviceRolloutId, getRolloutId)
+	}
+
+	if getConfigId != serviceConfigId {
+		t.Errorf("want configId: %s, get configId: %s", serviceConfigId, getConfigId)
+	}
+}
+
 func TestServiceConfigFetcherLoadConfigIdFromRollouts(t *testing.T) {
 	serviceName := "service-name"
 	serviceRolloutId := "test-rollout-id"

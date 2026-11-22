@@ -57,7 +57,11 @@ func (c *RolloutIdChangeDetector) fetchLatestRolloutId() (string, error) {
 	return reportResponse.ServiceRolloutId, nil
 }
 
-func (c *RolloutIdChangeDetector) SetDetectRolloutIdChangeTimer(interval time.Duration, callback func()) {
+// SetDetectRolloutIdChangeTimer checks the latest rollout id every interval and
+// calls callback with it when it differs from the last handled one. The rollout
+// id is recorded as handled only when callback returns true, so a rollout whose
+// config could not be loaded yet is checked again on the next tick.
+func (c *RolloutIdChangeDetector) SetDetectRolloutIdChangeTimer(interval time.Duration, callback func(latestRolloutId string) bool) {
 	go func() {
 		glog.Infof("start detect latest rollout id every %v", interval)
 		c.detectRolloutIdTicker = time.NewTicker(interval)
@@ -73,8 +77,9 @@ func (c *RolloutIdChangeDetector) SetDetectRolloutIdChangeTimer(interval time.Du
 				continue
 			}
 
-			c.curRolloutId = latestRolloutId
-			callback()
+			if callback(latestRolloutId) {
+				c.curRolloutId = latestRolloutId
+			}
 		}
 	}()
 }

@@ -97,7 +97,7 @@ func TestSetDetectRolloutIdChangeTimer(t *testing.T) {
 	wantCnt = 3
 
 	wantRolloutId := fmt.Sprintf("test-rollout-id-%v", wantCnt)
-	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*50, func() {
+	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*50, func(string) bool {
 		atomic.AddInt32(&cnt, 1)
 
 		// Update rolloutId so the callback will be called.
@@ -106,6 +106,7 @@ func TestSetDetectRolloutIdChangeTimer(t *testing.T) {
 			serviceRolloutId = fmt.Sprintf("test-rollout-id-%v", atomic.LoadInt32(&cnt)+1)
 			serviceControlServer.SetResp(genFakeReport(serviceRolloutId))
 		}
+		return true
 	})
 
 	// Sleep long enough to make sure the callback is called 3 times.
@@ -117,5 +118,34 @@ func TestSetDetectRolloutIdChangeTimer(t *testing.T) {
 
 	if cif.curRolloutId != wantRolloutId {
 		t.Errorf("want curRolloutId: %s, get curRolloutId: %s", wantRolloutId, cif.curRolloutId)
+	}
+}
+
+func TestSetDetectRolloutIdChangeTimerRetryUntilHandled(t *testing.T) {
+	serviceRolloutId := "test-rollout-id-1"
+	serviceControlServer := util.InitMockServer(genFakeReport(serviceRolloutId))
+	accessToken := func() (string, time.Duration, error) { return "token", time.Duration(60), nil }
+	cif := NewRolloutIdChangeDetector(&http.Client{}, serviceControlServer.GetURL(), "service-name", accessToken)
+
+	var cnt, wantCnt int32
+	cnt = 0
+	wantCnt = 3
+
+	cif.SetDetectRolloutIdChangeTimer(time.Millisecond*50, func(latestRolloutId string) bool {
+		if latestRolloutId != serviceRolloutId {
+			t.Errorf("want latestRolloutId: %s, get latestRolloutId: %s", serviceRolloutId, latestRolloutId)
+		}
+
+		// Report the rollout as not handled until the third call, so the
+		// same rollout id should be passed to the callback again.
+		return atomic.AddInt32(&cnt, 1) >= wantCnt
+	})
+
+	// Sleep long enough to make sure the callback would be called more than 3
+	// times if the rollout id were not stored after the third call.
+	time.Sleep(time.Millisecond * 1000)
+
+	if got := atomic.LoadInt32(&cnt); got != wantCnt {
+		t.Fatalf("want callback called by %v times, get %v times", wantCnt, got)
 	}
 }

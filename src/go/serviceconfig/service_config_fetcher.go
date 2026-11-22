@@ -69,16 +69,27 @@ func (s *ServiceConfigFetcher) FetchConfig(configId string) (*confpb.Service, er
 // Fetch all the rollouts and use the latest success rollout. Among its all
 // service configs, pick up the one with highest traffic percentage.
 func (s *ServiceConfigFetcher) LoadConfigIdFromRollouts() (string, error) {
+	_, configId, err := s.LoadLatestRollout()
+	return configId, err
+}
+
+// LoadLatestRollout is like LoadConfigIdFromRollouts, but also returns the id
+// of the latest rollout that the config id was picked from.
+func (s *ServiceConfigFetcher) LoadLatestRollout() (string, string, error) {
 	rollouts := new(smpb.ListServiceRolloutsResponse)
 	fetchRolloutUrl := util.FetchRolloutsURL(s.serviceManagementUrl, s.serviceName)
 	util.CallGoogleapisMu.RLock()
 	callGoogleapis := util.CallGoogleapis
 	util.CallGoogleapisMu.RUnlock()
 	if err := callGoogleapis(s.client, fetchRolloutUrl, util.GET, s.accessToken, s.retryConfigs, rollouts); err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return highestTrafficConfigIdInLatestRollout(rollouts)
+	configId, err := highestTrafficConfigIdInLatestRollout(rollouts)
+	if err != nil {
+		return "", "", err
+	}
+	return rollouts.GetRollouts()[0].GetRolloutId(), configId, nil
 }
 
 func highestTrafficConfigIdInLatestRollout(rollouts *smpb.ListServiceRolloutsResponse) (string, error) {

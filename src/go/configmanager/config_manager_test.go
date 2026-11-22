@@ -596,6 +596,136 @@ func TestServiceConfigAutoUpdate(t *testing.T) {
 	})
 }
 
+// Service Control can report a new rollout id before the Service Management
+// rollout list includes that rollout. The config manager should keep checking
+// until the rollout list catches up, instead of treating the rollout as handled.
+func TestServiceConfigAutoUpdateWhenRolloutListLags(t *testing.T) {
+	var fakeConfig, fakeScReport, fakeRollouts safeData
+
+	oldConfigID := "2018-12-05r0"
+	oldRolloutID := oldConfigID
+	newConfigID := "2018-12-05r1"
+	newRolloutID := newConfigID
+
+	testProjectName := "bookstore.endpoints.project123.cloud.goog"
+	testEndpointName := "endpoints.examples.bookstore.Bookstore"
+	testConfigID := "2017-05-01r0"
+
+	scReportJSON := func(rolloutID string) string {
+		return fmt.Sprintf(`{
+                "serviceRolloutId": "%s"
+            }`, rolloutID)
+	}
+	rolloutsJSON := func(rolloutID, configID string) string {
+		return fmt.Sprintf(`{
+            "rollouts": [
+                {
+                  "rolloutId": "%s",
+                  "createTime": "2018-12-05T19:07:18.438Z",
+                  "createdBy": "mocktest@google.com",
+                  "status": "SUCCESS",
+                  "trafficPercentStrategy": {
+                    "percentages": {
+                      "%s": 100
+                    }
+                  },
+                  "serviceName": "%s"
+                }
+              ]
+            }`, rolloutID, configID, testProjectName)
+	}
+	serviceConfigJSON := func(configID string) string {
+		return fmt.Sprintf(`{
+                "name": "%s",
+                "title": "Endpoints Example",
+                "documentation": {
+                "summary": "A simple Google Cloud Endpoints API example."
+                },
+                "apis":[
+                    {
+                        "name":"%s",
+                        "methods":[
+                            {
+                                "name": "Simplegetcors"
+                            }
+                        ]
+                    }
+                ],
+                "id": "%s"
+            }`, testProjectName, testEndpointName, configID)
+	}
+
+	if err := genProtoBinary(scReportJSON(oldRolloutID), new(servicecontrolpb.ReportResponse), &fakeScReport); err != nil {
+		t.Fatalf("generate fake service control report failed: %v", err)
+	}
+	if err := genProtoBinary(rolloutsJSON(oldRolloutID, oldConfigID), new(smpb.ListServiceRolloutsResponse), &fakeRollouts); err != nil {
+		t.Fatalf("generate fake service rollout failed: %v", err)
+	}
+	if err := genProtoBinary(serviceConfigJSON(oldConfigID), new(confpb.Service), &fakeConfig); err != nil {
+		t.Fatalf("generate fake service config failed: %v", err)
+	}
+
+	opts := options.DefaultConfigGeneratorOptions()
+	opts.BackendAddress = "grpc://127.0.0.1:80"
+	opts.CommonOptions.TracingOptions.DisableTracing = true
+
+	setFlags(testProjectName, testConfigID, util.ManagedRolloutStrategy, "100ms", "")
+
+	runTest(t, &fakeScReport, &fakeRollouts, &fakeConfig, opts, func(configManager *ConfigManager, err error) {
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx := context.Background()
+		req := &discoverypb.DiscoveryRequest{
+			Node: &corepb.Node{
+				Id: opts.Node,
+			},
+			TypeUrl: resource.ListenerType,
+		}
+		getVersion := func() string {
+			respInterface, err := configManager.cache.Fetch(ctx, req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			version, err := respInterface.GetVersion()
+			if err != nil {
+				t.Fatal(err)
+			}
+			return version
+		}
+
+		if version := getVersion(); version != oldConfigID {
+			t.Fatalf("snapshot cache fetch got version: %v, want: %v", version, oldConfigID)
+		}
+
+		// Service Control reports the new rollout, but the rollout list still
+		// has the old one as its latest rollout.
+		if err = genProtoBinary(scReportJSON(newRolloutID), new(servicecontrolpb.ReportResponse), &fakeScReport); err != nil {
+			t.Fatalf("generate fake service control report failed: %v", err)
+		}
+		if err = genProtoBinary(serviceConfigJSON(newConfigID), new(confpb.Service), &fakeConfig); err != nil {
+			t.Fatalf("generate fake service config failed: %v", err)
+		}
+
+		time.Sleep(*checkNewRolloutInterval + time.Second)
+
+		if version := getVersion(); version != oldConfigID {
+			t.Fatalf("snapshot cache fetch got version: %v, want: %v", version, oldConfigID)
+		}
+
+		// The rollout list catches up.
+		if err = genProtoBinary(rolloutsJSON(newRolloutID, newConfigID), new(smpb.ListServiceRolloutsResponse), &fakeRollouts); err != nil {
+			t.Fatalf("generate fake service rollout failed: %v", err)
+		}
+
+		time.Sleep(*checkNewRolloutInterval + time.Second)
+
+		if version := getVersion(); version != newConfigID || configManager.curConfigId() != newConfigID {
+			t.Errorf("snapshot cache fetch got version: %v, want: %v", version, newConfigID)
+		}
+	})
+}
+
 func runTest(t *testing.T, fakeScReport, fakeRollouts, fakeConfig *safeData, opts options.ConfigGeneratorOptions, f func(configManager *ConfigManager, err error)) {
 	fakeToken := `{"access_token": "ya29.new", "expires_in":3599, "token_type":"Bearer"}`
 	mockServiceControl := initMockServer(t, fakeScReport)
