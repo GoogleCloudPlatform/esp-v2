@@ -183,16 +183,26 @@ func NewConfigManager(mf *metadata.MetadataFetcher, opts options.ConfigGenerator
 
 	if rolloutStrategy == util.ManagedRolloutStrategy {
 		m.rolloutIdChangeDetector = sc.NewRolloutIdChangeDetector(client, opts.ServiceControlURL, m.serviceName, accessToken)
-		m.rolloutIdChangeDetector.SetDetectRolloutIdChangeTimer(*checkNewRolloutInterval, func() {
-			latestConfigId, err := m.serviceConfigFetcher.LoadConfigIdFromRollouts()
+		m.rolloutIdChangeDetector.SetDetectRolloutIdChangeTimer(*checkNewRolloutInterval, func(latestRolloutId string) bool {
+			rolloutId, latestConfigId, err := m.serviceConfigFetcher.LoadLatestRollout()
 			if err != nil {
 				glog.Errorf("error occurred when getting configId by fetching rollout, %v", err)
-				return
+				return false
 			}
 
 			if err = m.fetchAndApplyServiceConfig(latestConfigId); err != nil {
 				glog.Errorf("error occurred when fetching and applying new service config, %v", err)
+				return false
 			}
+
+			// Service Control can report a new rollout id before the rollout
+			// shows up in the Service Management rollout list. Check again on
+			// the next tick until both agree.
+			if rolloutId != latestRolloutId {
+				glog.Warningf("latest rollout in the rollout list is %v, not %v yet, will check again", rolloutId, latestRolloutId)
+				return false
+			}
+			return true
 		})
 	}
 
