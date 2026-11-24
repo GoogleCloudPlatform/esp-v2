@@ -110,7 +110,9 @@ ServiceControlHandlerImpl::ServiceControlHandlerImpl(
                     api_key_);
     }
 
-    if (require_ctx_->service_ctx().config().client_ip_from_forwarded_header()) {
+    if (require_ctx_->service_ctx()
+            .config()
+            .client_ip_from_forwarded_header()) {
       const auto status_or_ip = extractIPFromForwardedHeader(*headers);
       if (!status_or_ip.ok()) {
         ENVOY_LOG(error, "failed to extract IP from forwarded header: {}",
@@ -202,6 +204,9 @@ void ServiceControlHandlerImpl::prepareReportRequest(
 void ServiceControlHandlerImpl::callCheck(
     Envoy::Http::RequestHeaderMap& headers, Envoy::Tracing::Span& parent_span,
     CheckDoneCallback& callback) {
+  headers.remove(consumer_type_header_);
+  headers.remove(consumer_number_header_);
+
   // Don't have per-route config so pass through the request, regarded as the
   // unknown method.
   if (!isConfigured()) {

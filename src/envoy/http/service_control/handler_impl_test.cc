@@ -1301,6 +1301,31 @@ TEST_F(HandlerReportStatusTest, BadGrpcStatus) {
           absl::nullopt);
 }
 
+TEST_F(HandlerTest, StripsPreExistingConsumerHeadersWhenCheckNotRequired) {
+  proto_config_.set_generated_header_prefix("x-endpoint-");
+  setPerRouteOperation("get_no_key");
+  TestRequestHeaderMapImpl headers{
+      {":method", "GET"},
+      {":path", "/echo"},
+      {"x-endpoint-api-consumer-type", "SPOOFED_TYPE"},
+      {"x-endpoint-api-consumer-number", "999999"},
+  };
+  ServiceControlHandlerImpl handler(&headers, &mock_decoder_callbacks_,
+                                    "test-uuid", *cfg_parser_, test_time_,
+                                    stats_);
+
+  EXPECT_CALL(mock_check_done_callback_, onCheckDone(OkStatus(), ""));
+  handler.callCheck(headers, mock_span_, mock_check_done_callback_);
+
+  EXPECT_TRUE(
+      headers.get(Envoy::Http::LowerCaseString("x-endpoint-api-consumer-type"))
+          .empty());
+  EXPECT_TRUE(
+      headers
+          .get(Envoy::Http::LowerCaseString("x-endpoint-api-consumer-number"))
+          .empty());
+}
+
 }  // namespace
 }  // namespace service_control
 }  // namespace http_filters

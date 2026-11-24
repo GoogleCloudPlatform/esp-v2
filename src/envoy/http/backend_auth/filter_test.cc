@@ -66,7 +66,9 @@ class BackendAuthFilterTest : public ::testing::Test {
     per_route_cfg.set_jwt_audience(jwt_audience);
     auto per_route = std::make_shared<PerRouteFilterConfig>(per_route_cfg);
     EXPECT_CALL(mock_decoder_callbacks_, route())
-        .WillRepeatedly(Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(mock_route_.get())));
+        .WillRepeatedly(
+            Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(
+                mock_route_.get())));
     EXPECT_CALL(mock_decoder_callbacks_, mostSpecificPerFilterConfig())
         .WillRepeatedly(Invoke(
             [per_route]() -> const Envoy::Router::RouteSpecificFilterConfig* {
@@ -90,7 +92,8 @@ TEST_F(BackendAuthFilterTest, NoRouteRejectAllow) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
 
-  EXPECT_CALL(mock_decoder_callbacks_, route()).WillOnce(Return(Envoy::OptRef<const Envoy::Router::Route>()));
+  EXPECT_CALL(mock_decoder_callbacks_, route())
+      .WillOnce(Return(Envoy::OptRef<const Envoy::Router::Route>()));
 
   ASSERT_EQ(filter_->decodeHeaders(headers, false),
             Envoy::Http::FilterHeadersStatus::Continue);
@@ -100,7 +103,9 @@ TEST_F(BackendAuthFilterTest, NotPerRouteConfigAllowed) {
   Envoy::Http::TestRequestHeaderMapImpl headers{{":method", "GET"},
                                                 {":path", "/books/1"}};
   EXPECT_CALL(mock_decoder_callbacks_, route())
-      .WillRepeatedly(Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(mock_route_.get())));
+      .WillRepeatedly(
+          Return(Envoy::makeOptRefFromPtr<const Envoy::Router::Route>(
+              mock_route_.get())));
   EXPECT_CALL(mock_decoder_callbacks_, mostSpecificPerFilterConfig())
       .WillRepeatedly(Return(nullptr));
 
@@ -233,6 +238,31 @@ TEST_F(BackendAuthFilterTest, SucceedTokenOverridden) {
       Envoy::TestUtility::findCounter(scope_, "backend_auth.token_added");
   ASSERT_NE(counter, nullptr);
   EXPECT_EQ(counter->value(), 1);
+}
+
+TEST_F(BackendAuthFilterTest, UntrustedForwardedAuthRemovedWithoutAuthHeader) {
+  Envoy::Http::TestRequestHeaderMapImpl headers{
+      {":method", "GET"},
+      {":path", "/books/1"},
+      {"x-forwarded-authorization", "Bearer untrusted-token"}};
+
+  setPerRouteJwtAudience("this-is-audience");
+
+  EXPECT_CALL(*mock_filter_config_parser_, getJwtToken("this-is-audience"))
+      .Times(1)
+      .WillRepeatedly(Return(std::make_shared<std::string>("new-id-token")));
+
+  Envoy::Http::FilterHeadersStatus status =
+      filter_->decodeHeaders(headers, false);
+
+  ASSERT_EQ(headers.get(Envoy::Http::CustomHeaders::get().Authorization).size(),
+            1);
+  EXPECT_EQ(headers.get(Envoy::Http::CustomHeaders::get().Authorization)[0]
+                ->value()
+                .getStringView(),
+            "Bearer new-id-token");
+  EXPECT_TRUE(headers.get(kXForwardedAuthorization).empty());
+  EXPECT_EQ(status, Envoy::Http::FilterHeadersStatus::Continue);
 }
 
 }  // namespace backend_auth

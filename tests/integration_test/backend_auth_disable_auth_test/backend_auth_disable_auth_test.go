@@ -88,6 +88,20 @@ func TestBackendAuthDisableAuth(t *testing.T) {
 			wantResp: `{"Authorization": "Bearer ya29.DefaultAuth", "RequestURI": "/bearertoken/constant?foo=disableauthsettofalse", "X-Forwarded-Authorization":"Bearer origin-token"}`,
 		},
 		{
+			desc:     "With disable_auth=true, forged X-Forwarded-Authorization and X-Endpoint-API-UserInfo headers are stripped",
+			method:   "GET",
+			path:     "/disableauthsettotrue/constant/disableauthsettotrue",
+			headers:  map[string]string{"X-Forwarded-Authorization": "Bearer untrusted-token", "X-Endpoint-API-UserInfo": "untrusted-userinfo"},
+			wantResp: `{"Authorization": "", "RequestURI": "/bearertoken/constant?foo=disableauthsettotrue"}`,
+		},
+		{
+			desc:     "With disable_auth=false and no Authorization header, forged X-Forwarded-Authorization is stripped",
+			method:   "GET",
+			path:     "/disableauthsettofalse/constant/disableauthsettofalse",
+			headers:  map[string]string{"X-Forwarded-Authorization": "Bearer untrusted-token"},
+			wantResp: `{"Authorization": "Bearer ya29.DefaultAuth", "RequestURI": "/bearertoken/constant?foo=disableauthsettofalse"}`,
+		},
+		{
 			desc:     "Authentication is not set so JwtAudience is set with the backend address",
 			method:   "GET",
 			path:     "/authenticationnotset/constant/authenticationnotset",

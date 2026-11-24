@@ -37,3 +37,16 @@ envoy_cc_library(
         "@envoy//source/exe:all_extensions_lib",
     ],
 )
+
+envoy_cc_test(
+    name = "filter_test",
+    srcs = [
+        "filter_test.cc",
+    ],
+    repository = "@envoy",
+    deps = [
+        ":filter_lib",
+        "@envoy//test/mocks/http:http_mocks",
+        "@envoy//test/test_common:utility_lib",
+    ],
+)
