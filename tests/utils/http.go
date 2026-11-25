@@ -15,10 +15,14 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -121,4 +125,140 @@ func CheckHeaderExist(headers http.Header, wantHeaderName string, valueChecker H
 		}
 	}
 	return false
+}
+
+// DoHTTP sends an HTTP request with a raw body and returns headers, status
+// code, and body without failing on non-200 status codes. Redirects are
+// followed using a default http.Client.
+func DoHTTP(ctx context.Context, targetURL, method, body string, headers map[string]string) (http.Header, int, string, error) {
+	return doHTTPWithClient(ctx, &http.Client{}, targetURL, method, body, headers)
+}
+
+// DoHTTPNoRedirect sends an HTTP request like DoHTTP, but returns redirect
+// responses (3xx) directly without following them.
+func DoHTTPNoRedirect(ctx context.Context, targetURL, method, body string, headers map[string]string) (http.Header, int, string, error) {
+	client := &http.Client{
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	return doHTTPWithClient(ctx, client, targetURL, method, body, headers)
+}
+
+func doHTTPWithClient(ctx context.Context, client *http.Client, targetURL, method, body string, headers map[string]string) (http.Header, int, string, error) {
+	var bodyReader io.Reader
+	if body != "" {
+		bodyReader = strings.NewReader(body)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, targetURL, bodyReader)
+	if err != nil {
+		return nil, 0, "", err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, 0, "", err
+	}
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, 0, "", err
+	}
+	return resp.Header, resp.StatusCode, string(respBody), nil
+}
+
+// DoRawPathHTTP sends an HTTP request to hostPort using rawPathAndQuery
+// verbatim without client-side path cleaning or redirect following.
+func DoRawPathHTTP(ctx context.Context, hostPort, method, rawPathAndQuery, body string, headers map[string]string) (http.Header, int, string, error) {
+	var bodyReader io.Reader
+	if body != "" {
+		bodyReader = strings.NewReader(body)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, "http://"+hostPort, bodyReader)
+	if err != nil {
+		return nil, 0, "", err
+	}
+	if strings.HasPrefix(rawPathAndQuery, "//") {
+		if path, query, ok := strings.Cut(rawPathAndQuery, "?"); ok {
+			req.URL.Path = path
+			req.URL.RawQuery = query
+		} else {
+			req.URL.Path = rawPathAndQuery
+		}
+	} else {
+		req.URL.Opaque = rawPathAndQuery
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	client := &http.Client{
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, 0, "", err
+	}
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, 0, "", err
+	}
+	return resp.Header, resp.StatusCode, string(respBody), nil
+}
+
+// DoCORSPreflight sends an HTTP OPTIONS preflight request with CORS headers
+// and returns headers, status code, and body without following redirects.
+func DoCORSPreflight(ctx context.Context, targetURL, origin, requestMethod, requestHeaders string) (http.Header, int, string, error) {
+	headers := map[string]string{
+		"Origin":                        origin,
+		"Access-Control-Request-Method": requestMethod,
+	}
+	if requestHeaders != "" {
+		headers["Access-Control-Request-Headers"] = requestHeaders
+	}
+	return DoHTTPNoRedirect(ctx, targetURL, http.MethodOptions, "", headers)
+}
+
+// SendRawTCP writes rawRequest over a raw TCP connection to addr with timeout
+// and returns the full response read until EOF.
+func SendRawTCP(ctx context.Context, addr, rawRequest string, timeout time.Duration) (string, error) {
+	dialer := &net.Dialer{Timeout: timeout}
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return "", err
+	}
+	if _, err := conn.Write([]byte(rawRequest)); err != nil {
+		return "", err
+	}
+	resp, err := io.ReadAll(conn)
+	if err != nil {
+		return "", err
+	}
+	return string(resp), nil
+}
+
+// SendRawTCPStatusLine writes rawRequest over a raw TCP connection to addr
+// with timeout and returns only the first HTTP status line.
+func SendRawTCPStatusLine(ctx context.Context, addr, rawRequest string, timeout time.Duration) (string, error) {
+	dialer := &net.Dialer{Timeout: timeout}
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return "", err
+	}
+	if _, err := conn.Write([]byte(rawRequest)); err != nil {
+		return "", err
+	}
+	return bufio.NewReader(conn).ReadString('\n')
 }

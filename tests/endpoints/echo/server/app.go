@@ -63,15 +63,18 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.SkipClean(true)
 
 	r.Path("/echo").Methods("POST", "GET").
+		HandlerFunc(echoHandler)
+	r.Path("/echo/").Methods("POST", "GET").
 		HandlerFunc(echoHandler)
 	r.Path("/echoHeader").Methods("GET").
 		HandlerFunc(echoHeaderHandler)
 	r.PathPrefix("/echoMethod").Methods("GET", "POST", "PUT", "DELETE", "PATCH").
 		HandlerFunc(echoMethodHandler)
 	r.Path("/prefix/echo/{variable}/path").Methods("GET").HandlerFunc(dynamicRoutingHandler)
-
+	r.Path("/echostream").Methods("POST").HandlerFunc(echoStreamHandler)
 	r.Path("/websocketecho").HandlerFunc(websocketEchoHandler)
 	r.Path("/echo/nokey").Methods("POST").
 		HandlerFunc(echoHandler)
@@ -105,16 +108,16 @@ func main() {
 		HandlerFunc(authInfoHandler)
 	r.Path("/ipversion").Methods("GET").
 		HandlerFunc(getIPVersionHandler)
-	r.PathPrefix("/bearertoken/").Methods("GET", "OPTIONS").
+	r.PathPrefix("/bearertoken/").Methods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "TRACE", "PURGE").
 		HandlerFunc(bearerTokenHandler)
-	r.PathPrefix("/dynamicrouting").Methods("OPTIONS", "GET", "POST").
+	r.PathPrefix("/dynamicrouting").Methods("OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH", "TRACE", "PURGE").
 		Handler(corsHandler(dynamicRoutingHandler))
 	r.PathPrefix("/sleep").Methods("GET").
 		HandlerFunc(sleepHandler)
 
 	if *enableRootPathHandler {
-		r.PathPrefix("/").Methods("GET", "POST").
-			HandlerFunc(dynamicRoutingHandler)
+		r.PathPrefix("/").Methods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "TRACE", "PURGE").
+			Handler(corsHandler(dynamicRoutingHandler))
 	}
 
 	http.Handle("/", RejectMiddleWare(r))
@@ -455,4 +458,38 @@ func createServer() (*http.Server, error) {
 
 	server.TLSConfig = tlsConfig
 	return server, nil
+}
+
+// echoStreamHandler handles Server-Sent Events (SSE) streaming requests,
+// echoing JSON chunks.
+func echoStreamHandler(w http.ResponseWriter, r *http.Request) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		errorf(w, http.StatusInternalServerError, "Streaming unsupported by environment")
+		return
+	}
+
+	var msg map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+		errorf(w, http.StatusBadRequest, "Body was not valid JSON: %v", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	chunksToSend := []any{msg}
+	if arr, ok := msg["sse_chunks"].([]any); ok {
+		chunksToSend = arr
+	}
+
+	for _, chunk := range chunksToSend {
+		chunkJSON, err := json.Marshal(chunk)
+		if err != nil {
+			continue
+		}
+		fmt.Fprintf(w, "data: %s\n\n", chunkJSON)
+		flusher.Flush()
+	}
 }

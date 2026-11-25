@@ -260,6 +260,26 @@ var makeGRPCCall = func(addr, method, token string, header http.Header) (string,
 	case "DeleteShelf":
 		req := &bspbv1.DeleteShelfRequest{}
 		respMsg, err = cli.DeleteShelf(ctx, req)
+	case "ListBooks":
+		req := &bspbv1.ListBooksRequest{
+			Shelf: 100,
+		}
+		respMsg, err = cli.ListBooks(ctx, req)
+	case "GetBook":
+		req := &bspbv1.GetBookRequest{
+			Shelf: 100,
+			Book:  1001,
+		}
+		respMsg, err = cli.GetBook(ctx, req)
+	case "CreateBookWithCustomVerb":
+		req := &bspbv1.CreateBookRequest{
+			Shelf: 200,
+			Book: &bspbv1.Book{
+				Id:    20051,
+				Title: "Custom Verb Book",
+			},
+		}
+		respMsg, err = cli.CreateBookWithCustomVerb(ctx, req)
 	case "ReturnBadStatus":
 		req := &bspbv1.Empty{}
 		respMsg, err = cli.ReturnBadStatus(ctx, req)
@@ -347,6 +367,17 @@ func MakeGRPCWebCall(addr, method, token string, header http.Header) (string, GR
 	case "DeleteShelf":
 		reqMsg = &bspbv1.DeleteShelfRequest{}
 		respMsg = &bspbv1.Empty{}
+	case "ListBooks":
+		reqMsg = &bspbv1.ListBooksRequest{
+			Shelf: 100,
+		}
+		respMsg = &bspbv1.ListBooksResponse{}
+	case "GetBook":
+		reqMsg = &bspbv1.GetBookRequest{
+			Shelf: 100,
+			Book:  1001,
+		}
+		respMsg = &bspbv1.Book{}
 	default:
 		return "", nil, fmt.Errorf("unexpected method called")
 	}
