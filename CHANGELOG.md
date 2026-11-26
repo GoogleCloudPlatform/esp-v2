@@ -1,3 +1,15 @@
+# Release 2.57.3 26-11-2026
+
+TODO: Edit the section below before submitting! DIRECTORY /usr/local/google/home/sunaydagli/Desktop/esp-v2
+===============================================
+
+- update to 2.57.3
+- Trust headers (#1061)
+- Add flags for TLS key exchange groups and client TLS versions (#1059)
+- Upgrade Go to 1.26.11 (#1062)
+
+TODO: Edit the section above before submitting! DIRECTORY /usr/local/google/home/sunaydagli/Desktop/esp-v2
+===============================================
 # Release 2.57.2 13-11-2026
 
 - **Fix route ordering for paths with a custom verb ([#1058](https://github.com/GoogleCloudPlatform/esp-v2/pull/1058))**: a route such as `/v1/{name=foos/*}:decrypt` is now matched before `/v1/{name=foos/*}`.
