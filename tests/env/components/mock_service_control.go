@@ -314,3 +314,42 @@ func (m *MockServiceCtrl) VerifyRequestCount(wantRequestCount int) error {
 	}
 	return nil
 }
+
+// DrainRequests immediately drains any buffered requests without waiting for
+// timeout.
+func (m *MockServiceCtrl) DrainRequests() {
+	for {
+		select {
+		case <-m.ch:
+		default:
+			return
+		}
+	}
+}
+
+// WaitForReportedOperation reads up to maxAttempts requests from the mock
+// Service Control queue until a ReportRequest matching wantOp is observed.
+// It returns all observed operation names and an error if wantOp is not found.
+func (m *MockServiceCtrl) WaitForReportedOperation(wantOp string, maxAttempts int) ([]string, error) {
+	var seen []string
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		reqs, err := m.GetRequests(1)
+		if err != nil {
+			return seen, fmt.Errorf("waiting for ReportRequest %q (seen %q): %v", wantOp, seen, err)
+		}
+		if reqs[0].ReqType != utils.ReportRequest {
+			continue
+		}
+		reportReq, err := utils.UnmarshalReportRequest(reqs[0].ReqBody)
+		if err != nil {
+			return seen, fmt.Errorf("unmarshaling ReportRequest while waiting for %q: %v", wantOp, err)
+		}
+		for _, op := range reportReq.GetOperations() {
+			seen = append(seen, op.GetOperationName())
+			if op.GetOperationName() == wantOp {
+				return seen, nil
+			}
+		}
+	}
+	return seen, fmt.Errorf("reported operations = %q, want to include %q", seen, wantOp)
+}

@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net"
 
+	"github.com/GoogleCloudPlatform/esp-v2/tests/env/components"
 	"github.com/GoogleCloudPlatform/esp-v2/tests/env/platform"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/ptypes"
@@ -210,6 +211,13 @@ func testDecorator(ctx context.Context) error {
 		return fmt.Errorf("error retrieving metadata from context")
 	}
 	glog.Infof("GRPC bookstore metadata: %v", md)
+
+	if len(md.Get("x-require-backend-auth")) > 0 {
+		authVals := md.Get("authorization")
+		if len(authVals) == 0 || authVals[0] != components.FakeBearerAuthHeader {
+			return status.Errorf(codes.Unauthenticated, "missing or invalid backend authorization metadata: %v", authVals)
+		}
+	}
 
 	// Check for test headers
 	values := md.Get("x-grpc-test")

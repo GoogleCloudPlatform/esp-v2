@@ -183,6 +183,37 @@ const (
 	TestTracingProjectIdPrecedenceUnderscoreOverDot
 	TestTracingProjectIdDefaultFallback
 	TestTracingProjectIdNonGcpBypass
+	TestAPIGWRouteMatching
+	TestAPIGWMethodRouting
+	TestAPIGWPathOverlap
+	TestAPIGWWildcardRouting
+	TestAPIGWAsymAuthn
+	TestAPIGWNegativeAuthAPIKey
+	TestAPIGWBackendAuthTokens
+	TestAPIGWBackendAuthCORS
+	TestAPIGWBackendAuthEdge
+	TestAPIGWGRPCWebCore
+	TestAPIGWGRPCWebCORS
+	TestAPIGWGRPCWebStream
+	TestAPIGWTranscodingCore
+	TestAPIGWTranscodingVerbs
+	TestAPIGWTranscodingOverlap
+	TestAPIGWTranscodingStream
+	TestAPIGWPathMutationTraversal
+	TestAPIGWPathMutationSlashes
+	TestAPIGWPathMutationMatrix
+	TestAPIGWPathMutationInjection
+	TestAPIGWDataplaneHeaders
+	TestAPIGWDataplaneQuery
+	TestAPIGWDataplanePayloads
+	TestAPIGWServiceControlCore
+	TestAPIGWServiceControlAPIKey
+	TestAPIGWServiceControlCORS
+	TestAPIGWServiceControlOverlap
+	TestAPIGWServiceControlAsym
+	TestAPIGWServiceControlShadow
+	TestAPIGWServiceControlBypass
+	TestAPIGWServiceControlNorm
 	// The number of total tests. has to be the last one.
 	maxTestNum
 )

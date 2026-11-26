@@ -894,3 +894,96 @@ func VerifyServiceControlResp(desc string, wantScRequests []interface{}, scReque
 	}
 	return nil
 }
+
+// ServiceControlExpectation describes expected fields in Service Control v1
+// CheckRequest and ReportRequest payloads. Zero-valued fields are not checked.
+type ServiceControlExpectation struct {
+	OperationName string
+	ConsumerID    string
+	HTTPMethod    string
+	HTTPStatus    int
+	AuthHeader    string
+}
+
+// VerifyCheckRequest validates a single Service Control CheckRequest against
+// want. Zero-valued fields on want are ignored.
+func VerifyCheckRequest(req *ServiceRequest, want ServiceControlExpectation) error {
+	if req == nil {
+		return fmt.Errorf("service control Check request is nil")
+	}
+	if req.ReqType != CheckRequest {
+		return fmt.Errorf("service control request type = %v, want CheckRequest (%v)", req.ReqType, CheckRequest)
+	}
+	if want.AuthHeader != "" {
+		if got := req.ReqHeader.Get("Authorization"); got != want.AuthHeader {
+			return fmt.Errorf("CheckRequest Authorization header = %q, want %q", got, want.AuthHeader)
+		}
+	}
+	checkReq, err := UnmarshalCheckRequest(req.ReqBody)
+	if err != nil {
+		return fmt.Errorf("unmarshaling CheckRequest: %v", err)
+	}
+	op := checkReq.GetOperation()
+	if want.OperationName != "" && op.GetOperationName() != want.OperationName {
+		return fmt.Errorf("CheckRequest OperationName = %q, want %q", op.GetOperationName(), want.OperationName)
+	}
+	if want.ConsumerID != "" && op.GetConsumerId() != want.ConsumerID {
+		return fmt.Errorf("CheckRequest ConsumerId = %q, want %q", op.GetConsumerId(), want.ConsumerID)
+	}
+	return nil
+}
+
+// VerifyReportRequest validates a single Service Control ReportRequest against
+// want. Zero-valued fields on want are ignored.
+func VerifyReportRequest(req *ServiceRequest, want ServiceControlExpectation) error {
+	if req == nil {
+		return fmt.Errorf("service control Report request is nil")
+	}
+	if req.ReqType != ReportRequest {
+		return fmt.Errorf("service control request type = %v, want ReportRequest (%v)", req.ReqType, ReportRequest)
+	}
+	if want.AuthHeader != "" {
+		if got := req.ReqHeader.Get("Authorization"); got != want.AuthHeader {
+			return fmt.Errorf("ReportRequest Authorization header = %q, want %q", got, want.AuthHeader)
+		}
+	}
+	reportReq, err := UnmarshalReportRequest(req.ReqBody)
+	if err != nil {
+		return fmt.Errorf("unmarshaling ReportRequest: %v", err)
+	}
+	if len(reportReq.GetOperations()) == 0 {
+		return fmt.Errorf("ReportRequest has 0 operations, want at least 1")
+	}
+	op := reportReq.GetOperations()[0]
+	if want.OperationName != "" && op.GetOperationName() != want.OperationName {
+		return fmt.Errorf("ReportRequest OperationName = %q, want %q", op.GetOperationName(), want.OperationName)
+	}
+	if want.ConsumerID != "" && op.GetConsumerId() != want.ConsumerID {
+		return fmt.Errorf("ReportRequest ConsumerId = %q, want %q", op.GetConsumerId(), want.ConsumerID)
+	}
+	if want.HTTPMethod != "" || want.HTTPStatus != 0 {
+		if len(op.GetLogEntries()) == 0 {
+			return fmt.Errorf("ReportRequest operation %q has 0 log entries, want at least 1", op.GetOperationName())
+		}
+		httpReq := op.GetLogEntries()[0].GetHttpRequest()
+		if want.HTTPMethod != "" && httpReq.GetRequestMethod() != want.HTTPMethod {
+			return fmt.Errorf("ReportRequest HTTP method = %q, want %q", httpReq.GetRequestMethod(), want.HTTPMethod)
+		}
+		if want.HTTPStatus != 0 && int(httpReq.GetStatus()) != want.HTTPStatus {
+			return fmt.Errorf("ReportRequest HTTP status = %d, want %d", httpReq.GetStatus(), want.HTTPStatus)
+		}
+	}
+	return nil
+}
+
+// VerifyCheckAndReportRequests validates a 2-element slice containing a
+// CheckRequest followed by a ReportRequest against want.
+func VerifyCheckAndReportRequests(reqs []*ServiceRequest, want ServiceControlExpectation) error {
+	if len(reqs) != 2 {
+		return fmt.Errorf("service control request count = %d, want 2 (Check + Report)", len(reqs))
+	}
+	if err := VerifyCheckRequest(reqs[0], want); err != nil {
+		return err
+	}
+	return VerifyReportRequest(reqs[1], want)
+}

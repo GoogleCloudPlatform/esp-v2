@@ -17,6 +17,7 @@ package env
 import (
 	"flag"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"testing"
@@ -30,6 +31,7 @@ import (
 	bookserver "github.com/GoogleCloudPlatform/esp-v2/tests/endpoints/bookstore_grpc/server"
 	annotationspb "google.golang.org/genproto/googleapis/api/annotations"
 	confpb "google.golang.org/genproto/googleapis/api/serviceconfig"
+	apipb "google.golang.org/genproto/protobuf/api"
 )
 
 const (
@@ -196,6 +198,16 @@ func (e *TestEnv) Ports() *platform.Ports {
 	return e.ports
 }
 
+// ListenerAddr returns the IPv6-safe host:port address of the proxy listener.
+func (e *TestEnv) ListenerAddr() string {
+	return net.JoinHostPort(platform.GetLoopbackAddress(), strconv.Itoa(int(e.ports.ListenerPort)))
+}
+
+// ListenerURL returns an HTTP URL for path targeting the proxy listener.
+func (e *TestEnv) ListenerURL(path string) string {
+	return "http://" + e.ListenerAddr() + path
+}
+
 // OverrideAuthentication overrides Service.Authentication.
 func (e *TestEnv) OverrideAuthentication(authentication *confpb.Authentication) {
 	e.fakeServiceConfig.Authentication = authentication
@@ -226,9 +238,32 @@ func (e *TestEnv) OverrideQuota(quota *confpb.Quota) {
 	e.fakeServiceConfig.Quota = quota
 }
 
-// AppendHttpRules appends Service.Http.Rules.
+// AppendHttpRules appends Service.Http.Rules, merging rules with an existing
+// Selector into AdditionalBindings (or replacing when the new rule explicitly
+// specifies AdditionalBindings) so grpc_json_transcoder sees a single HttpRule
+// per Selector.
 func (e *TestEnv) AppendHttpRules(rules []*annotationspb.HttpRule) {
-	e.fakeServiceConfig.Http.Rules = append(e.fakeServiceConfig.Http.Rules, rules...)
+	for _, r := range rules {
+		merged := false
+		for i, existing := range e.fakeServiceConfig.Http.Rules {
+			if existing.GetSelector() == r.GetSelector() {
+				if len(r.GetAdditionalBindings()) > 0 {
+					e.fakeServiceConfig.Http.Rules[i] = r
+				} else {
+					existing.AdditionalBindings = append(existing.AdditionalBindings, &annotationspb.HttpRule{
+						Pattern:      r.GetPattern(),
+						Body:         r.GetBody(),
+						ResponseBody: r.GetResponseBody(),
+					})
+				}
+				merged = true
+				break
+			}
+		}
+		if !merged {
+			e.fakeServiceConfig.Http.Rules = append(e.fakeServiceConfig.Http.Rules, r)
+		}
+	}
 }
 
 // AppendBackendRules appends Service.Backend.Rules.
@@ -253,6 +288,44 @@ func (e *TestEnv) EnableScNetworkFailOpen() {
 // AppendUsageRules appends Service.Usage.Rules.
 func (e *TestEnv) AppendUsageRules(rules []*confpb.UsageRule) {
 	e.fakeServiceConfig.Usage.Rules = append(e.fakeServiceConfig.Usage.Rules, rules...)
+}
+
+// AppendAPIs appends apis to Service.Apis.
+func (e *TestEnv) AppendAPIs(apis []*apipb.Api) {
+	e.fakeServiceConfig.Apis = append(e.fakeServiceConfig.Apis, apis...)
+}
+
+// AppendAPIMethods appends methods to Service.Apis[0].Methods, skipping
+// duplicates by method name. It is a no-op if Service.Apis is empty.
+func (e *TestEnv) AppendAPIMethods(methods []*apipb.Method) {
+	if len(e.fakeServiceConfig.Apis) == 0 {
+		return
+	}
+	existing := make(map[string]bool, len(e.fakeServiceConfig.Apis[0].Methods))
+	for _, m := range e.fakeServiceConfig.Apis[0].Methods {
+		existing[m.GetName()] = true
+	}
+	for _, m := range methods {
+		if !existing[m.GetName()] {
+			e.fakeServiceConfig.Apis[0].Methods = append(e.fakeServiceConfig.Apis[0].Methods, m)
+			existing[m.GetName()] = true
+		}
+	}
+}
+
+// OverrideUsage overrides Service.Usage.
+func (e *TestEnv) OverrideUsage(usage *confpb.Usage) {
+	e.fakeServiceConfig.Usage = usage
+}
+
+// OverrideBackend overrides Service.Backend.
+func (e *TestEnv) OverrideBackend(backend *confpb.Backend) {
+	e.fakeServiceConfig.Backend = backend
+}
+
+// OverrideEndpoints overrides Service.Endpoints.
+func (e *TestEnv) OverrideEndpoints(endpoints []*confpb.Endpoint) {
+	e.fakeServiceConfig.Endpoints = endpoints
 }
 
 // SetAllowCors Sets AllowCors in API endpoint to true.
@@ -600,33 +673,37 @@ func (e *TestEnv) StopBackendServer() error {
 	return retErr
 }
 
-// TearDown shutdown the servers.
+// TearDown shuts down the servers and verifies teardown invariants.
+// When t is nil (for example, in TestMain), all child processes are stopped
+// before failing fatally on any invariant violation.
 func (e *TestEnv) TearDown(t *testing.T) {
 	glog.Infof("start tearing down...")
 
+	var invariantErrs []string
+
 	// Run all health checks. If they fail, our test causes a server to crash.
-	// Fail the test.
 	if !e.skipHealthChecks {
 		if err := e.healthRegistry.RunAllHealthChecks(); err != nil {
-			t.Errorf("health check failure during teardown: %v", err)
+			invariantErrs = append(invariantErrs, fmt.Sprintf("health check failure during teardown: %v", err))
 		}
 	}
 
 	// Verify invariants in statistics.
 	if e.StatsVerifier != nil {
 		if err := e.StatsVerifier.VerifyInvariants(); err != nil {
-			t.Errorf("Error verifying stats invariants: %v", err)
+			invariantErrs = append(invariantErrs, fmt.Sprintf("error verifying stats invariants: %v", err))
 		}
 	}
 
 	// Verify invariants in tracing.
 	if e.FakeStackdriverServer != nil {
 		if err := e.FakeStackdriverServer.VerifyInvariants(); err != nil {
-			t.Errorf("Error verifying tracing invariants: %v", err)
+			invariantErrs = append(invariantErrs, fmt.Sprintf("error verifying tracing invariants: %v", err))
 		}
 	}
 
-	// Tear down servers.
+	// Tear down servers unconditionally before reporting fatal errors so child
+	// processes are never leaked when t is nil.
 	if e.FakeJwtService != nil {
 		e.FakeJwtService.TearDown()
 	}
@@ -663,9 +740,21 @@ func (e *TestEnv) TearDown(t *testing.T) {
 		}
 	}
 
-	e.FakeStackdriverServer.StopAndWait()
+	if e.FakeStackdriverServer != nil {
+		e.FakeStackdriverServer.StopAndWait()
+	}
 
 	glog.Infof("finish tearing down...")
+
+	if len(invariantErrs) > 0 {
+		if t != nil {
+			for _, msg := range invariantErrs {
+				t.Error(msg)
+			}
+		} else {
+			glog.Fatalf("teardown failed: %s", strings.Join(invariantErrs, "; "))
+		}
+	}
 }
 
 // Form the backend address.
